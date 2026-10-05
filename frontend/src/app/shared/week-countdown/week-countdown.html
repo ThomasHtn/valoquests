@@ -1,15 +1,10 @@
-@if (remaining(); as remaining) {
-  <svg aria-hidden="true" class="size-4 shrink-0 text-text-muted" lucideHourglass></svg>
+@if (remainingText(); as text) {
+  <svg aria-hidden="true" class="week-countdown__icon" lucideHourglass></svg>
 
   <!-- Hidden below `md` for lack of room; the hourglass and the accessible name cover it. -->
-  <span class="label-caption hidden text-text-muted [text-box:trim-both_cap_alphabetic] md:inline">
-    {{ 'common.week.timeLabel' | translate }}
-  </span>
+  <span class="week-countdown__label label-caption">{{ timeLabel() }}</span>
 
-  <span
-    [attr.aria-label]="accessibleLabel()"
-    class="font-display text-base leading-none font-bold text-brand-500 tabular-nums [text-box:trim-both_cap_alphabetic] sm:text-lg"
-  >
-    {{ 'common.week.timeRemaining' | translate: { days: remaining.days, hours: remaining.hours } }}
+  <span [attr.aria-label]="timeLabel() + ' ' + text" class="week-countdown__value">
+    {{ text }}
   </span>
 }

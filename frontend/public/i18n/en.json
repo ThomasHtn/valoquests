@@ -107,7 +107,9 @@
         "trigger": {
           "scheduled": "scheduled",
           "manual": "manual"
-        }
+        },
+        "previousPage": "Previous page",
+        "nextPage": "Next page"
       },
       "lastRun": "Latest synchronization",
       "matchesImported": "Matches imported",
@@ -561,6 +563,14 @@
     "streak": {
       "value": "+{{percent}}%",
       "aria": "{{days}} of 7 days played this week, +{{percent}}% bonus"
+    },
+    "countdown": {
+      "units": {
+        "days": "d",
+        "hours": "h",
+        "minutes": "m",
+        "seconds": "s"
+      }
     }
   },
   "connectivity": {

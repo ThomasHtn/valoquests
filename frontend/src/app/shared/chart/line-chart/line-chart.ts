@@ -36,6 +36,7 @@ import { ChartSeries, ChartValueFormatter } from '../chart.model';
 @Component({
   selector: 'app-line-chart',
   templateUrl: './line-chart.html',
+  styleUrl: './line-chart.scss',
   host: { class: 'block' },
 })
 export class LineChart {
@@ -60,11 +61,6 @@ export class LineChart {
   public readonly valueFormatter = input<ChartValueFormatter | null>(null);
 
   /**
-   * Translation service, for the chart locale and default number format.
-   */
-  private readonly translation = inject(Translation);
-
-  /**
    * Translated x axis unit, used as the tooltip title.
    */
   public readonly pointLabel = input('');
@@ -80,9 +76,9 @@ export class LineChart {
   public readonly yAxisLabel = input('');
 
   /**
-   * Tailwind height classes of the chart box; tile previews pass a shorter one.
+   * Stretches the chart box to its host's size instead of the default height.
    */
-  public readonly heightClass = input('h-64 w-full sm:h-72');
+  public readonly fill = input(false);
 
   /**
    * Formatted value marked by a dashed rule at the first series' peak, empty for none.
@@ -98,6 +94,11 @@ export class LineChart {
    * Tints the area under each curve; off by default since overlaid fills bury the lines.
    */
   public readonly filled = input(false);
+
+  /**
+   * Translation service, for the chart locale and default number format.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Canvas the chart paints on.

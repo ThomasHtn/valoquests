@@ -1,0 +1,21 @@
+/* Sits on the baseline at the text's own size; brand unless the resource has its colour. */
+.rule-text__icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  translate: 0 0.15em;
+  color: var(--color-brand-400);
+}
+
+.rule-text__icon--food {
+  color: var(--color-accent-green);
+}
+
+.rule-text__icon--components {
+  color: var(--color-accent-cyan);
+}
+
+.rule-text__run--strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}

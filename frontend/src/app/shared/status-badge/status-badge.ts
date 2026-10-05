@@ -1,6 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, input } from '@angular/core';
+
 import { StatusBadgeTone } from './status-badge.model';
-import { TONE_CLASS } from './status-badge.constants';
 
 /**
  * A state in words plus a tint, never a tint alone (roster status, running sync).
@@ -8,10 +8,10 @@ import { TONE_CLASS } from './status-badge.constants';
 @Component({
   selector: 'app-status-badge',
   templateUrl: './status-badge.html',
+  styleUrl: './status-badge.scss',
   host: {
-    class:
-      'tracking-label notch-tr notch-tr-edge inline-block shrink-0 border px-2.5 py-1 font-mono text-xs font-semibold uppercase [--notch:0.375rem]',
-    '[class]': 'toneClass()',
+    class: 'notch-tr notch-tr-edge',
+    '[class]': '"status-badge--" + tone()',
   },
 })
 export class StatusBadge {
@@ -24,9 +24,4 @@ export class StatusBadge {
    * Tint of the badge.
    */
   public readonly tone = input<StatusBadgeTone>('neutral');
-
-  /**
-   * Tailwind classes of the current tone.
-   */
-  protected readonly toneClass = computed(() => TONE_CLASS[this.tone()]);
 }

@@ -1,0 +1,83 @@
+@use 'tools' as *;
+
+.empty-plate__illustration {
+  width: 22.5rem;
+  max-width: 100%;
+  height: 15rem;
+  margin-bottom: 0.375rem;
+}
+
+/* Brand when the plate awaits someone, cyan when it awaits data. */
+.empty-plate__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  letter-spacing: var(--tracking-label-wide);
+  color: var(--color-brand-500);
+}
+
+.empty-plate__eyebrow--waiting {
+  color: var(--color-accent-cyan);
+}
+
+.empty-plate__eyebrow-mark {
+  flex-shrink: 0;
+  width: 0.5625rem;
+  height: 0.625rem;
+  background-color: currentcolor;
+}
+
+.empty-plate__title {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+.empty-plate__text {
+  max-width: 28.5rem;
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  color: var(--color-text-secondary);
+}
+
+.empty-plate__readout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.empty-plate__dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--color-brand-500);
+  border-radius: 9999px;
+}
+
+/* Hard halo, no blur: the one dot that is running now. */
+.empty-plate__dot--live {
+  border-color: var(--color-success);
+  background-color: var(--color-success);
+  box-shadow: 0 0 0 3px tint(success, 20%);
+}
+
+.empty-plate__dot--info {
+  border-color: var(--color-text-muted);
+  background-color: var(--color-text-muted);
+}
+
+.empty-plate__readout-label {
+  color: var(--color-text-secondary);
+}
+
+.empty-plate__readout-value {
+  color: var(--color-text-primary);
+}
+
+.empty-plate__readout-value--live {
+  color: var(--color-success);
+}

@@ -21,13 +21,12 @@ import { TourCampaignTrack } from './tour-campaign-track/tour-campaign-track';
 import { TourCapacity } from './tour-capacity/tour-capacity';
 import {
   FULL_CAMPAIGN_POPULATION,
-  TOUR_EMPHASIS_MARKER,
   TOUR_SPEC_KEYS,
   TOUR_STEP_SOURCES,
   TOUR_STEPS,
   TOUR_STEPS_WITHOUT_SPECS,
 } from './tour.constants';
-import { TourStepId } from './tour.model';
+import { ClaimRun, TourStepId } from './tour.model';
 import {
   TOUR_SAMPLE_CAPACITY,
   TOUR_SAMPLE_CONTRIBUTION,
@@ -43,7 +42,13 @@ import {
   TOUR_SAMPLE_STAKES,
 } from './tour-samples.constants';
 import { TourTracker } from './tour-tracker/tour-tracker';
-import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.utils';
+import {
+  buildTourDailyRow,
+  buildTourWeek,
+  endOfDay,
+  splitEmphasis,
+  startOfWeek,
+} from './tour.utils';
 
 /**
  * Chrome-free first-visit tour; real components fed a sample, the live campaign may be empty.
@@ -109,11 +114,6 @@ export class Tour {
   protected readonly specKeys = TOUR_SPEC_KEYS;
 
   /**
-   * Steps that skip the closing figures.
-   */
-  protected readonly stepsWithoutSpecs = TOUR_STEPS_WITHOUT_SPECS;
-
-  /**
    * Title key of the page each step's illustration comes from.
    */
   protected readonly sources = TOUR_STEP_SOURCES;
@@ -142,6 +142,20 @@ export class Tour {
    * Whether the last step is shown, where next finishes the tour.
    */
   protected readonly isLast = computed(() => this.stepIndex() === this.steps.length - 1);
+
+  /**
+   * Whether the shown step closes on its three figures.
+   */
+  protected readonly hasSpecs = computed(
+    () => !TOUR_STEPS_WITHOUT_SPECS.includes(this.currentStep()),
+  );
+
+  /**
+   * The shown step's claim, split into plain and emphasized runs.
+   */
+  protected readonly claimRuns = computed<readonly ClaimRun[]>(() =>
+    splitEmphasis(this.translation.translate(`tour.steps.${this.currentStep()}.claim`)),
+  );
 
   /**
    * Current step as a one-item list: `track` rebuilds the blocks and replays their entry.
@@ -211,7 +225,7 @@ export class Tour {
       TOUR_SAMPLE_DAILY,
       TOUR_SAMPLE_OPERATORS,
       endOfDay(Date.now()),
-      resolveLocale(this.translation.language()),
+      this.translation.language(),
       (key, params) => this.translation.translate(key, params),
     );
   });
@@ -234,16 +248,6 @@ export class Tour {
    * The day the strip picks: today, the one after the tallied days.
    */
   protected readonly sampleToday = TOUR_SAMPLE_DAILY_TALLY.length;
-
-  /**
-   * Splits a translated claim into plain and `*emphasized*` runs, spaces kept.
-   */
-  protected claimRuns(claim: string): readonly { text: string; strong: boolean }[] {
-    return claim
-      .split(TOUR_EMPHASIS_MARKER)
-      .map((text, index) => ({ text, strong: index % 2 === 1 }))
-      .filter((run) => run.text.length > 0);
-  }
 
   /**
    * Moves to the next step, or finishes the tour on the last one.
@@ -271,13 +275,6 @@ export class Tour {
   }
 
   /**
-   * Leaves early, recorded as completed: the rules page keeps a way back.
-   */
-  protected skip(): void {
-    this.finish();
-  }
-
-  /**
    * Arrows walk the tour, `Escape` leaves; skipped with modifiers or a focused input.
    */
   protected onKeydown(event: KeyboardEvent): void {
@@ -298,7 +295,7 @@ export class Tour {
         this.previous();
         break;
       case 'Escape':
-        this.skip();
+        this.finish();
         break;
       default:
         return;
@@ -308,9 +305,9 @@ export class Tour {
   }
 
   /**
-   * Records the tour as completed and replaces it with the overview.
+   * Records the tour as completed, even when skipped, and replaces it with the overview.
    */
-  private finish(): void {
+  protected finish(): void {
     this.tourVisit.markCompleted();
     void this.router.navigate(['/overview'], { replaceUrl: true });
   }

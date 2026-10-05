@@ -1,4 +1,4 @@
-import { TranslateFn } from '@core/i18n/translation.model';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { ChallengeProgress } from '@core/challenges/challenge.model';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
@@ -7,7 +7,8 @@ import { DayCell, DayState } from '@pages/challenges/challenges.model';
 import { buildChallengeCard, toBoardRow } from '@core/challenges/card/challenge-card.utils';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 
-import { TourSampleDaily } from './tour.model';
+import { TOUR_EMPHASIS_MARKER } from './tour.constants';
+import { ClaimRun, TourSampleDaily } from './tour.model';
 
 /**
  * Sample daily challenge built with the page's own builders; `closesAt` in epoch ms.
@@ -16,7 +17,7 @@ export function buildTourDailyRow(
   daily: TourSampleDaily,
   operators: readonly ChallengeOperator[],
   closesAt: number,
-  locale: string,
+  language: Language,
   translate: TranslateFn,
 ): BoardRow {
   const players = operators.map((operator, index) => {
@@ -45,9 +46,9 @@ export function buildTourDailyRow(
   };
   const look = { tone: DAILY_TONE, mark: 'D' as const, kind: translate('challenges.daily.key') };
   const card = buildChallengeCard(challenge, look, operators, true, (amount) =>
-    formatFigure(amount, locale, amount >= 1_000),
+    formatFigure(amount, language, amount >= 1_000),
   );
-  return toBoardRow(challenge, card, card.rungs, closesAt, locale, translate);
+  return toBoardRow(challenge, card, card.rungs, closesAt, language, translate);
 }
 
 /**
@@ -109,4 +110,14 @@ export function endOfDay(now: number): number {
   const date = new Date(now);
   date.setHours(24, 0, 0, 0);
   return date.getTime();
+}
+
+/**
+ * Splits a translated claim into plain and `*emphasized*` runs, empty runs dropped.
+ */
+export function splitEmphasis(claim: string): readonly ClaimRun[] {
+  return claim
+    .split(TOUR_EMPHASIS_MARKER)
+    .map((text, index) => ({ text, strong: index % 2 === 1 }))
+    .filter((run) => run.text.length > 0);
 }

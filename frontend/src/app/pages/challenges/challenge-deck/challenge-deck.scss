@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -6,25 +8,25 @@
 
 /* ---------- Squad bar ---------- */
 
-.squad {
+.challenge-deck__squad {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
-.squad-hint {
+.challenge-deck__hint {
   font-size: 0.875rem;
   color: var(--color-text-muted);
 }
 
-.squad-row {
+.challenge-deck__squad-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(3.25rem, 1fr));
   gap: 3px;
 }
 
-.sq {
+.challenge-deck__operator {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -33,28 +35,27 @@
   min-width: 0;
   padding: 0.55rem 0.15rem 0.5rem;
   border: 0;
-  background: rgb(236 232 225 / 4%);
+  background: tint(text-primary, 4%);
   font: inherit;
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background-color 0.15s;
+
+  @include hover {
+    background: tint(text-primary, 8%);
+  }
 }
 
-.sq:hover {
-  background: rgb(236 232 225 / 8%);
-}
+.challenge-deck__operator-name {
+  @include truncate;
 
-.sq-name {
   max-width: 100%;
-  overflow: hidden;
   font-size: 0.75rem;
   line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* The pinned operator's only mark besides moving first. */
-.sq-star {
+.challenge-deck__operator-star {
   position: absolute;
   top: 0.25rem;
   right: 0.25rem;
@@ -67,6 +68,6 @@
 /* ---------- One card per challenge ---------- */
 
 /* Cancels the card's padding to sit flush with its edges. */
-.tally {
+.challenge-deck__tally {
   margin: 1rem -1rem -1.1rem -1.15rem;
 }

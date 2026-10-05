@@ -1,6 +1,15 @@
 import { ParamMap } from '@angular/router';
 
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode/match-game-mode.constants';
+import { PlayerStatistics } from '@core/players/player-details.model';
+import {
+  formatHeadshotPercentage,
+  formatKda,
+  formatScore,
+  formatWinRate,
+} from '@core/players/player-format.utils';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { Season } from '@core/seasons/season.model';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import {
@@ -8,7 +17,7 @@ import {
   PROFILE_QUERY_KEYS,
   PROGRESS_VIEW_PARAM,
 } from './player-profile.constants';
-import { ProfileQuery, SeasonParam } from './player-profile.model';
+import { ProfileQuery, SeasonParam, StatStrip } from './player-profile.model';
 
 /**
  * Id of the active season, else the most recent one, `null` when none is known.
@@ -18,17 +27,10 @@ export function resolveCurrentSeasonId(seasons: readonly Season[]): number | nul
 }
 
 /**
- * Colour of the next match's share: amber at full value, muted once cut (red would overstate).
- */
-export function resolveYieldToneClass(percent: number): string {
-  return percent >= 100 ? 'text-brand-500' : 'text-text-secondary';
-}
-
-/**
  * Translated not-found plate for an unknown player or match, echoing the `address`.
  */
 export function buildNotFoundPlate(
-  translate: (key: string) => string,
+  translate: TranslateFn,
   keyPrefix: string,
   address: string,
 ): EmptyPlate {
@@ -94,4 +96,30 @@ export function resolveRequestedSeasonId(
     return requested;
   }
   return resolveCurrentSeasonId(seasons);
+}
+
+/**
+ * Stat strip of the filtered matches; without a match every figure is judged `null` so it greys out.
+ */
+export function buildStatStrip(statistics: PlayerStatistics, language: Language): StatStrip {
+  const hasSample = statistics.matchesPlayed > 0;
+  const sampled = (value: number): number | null => (hasSample ? value : null);
+  const winRate = sampled(statistics.winRate);
+  const kda = sampled(statistics.kda);
+  return {
+    winRate: statistics.winRate,
+    winRateLabel: formatWinRate(winRate, language),
+    winRateVisual: resolveWinRateVisual(winRate),
+    wins: statistics.wins,
+    losses: statistics.losses,
+    kdaLabel: formatKda(kda, language),
+    kdaTone: resolveKdaVisual(kda).tone,
+    headshotPercentageLabel: formatHeadshotPercentage(
+      sampled(statistics.headshotPercentage),
+      language,
+    ),
+    adrLabel: formatScore(sampled(statistics.adr)),
+    acsLabel: formatScore(sampled(statistics.acs)),
+    matchesPlayed: statistics.matchesPlayed,
+  };
 }

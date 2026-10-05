@@ -9,15 +9,17 @@
 >
   <!-- Same silhouette as the loaded view so arriving sections do not shift the page. -->
   <div class="flex flex-col gap-6" skeleton>
-    <div class="bg-text-primary/4 p-5">
-      <span class="mb-4 block h-2.5 w-32 bg-surface-700"></span>
-      <span class="block h-56 w-full bg-surface-700/60"></span>
+    <div class="progression__skeleton-panel p-5">
+      <span class="progression__skeleton-bar mb-4 block h-2.5 w-32"></span>
+      <span
+        class="progression__skeleton-bar progression__skeleton-bar--faint block h-56 w-full"
+      ></span>
     </div>
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       @for (placeholder of skeletonRows; track $index) {
-        <div class="border-t-2 border-surface-700 bg-text-primary/4 px-4 py-3.5">
-          <span class="mb-3 block h-2.5 w-14 bg-surface-700"></span>
-          <span class="block h-5 w-12 bg-surface-700"></span>
+        <div class="progression__skeleton-tile px-4 py-3.5">
+          <span class="progression__skeleton-bar mb-3 block h-2.5 w-14"></span>
+          <span class="progression__skeleton-bar block h-5 w-12"></span>
         </div>
       }
     </div>
@@ -26,49 +28,49 @@
   @if (progression(); as data) {
     <!-- Flat blocks on one tinted ground, not cards: the sections read as one report. -->
     <div class="flex flex-col gap-6">
-      <section class="bg-text-primary/4 p-5 sm:p-6">
+      <section class="progression__section">
         <app-evolution-chart [evolution]="data.evolution" [seasonOrder]="seasonOrder()" />
       </section>
 
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-        <section class="bg-text-primary/4 p-5 sm:p-6">
+      <div class="progression__split grid gap-6">
+        <section class="progression__section">
           <app-play-style [aim]="data.aim" />
         </section>
 
-        <section class="bg-text-primary/4 p-5 sm:p-6">
+        <section class="progression__section">
           <app-schedule-performance [hourSlots]="data.hourSlots" [weekdays]="data.weekdays" />
         </section>
       </div>
 
-      <section class="bg-text-primary/4 p-5 sm:p-6">
+      <section class="progression__section">
         <app-personal-records [records]="data.records" />
       </section>
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <section class="bg-text-primary/4 p-5 sm:p-6">
+        <section class="progression__section">
           <app-entity-stats
-            [entityLabel]="translate('playerProfile.progression.maps.entity')"
+            [entityLabel]="'playerProfile.progression.maps.entity' | translate"
             [rows]="mapRows()"
-            [titleTooltip]="translate('playerProfile.progression.maps.tooltip')"
-            [title]="translate('playerProfile.progression.maps.title')"
+            [titleTooltip]="'playerProfile.progression.maps.tooltip' | translate"
+            [title]="'playerProfile.progression.maps.title' | translate"
           />
         </section>
 
-        <section class="bg-text-primary/4 p-5 sm:p-6">
+        <section class="progression__section">
           <app-entity-stats
-            [entityLabel]="translate('playerProfile.progression.agents.entity')"
+            [entityLabel]="'playerProfile.progression.agents.entity' | translate"
             [rows]="agentRows()"
-            [titleTooltip]="translate('playerProfile.progression.agents.tooltip')"
-            [title]="translate('playerProfile.progression.agents.title')"
+            [titleTooltip]="'playerProfile.progression.agents.tooltip' | translate"
+            [title]="'playerProfile.progression.agents.title' | translate"
           />
         </section>
       </div>
 
-      <section class="bg-text-primary/4 p-5 sm:p-6">
+      <section class="progression__section">
         <app-rank-journey [journey]="data.rankJourney" />
       </section>
 
-      <section class="bg-text-primary/4 p-5 sm:p-6">
+      <section class="progression__section">
         <app-consistency [consistency]="data.consistency" />
       </section>
     </div>

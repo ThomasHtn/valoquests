@@ -3,7 +3,9 @@ import {
   MILLISECONDS_PER_HOUR,
   MILLISECONDS_PER_MINUTE,
 } from '@core/date/date.constants';
+import { WEEK_DAYS } from '@core/date/date.constants';
 import { RemainingTime } from '@core/date/date.model';
+import { daysBetween, parseIsoDate } from '@core/date/date.utils';
 import { CAMPAIGN_WALL_CLOCK } from './campaign-calendar.constants';
 import { WallClock } from './campaign-calendar.model';
 
@@ -40,7 +42,7 @@ function campaignOffsetMs(epochMs: number): number {
  * 00:00 in the campaign time zone of `isoDate` (`YYYY-MM-DD`) shifted by `plusDays`.
  */
 export function campaignMidnight(isoDate: string, plusDays = 0): Date {
-  const [year, month, day] = isoDate.split('-').map(Number);
+  const { year, month, day } = parseIsoDate(isoDate);
   const wallAsUtc = Date.UTC(year, month - 1, day + plusDays);
   // Second pass handles a daylight-saving change between the guess and midnight.
   const guess = wallAsUtc - campaignOffsetMs(wallAsUtc);
@@ -68,4 +70,11 @@ export function remainingWeekTime(weekEnd: string, now: Date): RemainingTime {
     hours: Math.floor((remaining % MILLISECONDS_PER_DAY) / MILLISECONDS_PER_HOUR),
     minutes: Math.floor((remaining % MILLISECONDS_PER_HOUR) / MILLISECONDS_PER_MINUTE),
   };
+}
+
+/**
+ * Zero-based position of `today` in the week starting `weekStart`, clamped to its seven days.
+ */
+export function weekDayIndex(weekStart: string, today: string): number {
+  return Math.min(WEEK_DAYS - 1, Math.max(0, daysBetween(weekStart, today)));
 }

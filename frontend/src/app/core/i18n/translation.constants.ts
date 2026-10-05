@@ -13,4 +13,4 @@ export const DEFAULT_LANGUAGE: Language = 'fr';
 /**
  * `localStorage` key of the language choice.
  */
-export const STORAGE_KEY = 'valo-quests.language';
+export const LANGUAGE_STORAGE_KEY = 'valo-quests.language';

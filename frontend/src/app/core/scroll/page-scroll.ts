@@ -34,6 +34,11 @@ export class PageScroll {
   private restoring = false;
 
   /**
+   * Timer of the restore attempt in flight, cancelled when another navigation starts.
+   */
+  private restoreTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /**
    * Whether the page is scrolled deep enough to offer back-to-top.
    */
   public readonly deep = signal(false);
@@ -47,6 +52,7 @@ export class PageScroll {
 
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
+        clearTimeout(this.restoreTimer);
         this.restoring = event.navigationTrigger === 'popstate';
       } else if (event instanceof NavigationEnd) {
         this.deep.set(false);
@@ -86,12 +92,15 @@ export class PageScroll {
     }
     const body = this.body();
     const reachable = body !== null && body.scrollHeight - body.clientHeight >= offset;
-    if (body && (reachable || frame >= SCROLL_RESTORE_MAX_FRAMES)) {
-      body.scrollTop = offset;
+    if (reachable || frame >= SCROLL_RESTORE_MAX_FRAMES) {
+      // A route without a page body gives up once the frames run out.
+      if (body) {
+        body.scrollTop = offset;
+      }
       return;
     }
     // Not `requestAnimationFrame`, which a background tab stops firing.
-    setTimeout(() => this.restore(offset, frame + 1), SCROLL_RESTORE_STEP_MS);
+    this.restoreTimer = setTimeout(() => this.restore(offset, frame + 1), SCROLL_RESTORE_STEP_MS);
   }
 
   /**

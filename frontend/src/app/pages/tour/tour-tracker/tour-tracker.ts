@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LucideArrowDown } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
@@ -10,10 +10,6 @@ import {
   resolveDamageHintKey,
   resolveMapImageUrl,
 } from '@core/matches/display/match-format.utils';
-import {
-  resolveResultAccentClass,
-  resolveResultTextClass,
-} from '@core/matches/display/match-visual.utils';
 import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { TourSampleMatch } from '../tour.model';
@@ -56,16 +52,6 @@ export class TourTracker {
   );
 
   /**
-   * Accent stripe class of a match result.
-   */
-  protected readonly resultAccentClass = resolveResultAccentClass;
-
-  /**
-   * Text color class of a match result.
-   */
-  protected readonly resultTextClass = resolveResultTextClass;
-
-  /**
    * Monogram shown when an agent portrait is missing.
    */
   protected readonly agentInitial = resolveAgentInitial;
@@ -94,6 +80,6 @@ export class TourTracker {
    * Formats a damage amount in the current language.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 }

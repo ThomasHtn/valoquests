@@ -1,0 +1,25 @@
+.not-found__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 60vh;
+  padding-block: 1.5rem;
+}
+
+.not-found__home-link {
+  --notch: 0.625rem;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}

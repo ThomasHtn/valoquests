@@ -100,3 +100,11 @@ function friezeTitleKeyOf(state: FriezeWeek['state'], campaign: Campaign): strin
 function isUnplayed(campaign: Campaign): boolean {
   return campaign.status === 'CLOSED';
 }
+
+/**
+ * Gain or loss with its sign, a true minus for losses, nothing before zero.
+ */
+export function formatSigned(amount: number, format: (amount: number) => string): string {
+  const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
+  return `${sign}${format(Math.abs(amount))}`;
+}

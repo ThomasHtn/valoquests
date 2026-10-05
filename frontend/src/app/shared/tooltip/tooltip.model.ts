@@ -22,3 +22,8 @@ export interface TooltipIconNode {
  * `hover` for hover and focus, `click` for an info button (mouse hover plus tap).
  */
 export type TooltipTrigger = 'hover' | 'click';
+
+/**
+ * Bubble layout: `sm`/`md` text sizes, a rich `template`, or a `portrait` beside a name.
+ */
+export type TooltipLayout = 'sm' | 'md' | 'template' | 'portrait';

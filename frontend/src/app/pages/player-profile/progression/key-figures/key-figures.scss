@@ -1,0 +1,68 @@
+@use 'tools' as *;
+
+.key-figures__list {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  border-top: 1px solid var(--color-edge);
+
+  @include from(sm) {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+}
+
+/* Values inherit this colour unless the figure brings its own (a rank's). */
+.key-figures__item {
+  color: var(--color-text-primary);
+}
+
+/* A flat tint of the tone behind a pictogram in that tone. */
+.key-figures__icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.key-figures__icon--brand {
+  background-color: tint(brand-500, 12%);
+  color: var(--color-brand-500);
+}
+
+.key-figures__icon--good {
+  background-color: tint(success, 12%);
+  color: var(--color-success);
+}
+
+.key-figures__icon--bad {
+  background-color: tint(danger, 12%);
+  color: var(--color-danger);
+}
+
+.key-figures__icon--neutral {
+  background-color: tint(text-primary, 4%);
+  color: var(--color-text-secondary);
+}
+
+.key-figures__caption {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  color: var(--color-text-muted);
+}
+
+.key-figures__value {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.key-figures__value--toned {
+  color: var(--tone);
+}
+
+.key-figures__detail {
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: var(--color-text-muted);
+}

@@ -1,33 +1,20 @@
 <!-- Wordmark, same gradient as the landing page. -->
-<p class="font-display mb-6 text-3xl leading-none font-bold uppercase">
-  <span class="bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-transparent"
-    >ValoQuests</span
-  >
+<p class="admin-login__wordmark">
+  <span class="admin-login__wordmark-text">ValoQuests</span>
 </p>
 
 <!-- Inner notches step down to 0.5rem so nested corners read as concentric. -->
-<div
-  class="notch-tr notch-tr-edge w-full max-w-md border border-brand-500/30 bg-surface-sunken p-8 [--notch:1.25rem]"
->
-  <span
-    aria-hidden="true"
-    class="clip-hex mx-auto flex h-16 w-14 shrink-0 items-center justify-center bg-brand-500/12 text-brand-500"
-  >
-    <svg class="h-7 w-7" lucideLockKeyhole></svg>
+<div class="admin-login__card notch-tr notch-tr-edge">
+  <span aria-hidden="true" class="admin-login__emblem clip-hex">
+    <svg class="size-7" lucideLockKeyhole></svg>
   </span>
 
-  <p class="tracking-label-wide mt-6 font-mono text-xs font-medium text-brand-500 uppercase">
-    {{ 'admin.login.eyebrow' | translate }}
-  </p>
+  <p class="admin-login__eyebrow">{{ 'admin.login.eyebrow' | translate }}</p>
 
-  <h1
-    class="font-display mt-2 text-2xl leading-none font-bold text-balance text-text-primary uppercase"
-  >
-    {{ 'admin.login.heading' | translate }}
-  </h1>
+  <h1 class="admin-login__heading">{{ 'admin.login.heading' | translate }}</h1>
 
   <!-- What signing in lets the reader do. -->
-  <p class="mt-3 text-prose text-text-secondary">{{ 'admin.login.keyHint' | translate }}</p>
+  <p class="admin-login__hint">{{ 'admin.login.keyHint' | translate }}</p>
 
   <form (submit)="submit($event)" class="mt-6">
     <app-text-field [label]="'admin.login.keyLabel' | translate">
@@ -46,29 +33,20 @@
         (click)="toggleShowKey()"
         [attr.aria-label]="(showKey() ? 'admin.login.hideKey' : 'admin.login.showKey') | translate"
         [attr.aria-pressed]="showKey()"
-        class="focus-ring flex h-full w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary"
+        class="admin-login__key-toggle focus-ring"
         type="button"
       >
         @if (showKey()) {
-          <svg aria-hidden="true" class="h-4 w-4" lucideEyeOff></svg>
+          <svg aria-hidden="true" class="size-4" lucideEyeOff></svg>
         } @else {
-          <svg aria-hidden="true" class="h-4 w-4" lucideEye></svg>
+          <svg aria-hidden="true" class="size-4" lucideEye></svg>
         }
       </button>
     </app-text-field>
 
-    <button
-      appButton="primary"
-      [disabled]="verifying() || key().trim() === ''"
-      class="mt-6 flex min-h-11 w-full items-center justify-center gap-2 px-4 py-2 text-base font-semibold [--notch:0.5rem]"
-      type="submit"
-    >
+    <button appButton="primary" [disabled]="!canSubmit()" class="admin-login__submit" type="submit">
       @if (verifying()) {
-        <svg
-          aria-hidden="true"
-          class="h-4 w-4 shrink-0 motion-safe:animate-spin"
-          lucideLoaderCircle
-        ></svg>
+        <app-spinner />
       }
       {{ 'admin.login.submit' | translate }}
     </button>
@@ -76,10 +54,7 @@
 </div>
 
 <!-- Way out to the public site, styled as a back link rather than an action. -->
-<a
-  [routerLink]="'/overview'"
-  class="focus-ring mt-6 flex items-center gap-1.5 font-mono text-xs text-text-muted transition-colors hover:text-text-primary"
->
+<a [routerLink]="'/overview'" class="admin-login__back-link focus-ring">
   <svg aria-hidden="true" class="size-3.5 shrink-0" lucideChevronLeft></svg>
   {{ 'admin.login.backToSite' | translate }}
 </a>

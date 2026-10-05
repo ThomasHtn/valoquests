@@ -1,0 +1,28 @@
+/* One button of a segmented control (filters, chart metrics); `aria-pressed` marks the choice. */
+
+.segment {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out-quart),
+    background-color var(--duration-fast) var(--ease-out-quart);
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: --alpha(var(--color-brand-500) / 8%);
+      color: var(--color-text-primary);
+    }
+  }
+
+  /* After the hover rule, so the pressed segment keeps its tint under the pointer. */
+  &[aria-pressed='true'] {
+    background-color: --alpha(var(--color-brand-500) / 15%);
+    color: var(--color-brand-500);
+  }
+}

@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 /* Two rows: name and state, then figures and gap. */
 :host {
   display: grid;
@@ -7,36 +9,37 @@
   min-width: 11rem;
 }
 
-.name {
+.progress-tip__name {
   font-weight: 600;
   line-height: 1.1;
   color: var(--color-text-secondary);
 }
 
-.figures {
+.progress-tip__figures {
   display: flex;
   align-items: baseline;
   gap: 0.3rem;
   font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.value {
+.progress-tip__value {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--tone);
 }
 
-.value--idle {
+.progress-tip__value--idle {
   color: var(--color-text-muted);
 }
 
-.target {
+.progress-tip__target {
   font-size: 1rem;
   color: var(--color-text-muted);
 }
 
-.state {
+.progress-tip__state {
   display: inline-flex;
   justify-self: end;
   align-items: center;
@@ -44,36 +47,37 @@
   color: var(--color-text-muted);
 }
 
-.state--open {
+.progress-tip__state--open {
   color: var(--color-text-secondary);
 }
 
-.state--done {
+.progress-tip__state--done {
   font-weight: 600;
   color: var(--color-success);
 }
 
-.state-icon {
+.progress-tip__state-icon {
   width: 0.875rem;
   height: 0.875rem;
   stroke-width: 3;
 }
 
-.gap {
+.progress-tip__gap {
   justify-self: end;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.gap b {
+.progress-tip__gap-value {
   font-family: var(--font-display);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.gap--remaining b {
+.progress-tip__gap--remaining .progress-tip__gap-value {
   color: var(--color-brand-400);
 }
 
-.gap--surplus b {
+.progress-tip__gap--surplus .progress-tip__gap-value {
   color: var(--color-success);
 }

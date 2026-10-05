@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, effect, inject, Pipe, PipeTransform } from '@angular/core';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { Translation } from '../translation';
+import { formatFigure } from './number-format.utils';
 
 /**
  * Figure in the reader's notation; impure to follow a language switch.
@@ -32,6 +32,6 @@ export class FigurePipe implements PipeTransform {
    * Formats `value` with digit grouping in the active language.
    */
   public transform(value: number): string {
-    return formatDamage(value, this.translation.language());
+    return formatFigure(value, this.translation.language());
   }
 }

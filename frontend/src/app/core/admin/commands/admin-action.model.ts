@@ -1,7 +1,7 @@
 /**
  * Lifecycle of a backoffice action, for button feedback; the outcome goes to the snackbar.
  */
-export type AdminActionStatus = 'idle' | 'running' | 'done' | 'error';
+type AdminActionStatus = 'idle' | 'running' | 'done' | 'error';
 
 /**
  * State of one backoffice action.

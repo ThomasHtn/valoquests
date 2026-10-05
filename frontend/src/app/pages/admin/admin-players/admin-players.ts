@@ -19,7 +19,7 @@ import { CampaignApi } from '@core/campaign/campaign-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
-import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
+import { formatCampaignDateTime } from '@core/date/date-format.utils';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
@@ -31,6 +31,7 @@ import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { PlayerFormPanel } from './player-form-panel/player-form-panel';
 import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
+import { GUIDE_STEPS } from './admin-players.constants';
 
 /**
  * Backoffice roster: add, edit, (de)activate and remove players.
@@ -57,6 +58,7 @@ import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
     StatusBadge,
   ],
   templateUrl: './admin-players.html',
+  styleUrl: './admin-players.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminPlayers {
@@ -86,6 +88,11 @@ export class AdminPlayers {
   protected readonly playersResource = this.adminApi.players;
 
   /**
+   * Getting-started steps, numbered in this order.
+   */
+  protected readonly guideSteps = GUIDE_STEPS;
+
+  /**
    * Placeholder widths of the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
@@ -99,8 +106,8 @@ export class AdminPlayers {
    * Frozen roster notice of the live run, empty otherwise (the page must work without it).
    */
   protected readonly frozenRosterLabel = computed<string>(() => {
-    const campaign = resourceValue(this.campaignApi.campaign, null) ?? null;
-    if (campaign === null || campaign.status === null || campaign.status === 'CLOSED') {
+    const campaign = resourceValue(this.campaignApi.campaign, null);
+    if (!campaign || campaign.status === null || campaign.status === 'CLOSED') {
       return '';
     }
 
@@ -123,7 +130,7 @@ export class AdminPlayers {
   /**
    * State of the last roster command.
    */
-  protected readonly commandState = signal<AdminActionState>(IDLE_ACTION);
+  private readonly commandState = signal<AdminActionState>(IDLE_ACTION);
 
   /**
    * Player the removal dialog is about, `null` while closed.
@@ -160,11 +167,18 @@ export class AdminPlayers {
   }
 
   /**
+   * Label key of the (de)activation button, which flips the current status.
+   */
+  protected toggleActiveLabelKey(status: AdminPlayerStatus): string {
+    return status === 'ACTIVE' ? 'admin.players.deactivate' : 'admin.players.activate';
+  }
+
+  /**
    * Last successful sync, or "never"; tested for emptiness since the backend omits null fields.
    */
   protected formatLastSync(instant: string | null): string {
     return instant
-      ? formatSynchronizationTimestamp(instant, this.translation.language())
+      ? formatCampaignDateTime(instant, this.translation.language())
       : this.translation.translate('admin.players.neverSynchronized');
   }
 
@@ -182,6 +196,27 @@ export class AdminPlayers {
   protected startEditing(player: AdminPlayer): void {
     this.editedPlayer.set(player);
     this.formOpen.set(true);
+  }
+
+  /**
+   * Opens the panel from a row click, unless a command runs.
+   */
+  protected openEditor(player: AdminPlayer): void {
+    if (!this.busy()) {
+      this.startEditing(player);
+    }
+  }
+
+  /**
+   * Opens the panel from the focused row; keys pressed on its nested buttons are theirs.
+   */
+  protected onRowKeydown(event: Event, player: AdminPlayer): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    event.preventDefault();
+    this.openEditor(player);
   }
 
   /**
@@ -239,6 +274,13 @@ export class AdminPlayers {
       busy: this.busy,
       successMessage: () => this.translation.translate('admin.players.statusChanged'),
     });
+  }
+
+  /**
+   * Deactivates an active player, activates an inactive one.
+   */
+  protected async toggleActive(player: AdminPlayer): Promise<void> {
+    await this.changeStatus(player, player.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE');
   }
 
   /**

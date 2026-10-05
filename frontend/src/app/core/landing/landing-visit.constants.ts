@@ -1,7 +1,7 @@
 /**
  * `localStorage` key of the first entry through the landing page.
  */
-export const STORAGE_KEY = 'valo-quests.landing-entered';
+export const LANDING_ENTERED_STORAGE_KEY = 'valo-quests.landing-entered';
 
 /**
  * Query parameter re-opening the landing page once entered.

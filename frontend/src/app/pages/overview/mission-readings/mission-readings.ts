@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LucideCheck, LucideDynamicIcon } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { CONFETTI } from '@shared/progress-mark/progress-mark.constants';
@@ -85,6 +85,11 @@ export class MissionReadings {
   protected readonly breach = computed(() => 1 - this.mission().guardianLeft);
 
   /**
+   * The squad's share as a CSS length, for the track's `--breach`.
+   */
+  protected readonly breachLevel = computed(() => `${this.breach() * 100}%`);
+
+  /**
    * Operators who hit the guardian, heaviest first; challenge points never widen a segment.
    */
   protected readonly strikes = computed<readonly Strike[]>(() => {
@@ -126,6 +131,6 @@ export class MissionReadings {
    * Formats an amount in the active language for the strikes and stakes.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 }

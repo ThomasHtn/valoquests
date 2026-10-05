@@ -8,11 +8,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { LucideLoaderCircle } from '@lucide/angular';
 
 import { Button } from '@shared/button/button';
-import { TextField, TextFieldInput } from '@shared/text-field/text-field';
+import { TextField } from '@shared/text-field/text-field';
+import { TextFieldInput } from '@shared/text-field/text-field-input';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
+import { Spinner } from '@shared/spinner/spinner';
 
 /**
  * Modal confirmation for an irreversible backoffice action, optionally gated by a typed phrase.
@@ -20,8 +21,9 @@ import { FocusTrap } from '@shared/focus-trap/focus-trap';
  */
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [FocusTrap, Button, LucideLoaderCircle, TextField, TextFieldInput],
+  imports: [FocusTrap, Button, TextField, TextFieldInput, Spinner],
   templateUrl: './confirm-dialog.html',
+  styleUrl: './confirm-dialog.scss',
   host: {
     class: 'contents',
     '(document:keydown.escape)': 'onEscape()',
@@ -119,6 +121,15 @@ export class ConfirmDialog {
    */
   protected onPhraseInput(event: Event): void {
     this.typedPhrase.set((event.target as HTMLInputElement).value);
+  }
+
+  /**
+   * Dismisses on a scrim click unless the action is running.
+   */
+  protected onScrimClick(): void {
+    if (!this.busy()) {
+      this.dismissed.emit();
+    }
   }
 
   /**

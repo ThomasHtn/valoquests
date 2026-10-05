@@ -1,71 +1,26 @@
-/* Drawn as the ledger's bar so the two read as a pair. */
-.fold {
-  background: rgb(236 232 225 / 4%);
+@use 'tools' as *;
+@use 'campaign-fold';
+
+.campaign-panel {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 4vw, 3.25rem);
+}
+
+/* Holds the deferred rocket's height so the page does not jump when it loads. */
+.campaign-panel__rocket-placeholder {
+  min-height: 20rem;
+}
+
+.campaign-panel__history-placeholder {
+  min-height: 17rem;
 }
 
 /* Stacked right under the ledger's bar when there is one. */
-section + .fold {
+.campaign-panel__reserves + .campaign-fold {
   margin-top: 0.5rem;
 }
 
-.fold-sum {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.5rem;
-  min-height: 3.5rem;
-  padding: 1.1rem 1.25rem;
-  list-style: none;
-  cursor: pointer;
-}
-
-.fold-sum::-webkit-details-marker {
-  display: none;
-}
-
-.fold-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-brand-400);
-}
-
-.fold-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: auto;
-  color: var(--color-text-muted);
-}
-
-.fold-sum:hover .fold-cue {
-  color: var(--color-text-primary);
-}
-
-.fold-chev {
-  transition: rotate 0.25s var(--ease-out-quart);
-}
-
-.fold[open] .fold-chev {
-  rotate: 180deg;
-}
-
-.fold-body {
+.campaign-panel__history-body {
   padding: 0 1.25rem 1.25rem;
-  animation: campaign-open 0.3s var(--ease-out-quart) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fold-body {
-    animation: none;
-  }
-
-  .fold-chev {
-    transition: none;
-  }
 }

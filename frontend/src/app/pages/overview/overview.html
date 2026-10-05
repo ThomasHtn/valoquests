@@ -3,7 +3,7 @@
   @if (missionReport()) {
     <button
       (click)="openReport()"
-      class="focus-ring label-caption flex h-10 shrink-0 cursor-pointer items-center gap-2 px-2 text-text-secondary transition-colors hover:text-text-primary motion-safe:active:scale-[0.96]"
+      class="overview__report-button label-caption focus-ring press"
       type="button"
     >
       <svg aria-hidden="true" class="size-4 shrink-0" lucideFileText></svg>
@@ -17,12 +17,9 @@
   <app-mission-report (closed)="closeReport()" [open]="reportOpen()" [report]="report" />
 }
 
-<div class="page-body !gap-0 !pt-0">
+<div class="overview__body page-body">
   <!-- The city is the score; the rocket gains a stage per guardian defeated. -->
-  <section
-    [attr.aria-label]="'overview.scene.section' | translate"
-    class="scene relative !max-w-none shrink-0 overflow-hidden bg-[#040a11] !px-0"
-  >
+  <section [attr.aria-label]="'overview.scene.section' | translate" class="overview__scene">
     @defer (on viewport) {
       <app-base-scene
         [fullCampaignPopulation]="fullCampaignPopulation"
@@ -32,23 +29,20 @@
         [trackVisits]="true"
       />
     } @placeholder {
-      <div class="aspect-[1200/322] min-h-60 w-full max-h-[30rem]"></div>
+      <div class="overview__scene-placeholder"></div>
     }
-    <div aria-hidden="true" class="scene-wash absolute inset-0"></div>
+    <div aria-hidden="true" class="overview__scene-wash"></div>
 
     @if (hasBase()) {
-      <div class="absolute inset-x-0 bottom-0 pb-[clamp(1.25rem,2vw,2rem)]">
-        <div
-          class="mx-auto flex w-full max-w-[1440px] flex-wrap items-end gap-x-14 gap-y-6 px-4 sm:px-6"
-        >
+      <div class="overview__scene-caption">
+        <div class="overview__scene-caption-inner">
           <div>
-            <p class="pop-figure flex items-baseline gap-3">
+            <p class="overview__population">
               <span [appCountUp]="population()" class="tabular-nums"></span>
-              <span
-                class="inline-flex items-center gap-2 font-display text-lg font-medium tracking-[0.16em] text-text-secondary uppercase"
+              <span class="overview__population-unit"
                 ><svg
                   aria-hidden="true"
-                  class="size-5 shrink-0 text-brand-400"
+                  class="overview__population-icon"
                   [lucideIcon]="concepts.base"
                 ></svg
                 >{{ 'overview.scene.unit' | translate }}</span
@@ -56,21 +50,19 @@
             </p>
             @if (populationChange() !== 0) {
               <p
-                class="pop-delta mt-3.5 inline-flex items-center gap-1.5 border px-2.5 py-1.5 font-display text-[1.0625rem] font-semibold tracking-[0.04em]"
-                [class.border-accent-green/45]="populationChange() > 0"
-                [class.text-accent-green]="populationChange() > 0"
-                [class.border-boss-hp-edge/45]="populationChange() < 0"
-                [class.text-boss-hp-edge]="populationChange() < 0"
+                [class.overview__population-delta--gain]="populationChange() > 0"
+                [class.overview__population-delta--loss]="populationChange() < 0"
+                class="overview__population-delta"
               >
                 {{ signed(populationChange()) }}
-                <small class="font-sans font-medium text-text-secondary">{{
+                <small class="overview__population-delta-caption">{{
                   'overview.scene.delta' | translate
                 }}</small>
               </p>
             }
             <!-- Change since the last visit, apart from the day's delta. -->
             @if (sinceLastVisit() !== 0) {
-              <p class="mt-2 text-sm text-text-secondary">
+              <p class="overview__since-visit">
                 {{ 'overview.scene.sinceVisit' | translate: { count: signed(sinceLastVisit()) } }}
               </p>
             }
@@ -82,28 +74,27 @@
 
   <!-- Frieze: untitled, the --now cell already marks the current week. -->
   @if (frieze().length > 0) {
-    <div
-      class="frieze-bar !max-w-none shrink-0 border-t-2 border-b border-edge bg-surface-sunken/55 !px-0"
-    >
-      <ul [attr.aria-label]="'overview.frieze.aria' | translate" class="frieze flex w-full">
+    <div class="overview__frieze">
+      <ul [attr.aria-label]="'overview.frieze.aria' | translate" class="flex w-full">
         @for (week of frieze(); track week.index) {
-          <li class="week-slot">
+          <li class="overview__frieze-slot">
             <!-- Only a settled week opens its mission report. -->
             @if (week.settled) {
               <button
                 (click)="openReport(week.index)"
-                [class]="'week week--settled week--' + week.state + ' focus-ring'"
+                [class]="'overview__week--' + week.state"
+                class="overview__week overview__week--settled focus-ring"
                 type="button"
               >
                 <ng-container
                   [ngTemplateOutlet]="cell"
                   [ngTemplateOutletContext]="{ $implicit: week }"
                 />
-                <svg aria-hidden="true" class="week-report" lucideFileText></svg>
+                <svg aria-hidden="true" class="overview__week-report" lucideFileText></svg>
                 <span class="sr-only">{{ 'overview.frieze.openReport' | translate }}</span>
               </button>
             } @else {
-              <div [class]="'week week--' + week.state">
+              <div [class]="'overview__week--' + week.state" class="overview__week">
                 <ng-container
                   [ngTemplateOutlet]="cell"
                   [ngTemplateOutletContext]="{ $implicit: week }"
@@ -118,15 +109,22 @@
 
   <ng-template #cell let-week>
     <!-- The ring's arc is the guardian's hit points left. -->
-    <span aria-hidden="true" class="orb">
-      <img [ngSrc]="week.art" alt="" class="orb-art" decoding="async" height="28" width="28" />
-      <svg class="orb-ring" viewBox="0 0 40 40">
-        <circle class="orb-track" cx="20" cy="20" pathLength="100" r="18.5" />
+    <span aria-hidden="true" class="overview__orb">
+      <img
+        [ngSrc]="week.art"
+        alt=""
+        class="overview__orb-art"
+        decoding="async"
+        height="28"
+        width="28"
+      />
+      <svg class="overview__orb-ring" viewBox="0 0 40 40">
+        <circle class="overview__orb-track" cx="20" cy="20" pathLength="100" r="18.5" />
         @if (week.state !== 'ahead') {
           <circle
             [attr.stroke-dasharray]="week.standing * 100 + ' 100'"
             [style.--fx-delay]="week.index * 70 + 'ms'"
-            class="orb-arc fx-arc-drain"
+            class="overview__orb-arc fx-arc-drain"
             cx="20"
             cy="20"
             pathLength="100"
@@ -135,12 +133,12 @@
         }
       </svg>
     </span>
-    <span aria-hidden="true" class="week-text">
-      <span class="week-name"
-        >{{ week.label }}<span class="week-planet">&nbsp;{{ week.name }}</span></span
+    <span aria-hidden="true" class="overview__week-text">
+      <span class="overview__week-name"
+        >{{ week.label }}<span class="overview__week-planet">&nbsp;{{ week.name }}</span></span
       >
-      <span class="week-line"
-        >{{ week.level }} · <span class="week-status">{{ week.status }}</span></span
+      <span class="overview__week-line"
+        >{{ week.level }} · <span class="overview__week-status">{{ week.status }}</span></span
       >
     </span>
     <span class="sr-only">{{ week.label }} {{ week.name }}, {{ week.title }}</span>
@@ -148,18 +146,16 @@
 
   <app-resource-state
     (retry)="retry()"
-    [emptyKind]="stateKey() === 'none' ? 'creation' : 'waiting'"
+    [emptyKind]="emptyKind()"
     [emptyPlate]="emptyPlate()"
     [errorText]="'overview.state.error' | translate"
     [isEmpty]="!isRunning()"
     [isError]="isError()"
     [isLoading]="isLoading()"
     [loadingText]="'overview.state.loading' | translate"
-    padding="px-4 py-10 sm:px-6"
+    padding="page"
   >
-    <main
-      class="body flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pt-[clamp(2.5rem,4vw,3.5rem)] pb-24"
-    >
+    <main class="overview__main">
       <!-- A scan wire ties the planet to the row it points at. -->
       @if (mission(); as mission) {
         <section aria-labelledby="mission-title">
@@ -168,23 +164,14 @@
             headingId="mission-title"
           />
 
-          <div appScanWires class="scan">
-            <svg aria-hidden="true" class="wires" data-wires></svg>
+          <div appScanWires class="overview__scan">
+            <svg aria-hidden="true" class="overview__wires" data-wires></svg>
 
-            <div class="orbit">
+            <div class="overview__orbit">
               <app-planet-figure
                 [guardianLeft]="mission.guardianLeft"
+                [label]="planetLabel()"
                 [weekIndex]="mission.weekIndex"
-                [label]="
-                  'overview.mission.planetAria'
-                    | translate
-                      : {
-                          planet: mission.planetName,
-                          week: mission.weekIndex,
-                          wounded: format(mission.wounded),
-                          percent: mission.breachPercent,
-                        }
-                "
                 data-planet
               />
             </div>
@@ -202,7 +189,7 @@
       }
 
       <!-- The tabs replace a section rule as heading. -->
-      <div class="tab-deck flex flex-col gap-7">
+      <div class="overview__tab-deck">
         <app-overview-tabs
           (favoriteChange)="pinTab($event)"
           [(selected)]="selectedTab"
@@ -238,7 +225,7 @@
   </app-resource-state>
 
   <!-- Without a mission, a settled or closed campaign still shows its result. -->
-  @if (!isRunning() && hasBase() && !isLoading() && !isError()) {
+  @if (showsSettledResult()) {
     <section [attr.aria-label]="'overview.tabs.campaign.label' | translate" class="pb-24">
       <app-campaign-panel [campaign]="campaign()" />
     </section>

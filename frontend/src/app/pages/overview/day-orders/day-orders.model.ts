@@ -1,3 +1,5 @@
+import type { LucideIcon } from '@lucide/angular';
+
 /**
  * Day's gains, line by line.
  */
@@ -81,4 +83,49 @@ export interface DayPip {
    * Whether the slot is lit.
    */
   readonly on: boolean;
+}
+
+/**
+ * Tone of a tally tile: its resource, the base growing or shrinking, or a cost.
+ */
+export type TallyTileTone = 'components' | 'food' | 'growth' | 'decline' | 'cost';
+
+/**
+ * One base flow of the day, every text already translated.
+ */
+export interface TallyTile {
+  /**
+   * Colour of the tile, unique per tile.
+   */
+  readonly tone: TallyTileTone;
+
+  /**
+   * Icon of the resource.
+   */
+  readonly icon: LucideIcon;
+
+  /**
+   * Name of the flow.
+   */
+  readonly label: string;
+
+  /**
+   * Tooltip explaining the flow.
+   */
+  readonly tooltip: string;
+
+  /**
+   * Signed amount of the day.
+   */
+  readonly figure: string;
+
+  /**
+   * Capacity the amount bought, shown as a chip; `null` for a plain note.
+   */
+  readonly gain: string | null;
+
+  /**
+   * Caption after the amount when there is no chip.
+   */
+  readonly note: string | null;
 }

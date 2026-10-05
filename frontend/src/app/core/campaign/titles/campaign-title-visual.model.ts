@@ -1,10 +1,10 @@
 /**
- * Title icon, matched by a `@switch` since each Lucide icon is its own directive.
+ * Title icon key, mapped to its Lucide icon by the title badge.
  */
 export type TitleIcon = 'crown' | 'wrench' | 'wheat' | 'flame' | 'target';
 
 /**
- * Icon and colour of a title; full literal classes so Tailwind's scanner finds them.
+ * Icon and colour of a title.
  */
 export interface TitleVisual {
   /**
@@ -13,7 +13,7 @@ export interface TitleVisual {
   readonly icon: TitleIcon;
 
   /**
-   * Tailwind text colour class.
+   * CSS colour of the title (`var(--color-accent-cyan)`), bound as `--tone`.
    */
-  readonly colorClass: string;
+  readonly tone: string;
 }

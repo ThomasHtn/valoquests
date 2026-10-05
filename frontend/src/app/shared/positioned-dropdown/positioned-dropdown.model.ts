@@ -70,11 +70,6 @@ export interface PositionedDropdown {
   close(): void;
 
   /**
-   * Opens the panel when closed, closes it when open.
-   */
-  toggle(): void;
-
-  /**
    * Closes and refocuses the trigger, for a caller-driven dismissal (Escape, selection).
    */
   closeAndRefocus(): void;

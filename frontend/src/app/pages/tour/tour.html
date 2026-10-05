@@ -1,18 +1,11 @@
-<!-- `h-dvh`: no sized ancestor. Only the middle scrolls, so the way out stays on screen. -->
-<main
-  [attr.aria-label]="'tour.ariaLabel' | translate"
-  class="ambient-field flex h-dvh flex-col overflow-hidden bg-surface-950 text-text-primary"
->
-  <header
-    class="flex shrink-0 items-center gap-4 border-b border-brand-500/20 bg-surface-sunken/80 px-4 py-3 motion-safe:animate-chrome-in sm:gap-6 sm:px-8 sm:py-3.5"
-  >
+<!-- Only the middle scrolls, so the way out stays on screen. -->
+<main [attr.aria-label]="'tour.ariaLabel' | translate" class="tour ambient-field">
+  <header class="tour__header motion-safe:animate-chrome-in">
     <p class="flex shrink-0 items-baseline gap-2.5">
-      <span class="label-caption text-text-muted max-sm:sr-only">{{
+      <span class="tour__progress-label label-caption max-sm:sr-only">{{
         'tour.progress.label' | translate
       }}</span>
-      <span
-        class="font-display text-xl leading-none font-bold text-brand-500 tabular-nums sm:text-2xl"
-      >
+      <span class="tour__counter">
         {{
           'tour.progress.counter' | translate: { current: currentPosition(), total: steps.length }
         }}
@@ -22,54 +15,38 @@
     <!-- Hidden: the counter already states the position. -->
     <div aria-hidden="true" class="flex min-w-0 flex-1 gap-1.5 sm:gap-2">
       @for (filled of segments(); track $index) {
-        <span class="clip-shear relative h-2.5 flex-1 bg-accent-gold/60 sm:h-3 sm:max-w-28">
+        <span class="tour__segment clip-shear">
           <span
-            [class.bg-brand-500]="filled"
-            [class.bg-surface-700]="!filled"
-            class="clip-shear absolute inset-px transition-colors duration-500 motion-reduce:transition-none"
+            [class.tour__segment-fill--filled]="filled"
+            class="tour__segment-fill clip-shear"
           ></span>
         </span>
       }
     </div>
 
-    <button appNavChip (click)="skip()" class="shrink-0" type="button">
+    <button appNavChip (click)="finish()" class="shrink-0" type="button">
       <span class="sm:hidden">{{ 'tour.skipShort' | translate }}</span>
       <span class="max-sm:hidden">{{ 'tour.skip' | translate }}</span>
     </button>
   </header>
 
-  <div
-    #content
-    class="scroll-subtle flex flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-8 sm:py-10"
-  >
+  <div #content class="tour__content scroll-subtle">
     <!-- `m-auto`, not `justify-center`, which would push a tall step above the scroll origin. -->
     <div aria-live="polite" class="m-auto w-full max-w-6xl">
       @for (step of stepFrames(); track step) {
-        <div class="tour-step">
-          <div class="tour-copy flex flex-col motion-safe:animate-step-in">
-            <p class="tracking-label-wide font-mono text-2xs text-brand-500 uppercase sm:text-xs">
-              {{ 'tour.steps.' + step + '.eyebrow' | translate }}
-            </p>
-
-            <h1
-              class="font-display mt-2 text-[2rem]/[1.06] text-balance font-bold uppercase sm:mt-3 sm:text-5xl/[1.06]"
-            >
-              {{ 'tour.steps.' + step + '.title' | translate }}
-            </h1>
-
-            <p
-              class="mt-2.5 max-w-[30rem] text-pretty text-[0.9375rem]/[1.55] text-text-secondary sm:mt-5 sm:text-xl/relaxed"
-            >
-              @for (run of claimRuns('tour.steps.' + step + '.claim' | translate); track $index) {
-                <span [class.tour-em]="run.strong">{{ run.text }}</span>
+        <div class="tour__step">
+          <div class="tour__copy motion-safe:animate-step-in">
+            <p class="tour__eyebrow">{{ 'tour.steps.' + step + '.eyebrow' | translate }}</p>
+            <h1 class="tour__title">{{ 'tour.steps.' + step + '.title' | translate }}</h1>
+            <p class="tour__claim">
+              @for (run of claimRuns(); track $index) {
+                <span [class.tour__claim-emphasis]="run.strong">{{ run.text }}</span>
               }
             </p>
           </div>
 
           <!-- Sample screens are hidden and inert; only the base stays live for its sliders. -->
-          <figure
-            class="tour-figure flex min-w-0 flex-col gap-2.5 motion-safe:animate-step-in-late"
-          >
+          <figure class="tour__figure motion-safe:animate-step-in-late">
             @if (step === 'base') {
               <app-tour-base-preview
                 [fullCampaignPopulation]="fullCampaignPopulation"
@@ -101,12 +78,12 @@
                   }
                   @case ('challenges') {
                     <!-- Phone card, kept at a phone's width on every screen. -->
-                    <app-deck-card [row]="sampleDailyRow()" class="tour-phone-card">
+                    <app-deck-card [row]="sampleDailyRow()" class="tour__phone-card">
                       <app-daily-week
                         [days]="sampleDays()"
                         [initials]="true"
                         [selected]="sampleToday"
-                        class="tour-tally"
+                        class="tour__tally"
                       />
                     </app-deck-card>
                   }
@@ -116,20 +93,20 @@
                 }
               </div>
             }
-            <figcaption class="text-xs text-text-muted sm:text-sm">
+            <figcaption class="tour__caption">
               {{ 'tour.source' | translate: { page: (sources[step] | translate) } }}
             </figcaption>
           </figure>
 
           <!-- Spec sheet: under the copy when wide, under the illustration on a phone. -->
-          @if (!stepsWithoutSpecs.includes(step)) {
-            <dl class="tour-specs motion-safe:animate-step-in">
+          @if (hasSpecs()) {
+            <dl class="tour__specs motion-safe:animate-step-in">
               @for (spec of specKeys; track spec) {
-                <div class="tour-spec">
-                  <dt class="font-display text-figure-sm font-bold text-brand-500 tabular-nums">
+                <div class="tour__spec">
+                  <dt class="tour__spec-value">
                     {{ 'tour.steps.' + step + '.' + spec + '.value' | translate }}
                   </dt>
-                  <dd class="tour-spec-label">
+                  <dd class="tour__spec-label">
                     {{ 'tour.steps.' + step + '.' + spec + '.label' | translate }}
                   </dd>
                 </div>
@@ -142,17 +119,15 @@
   </div>
 
   <!-- "Back" keeps its slot on the first step so the buttons never shift. -->
-  <footer
-    class="flex shrink-0 items-center justify-between gap-4 border-t border-brand-500/20 bg-surface-sunken/80 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] motion-safe:animate-chrome-in sm:px-8 sm:pt-3.5 sm:pb-[max(0.875rem,env(safe-area-inset-bottom))]"
-  >
+  <footer class="tour__footer motion-safe:animate-chrome-in">
     <button appNavChip (click)="previous()" [disabled]="isFirst()" type="button">
-      <svg class="block h-4 w-4 shrink-0" lucideChevronLeft></svg>
+      <svg class="block size-4 shrink-0" lucideChevronLeft></svg>
       {{ 'tour.previous' | translate }}
     </button>
 
     <button appNavChip="solid" (click)="next()" type="button">
       {{ (isLast() ? 'tour.finish' : 'tour.next') | translate }}
-      <svg class="block h-4 w-4 shrink-0" lucideChevronRight></svg>
+      <svg class="block size-4 shrink-0" lucideChevronRight></svg>
     </button>
   </footer>
 </main>

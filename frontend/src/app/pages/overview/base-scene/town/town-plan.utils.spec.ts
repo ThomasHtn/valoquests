@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildingAt, growthOf, planCity, tierAt } from './town-plan.utils';
-import { FOUNDING_CAMP, PLOT, TIER_HEIGHTS } from './town-scene.constants';
+import { FOUNDING_CAMP, LAUNCH_PLOT, TIER_HEIGHTS } from './town-scene.constants';
 
 const lots = planCity();
 const standing = (growth: number): number[] => lots.map((lot) => tierAt(lot, growth));
@@ -14,7 +14,7 @@ describe('planCity', () => {
 
   it('keeps the launch plot free', () => {
     for (const lot of lots) {
-      expect(lot.x + lot.w <= PLOT[0] || lot.x >= PLOT[1]).toBe(true);
+      expect(lot.x + lot.w <= LAUNCH_PLOT[0] || lot.x >= LAUNCH_PLOT[1]).toBe(true);
     }
   });
 

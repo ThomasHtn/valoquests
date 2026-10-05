@@ -5,7 +5,7 @@ import { WEEKDAY_NAMES } from './player-progression.constants';
 /**
  * One match plotted on the evolution charts.
  */
-export interface ProgressionMatchPoint {
+interface ProgressionMatchPoint {
   /**
    * Start instant, as an ISO-8601 string.
    */
@@ -35,7 +35,7 @@ export interface ProgressionMatchPoint {
 /**
  * Season mean of each plotted metric, computed by the backend.
  */
-export interface ProgressionAverages {
+interface ProgressionAverages {
   /**
    * Share of hits that landed on the head, in percent.
    */
@@ -145,7 +145,7 @@ export interface WeekdayPerformance {
 /**
  * Name of one day of the week.
  */
-export type WeekdayName = (typeof WEEKDAY_NAMES)[number];
+type WeekdayName = (typeof WEEKDAY_NAMES)[number];
 
 /**
  * One three-hour slot's performance. `startHour` is that slot's first hour, 0 to 21.
@@ -255,7 +255,7 @@ export interface PersonalRecords {
 /**
  * Aggregated statistics for one map or one agent.
  */
-export interface ProgressionEntityStatistics {
+interface ProgressionEntityStatistics {
   /**
    * Matches played.
    */
@@ -295,7 +295,7 @@ export interface ProgressionEntityStatistics {
 /**
  * Aggregated statistics for one map.
  */
-export interface MapStatistics extends ProgressionEntityStatistics {
+interface MapStatistics extends ProgressionEntityStatistics {
   /**
    * Riot map identifier, or `null` when unknown.
    */
@@ -310,7 +310,7 @@ export interface MapStatistics extends ProgressionEntityStatistics {
 /**
  * Aggregated statistics for one agent.
  */
-export interface AgentStatistics extends ProgressionEntityStatistics {
+interface AgentStatistics extends ProgressionEntityStatistics {
   /**
    * Riot agent identifier, or `null` when unknown.
    */

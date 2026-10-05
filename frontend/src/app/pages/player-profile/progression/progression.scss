@@ -1,0 +1,35 @@
+@use 'tools' as *;
+
+/* Flat blocks on one tinted ground, not cards: the sections read as one report. */
+.progression__section {
+  padding: 1.25rem;
+  background-color: tint(text-primary, 4%);
+
+  @include from(sm) {
+    padding: 1.5rem;
+  }
+}
+
+/* The schedule's two charts get the wider column. */
+.progression__split {
+  @include from(lg) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  }
+}
+
+.progression__skeleton-panel {
+  background-color: tint(text-primary, 4%);
+}
+
+.progression__skeleton-tile {
+  border-top: 2px solid var(--color-surface-700);
+  background-color: tint(text-primary, 4%);
+}
+
+.progression__skeleton-bar {
+  background-color: var(--color-surface-700);
+}
+
+.progression__skeleton-bar--faint {
+  background-color: tint(surface-700, 60%);
+}

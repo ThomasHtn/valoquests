@@ -13,10 +13,8 @@ import { LucideFileText, LucideDynamicIcon } from '@lucide/angular';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
-import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
@@ -50,7 +48,7 @@ import {
   buildMission,
 } from './mission-readings/mission-readings.utils';
 import { buildDailyRow, buildTally } from './day-orders/day-orders.utils';
-import { buildFrieze } from './overview.utils';
+import { buildFrieze, formatSigned } from './overview.utils';
 import {
   buildMissionReport,
   readSeenReport,
@@ -277,6 +275,22 @@ export class Overview {
   );
 
   /**
+   * Accessible description of the mission planet, empty outside a mission.
+   */
+  protected readonly planetLabel = computed(() => {
+    const mission = this.mission();
+    if (!mission) {
+      return '';
+    }
+    return this.translation.translate('overview.mission.planetAria', {
+      planet: mission.planetName,
+      week: mission.weekIndex,
+      wounded: this.format(mission.wounded),
+      percent: mission.breachPercent,
+    });
+  });
+
+  /**
    * Whether the Monday report is on screen.
    */
   protected readonly reportOpen = signal(false);
@@ -338,13 +352,13 @@ export class Overview {
    * Daily challenge card, `null` when none was drawn.
    */
   protected readonly dailyRow = computed<BoardRow | null>(() => {
-    const locale = resolveLocale(this.translation.language());
+    const language = this.translation.language();
     return buildDailyRow(
       resourceValue(this.challengesResource, null) ?? null,
       this.campaign()?.status === 'RUNNING',
       this.translation.translate('challenges.daily.key'),
-      (amount) => formatFigure(amount, locale, amount >= 1_000),
-      locale,
+      (amount) => formatFigure(amount, language, amount >= 1_000),
+      language,
       (key, params) => this.translation.translate(key, params),
     );
   });
@@ -433,6 +447,20 @@ export class Overview {
   });
 
   /**
+   * Empty state illustration: no campaign yet, or one between missions.
+   */
+  protected readonly emptyKind = computed<'creation' | 'waiting'>(() =>
+    this.stateKey() === 'none' ? 'creation' : 'waiting',
+  );
+
+  /**
+   * Whether a settled or closed campaign shows its result in place of the mission.
+   */
+  protected readonly showsSettledResult = computed(
+    () => !this.isRunning() && this.hasBase() && !this.isLoading() && !this.isError(),
+  );
+
+  /**
    * Empty state by campaign state.
    */
   protected readonly emptyPlate = computed<EmptyPlate>(() => {
@@ -493,15 +521,14 @@ export class Overview {
    * Formats an amount in the active language.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 
   /**
    * Formats a gain or loss with its sign, a true minus for losses.
    */
   protected signed(amount: number): string {
-    const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
-    return `${sign}${this.format(Math.abs(amount))}`;
+    return formatSigned(amount, (value) => this.format(value));
   }
 
   /**

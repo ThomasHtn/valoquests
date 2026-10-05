@@ -3,7 +3,7 @@ import { Match } from '@core/matches/match.model';
 /**
  * Player a history row belongs to, shown only on the squad's shared history.
  */
-export interface MatchOwner {
+interface MatchOwner {
   /**
    * Player identifier, for the link to the match.
    */

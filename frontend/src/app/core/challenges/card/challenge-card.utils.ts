@@ -1,4 +1,5 @@
 import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { ChallengeProgress, RosterPlayer } from '../challenge.model';
 import { MAX_SEGMENTED_TARGET } from './challenge-card.constants';
@@ -26,7 +27,7 @@ export function progressFraction(target: number | null, value: number, done: boo
 /**
  * One card line per operator, furthest along first, roster order settling ties.
  */
-export function buildRungs(
+function buildRungs(
   operators: readonly ChallengeOperator[],
   target: number | null,
   progressOf: (playerId: number) => OperatorProgress,
@@ -58,14 +59,14 @@ export function buildRungs(
 export function describeRung(
   rung: ChallengeRung,
   target: number | null,
-  locale: string,
-  translate: (key: string, params: Record<string, string | number>) => string,
+  language: Language,
+  translate: TranslateFn,
 ): string {
-  const value = formatFigure(rung.value, locale);
+  const value = formatFigure(rung.value, language);
   if (target === null || target <= 0) {
     return translate(rung.done ? 'openEndedDone' : 'openEnded', { value });
   }
-  const params = { value, target: formatFigure(target, locale) };
+  const params = { value, target: formatFigure(target, language) };
   if (rung.done) {
     return translate('done', params);
   }
@@ -73,7 +74,7 @@ export function describeRung(
   // `count` picks the plural branch of the remaining units.
   return translate('open', {
     ...params,
-    remaining: formatFigure(remaining, locale),
+    remaining: formatFigure(remaining, language),
     count: remaining,
   });
 }
@@ -85,10 +86,10 @@ export function toMarkDetail(
   rung: ChallengeRung,
   target: number | null,
   tone: string,
-  locale: string,
+  language: Language,
 ): MarkDetail {
   const state = rung.done ? 'done' : rung.idle ? 'idle' : 'open';
-  const base = { name: rung.name, tone, state, value: formatFigure(rung.value, locale) } as const;
+  const base = { name: rung.name, tone, state, value: formatFigure(rung.value, language) } as const;
   if (target === null || target <= 0) {
     return {
       ...base,
@@ -103,10 +104,10 @@ export function toMarkDetail(
   const gapCount = gap === 'surplus' ? surplus : gap === 'remaining' ? target - rung.value : 0;
   return {
     ...base,
-    target: formatFigure(target, locale),
+    target: formatFigure(target, language),
     gap,
     gapLabel:
-      gap === 'none' ? '' : `${gap === 'surplus' ? '+' : ''}${formatFigure(gapCount, locale)}`,
+      gap === 'none' ? '' : `${gap === 'surplus' ? '+' : ''}${formatFigure(gapCount, language)}`,
     gapCount,
   };
 }
@@ -191,11 +192,11 @@ export function toBoardRow(
   card: ChallengeCard,
   rungs: readonly ChallengeRung[],
   closesAt: number | null,
-  locale: string,
-  translate: (key: string, params: Record<string, string | number>) => string,
+  language: Language,
+  translate: TranslateFn,
 ): BoardRow {
   const marks = rungs.map((rung) => {
-    const tip = describeRung(rung, card.target, locale, (key, params) =>
+    const tip = describeRung(rung, card.target, language, (key, params) =>
       translate(`challenges.card.bandTooltip.${key}`, params),
     );
     const named = translate('challenges.board.markTip', { name: rung.name, tip });
@@ -203,7 +204,7 @@ export function toBoardRow(
       rung,
       card.target,
       named,
-      toMarkDetail(rung, card.target, card.tone, locale),
+      toMarkDetail(rung, card.target, card.tone, language),
     );
   });
   return {

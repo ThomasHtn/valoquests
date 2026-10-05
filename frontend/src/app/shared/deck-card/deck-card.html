@@ -1,33 +1,41 @@
 @let row = this.row();
 
-<app-challenge-head [class.head--aligned]="roomy()" [row]="row" class="head--compact" />
-<hr aria-hidden="true" class="rule" />
-<ul [attr.aria-label]="'challenges.card.progress' | translate" class="lines">
+<app-challenge-head
+  [class.challenge-head--aligned]="roomy()"
+  [row]="row"
+  class="challenge-head--compact"
+/>
+<hr aria-hidden="true" class="deck-card__rule" />
+<ul [attr.aria-label]="'challenges.card.progress' | translate" class="deck-card__lines">
   @for (mark of row.marks; track mark.playerId) {
     <li
       [appTooltipTemplate]="tip"
       [appTooltip]="mark.tip"
-      [class.line--done]="mark.done"
-      [class.line--idle]="mark.idle"
-      class="line"
+      [class.deck-card__line--done]="mark.done"
+      [class.deck-card__line--idle]="mark.idle"
+      class="deck-card__line"
     >
-      <span aria-hidden="true" class="face"><app-avatar [src]="mark.portrait" size="xs" /></span>
-      <span aria-hidden="true" class="who">{{ mark.name }}</span>
+      <span aria-hidden="true" class="deck-card__portrait">
+        <app-avatar [src]="mark.portrait" size="xs" />
+      </span>
+      <span aria-hidden="true" class="deck-card__name">{{ mark.name }}</span>
       <!-- One segment per unit for small targets, a continuous line past that. -->
-      <span aria-hidden="true" class="track">
+      <span aria-hidden="true" class="deck-card__track">
         @for (lit of mark.segments; track $index) {
-          <i [class.lit]="lit"></i>
+          <i [class.deck-card__segment--lit]="lit" class="deck-card__segment"></i>
         } @empty {
-          <span class="run"><b [style.width.%]="mark.fraction * 100"></b></span>
+          <span class="deck-card__run">
+            <b [style.width.%]="mark.fraction * 100" class="deck-card__run-fill"></b>
+          </span>
         }
       </span>
-      <span aria-hidden="true" class="figures tabular-nums">
+      <span aria-hidden="true" class="deck-card__figures">
         @if (mark.done) {
-          <svg class="check" lucideCheck></svg>
+          <svg class="deck-card__check" lucideCheck></svg>
         } @else if (mark.idle && !idleFigures()) {
-          <span class="dash">—</span>
+          <span class="deck-card__dash">—</span>
         } @else {
-          <b>{{ mark.valueLabel }}</b>
+          <b class="deck-card__value">{{ mark.valueLabel }}</b>
           @if (mark.targetLabel) {
             /{{ mark.targetLabel }}
           }

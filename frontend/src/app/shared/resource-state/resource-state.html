@@ -4,42 +4,30 @@
     <ng-content select="[skeleton]" />
 
     <!-- Fallback silhouette, hidden by CSS when a `[skeleton]` sibling exists. -->
-    <div [class]="padding()" aria-hidden="true" class="resource-loading-fallback flex-col gap-5">
-      <p class="label-caption flex items-center gap-3 text-text-muted">
+    <div [class]="frameClass()" aria-hidden="true" class="resource-loading-fallback flex-col gap-5">
+      <p class="resource-state__loading-text label-caption">
         <span class="loader-hex clip-hex"></span>
         {{ loadingText() }}
       </p>
-      <span class="skeleton block h-7 w-2/3 max-w-72"></span>
-      <span class="skeleton block h-44 w-full [--skeleton-delay:120ms]"></span>
+      <span class="resource-state__skeleton-title skeleton"></span>
+      <span class="resource-state__skeleton-body skeleton"></span>
       <span class="grid grid-cols-2 gap-3">
-        <span class="skeleton block h-24 [--skeleton-delay:240ms]"></span>
-        <span class="skeleton block h-24 [--skeleton-delay:360ms]"></span>
+        <span class="resource-state__skeleton-tile skeleton"></span>
+        <span class="resource-state__skeleton-tile skeleton"></span>
       </span>
     </div>
 
     <p class="sr-only" role="status">{{ loadingText() }}</p>
   </div>
 } @else if (isError()) {
-  <!-- Error state with retry. -->
-  <div
-    [class]="padding()"
-    class="resource-settle flex flex-col items-center gap-3 text-center"
-    role="alert"
-  >
-    <span
-      class="clip-hex flex h-12 w-11 shrink-0 items-center justify-center bg-danger/15 text-danger"
-    >
-      <svg class="h-5 w-5" lucideTriangleAlert></svg>
+  <div [class]="frameClass()" class="resource-state__message resource-settle" role="alert">
+    <span class="resource-state__glyph resource-state__glyph--danger clip-hex">
+      <svg class="size-5" lucideTriangleAlert></svg>
     </span>
-    <p class="text-prose font-semibold text-text-primary">{{ errorText() }}</p>
-    <p class="-mt-1.5 max-w-sm text-sm text-text-muted">{{ errorHint() }}</p>
-    <button
-      appButton="accent"
-      (click)="retry.emit()"
-      class="flex min-h-10 items-center gap-2 px-4 py-2 text-sm font-semibold [--notch:0.5rem]"
-      type="button"
-    >
-      <svg class="h-4 w-4 shrink-0" lucideRefreshCw></svg>
+    <p class="resource-state__error-text">{{ errorText() }}</p>
+    <p class="resource-state__error-hint">{{ errorHint() }}</p>
+    <button appButton="accent" (click)="retry.emit()" class="resource-state__retry" type="button">
+      <svg class="size-4 shrink-0" lucideRefreshCw></svg>
       {{ retryLabel() }}
     </button>
   </div>
@@ -47,8 +35,8 @@
   <!-- Empty state shaped by `emptyKind`; only `anomaly` is announced as an alert. -->
   <div
     [attr.role]="emptyKind() === 'anomaly' ? 'alert' : null"
-    [class]="padding()"
-    class="resource-settle flex flex-col items-center gap-3 text-center"
+    [class]="frameClass()"
+    class="resource-state__message resource-settle"
   >
     @if (emptyPlate(); as plate) {
       <app-empty-plate
@@ -56,26 +44,23 @@
         [tone]="emptyKind() === 'waiting' ? 'waiting' : 'creation'"
       />
     } @else {
-      <span
-        [class]="emptyGlyphClass()"
-        class="clip-hex flex h-12 w-11 shrink-0 items-center justify-center"
-      >
+      <span [class]="emptyGlyphClass()" class="resource-state__glyph clip-hex">
         @switch (emptyKind()) {
           @case ('waiting') {
-            <svg class="h-5 w-5" lucideHourglass></svg>
+            <svg class="size-5" lucideHourglass></svg>
           }
           @case ('creation') {
-            <svg class="h-5 w-5" lucidePlus></svg>
+            <svg class="size-5" lucidePlus></svg>
           }
           @case ('anomaly') {
-            <svg class="h-5 w-5" lucideTriangleAlert></svg>
+            <svg class="size-5" lucideTriangleAlert></svg>
           }
           @default {
-            <svg class="h-5 w-5" lucideFilter></svg>
+            <svg class="size-5" lucideFilter></svg>
           }
         }
       </span>
-      <p class="text-prose text-text-secondary">{{ emptyText() }}</p>
+      <p class="resource-state__empty-text">{{ emptyText() }}</p>
     }
 
     <!-- Caller-projected way out: filter to clear, record to create, operation to run. -->

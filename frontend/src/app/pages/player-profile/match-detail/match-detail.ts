@@ -2,10 +2,9 @@ import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft } from '@lucide/angular';
 
-import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
-import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { formatLocalDayMonth, formatLocalTime } from '@core/date/date-format.utils';
+import { buildTitlesByPlayer } from '@core/campaign/titles/campaign-title.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { formatCampaignDayMonth, formatCampaignTime } from '@core/date/date-format.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
 import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
 import {
@@ -15,19 +14,12 @@ import {
   resolveMapImageUrl,
   resolveMatchScore,
 } from '@core/matches/display/match-format.utils';
-import { resolveResultTextClass } from '@core/matches/display/match-visual.utils';
-import { MatchTeammate } from '@core/matches/match.model';
+import { resolveResultTone } from '@core/matches/display/match-visual.utils';
 import { MatchesApi } from '@core/matches/matches-api';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resolveCompetitiveTierVisual } from '@core/players/competitive-tier/player-competitive-tier.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
-import {
-  formatHeadshotPercentage,
-  formatKda,
-  formatScore,
-} from '@core/players/player-format.utils';
-import { resolveKdVisual } from '@core/players/stats/player-stats.utils';
+import { formatHeadshotPercentage } from '@core/players/player-format.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -40,6 +32,11 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { buildNotFoundPlate } from '../player-profile.utils';
+import {
+  buildMatchFigures,
+  buildMatchShotCounts,
+  buildMatchTeammateRows,
+} from './match-detail.utils';
 
 /**
  * Match detail: the history row's figures plus shots, raw damage and tracked teammates.
@@ -60,6 +57,7 @@ import { buildNotFoundPlate } from '../player-profile.utils';
     Tooltip,
   ],
   templateUrl: './match-detail.html',
+  styleUrl: './match-detail.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class MatchDetail {
@@ -96,12 +94,12 @@ export class MatchDetail {
   /**
    * Parsed player id, `null` when malformed.
    */
-  protected readonly playerId = computed(() => parseRouteId(this.id()));
+  private readonly playerId = computed(() => parseRouteId(this.id()));
 
   /**
    * Parsed player-match id, `null` when malformed.
    */
-  protected readonly playerMatchId = computed(() => parseRouteId(this.matchId()));
+  private readonly playerMatchId = computed(() => parseRouteId(this.matchId()));
 
   /**
    * Full detail of the requested match.
@@ -141,90 +139,90 @@ export class MatchDetail {
   });
 
   /**
-   * Local map image.
+   * Local map image, `null` while loading or for an unknown map.
    */
-  protected readonly mapImageUrl = resolveMapImageUrl;
+  protected readonly mapImageUrl = computed(() => {
+    const match = this.match();
+    return match ? resolveMapImageUrl(match.mapName) : null;
+  });
 
   /**
-   * Local agent portrait.
+   * Local agent portrait, `null` while loading or for an unknown agent.
    */
-  protected readonly agentImageUrl = resolveAgentImageUrl;
+  protected readonly agentImageUrl = computed(() => {
+    const match = this.match();
+    return match ? resolveAgentImageUrl(match.agentName) : null;
+  });
 
   /**
-   * Monogram standing in for an agent portrait.
+   * Monogram standing in for a missing map or agent image.
    */
-  protected readonly agentInitial = resolveAgentInitial;
+  protected readonly agentInitial = computed(() => {
+    const match = this.match();
+    return match ? resolveAgentInitial(match.agentName) : '';
+  });
 
   /**
-   * Id of the reigning weekly champion, `null` while unknown.
+   * Tone of the match result, which the hero's edge takes.
    */
-  protected readonly championPlayerId = computed(() =>
-    resolveChampionPlayerId(resourceValue(this.rankingApi.latestFinalizedWeek, null)),
+  protected readonly resultTone = computed(() =>
+    resolveResultTone(this.match()?.result ?? 'UNKNOWN'),
   );
 
   /**
-   * Current week's title held by each player id.
+   * Round score, `null` for a mode without rounds.
    */
-  protected readonly titlesByPlayer = computed(() => {
-    const byPlayer = new Map<number, WeeklyTitle>();
-    for (const entry of resourceValue(this.rankingApi.current, null)?.ranking ?? []) {
-      const title = primaryTitle(entry.titles);
-      if (title !== null) {
-        byPlayer.set(entry.player.id, title);
-      }
-    }
-    return byPlayer;
-  });
-
-  /**
-   * Bundled avatar of a teammate.
-   */
-  protected readonly avatarUrl = resolvePlayerAvatarUrl;
-
-  /**
-   * Round score of the match.
-   */
-  protected readonly matchScore = resolveMatchScore;
-
-  /**
-   * Text colour of the match result.
-   */
-  protected readonly resultTextClass = resolveResultTextClass;
-
-  /**
-   * Text colour of a KDA.
-   */
-  protected readonly kdVisual = resolveKdVisual;
-
-  /**
-   * Formats a combat or damage score.
-   */
-  protected readonly formatScore = formatScore;
-
-  /**
-   * Start day of the match.
-   */
-  protected readonly matchDay = computed(() => {
+  protected readonly score = computed(() => {
     const match = this.match();
-    return match ? formatLocalDayMonth(match.startedAt, this.translation.language()) : '';
+    return match ? resolveMatchScore(match.allyScore, match.enemyScore) : null;
   });
 
   /**
-   * Formats the start time.
+   * Day, time, mode and duration under the map name.
    */
-  protected readonly matchTime = formatLocalTime;
+  protected readonly metaLine = computed(() => {
+    const match = this.match();
+    if (!match) {
+      return '';
+    }
+    const language = this.translation.language();
+    return [
+      formatCampaignDayMonth(match.startedAt, language),
+      formatCampaignTime(match.startedAt),
+      this.translation.translate(`playerProfile.matches.gameMode.${match.gameMode}`),
+      // Henrik reports no duration for some matches.
+      match.durationSeconds
+        ? this.translation.translate('playerProfile.matches.detail.duration', {
+            minutes: Math.round(match.durationSeconds / 60),
+          })
+        : '',
+    ]
+      .filter((part) => part !== '')
+      .join(' · ');
+  });
 
   /**
-   * Duration as `"32 min"`, `''` when Henrik reported none.
+   * Stat grid of the match.
    */
-  protected readonly durationLabel = computed(() => {
-    const seconds = this.match()?.durationSeconds;
-    return seconds
-      ? this.translation.translate('playerProfile.matches.detail.duration', {
-          minutes: Math.round(seconds / 60),
-        })
-      : '';
+  protected readonly figures = computed(() => {
+    const match = this.match();
+    return match ? buildMatchFigures(match, this.translation.language()) : [];
   });
+
+  /**
+   * Hits per body zone.
+   */
+  protected readonly shotCounts = computed(() => {
+    const match = this.match();
+    return match ? buildMatchShotCounts(match) : [];
+  });
+
+  /**
+   * Formatted headshot rate.
+   */
+  protected readonly headshotPercentage = computed(() =>
+    formatHeadshotPercentage(this.match()?.headshotPercentage ?? null, this.translation.language()),
+  );
 
   /**
    * Coloured label of the match's competitive tier.
@@ -237,37 +235,40 @@ export class MatchDetail {
   });
 
   /**
-   * Formats a KDA ratio.
+   * Explains the damage coefficient the day's ladder applied, worded like the history row.
    */
-  protected readonly formatKda = (kda: number | null): string =>
-    formatKda(kda, this.translation.language());
+  protected readonly damageExplanation = computed(() => {
+    const coefficientPercent = this.match()?.damageCoefficientPercent ?? 100;
+    return this.translation.translate(resolveDamageHintKey(coefficientPercent), {
+      percent: coefficientPercent,
+    });
+  });
 
   /**
-   * Formats a headshot percentage.
+   * Current week's title held by each player id.
    */
-  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
-    formatHeadshotPercentage(percentage, this.translation.language());
+  private readonly titlesByPlayer = computed(() =>
+    buildTitlesByPlayer(resourceValue(this.rankingApi.current, null)?.ranking ?? []),
+  );
+
+  /**
+   * Other tracked players of the lobby.
+   */
+  protected readonly teammates = computed(() => {
+    const match = this.match();
+    if (!match) {
+      return [];
+    }
+    const championPlayerId = resolveChampionPlayerId(
+      resourceValue(this.rankingApi.latestFinalizedWeek, null),
+    );
+    return buildMatchTeammateRows(match, championPlayerId, this.titlesByPlayer());
+  });
 
   /**
    * Damage amount grouped in the active language, e.g. `"1 250"`.
    */
   protected formatDamageAmount(damage: number): string {
-    return formatDamage(damage, this.translation.language());
-  }
-
-  /**
-   * Explains the damage coefficient the day's ladder applied, worded like the history row.
-   */
-  protected damageExplanation(coefficientPercent: number): string {
-    return this.translation.translate(resolveDamageHintKey(coefficientPercent), {
-      percent: coefficientPercent,
-    });
-  }
-
-  /**
-   * Result colour of a teammate.
-   */
-  protected teammateResultClass(teammate: MatchTeammate): string {
-    return resolveResultTextClass(teammate.result);
+    return formatFigure(damage, this.translation.language());
   }
 }

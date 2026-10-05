@@ -1,0 +1,77 @@
+@use 'tools' as *;
+
+.consistency__title {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-primary);
+}
+
+.consistency__tip-score {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.consistency__tip-unit {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+}
+
+.consistency__chips {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+}
+
+/* Neutral by default: an outcome other than a win or a loss, or a match outside the zone. */
+.consistency__chip {
+  padding: 0.125rem 0.5rem;
+  background-color: tint(text-primary, 4%);
+  color: var(--color-text-secondary);
+}
+
+.consistency__chip--win {
+  background-color: tint(success, 14%);
+  color: var(--color-success);
+}
+
+.consistency__chip--loss {
+  background-color: tint(danger, 14%);
+  color: var(--color-danger);
+}
+
+.consistency__chip--inside {
+  background-color: tint(brand-500, 14%);
+  color: var(--color-brand-500);
+}
+
+.consistency__tip-facts {
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--color-edge);
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+}
+
+/* Icon, caption, then the value pushed to the right edge. */
+.consistency__tip-fact {
+  display: grid;
+  grid-template-columns: 1rem auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.consistency__tip-value {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.consistency__empty {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}

@@ -1,4 +1,4 @@
-import { effect, inject, Injectable, signal } from '@angular/core';
+import { effect, inject, Service, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { Translation } from '../translation';
@@ -6,8 +6,9 @@ import { APPLICATION_NAME } from './translated-title-strategy.constants';
 
 /**
  * Document title from the route's `title` as a translation key, following the language.
+ * Not auto-provided: `app.config.ts` registers it as the router's `TitleStrategy`.
  */
-@Injectable()
+@Service({ autoProvided: false })
 export class TranslatedTitleStrategy extends TitleStrategy {
   /**
    * Browser title service the translated title is written to.

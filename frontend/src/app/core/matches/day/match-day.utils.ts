@@ -1,6 +1,6 @@
-import { CAMPAIGN_TIME_ZONE } from '@core/campaign/calendar/campaign-calendar.constants';
 import { toCampaignDayKey } from '@core/campaign/calendar/campaign-calendar.utils';
-import { formatLocalDayMonth } from '@core/date/date-format.utils';
+import { formatCampaignDayMonth } from '@core/date/date-format.utils';
+import { Language } from '@core/i18n/translation.model';
 import { Match } from '@core/matches/match.model';
 import { MatchDay, MatchDayGroup } from './match-day.model';
 
@@ -9,7 +9,7 @@ import { MatchDay, MatchDayGroup } from './match-day.model';
  */
 export function groupMatchesByDay<T extends Match>(
   matches: readonly T[],
-  language: 'fr' | 'en',
+  language: Language,
 ): readonly MatchDay<T>[] {
   const days: MatchDayGroup<T>[] = [];
 
@@ -29,7 +29,7 @@ export function groupMatchesByDay<T extends Match>(
 
     days.push({
       dayKey,
-      dateLabel: formatLocalDayMonth(match.startedAt, language, 'short', CAMPAIGN_TIME_ZONE),
+      dateLabel: formatCampaignDayMonth(match.startedAt, language, 'short'),
       wins: match.result === 'WIN' ? 1 : 0,
       losses: match.result === 'LOSS' ? 1 : 0,
       matches: [match],
@@ -40,43 +40,34 @@ export function groupMatchesByDay<T extends Match>(
 }
 
 /**
+ * Mean of the values a mode reports, `null` when none does.
+ */
+function averageOfReported(values: readonly (number | null)[]): number | null {
+  const reported = values.filter((value): value is number => value !== null);
+  return reported.length === 0
+    ? null
+    : reported.reduce((total, value) => total + value, 0) / reported.length;
+}
+
+/**
  * Fills a grouped day's averages and totals from its matches.
  */
 function withDayAverages<T extends Match>(day: MatchDayGroup<T>): MatchDay<T> {
   const sum = (selector: (match: Match) => number): number =>
     day.matches.reduce((total, match) => total + selector(match), 0);
-
-  // Matches without shot data are left out rather than averaged in as a false 0 %.
-  const headshotPercentages = day.matches
-    .map((match) => match.headshotPercentage)
-    .filter((percentage) => percentage !== null);
-
-  // Same for scores: deathmatch and escalation omit the field.
-  const average = (selector: (match: Match) => number): number | null => {
-    const values = day.matches.map(selector).filter((value) => Number.isFinite(value));
-    return values.length === 0
-      ? null
-      : values.reduce((total, value) => total + value, 0) / values.length;
-  };
+  const totalKills = sum((match) => match.kills);
+  const totalDeaths = sum((match) => match.deaths);
 
   return {
     ...day,
     // From the day's totals, so it agrees with the K/D/A printed beside it.
-    avgKd:
-      sum((match) => match.kills) /
-      Math.max(
-        1,
-        sum((match) => match.deaths),
-      ),
-    avgHeadshotPercentage:
-      headshotPercentages.length === 0
-        ? null
-        : headshotPercentages.reduce((total, percentage) => total + percentage, 0) /
-          headshotPercentages.length,
-    avgAdr: average((match) => match.adr),
-    avgAcs: average((match) => match.acs),
-    totalKills: sum((match) => match.kills),
-    totalDeaths: sum((match) => match.deaths),
+    avgKd: totalKills / Math.max(1, totalDeaths),
+    // Matches without the figure are left out rather than averaged in as a false 0.
+    avgHeadshotPercentage: averageOfReported(day.matches.map((match) => match.headshotPercentage)),
+    avgAdr: averageOfReported(day.matches.map((match) => match.adr)),
+    avgAcs: averageOfReported(day.matches.map((match) => match.acs)),
+    totalKills,
+    totalDeaths,
     totalAssists: sum((match) => match.assists),
     totalValoquestsDamage: sum((match) => match.valoquestsDamage),
   };

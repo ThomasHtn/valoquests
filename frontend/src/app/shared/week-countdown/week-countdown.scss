@@ -1,0 +1,33 @@
+@use 'tools' as *;
+
+.week-countdown__icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+}
+
+/* Label and figure trim to cap height: the mono label and Oswald figure have different metrics. */
+.week-countdown__label {
+  display: none;
+  color: var(--color-text-muted);
+  text-box: trim-both cap alphabetic;
+
+  @include from(md) {
+    display: inline;
+  }
+}
+
+.week-countdown__value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-brand-500);
+  text-box: trim-both cap alphabetic;
+
+  @include from(sm) {
+    font-size: 1.125rem;
+  }
+}

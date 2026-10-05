@@ -1,16 +1,18 @@
-import { Component, input, output } from '@angular/core';
-import { LucideLoaderCircle } from '@lucide/angular';
+import { Component, computed, input, output } from '@angular/core';
 
 import { AdminActionState } from '@core/admin/commands/admin-action.model';
 import { Button } from '@shared/button/button';
+import { ButtonVariant } from '@shared/button/button.model';
+import { Spinner } from '@shared/spinner/spinner';
 
 /**
  * One backoffice operation: name, description, button; the outcome goes to the snackbar.
  */
 @Component({
   selector: 'app-admin-action-card',
-  imports: [Button, LucideLoaderCircle],
+  imports: [Button, Spinner],
   templateUrl: './admin-action-card.html',
+  styleUrl: './admin-action-card.scss',
   host: { class: 'block' },
 })
 export class AdminActionCard {
@@ -48,4 +50,16 @@ export class AdminActionCard {
    * Emitted when the operator triggers the operation.
    */
   public readonly triggered = output<void>();
+
+  /**
+   * Whether the operation is in flight, for the spinner.
+   */
+  protected readonly running = computed(() => this.state().status === 'running');
+
+  /**
+   * Button tone, danger for a destructive operation.
+   */
+  protected readonly buttonVariant = computed<ButtonVariant>(() =>
+    this.destructive() ? 'danger' : 'primary',
+  );
 }

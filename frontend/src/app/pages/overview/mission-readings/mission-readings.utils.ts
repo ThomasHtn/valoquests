@@ -1,8 +1,7 @@
 import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
-import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
+import { campaignMidnight, weekDayIndex } from '@core/campaign/calendar/campaign-calendar.utils';
 import { CAMPAIGN_TIME_ZONE } from '@core/campaign/calendar/campaign-calendar.constants';
-import { daysBetween } from '@core/date/date.utils';
 import { Language } from '@core/i18n/translation.model';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { CurrentRanking } from '@core/ranking/ranking.model';
@@ -52,7 +51,7 @@ export function buildMission(
     weekIndex: week.weekIndex,
     planetName: week.planetName,
     category: week.category,
-    dayOfWeek: Math.min(7, Math.max(1, daysBetween(week.weekStart, campaign.today) + 1)),
+    dayOfWeek: weekDayIndex(week.weekStart, campaign.today) + 1,
     hitPointsLeft,
     hitPoints: week.guardianHitPoints,
     breachPercent: week.progressPercent,

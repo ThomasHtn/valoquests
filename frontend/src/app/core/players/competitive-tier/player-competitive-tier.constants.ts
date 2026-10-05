@@ -1,4 +1,4 @@
-import { CompetitiveTier, TierGroup } from './player-competitive-tier.model';
+import { CompetitiveTier, TierGroup, TierGroupKey } from './player-competitive-tier.model';
 
 /**
  * Maps every {@link CompetitiveTier} to its rank group and sub-rank number.
@@ -65,17 +65,17 @@ export const COMPETITIVE_TIER_ORDER: readonly CompetitiveTier[] = [
 ];
 
 /**
- * Text and badge colour per rank group, from the accent palette.
+ * Colour token per rank group, from the accent palette (`accent-gold` is `--color-accent-gold`).
  */
-export const TIER_GROUP_COLOR_CLASSES: Readonly<Record<string, string>> = {
-  unranked: 'text-text-muted',
-  iron: 'text-text-muted',
-  bronze: 'text-podium-bronze',
-  silver: 'text-text-secondary',
-  gold: 'text-accent-gold',
-  platinum: 'text-accent-cyan',
-  diamond: 'text-accent-purple',
-  ascendant: 'text-accent-green',
-  immortal: 'text-accent-pink',
-  radiant: 'text-accent-blue',
+export const TIER_GROUP_COLOR_TOKENS: Readonly<Record<TierGroupKey, string>> = {
+  unranked: 'text-muted',
+  iron: 'text-muted',
+  bronze: 'podium-bronze',
+  silver: 'text-secondary',
+  gold: 'accent-gold',
+  platinum: 'accent-cyan',
+  diamond: 'accent-purple',
+  ascendant: 'accent-green',
+  immortal: 'accent-pink',
+  radiant: 'accent-blue',
 };

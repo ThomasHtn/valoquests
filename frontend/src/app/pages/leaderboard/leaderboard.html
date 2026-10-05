@@ -18,7 +18,7 @@
     [isLoading]="isLoading()"
     [loadingText]="'leaderboard.state.loading' | translate"
     emptyKind="waiting"
-    padding="px-4 py-10 sm:px-6"
+    padding="page"
   >
     @if (board(); as board) {
       <main class="flex flex-col gap-6 pb-20">
@@ -27,78 +27,33 @@
           <section aria-labelledby="podium-title" class="-mt-4">
             <h2 class="sr-only" id="podium-title">{{ 'leaderboard.podium.label' | translate }}</h2>
             <app-podium [rows]="board.ranked" />
-            <span aria-hidden="true" class="block h-0.5 w-full bg-edge-strong"></span>
+            <span aria-hidden="true" class="leaderboard__podium-rule"></span>
           </section>
         }
 
-        <section aria-labelledby="board-title" class="board">
+        <section aria-labelledby="board-title" class="leaderboard__board">
           <h2 class="sr-only" id="board-title">{{ 'leaderboard.board.label' | translate }}</h2>
 
           <!-- Column header, hidden from AT: each row value carries its own caption. -->
           @if (board.ranked.length > 0) {
-            <div aria-hidden="true" class="bar-head head">
+            <div aria-hidden="true" class="leaderboard__head bar-head">
               <span class="bar-count clip-hex"
                 ><span class="clip-hex">{{
                   board.ranked.length + board.unranked.length
                 }}</span></span
               >
-              <span class="label-caption text-text-muted">
+              <span class="leaderboard__label label-caption">
                 {{ 'leaderboard.board.operator' | translate }}
               </span>
-              <span
-                [appTooltip]="
-                  (rescueActive()
-                    ? 'leaderboard.board.scoreHelp'
-                    : 'leaderboard.board.scoreHelpOff'
-                  ) | translate
-                "
-                class="head-fig label-caption cursor-help text-text-muted"
-              >
-                {{ 'leaderboard.board.score' | translate }}
-              </span>
-              <span
-                [appTooltip]="
-                  (rescueActive()
-                    ? 'leaderboard.board.damageHelp'
-                    : 'leaderboard.board.damageHelpOff'
-                  ) | translate
-                "
-                class="head-fig label-caption cursor-help text-text-muted"
-              >
-                {{ 'leaderboard.board.damage' | translate }}
-              </span>
-              <span
-                [appTooltip]="
-                  (rescueActive()
-                    ? 'leaderboard.board.pointsHelp'
-                    : 'leaderboard.board.pointsHelpOff'
-                  ) | translate
-                "
-                class="head-fig label-caption cursor-help text-text-muted"
-              >
-                {{
-                  (rescueActive() ? 'leaderboard.board.points' : 'leaderboard.board.pointsOff')
-                    | translate
-                }}
-              </span>
-              <span
-                [appTooltip]="'leaderboard.board.challengesHelp' | translate"
-                class="head-fig label-caption cursor-help text-text-muted"
-              >
-                {{ 'leaderboard.board.challenges' | translate }}
-              </span>
-              <span
-                [appTooltip]="'leaderboard.board.matchesHelp' | translate"
-                class="head-fig label-caption cursor-help text-text-muted"
-              >
-                {{ 'leaderboard.board.matches' | translate }}
-              </span>
-              <span
-                [appTooltip]="'leaderboard.board.streakHelp' | translate"
-                class="head-fig head-fig--start label-caption cursor-help text-text-muted"
-              >
-                {{ 'leaderboard.board.streak' | translate }}
-              </span>
+              @for (column of columns(); track column.key) {
+                <span
+                  [appTooltip]="column.help | translate"
+                  [class.leaderboard__column--streak]="column.key === 'streak'"
+                  class="leaderboard__column label-caption"
+                >
+                  {{ column.label | translate }}
+                </span>
+              }
             </div>
           }
 
@@ -106,7 +61,7 @@
             <app-empty-plate [plate]="nobodyPlate()" class="px-4 py-10" tone="waiting" />
           }
 
-          <ul class="rows">
+          <ul class="leaderboard__rows">
             @for (row of board.ranked; track row.playerId) {
               <ng-container
                 [ngTemplateOutlet]="boardRow"
@@ -117,10 +72,10 @@
 
           @if (board.unranked.length > 0) {
             <!-- Out of the campaign this week: tracked, never ranked. -->
-            <p class="label-caption mt-6 text-text-muted">
+            <p class="leaderboard__label label-caption mt-6">
               {{ 'leaderboard.board.unranked' | translate }}
             </p>
-            <ul class="rows">
+            <ul class="leaderboard__rows">
               @for (row of board.unranked; track row.playerId) {
                 <ng-container
                   [ngTemplateOutlet]="boardRow"
@@ -137,167 +92,128 @@
 
 <!-- Row linking to the profile; captions dissolve into the header columns when wide. -->
 <ng-template #boardRow let-row>
+  @let ranked = row.position !== null;
   <li>
     <a
-      [class.row-link--idle]="row.position === null"
+      [class.leaderboard__row-link--idle]="!ranked"
       [routerLink]="['/players', row.playerId]"
-      class="row-link focus-ring-inset border-l-2 border-edge"
+      class="leaderboard__row-link focus-ring-inset"
     >
-      <span class="cell-pos">
-        <span>
-          @if (row.position === null) {
-            <span aria-hidden="true" class="font-display text-base text-text-muted">—</span>
+      <span class="leaderboard__position">
+        <span class="leaderboard__place">
+          @if (!ranked) {
+            <span aria-hidden="true" class="leaderboard__place-dash">—</span>
           }
           <app-position-badge [position]="row.position" />
         </span>
-        @if (row.variation > 0) {
-          <span class="variation text-accent-green">
-            <svg aria-hidden="true" class="size-3" lucideChevronUp></svg>
-            <span aria-hidden="true">{{ row.variation }}</span>
+        @if (row.variation !== 0) {
+          @let climbed = row.variation > 0;
+          @let places = climbed ? row.variation : -row.variation;
+          <span [class.leaderboard__variation--down]="!climbed" class="leaderboard__variation">
+            @if (climbed) {
+              <svg aria-hidden="true" class="leaderboard__variation-icon" lucideChevronUp></svg>
+            } @else {
+              <svg aria-hidden="true" class="leaderboard__variation-icon" lucideChevronDown></svg>
+            }
+            <span aria-hidden="true">{{ places }}</span>
             <span class="sr-only">
-              {{ 'leaderboard.board.variation.up' | translate: { count: row.variation } }}
-            </span>
-          </span>
-        } @else if (row.variation < 0) {
-          <span class="variation text-accent-red">
-            <svg aria-hidden="true" class="size-3" lucideChevronDown></svg>
-            <span aria-hidden="true">{{ -row.variation }}</span>
-            <span class="sr-only">
-              {{ 'leaderboard.board.variation.down' | translate: { count: -row.variation } }}
+              {{
+                (climbed ? 'leaderboard.board.variation.up' : 'leaderboard.board.variation.down')
+                  | translate: { count: places }
+              }}
             </span>
           </span>
         }
       </span>
 
-      <span class="cell-who">
+      <span class="leaderboard__operator">
         <app-avatar [champion]="row.isChampion" [src]="row.portrait" size="sm" />
-        <span class="who">
-          <span class="who-name">
-            <span
-              [class.text-accent-gold]="row.isChampion"
-              [class.text-text-primary]="!row.isChampion"
-              class="name font-display"
-            >
-              {{ row.name }}
-            </span>
+        <span class="leaderboard__identity">
+          <span [class.leaderboard__name--champion]="row.isChampion" class="leaderboard__name">
+            {{ row.name }}
           </span>
-          @if (row.isChampion) {
-            <span class="who-titles">
-              <app-champion-badge [inLink]="true" />
-            </span>
-          } @else if (row.title; as title) {
-            <span class="who-titles">
-              <app-title-badge [inLink]="true" [measure]="title.measure" [title]="title.key" />
+          @if (row.isChampion || row.title) {
+            <span class="leaderboard__titles">
+              @if (row.isChampion) {
+                <app-champion-badge [inLink]="true" />
+              } @else {
+                <app-title-badge
+                  [inLink]="true"
+                  [measure]="row.title.measure"
+                  [title]="row.title.key"
+                />
+              }
             </span>
           }
         </span>
       </span>
 
-      <!-- Unranked operators score nothing: dashes, not zeroes. -->
-      <span class="cell-figs">
-        <span class="cell-fig">
-          <span class="cap label-caption"
-            ><svg
-              aria-hidden="true"
-              class="mr-1 inline-block size-3.5 -translate-y-px"
-              lucideTrophy
-            ></svg
-            >{{ 'leaderboard.board.score' | translate }}</span
+      <!-- Unranked operators score nothing: dashes, not zeroes; challenges count for everyone. -->
+      <span class="leaderboard__figures">
+        @for (column of columns(); track column.key) {
+          <span
+            [class.leaderboard__figure--streak]="column.key === 'streak'"
+            class="leaderboard__figure"
           >
-          <span class="fig text-accent-gold">{{
-            row.position === null ? '—' : format(row.total)
-          }}</span>
-        </span>
-        <span class="cell-fig">
-          <span class="cap label-caption"
-            ><svg
-              aria-hidden="true"
-              class="mr-1 inline-block size-3.5 -translate-y-px"
-              [lucideIcon]="concepts.damage"
-            ></svg
-            >{{ 'leaderboard.board.damage' | translate }}</span
-          >
-          <span class="fig text-boss-hp-edge">{{
-            row.position === null ? '—' : format(row.damage)
-          }}</span>
-        </span>
-        <span class="cell-fig">
-          <span class="cap label-caption">
-            @if (rescueActive()) {
-              <svg
+            <span class="leaderboard__caption label-caption"
+              ><svg
                 aria-hidden="true"
-                class="inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.wounded"
-              ></svg>
-            } @else {
-              <svg
-                aria-hidden="true"
-                class="inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.points"
-              ></svg>
-            }
-            {{
-              (rescueActive() ? 'leaderboard.board.points' : 'leaderboard.board.pointsOff')
-                | translate
-            }}</span
-          >
-          <span class="fig text-brand-400">{{
-            row.position === null ? '—' : format(row.challengePoints)
-          }}</span>
-        </span>
-        <!-- Counted for everyone: validating a challenge needs no place. -->
-        <span class="cell-fig">
-          <span class="cap label-caption"
-            ><svg
-              aria-hidden="true"
-              class="mr-1 inline-block size-3.5 -translate-y-px"
-              [lucideIcon]="concepts.challenge"
-            ></svg
-            >{{ 'leaderboard.board.challenges' | translate }}</span
-          >
-          <span class="fig">
-            <span
-              aria-hidden="true"
-              [class.text-accent-green]="row.challengesCompleted >= row.challengesMax"
-              [class.text-text-primary]="row.challengesCompleted < row.challengesMax"
-              >{{ row.challengesCompleted }}</span
-            ><span aria-hidden="true" class="fig-max text-text-muted"
-              >/{{ row.challengesMax }}</span
+                class="leaderboard__caption-icon"
+                [lucideIcon]="column.icon"
+              ></svg
+              >{{ column.label | translate }}</span
             >
-            <span class="sr-only">{{
-              'leaderboard.board.challengesValue'
-                | translate: { count: row.challengesCompleted, max: row.challengesMax }
-            }}</span>
+            @switch (column.key) {
+              @case ('score') {
+                <span class="leaderboard__value leaderboard__value--score">{{
+                  ranked ? format(row.total) : '—'
+                }}</span>
+              }
+              @case ('damage') {
+                <span class="leaderboard__value leaderboard__value--damage">{{
+                  ranked ? format(row.damage) : '—'
+                }}</span>
+              }
+              @case ('points') {
+                <span class="leaderboard__value leaderboard__value--points">{{
+                  ranked ? format(row.challengePoints) : '—'
+                }}</span>
+              }
+              @case ('challenges') {
+                <span class="leaderboard__value">
+                  <span
+                    [class.leaderboard__count--complete]="
+                      row.challengesCompleted >= row.challengesMax
+                    "
+                    aria-hidden="true"
+                    class="leaderboard__count"
+                    >{{ row.challengesCompleted }}</span
+                  ><span aria-hidden="true" class="leaderboard__count-max"
+                    >/{{ row.challengesMax }}</span
+                  >
+                  <span class="sr-only">{{
+                    'leaderboard.board.challengesValue'
+                      | translate: { count: row.challengesCompleted, max: row.challengesMax }
+                  }}</span>
+                </span>
+              }
+              @case ('matches') {
+                <span class="leaderboard__value leaderboard__value--matches">{{
+                  row.matchCount
+                }}</span>
+              }
+              @case ('streak') {
+                <!-- Same gauge as the contribution sheet. -->
+                <app-streak-gauge
+                  [bonusPercent]="row.streak.bonusPercent"
+                  [days]="row.streak.days"
+                  [week]="row.streak.week"
+                  class="streak-gauge--fill"
+                />
+              }
+            }
           </span>
-        </span>
-        <span class="cell-fig">
-          <span class="cap label-caption"
-            ><svg
-              aria-hidden="true"
-              class="mr-1 inline-block size-3.5 -translate-y-px"
-              [lucideIcon]="concepts.matches"
-            ></svg
-            >{{ 'leaderboard.board.matches' | translate }}</span
-          >
-          <span class="fig text-text-primary">{{ row.matchCount }}</span>
-        </span>
-        <!-- Same gauge as the contribution sheet. -->
-        <span class="cell-fig cell-fig--start">
-          <span class="cap label-caption"
-            ><svg
-              aria-hidden="true"
-              class="mr-1 inline-block size-3.5 -translate-y-px"
-              [lucideIcon]="concepts.streak"
-            ></svg
-            >{{ 'leaderboard.board.streak' | translate }}</span
-          >
-          <app-streak-gauge
-            [bonusPercent]="row.streak.bonusPercent"
-            [days]="row.streak.days"
-            [week]="row.streak.week"
-            class="is-fill"
-          />
-        </span>
+        }
       </span>
     </a>
   </li>

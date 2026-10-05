@@ -1,0 +1,15 @@
+@use 'tools' as *;
+
+.position-badge {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}
+
+/* Only first place gets gold. */
+.position-badge--first {
+  color: var(--color-accent-gold);
+}

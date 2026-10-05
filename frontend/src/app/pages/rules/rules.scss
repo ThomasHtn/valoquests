@@ -1,62 +1,329 @@
-/* The rulebook's shapes, named once: a board, a numbered line, a tile of a ladder. */
+@use 'tools' as *;
+
+/* The rulebook's shapes, named once: a board, a numbered step, a tile of a ladder, a note. */
+
+/* Small uppercase display heading, coloured by the caller. */
+@mixin small-heading {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rules__replay-link {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding-inline: 0.5rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    color: var(--color-text-primary);
+  }
+}
+
+/* Running text under a figure. */
+.rules__prose {
+  display: block;
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  color: var(--color-text-secondary);
+}
+
+/* Colour of a `label-caption` over a figure. */
+.rules__caption {
+  color: var(--color-text-muted);
+}
+
+.rules__heading {
+  @include small-heading;
+
+  color: var(--color-text-primary);
+}
+
+.rules__heading--brand {
+  color: var(--color-brand-400);
+}
+
+/* Guardian categories, in the campaign page's colours. */
+.rules__heading--minor {
+  color: var(--color-accent-green);
+}
+
+.rules__heading--standard {
+  color: var(--color-brand-400);
+}
+
+.rules__heading--elite {
+  color: var(--color-boss-hp-edge);
+}
 
 /* The squad's and leaderboard's board: a tinted header bar, then each row its own strip. */
-.rule-table {
+.rule-table,
+.rule-table__rows {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.rule-table-head,
-.rule-table-row {
+.rule-table__head,
+.rule-table__row {
+  display: grid;
+  column-gap: 0.75rem;
   align-items: center;
   padding: 0.875rem 0.75rem;
   border-left: 2px solid transparent;
+
+  @include from(sm) {
+    padding-inline: 1.25rem;
+  }
 }
 
-.rule-table-head {
-  background: rgb(236 232 225 / 8%);
+.rule-table__head {
+  background: tint(text-primary, 8%);
 }
 
-.rule-table-row {
+.rule-table__row {
   min-height: 3.5rem;
-  border-left-color: rgb(236 232 225 / 15%);
-  background: rgb(236 232 225 / 4%);
+  border-left-color: tint(text-primary, 15%);
+  background: tint(text-primary, 4%);
 }
 
 /* The row the eye should land on: the hover colour of the boards, held. */
-.rule-table-row--lead {
-  border-left-color: rgb(217 149 74 / 60%);
-  background: rgb(217 149 74 / 8%);
+.rule-table__row--lead {
+  border-left-color: tint(brand-500, 60%);
+  background: tint(brand-500, 8%);
+}
+
+/* Column layouts, shared by each board's header and rows. */
+.rule-table--modes .rule-table__head,
+.rule-table--modes .rule-table__row {
+  grid-template-columns: minmax(0, 1fr) repeat(3, 4.875rem);
+  column-gap: 0.5rem;
+
+  @include from(sm) {
+    grid-template-columns: minmax(0, 1fr) repeat(3, 5rem);
+    column-gap: 0.75rem;
+  }
+}
+
+.rule-table--sunday .rule-table__row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* The "how it plays" column only exists from `sm`. */
+.rule-table--weeks .rule-table__head,
+.rule-table--weeks .rule-table__row {
+  grid-template-columns: 2.5rem 5.5rem 5.5rem 5rem;
+
+  @include from(sm) {
+    grid-template-columns: 2.5rem 6rem 9rem 5.5rem minmax(0, 1fr);
+  }
+}
+
+.rule-table--difficulties .rule-table__head,
+.rule-table--difficulties .rule-table__row {
+  grid-template-columns: 6rem minmax(0, 1fr);
+
+  @include from(sm) {
+    grid-template-columns: 6rem 9rem minmax(0, 1fr);
+  }
+}
+
+.rule-table--challenges .rule-table__head,
+.rule-table--challenges .rule-table__row {
+  grid-template-columns: 2.25rem minmax(0, 1fr) 3.5rem 4.5rem;
+  column-gap: 0.5rem;
+
+  @include from(sm) {
+    column-gap: 0.75rem;
+  }
+}
+
+.rule-table__caption {
+  color: var(--color-text-muted);
+}
+
+.rule-table__caption--end {
+  text-align: right;
+}
+
+.rule-table__caption--accent {
+  color: var(--color-brand-500);
+}
+
+.rule-table__caption--with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  text-align: right;
+}
+
+/* Wounded icon by default. */
+.rule-table__icon {
+  color: var(--color-brand-400);
+}
+
+.rule-table__icon--danger {
+  color: var(--color-boss-hp-edge);
 }
 
 /* What the rows under it share, stated once, tucked onto them like the squad's group labels. */
-.rule-table-group {
+.rule-table__group {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.75rem;
   padding: 1rem 0.75rem 0.25rem calc(0.75rem + 2px);
-}
 
-@media (width >= 40rem) {
-  .rule-table-head,
-  .rule-table-row {
-    padding-inline: 1.25rem;
-  }
-
-  .rule-table-group {
+  @include from(sm) {
     padding-inline: calc(1.25rem + 2px) 1.25rem;
   }
 }
 
-.rule-row {
-  padding-block: 0.625rem;
-  border-bottom: 1px solid rgb(236 232 225 / 8%);
+.rule-table__group-label {
+  color: var(--color-text-secondary);
 }
 
-.rule-row:last-child {
-  border-bottom: 0;
+.rule-table__shares,
+.rule-table__group-note {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  font-weight: 600;
+}
+
+.rule-table__shares {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rule-table__group-note {
+  color: var(--color-text-muted);
+}
+
+.rule-table__share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rule-table__share--food {
+  color: var(--color-accent-green);
+}
+
+.rule-table__share--components {
+  color: var(--color-accent-cyan);
+}
+
+.rule-table__name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* A board's number, right-aligned in its column. */
+.rule-table__figure {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+.rule-table__figure--start {
+  text-align: left;
+}
+
+.rule-table__figure--muted {
+  color: var(--color-text-muted);
+}
+
+.rule-table__figure--accent,
+.rule-table__row--lead .rule-table__figure {
+  color: var(--color-brand-500);
+}
+
+.rule-table__weight {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+/* Wide-screen explanation column. */
+.rule-table__detail {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}
+
+/* The same explanation, folded under the figure on phones. */
+.rule-table__example {
+  font-size: 0.875rem;
+  line-height: 1.375;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Beats the global `hex-mark` size. */
+.rule-table__hex {
+  width: 2.25rem;
+  height: 2.55rem;
+}
+
+.rule-table__tier {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  font-weight: 700;
+}
+
+/* A numbered line of a list read in order. */
+.rule-step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding-block: 0.625rem;
+  border-bottom: 1px solid tint(text-primary, 8%);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.rule-step__number {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  font-weight: 700;
+  color: var(--color-brand-500);
+}
+
+.rule-step__when {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+  text-transform: none;
 }
 
 .rule-tile {
@@ -65,17 +332,183 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.625rem 0.25rem;
-  border-top: 2px solid rgb(217 149 74 / 50%);
-  background: rgb(217 149 74 / 8%);
+  border-top: 2px solid tint(brand-500, 50%);
+  background: tint(brand-500, 8%);
 }
 
 .rule-tile--danger {
-  border-top-color: rgb(224 64 78 / 50%);
-  background: rgb(224 64 78 / 6%);
+  border-top-color: tint(boss-hp-edge, 50%);
+  background: tint(boss-hp-edge, 6%);
+}
+
+.rule-tile__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.rule-tile__value {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-brand-500);
+}
+
+.rule-tile__value--danger {
+  font-size: 0.875rem;
+  color: var(--color-boss-hp-edge);
+
+  @include from(sm) {
+    font-size: 1rem;
+  }
 }
 
 /* A remark set apart from the flow: flat tint and a leading rule, the block's own colour. */
 .rule-note {
   padding: 0.75rem 0.875rem;
-  background: rgb(236 232 225 / 4%);
+  border-left: 2px solid var(--color-edge-strong);
+  background: tint(text-primary, 4%);
+}
+
+.rule-note--brand {
+  border-left-color: var(--color-brand-500);
+}
+
+.rule-note--food {
+  border-left-color: var(--color-accent-green);
+}
+
+.rule-note--components {
+  border-left-color: var(--color-accent-cyan);
+}
+
+.rule-note--points {
+  border-left-color: var(--color-accent-blue);
+}
+
+.rule-note__resource {
+  @include small-heading;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.08em;
+}
+
+.rule-note__resource--food {
+  color: var(--color-accent-green);
+}
+
+.rule-note__resource--components {
+  color: var(--color-accent-cyan);
+}
+
+.rule-note__formula {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  color: var(--color-brand-400);
+}
+
+.rule-note__formula--points {
+  color: var(--color-accent-blue);
+}
+
+/* Sunday's settlement, term by term. */
+.rule-settlement {
+  padding: 0.75rem 1rem;
+  border-left: 2px solid var(--color-brand-500);
+  background: tint(text-primary, 4%);
+}
+
+.rule-settlement__line {
+  display: grid;
+  column-gap: 1rem;
+  padding-block: 0.375rem;
+
+  @include from(sm) {
+    grid-template-columns: 9rem minmax(0, 1fr);
+  }
+}
+
+/* Champion first, alone on its row on phones. */
+.rule-title-card {
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  background: tint(text-primary, 4%);
+
+  &:first-child {
+    grid-column: span 2 / span 2;
+
+    @include from(md) {
+      grid-column: span 1 / span 1;
+    }
+  }
+}
+
+/* Colour comes from the title's own visual. */
+.rule-title-card__name {
+  @include small-heading;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--tone);
+}
+
+.rule-title-card__hint {
+  font-size: 0.875rem;
+  line-height: 1.375;
+  color: var(--color-text-secondary);
+}
+
+.rule-constants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  column-gap: 2rem;
+}
+
+.rule-constants__item {
+  display: grid;
+  align-content: start;
+  gap: 0.125rem;
+  padding-block: 0.625rem;
+  border-bottom: 1px solid tint(text-primary, 8%);
+}
+
+.rule-constants__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.rule-constants__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--color-brand-500);
+}
+
+.rule-constants__icon--food {
+  color: var(--color-accent-green);
+}
+
+.rule-constants__icon--components {
+  color: var(--color-accent-cyan);
+}
+
+.rule-constants__value {
+  padding-left: 1.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-secondary);
 }

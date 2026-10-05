@@ -1,0 +1,59 @@
+@use 'tools' as *;
+
+.select__trigger {
+  --notch: 0.5rem;
+
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    background-color: tint(brand-500, 8%);
+  }
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  @include from(sm) {
+    gap: 0.5rem;
+    padding-inline: 1rem;
+  }
+}
+
+.select__icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.select__chevron {
+  transition: rotate 200ms var(--ease-out-quart);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.select__chevron--open {
+  rotate: 180deg;
+}
+
+/* Replaces a list of at most one option. */
+.select__empty {
+  padding: 0.625rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}

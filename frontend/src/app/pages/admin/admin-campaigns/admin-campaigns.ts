@@ -15,9 +15,8 @@ import {
   CampaignStartWeek,
   CampaignStatus,
 } from '@core/campaign/campaign.model';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { daysBetween, addDays } from '@core/date/date.utils';
-import { formatDateRange, formatDayMonth } from '@core/date/date-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { formatDayMonth } from '@core/date/date-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
@@ -32,7 +31,8 @@ import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
 import { CAMPAIGN_DAYS } from './admin-campaigns.constants';
-import { LiveCampaign } from './admin-campaigns.model';
+import { LiveCampaign, PendingCampaignDeletion } from './admin-campaigns.model';
+import { buildLiveCampaign, formatCampaignRange } from './admin-campaigns.utils';
 
 /**
  * Backoffice campaign lifecycle: open (difficulty frozen for the run), stop or delete.
@@ -52,6 +52,7 @@ import { LiveCampaign } from './admin-campaigns.model';
     StatusBadge,
   ],
   templateUrl: './admin-campaigns.html',
+  styleUrl: './admin-campaigns.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminCampaigns {
@@ -108,39 +109,9 @@ export class AdminCampaigns {
   /**
    * Opened or running campaign, `null` between campaigns.
    */
-  protected readonly live = computed<LiveCampaign | null>(() => {
-    const campaign = resourceValue(this.campaignResource, null);
-    if (
-      !campaign ||
-      campaign.id === null ||
-      campaign.status === null ||
-      campaign.status === 'CLOSED' ||
-      campaign.firstWeekStart === null ||
-      campaign.lastWeekStart === null
-    ) {
-      return null;
-    }
-
-    // Clamped: day zero before the first Monday, never past the last day.
-    const dayIndex = Math.min(
-      CAMPAIGN_DAYS,
-      Math.max(0, daysBetween(campaign.firstWeekStart, campaign.today) + 1),
-    );
-
-    return {
-      id: campaign.id,
-      number: campaign.number ?? 0,
-      status: campaign.status,
-      difficulty: campaign.difficulty ?? 'AMATEUR',
-      reference: campaign.reference ?? 0,
-      rosterSize: campaign.rosterSize ?? 0,
-      range: formatDateRange(campaign.firstWeekStart, addDays(campaign.lastWeekStart, 6)),
-      startsOn: formatDayMonth(campaign.firstWeekStart),
-      weekIndex: campaign.currentWeekIndex ?? 0,
-      dayIndex,
-      daysLeft: CAMPAIGN_DAYS - dayIndex,
-    };
-  });
+  protected readonly live = computed<LiveCampaign | null>(() =>
+    buildLiveCampaign(resourceValue(this.campaignResource, null)),
+  );
 
   /**
    * Closed campaigns, empty while the history loads or fails.
@@ -160,7 +131,17 @@ export class AdminCampaigns {
   /**
    * State of the delete command.
    */
-  protected readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
+  private readonly deleteState = signal<AdminActionState>(IDLE_ACTION);
+
+  /**
+   * Whether the open command runs, which locks its dialog.
+   */
+  protected readonly opening = computed(() => this.openState().status === 'running');
+
+  /**
+   * Whether the stop command runs, which locks its button and dialog.
+   */
+  protected readonly stopping = computed(() => this.stopState().status === 'running');
 
   /**
    * Whether the open confirmation dialog is shown.
@@ -175,11 +156,7 @@ export class AdminCampaigns {
   /**
    * Campaign the delete dialog is about, `null` while closed.
    */
-  protected readonly pendingDeletion = signal<{
-    id: number;
-    number: number;
-    opened: boolean;
-  } | null>(null);
+  protected readonly pendingDeletion = signal<PendingCampaignDeletion | null>(null);
 
   /**
    * Whether a deletion runs, so a second confirm is ignored.
@@ -228,14 +205,14 @@ export class AdminCampaigns {
    * Formats a reference or a population in the current language.
    */
   protected amount(value: number): string {
-    return formatDamage(value, this.translation.language());
+    return formatFigure(value, this.translation.language());
   }
 
   /**
    * Closed campaign's span, its last Sunday included.
    */
   protected range(firstWeekStart: string, lastWeekStart: string): string {
-    return formatDateRange(firstWeekStart, addDays(lastWeekStart, 6));
+    return formatCampaignRange(firstWeekStart, lastWeekStart);
   }
 
   /**

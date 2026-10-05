@@ -24,6 +24,7 @@ import { nextInstanceId } from '@core/dom/instance-id.utils';
   selector: 'app-select',
   imports: [LucideChevronDown, LucideEllipsisVertical],
   templateUrl: './select.html',
+  styleUrl: './select.scss',
   host: {
     class: 'relative inline-block',
     '(keydown)': 'onKeydown($event)',
@@ -198,7 +199,7 @@ export class Select<T> {
   /**
    * Closes the panel and clears the keyboard highlight.
    */
-  protected close(): void {
+  private close(): void {
     this.dropdown.close();
     this.activeIndex.set(-1);
   }

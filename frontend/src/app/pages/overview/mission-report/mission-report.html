@@ -7,7 +7,7 @@
     animate.enter="fx-scrim-in"
     animate.leave="fx-scrim-out"
     aria-hidden="true"
-    class="fixed inset-0 z-50 bg-surface-950/80"
+    class="mission-report__scrim"
   ></div>
 
   <div
@@ -15,54 +15,55 @@
     appFocusTrap
     animate.enter="fx-modal-in"
     animate.leave="fx-modal-out"
-    [class.rep--held]="!report.defeated"
+    [class.mission-report--held]="!report.defeated"
     aria-labelledby="mission-report-title mission-report-verdict"
     aria-modal="true"
-    class="rep"
+    class="mission-report"
     role="dialog"
     tabindex="-1"
   >
     <!-- Fixed header: title, week and the framed exit. -->
-    <header class="rep-head">
-      <span aria-hidden="true" class="rep-head-icon">
+    <header class="mission-report__header">
+      <span aria-hidden="true" class="mission-report__header-icon">
         <svg class="size-4" lucideFileText></svg>
       </span>
       <div class="min-w-0">
-        <h2 class="rep-title" id="mission-report-title">
+        <h2 class="mission-report__title" id="mission-report-title">
           {{ 'overview.missionReport.title' | translate }}
         </h2>
-        <p class="rep-week">
+        <p class="mission-report__week">
           {{
             'overview.missionReport.week' | translate: { index: report.weekIndex, total: weekCount }
           }}
-          · <b>{{ report.planetName }}</b>
+          · <b class="mission-report__highlight">{{ report.planetName }}</b>
         </p>
       </div>
       <button
         (click)="closed.emit()"
         [attr.aria-label]="'overview.missionReport.close' | translate"
-        class="rep-x focus-ring-inset"
+        class="mission-report__close focus-ring-inset"
         type="button"
       >
         <svg aria-hidden="true" class="size-4" lucideX></svg>
       </button>
     </header>
 
-    <div class="rep-scroll">
-      <div class="rep-banner">
-        <p class="rep-verdict" id="mission-report-verdict">
+    <div class="mission-report__scroll">
+      <div class="mission-report__banner">
+        <p class="mission-report__verdict" id="mission-report-verdict">
           {{
             (report.defeated ? 'overview.missionReport.won' : 'overview.missionReport.held')
               | translate
           }}
         </p>
-        <p class="rep-line">
+        <p class="mission-report__summary">
           @if (report.defeated) {
             @if (report.blow; as blow) {
               {{ blow.when }}
               <!-- `where` hugs the name: it opens on its own comma. -->
               @if (blow.by) {
-                {{ 'overview.missionReport.blowBy' | translate }} <b>{{ blow.by }}</b
+                {{ 'overview.missionReport.blowBy' | translate }}
+                <b class="mission-report__highlight">{{ blow.by }}</b
                 >{{ blow.where }}
               } @else {
                 {{ blow.where }}
@@ -79,25 +80,35 @@
         </p>
       </div>
 
-      <section [attr.aria-label]="'overview.missionReport.loot' | translate" class="rep-loot">
-        <div class="rep-main">
-          <span aria-hidden="true" class="rep-hex rep-hex--lg clip-hex text-brand-400"
-            ><span class="clip-hex"><svg [lucideIcon]="concepts.wounded"></svg></span
+      <section
+        [attr.aria-label]="'overview.missionReport.loot' | translate"
+        class="mission-report__loot"
+      >
+        <div class="mission-report__rescue">
+          <span
+            aria-hidden="true"
+            class="mission-report__hex mission-report__hex--large clip-hex text-brand-400"
+            ><span class="mission-report__hex-face clip-hex"
+              ><svg [lucideIcon]="concepts.wounded"></svg></span
           ></span>
           <div class="min-w-0">
-            <p class="rep-main-fig">
-              <strong [appCountUp]="report.rescued"></strong>
-              <span>{{
+            <p class="mission-report__rescue-figure">
+              <strong [appCountUp]="report.rescued" class="mission-report__rescue-count"></strong>
+              <span class="mission-report__rescue-label">{{
                 'overview.missionReport.rescued' | translate: { spotted: format(report.spotted) }
               }}</span>
             </p>
-            <div aria-hidden="true" class="rep-leds">
+            <div aria-hidden="true" class="mission-report__leds">
               @for (lit of segments(); track $index) {
-                <i [class.on]="lit" [style.--i]="$index"></i>
+                <i
+                  [class.mission-report__led--lit]="lit"
+                  [style.--i]="$index"
+                  class="mission-report__led"
+                ></i>
               }
             </div>
           </div>
-          <p class="rep-main-sub">
+          <p class="mission-report__rescue-detail">
             {{
               'overview.missionReport.rescuedSplit'
                 | translate
@@ -111,39 +122,26 @@
           </p>
         </div>
 
-        @if (report.base; as base) {
-          <ul class="rep-gains">
-            <li class="rep-gain text-accent-green" style="--i: 0">
-              <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg [lucideIcon]="concepts.food"></svg></span
-              ></span>
-              <strong>+<span [appCountUp]="base.foodGained"></span></strong>
-              <span>{{ 'overview.missionReport.food' | translate }}</span>
-            </li>
-            <li class="rep-gain text-accent-cyan" style="--i: 1">
-              <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg [lucideIcon]="concepts.components"></svg></span
-              ></span>
-              <strong>+<span [appCountUp]="base.componentsGained"></span></strong>
-              <span>{{ 'overview.missionReport.components' | translate }}</span>
-            </li>
-            <li
-              [class.text-boss-hp-edge]="base.populationChange < 0"
-              [class.text-brand-400]="base.populationChange >= 0"
-              class="rep-gain"
-              style="--i: 2"
-            >
-              <span aria-hidden="true" class="rep-hex clip-hex"
-                ><span class="clip-hex"><svg [lucideIcon]="concepts.base"></svg></span
-              ></span>
-              <strong
-                >{{ base.populationChange > 0 ? '+' : ''
-                }}<span [appCountUp]="base.populationChange"></span
-              ></strong>
-              <span>{{
-                'overview.missionReport.population' | translate: { total: format(base.population) }
-              }}</span>
-            </li>
+        @if (gains().length > 0) {
+          <ul class="mission-report__gains">
+            @for (gain of gains(); track gain.tone) {
+              <li
+                [class]="'mission-report__gain--' + gain.tone"
+                [style.--i]="$index"
+                class="mission-report__gain"
+              >
+                <span
+                  aria-hidden="true"
+                  class="mission-report__hex mission-report__hex--gain clip-hex"
+                  ><span class="mission-report__hex-face clip-hex"
+                    ><svg [lucideIcon]="gain.icon"></svg></span
+                ></span>
+                <strong class="mission-report__gain-value"
+                  >{{ gain.sign }}<span [appCountUp]="gain.value"></span
+                ></strong>
+                <span class="mission-report__gain-label">{{ gain.label }}</span>
+              </li>
+            }
           </ul>
         }
       </section>
@@ -151,61 +149,60 @@
       @if (report.titles; as titles) {
         <section
           [attr.aria-label]="'overview.missionReport.honours' | translate"
-          class="rep-honours"
+          class="mission-report__honours"
         >
           @if (report.champion; as champion) {
-            <div [class.rep-champ--none]="!champion.holder" class="rep-champ">
-              <span class="rep-champ-avatar">
+            <div
+              [class.mission-report__champion--vacant]="!champion.holder"
+              class="mission-report__champion"
+            >
+              <span class="mission-report__champion-avatar">
                 <app-avatar [champion]="!!champion.holder" [src]="champion.portrait" size="md" />
               </span>
-              <span class="rep-champ-crown">
+              <span class="mission-report__champion-crown">
                 <svg aria-hidden="true" class="size-4" lucideCrown></svg>
                 {{ 'overview.missionReport.champion' | translate }}
               </span>
               @if (champion.holder) {
-                <b>{{ champion.holder }}</b>
-                <small>{{
+                <b class="mission-report__champion-name">{{ champion.holder }}</b>
+                <small class="mission-report__champion-points">{{
                   'overview.missionReport.championPoints'
                     | translate: { points: format(champion.points) }
                 }}</small>
               } @else {
-                <b>{{ 'overview.missionReport.noChampion' | translate }}</b>
+                <b class="mission-report__champion-name">{{
+                  'overview.missionReport.noChampion' | translate
+                }}</b>
               }
             </div>
           }
-          <ul class="rep-medals">
+          <ul class="mission-report__medals">
             @for (title of titles; track title.key; let index = $index) {
               <li
-                [class]="title.colorClass"
-                [class.rep-medal--none]="!title.holder"
+                [class.mission-report__medal--vacant]="!title.holder"
                 [style.--i]="index"
-                class="rep-medal"
+                [style.--tone]="title.tone"
+                class="mission-report__medal"
               >
-                <span aria-hidden="true" class="rep-hex clip-hex">
-                  <span class="clip-hex">
-                    @switch (title.icon) {
-                      @case ('wrench') {
-                        <svg [lucideIcon]="concepts.components"></svg>
-                      }
-                      @case ('wheat') {
-                        <svg [lucideIcon]="concepts.food"></svg>
-                      }
-                      @case ('flame') {
-                        <svg lucideFlame></svg>
-                      }
-                      @case ('target') {
-                        <svg lucideTarget></svg>
-                      }
-                    }
+                <span
+                  aria-hidden="true"
+                  class="mission-report__hex mission-report__hex--medal clip-hex"
+                >
+                  <span class="mission-report__hex-face clip-hex">
+                    <svg [lucideIcon]="titleIcons[title.icon]"></svg>
                   </span>
                 </span>
-                <em>{{ 'common.title.' + title.key | translate }}</em>
-                <span class="rep-holder">
+                <em class="mission-report__medal-name">{{
+                  'common.title.' + title.key | translate
+                }}</em>
+                <span class="mission-report__medal-holder">
                   @if (title.holder) {
                     <app-avatar [src]="title.portrait" size="xs" />
-                    <b>{{ title.holder }}</b>
+                    <b class="mission-report__medal-holder-name">{{ title.holder }}</b>
                   } @else {
-                    <b>{{ 'overview.missionReport.notAwarded' | translate }}</b>
+                    <b class="mission-report__medal-holder-name">{{
+                      'overview.missionReport.notAwarded' | translate
+                    }}</b>
                   }
                 </span>
               </li>
@@ -213,14 +210,17 @@
           </ul>
         </section>
       } @else {
-        <p class="rep-not-frozen">{{ 'overview.missionReport.notFrozen' | translate }}</p>
+        <p class="mission-report__not-frozen">
+          {{ 'overview.missionReport.notFrozen' | translate }}
+        </p>
       }
     </div>
 
-    <footer class="rep-foot">
+    <footer class="mission-report__footer">
       @if (report.next; as next) {
-        <p class="rep-next">
-          {{ 'overview.missionReport.nextLabel' | translate }} <b>{{ next.planetName }}</b
+        <p class="mission-report__next">
+          {{ 'overview.missionReport.nextLabel' | translate }}
+          <b class="mission-report__highlight">{{ next.planetName }}</b
           >,
           {{
             'overview.missionReport.nextSub'
@@ -231,7 +231,7 @@
       <button
         appButton="primary"
         (click)="closed.emit()"
-        class="rep-continue flex min-h-11 items-center justify-center px-6 py-2 text-base font-semibold [--notch:0.5rem]"
+        class="mission-report__continue"
         type="button"
       >
         {{ 'overview.missionReport.continue' | translate }}

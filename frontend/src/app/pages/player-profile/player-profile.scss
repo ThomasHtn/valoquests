@@ -1,0 +1,313 @@
+@use 'tools' as *;
+
+.player-profile__back-aside {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  color: var(--color-text-muted);
+}
+
+.player-profile__not-found-action {
+  --notch: 0.625rem;
+
+  min-height: 3rem;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.player-profile__banner-skeleton {
+  border-left: 2px solid var(--color-surface-700);
+  background-color: tint(text-primary, 4%);
+}
+
+.player-profile__skeleton-bar {
+  background-color: var(--color-surface-700);
+}
+
+.player-profile__skeleton-bar--round {
+  border-radius: 9999px;
+}
+
+/* Same surface as a registry row, read as that row opened up. */
+.player-profile__banner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border-left: 2px solid tint(text-primary, 15%);
+  background-color: tint(text-primary, 4%);
+
+  @include from(sm) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+  }
+}
+
+.player-profile__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+
+  @include from(sm) {
+    font-size: 1.875rem;
+  }
+}
+
+.player-profile__name--champion {
+  color: var(--color-accent-gold);
+}
+
+.player-profile__name-text {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.player-profile__tag {
+  margin-top: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  color: var(--color-text-muted);
+}
+
+.player-profile__tier {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--tone);
+}
+
+.player-profile__rating {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-profile__rating-unit {
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+/* One scrolling line from `sm`, wrapping below so no block hides. */
+.player-profile__filters {
+  flex-wrap: wrap;
+
+  @include from(sm) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+}
+
+.player-profile__segment-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  background-color: tint(text-primary, 4%);
+
+  @include below(sm) {
+    width: 100%;
+  }
+}
+
+/* First on a phone since it changes the whole page; pushed to the bar's end above. */
+.player-profile__segment-group--view {
+  @include below(sm) {
+    order: -9999;
+  }
+
+  @include from(sm) {
+    margin-inline-start: auto;
+  }
+}
+
+.player-profile__view-segments {
+  @include below(sm) {
+    width: 100%;
+
+    > * {
+      flex: 1;
+    }
+  }
+}
+
+/* Look from the global `segment`; stretched to the group's height. */
+.player-profile__segment {
+  align-self: stretch;
+}
+
+/* Tinted and notched like a pressed segment; the polygon is `notch-tr`'s, applied only when active. */
+.player-profile__overflow-modes--active {
+  background-color: tint(brand-500, 15%);
+  clip-path: polygon(0 0, calc(100% - 0.5rem) 0, 100% 0.5rem, 100% 100%, 0 100%);
+}
+
+.player-profile__reset {
+  flex-shrink: 0;
+  min-height: 2.5rem;
+  padding-inline: 0.5rem;
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    color: var(--color-text-primary);
+  }
+}
+
+/* The win rate leads with the wide column; shared with its skeleton. */
+.player-profile__stat-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  @include from(sm) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include from(lg) {
+    grid-template-columns: minmax(0, 1.6fr) repeat(5, minmax(0, 1fr));
+  }
+}
+
+.player-profile__stat--lead {
+  grid-column: span 2 / span 2;
+
+  @include from(sm) {
+    grid-column: span 3 / span 3;
+  }
+
+  @include from(lg) {
+    grid-column: span 1 / span 1;
+  }
+}
+
+/* Fills the trailing gap of the two- and three-column grids. */
+.player-profile__stat--trail {
+  grid-column: span 2 / span 2;
+
+  @include from(lg) {
+    grid-column: span 1 / span 1;
+  }
+}
+
+/* `currentColor` border: the tile's text colour is the win rate's tone. */
+.player-profile__win-rate {
+  padding: 0.875rem 1rem;
+  border-top: 2px solid currentColor;
+  background-color: tint(text-primary, 4%);
+  color: var(--tone);
+}
+
+.player-profile__win-rate-mark {
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  background-color: var(--tone);
+  rotate: 45deg;
+}
+
+.player-profile__win-rate-bar {
+  height: 0.375rem;
+}
+
+.player-profile__win-rate-label {
+  color: var(--color-text-muted);
+  cursor: help;
+}
+
+.player-profile__win-rate-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.player-profile__record {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.player-profile__stat-skeleton {
+  padding: 0.875rem 1rem;
+  border-top: 2px solid var(--color-surface-700);
+  background-color: tint(text-primary, 4%);
+}
+
+.player-profile__yield {
+  --notch: 0.625rem;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 2px solid var(--color-brand-500);
+}
+
+.player-profile__yield-title {
+  color: var(--color-text-muted);
+}
+
+.player-profile__yield-text {
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  color: var(--color-text-secondary);
+}
+
+.player-profile__yield-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Muted once the ladder cuts the share: red would overstate a smaller reward. */
+.player-profile__yield-next {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.player-profile__yield-next--full {
+  color: var(--color-brand-500);
+}
+
+.player-profile__yield-drops {
+  color: var(--color-text-muted);
+}
+
+.player-profile__yield-link {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  transition: color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    color: var(--color-brand-500);
+  }
+}

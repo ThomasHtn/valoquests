@@ -2,7 +2,7 @@
   (click)="step(1)"
   [attr.aria-label]="'leaderboard.nav.previous' | translate"
   [disabled]="!canGoBack()"
-  class="step focus-ring-inset"
+  class="week-picker__step focus-ring-inset"
   type="button"
 >
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
@@ -18,7 +18,7 @@
   [attr.aria-expanded]="isOpen()"
   [attr.aria-label]="'leaderboard.nav.choose' | translate"
   aria-haspopup="listbox"
-  class="trigger notch-tr focus-ring-inset [--notch:0.5rem]"
+  class="week-picker__trigger notch-tr focus-ring-inset"
   role="combobox"
   type="button"
 >
@@ -27,15 +27,17 @@
       [ngTemplateOutlet]="weekMark"
       [ngTemplateOutletContext]="{ $implicit: current }"
     />
-    <span class="trigger-span">{{ current.label }}</span>
+    <span class="week-picker__trigger-label">{{ current.label }}</span>
     @if (current.live) {
-      <span class="live label-caption text-2xs">{{ 'leaderboard.nav.live' | translate }}</span>
+      <span class="week-picker__live label-caption text-2xs">{{
+        'leaderboard.nav.live' | translate
+      }}</span>
     }
   }
   <svg
-    [class.rotate-180]="isOpen()"
+    [class.week-picker__chevron--open]="isOpen()"
     aria-hidden="true"
-    class="size-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+    class="week-picker__chevron"
     lucideChevronDown
   ></svg>
 </button>
@@ -44,7 +46,7 @@
   (click)="step(-1)"
   [attr.aria-label]="'leaderboard.nav.next' | translate"
   [disabled]="!canGoForward()"
-  class="step focus-ring-inset"
+  class="week-picker__step focus-ring-inset"
   type="button"
 >
   <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
@@ -57,23 +59,23 @@
   [attr.aria-label]="'leaderboard.nav.choose' | translate"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="menu-panel listbox"
+  class="week-picker__listbox menu-panel"
   role="listbox"
   tabindex="-1"
 >
-  <div class="panel-scroll">
+  <div class="week-picker__scroll">
     @for (option of options(); track option.weekStart) {
       @if (startsGroup($index)) {
-        <hr aria-hidden="true" class="rule" />
+        <hr aria-hidden="true" class="week-picker__rule" />
       }
       <!-- Keyboard highlight wears the hover tint; options stay out of the tab order. -->
       <button
         (click)="select(option)"
         [attr.aria-selected]="option.weekStart === selected()"
         [attr.data-active]="$index === activeIndex() || null"
-        [class.text-brand-500]="option.weekStart === selected()"
+        [class.week-picker__option--selected]="option.weekStart === selected()"
         [id]="optionId($index)"
-        class="menu-option option focus-ring-inset text-text-secondary hover:bg-brand-500/8 hover:text-text-primary data-active:bg-brand-500/8 data-active:text-text-primary"
+        class="week-picker__option menu-option focus-ring-inset"
         role="option"
         tabindex="-1"
         type="button"
@@ -82,16 +84,16 @@
           [ngTemplateOutlet]="weekMark"
           [ngTemplateOutletContext]="{ $implicit: option }"
         />
-        <span class="option-span">{{ option.label }}</span>
+        <span class="week-picker__option-label">{{ option.label }}</span>
         <!-- Winner in its own column so portraits line up. -->
-        <span class="option-winner">
+        <span class="week-picker__winner">
           @if (option.live) {
-            <span class="live label-caption text-2xs">{{
+            <span class="week-picker__live label-caption text-2xs">{{
               'leaderboard.nav.live' | translate
             }}</span>
           } @else if (option.winner; as winner) {
             <app-avatar [src]="winner.portrait" size="xs" />
-            <span class="truncate text-sm font-medium text-accent-gold">{{ winner.name }}</span>
+            <span class="week-picker__winner-name">{{ winner.name }}</span>
           }
         </span>
       </button>
@@ -101,7 +103,7 @@
 
 <ng-template #weekMark let-option>
   @if (option.index !== null) {
-    <span class="mark">
+    <span class="week-picker__mark">
       <span class="sr-only">{{
         'leaderboard.nav.weekIndex' | translate: { week: option.index }
       }}</span>
@@ -110,6 +112,6 @@
       }}</span>
     </span>
   } @else {
-    <span aria-hidden="true" class="mark mark--none">—</span>
+    <span aria-hidden="true" class="week-picker__mark week-picker__mark--none">—</span>
   }
 </ng-template>

@@ -1,15 +1,17 @@
+@use 'tools' as *;
+
 :host {
   display: block;
 }
 
 /* Seven cells under one rule: past counts green, today cyan, the picked day tinted, ahead faded. */
-.week {
+.daily-week__strip {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top: 1px solid var(--rule, var(--color-edge));
+  border-top: 1px solid var(--color-edge);
 }
 
-.day {
+.daily-week__day {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,7 +20,7 @@
   min-height: 2.75rem;
   padding: 0.35rem 0.1rem 0.4rem;
   border: 0;
-  border-left: 1px solid var(--rule, var(--color-edge));
+  border-left: 1px solid var(--color-edge);
   background: transparent;
   font: inherit;
   color: var(--color-text-muted);
@@ -26,23 +28,25 @@
   transition:
     background-color 0.2s,
     color 0.2s;
-}
 
-.day:first-child {
-  border-left: 0;
-}
+  &:first-child {
+    border-left: 0;
+  }
 
-.day:not([aria-disabled='true']):hover {
-  background: rgb(236 232 225 / 6%);
-  color: var(--color-text-primary);
-}
+  &:not([aria-disabled='true']) {
+    @include hover {
+      background: tint(text-primary, 6%);
+      color: var(--color-text-primary);
+    }
+  }
 
-.day[aria-disabled='true'] {
-  cursor: default;
+  &[aria-disabled='true'] {
+    cursor: default;
+  }
 }
 
 /* Line height above 1 so Oswald's accented capitals are not clipped. */
-.day-name {
+.daily-week__day-name {
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 600;
@@ -52,73 +56,76 @@
   white-space: nowrap;
 }
 
-.day-score {
+.daily-week__day-score {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
 }
 
-.day--closed {
+.daily-week__day--closed {
   color: var(--color-text-secondary);
 }
 
-.day--closed .day-score {
+.daily-week__day--closed .daily-week__day-score {
   color: var(--color-accent-green);
 }
 
-.day--now,
-.day--now:not([aria-disabled='true']):hover {
+/* Hover keeps the state colour: the hover rule above would grey it otherwise. */
+.daily-week__day--now,
+.daily-week__day--now:not([aria-disabled='true']):hover {
   color: var(--color-accent-cyan);
 }
 
-.day--picked,
-.day--picked:not([aria-disabled='true']):hover {
-  background: color-mix(in srgb, var(--color-accent-cyan) 14%, transparent);
+.daily-week__day--picked,
+.daily-week__day--picked:not([aria-disabled='true']):hover {
+  background: tint(accent-cyan, 14%);
   box-shadow: inset 0 -2px 0 var(--color-accent-cyan);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .day:not([aria-disabled='true']):active {
+  .daily-week__day:not([aria-disabled='true']):active {
     scale: 0.96;
   }
 }
 
-.day--ahead {
+.daily-week__day--ahead {
   opacity: 0.55;
 }
 
 /* Slim: one underlined initial per day, cyan when validated, primary when picked. */
-:host(.daily-week--slim) .week {
+:host(.daily-week--slim) .daily-week__strip {
   display: flex;
   gap: 0.3rem;
   border-top: 0;
 }
 
-:host(.daily-week--slim) .day {
+:host(.daily-week--slim) .daily-week__day {
   flex: none;
   width: 1.5rem;
   min-height: 1.5rem;
   padding: 0 0 0.1rem;
   border-left: 0;
   border-bottom: 2px solid var(--color-edge);
+
+  &:not([aria-disabled='true']) {
+    @include hover {
+      background: none;
+    }
+  }
 }
 
-:host(.daily-week--slim) .day-name {
+:host(.daily-week--slim) .daily-week__day-name {
   font-size: 0.75rem;
   line-height: 1.6;
 }
 
-:host(.daily-week--slim) .day:not([aria-disabled='true']):hover {
-  background: none;
-}
-
-:host(.daily-week--slim) .day--hit {
+:host(.daily-week--slim) .daily-week__day--hit {
   border-bottom-color: var(--color-accent-cyan);
 }
 
-:host(.daily-week--slim) .day--picked,
-:host(.daily-week--slim) .day--picked:not([aria-disabled='true']):hover {
-  background: none;
-  box-shadow: none;
-  color: var(--color-text-primary);
+:host(.daily-week--slim) .daily-week__day--picked,
+:host(.daily-week--slim) .daily-week__day--picked:not([aria-disabled='true']):hover {
   border-bottom-color: var(--color-text-primary);
+  background: none;
+  color: var(--color-text-primary);
+  box-shadow: none;
 }

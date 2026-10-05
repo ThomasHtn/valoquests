@@ -1,5 +1,14 @@
+@use 'tools' as *;
+
+.mission-report__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: tint(surface-950, 80%);
+}
+
 /* One inner margin so every block shares its edges. */
-.rep {
+.mission-report {
   --pad: 2rem;
   --tone: var(--color-brand-500);
 
@@ -12,28 +21,35 @@
   width: min(56rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   translate: -50% -50%;
-  background: var(--color-surface-sunken);
   border: 1.5px solid var(--tone);
+  background: var(--color-surface-sunken);
+
+  /* Focused only to move focus into the dialog; a ring would double the frame. */
+  &:focus {
+    outline: none;
+  }
 }
 
-/* Focused only to move focus into the dialog; a ring would double the frame. */
-.rep:focus {
-  outline: none;
-}
-
-.rep--held {
+.mission-report--held {
   --tone: var(--color-boss-hp-edge);
 }
 
-.rep-scroll {
+.mission-report__scroll {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-/* Header: framed icon, title over the week, framed exit. */
-.rep-head {
+/* Planet, blow author and next target stand out of their sentence. */
+.mission-report__highlight {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ---------- Header: framed icon, title over the week, framed exit ---------- */
+
+.mission-report__header {
   display: grid;
   flex: none;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -43,145 +59,145 @@
   border-bottom: 1px solid var(--color-edge);
 }
 
-.rep-head-icon {
+.mission-report__header-icon,
+.mission-report__close {
   display: grid;
   place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  color: var(--tone);
-  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  border: 1px solid var(--color-edge);
 }
 
-.rep-title {
+.mission-report__header-icon {
+  border-color: color-mix(in srgb, var(--tone) 45%, transparent);
+  color: var(--tone);
+}
+
+.mission-report__title {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--color-text-primary);
+  text-transform: uppercase;
 }
 
-.rep-x {
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+.mission-report__week {
+  @include truncate;
+
+  font-size: 0.9375rem;
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-edge);
+}
+
+.mission-report__close {
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition:
     color 0.15s,
     background-color 0.15s;
+
+  &:hover {
+    background: tint(text-primary, 10%);
+    color: var(--color-text-primary);
+  }
 }
 
-.rep-x:hover {
-  color: var(--color-text-primary);
-  background: rgb(236 232 225 / 10%);
-}
+/* ---------- Verdict: clips the stamp-in scale, which would push a horizontal scrollbar ---------- */
 
-/* Verdict: clips the stamp-in scale, which would push a horizontal scrollbar. */
-.rep-banner {
-  overflow: clip;
+.mission-report__banner {
   padding: 1.75rem var(--pad) 1.5rem;
-  text-align: center;
+  overflow: clip;
   border-bottom: 1px solid var(--color-edge);
+  text-align: center;
 }
 
-.rep-week {
-  overflow: hidden;
-  font-size: 0.9375rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-text-secondary);
-}
-
-.rep-week b {
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.rep-verdict {
+.mission-report__verdict {
   font-family: var(--font-display);
   font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem);
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: 0.06em;
+  color: var(--tone);
   text-transform: uppercase;
   text-wrap: balance;
-  color: var(--tone);
 }
 
-.rep-line {
+.mission-report__summary {
   max-width: 34rem;
   margin: 0.625rem auto 0;
   font-size: 1rem;
-  text-wrap: balance;
   color: var(--color-text-secondary);
+  text-wrap: balance;
 }
 
-.rep-line b {
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
+/* ---------- Hexagon mark: `--hex` sets the width, `--glyph` the icon ---------- */
 
-/* Regular pointy-top hexagon: `--hex` sets the width, `--glyph` the icon. */
-.rep-hex {
+/* Regular pointy-top hexagon, its frame drawn by the half-tinted ground around the face. */
+.mission-report__hex {
   --hex: 3rem;
   --glyph: 1.25rem;
 
   display: grid;
   flex: none;
+  grid-row: 1 / span 2;
   place-items: center;
   width: var(--hex);
   aspect-ratio: 0.88;
   background: color-mix(in srgb, currentcolor 50%, transparent);
 }
 
-.rep-hex > span {
+.mission-report__hex-face {
   display: grid;
   place-items: center;
   width: calc(100% - 3px);
   height: calc(100% - 3px);
   background: var(--color-surface-sunken);
+
+  svg {
+    width: var(--glyph);
+    height: var(--glyph);
+  }
 }
 
-.rep-hex svg {
-  width: var(--glyph);
-  height: var(--glyph);
-}
-
-.rep-hex--lg {
+.mission-report__hex--large {
   --hex: 3.75rem;
   --glyph: 1.5rem;
 }
 
-/* Loot. */
-.rep-loot {
+.mission-report__hex--gain {
+  --hex: 2.5rem;
+  --glyph: 1.125rem;
+}
+
+.mission-report__hex--medal {
+  --hex: 2.75rem;
+  --glyph: 1.125rem;
+}
+
+/* ---------- Loot ---------- */
+
+.mission-report__loot {
   display: grid;
   gap: 1.25rem;
   padding: 1.5rem var(--pad) 0;
 }
 
-.rep-main {
+.mission-report__rescue {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 0.25rem 1.25rem;
 }
 
-.rep-main > .rep-hex {
-  grid-row: 1 / span 2;
-}
-
-.rep-main-fig {
+.mission-report__rescue-figure {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 0.625rem;
 }
 
-.rep-main-fig strong {
+.mission-report__rescue-count {
   font-family: var(--font-display);
   font-size: 2.75rem;
   font-weight: 600;
@@ -190,45 +206,46 @@
   color: var(--color-brand-400);
 }
 
-.rep-main-fig > span {
+.mission-report__rescue-label {
   font-size: 1.125rem;
   color: var(--color-text-secondary);
 }
 
-.rep-leds {
+.mission-report__leds {
   display: grid;
   grid-template-columns: repeat(20, 1fr);
   gap: 3px;
   margin-top: 0.5rem;
 }
 
-.rep-leds i {
+.mission-report__led {
   height: 0.5rem;
   background: var(--color-surface-800);
 }
 
-.rep-leds i.on {
+.mission-report__led--lit {
   background: var(--color-brand-400);
 }
 
-.rep-main-sub {
+.mission-report__rescue-detail {
   grid-column: 2;
   margin-top: 0.25rem;
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
 
-.rep-gains {
+.mission-report__gains,
+.mission-report__medals {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.rep-gain,
-.rep-medal {
+.mission-report__gains {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mission-report__gain,
+.mission-report__medal {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -236,23 +253,29 @@
   padding: 0.75rem 1rem;
 }
 
-.rep-gain > .rep-hex {
-  --hex: 2.5rem;
-  --glyph: 1.125rem;
-}
-
 /* Challenge card tint as on the page ground, not the sunken dialog. */
-.rep-gain {
+.mission-report__gain {
   background: color-mix(in srgb, var(--color-text-primary) 4%, var(--color-surface-950));
   box-shadow: inset 3px 0 0 currentcolor;
 }
 
-.rep-gain > .rep-hex,
-.rep-medal > .rep-hex {
-  grid-row: 1 / span 2;
+.mission-report__gain--food {
+  color: var(--color-accent-green);
 }
 
-.rep-gain strong {
+.mission-report__gain--components {
+  color: var(--color-accent-cyan);
+}
+
+.mission-report__gain--growth {
+  color: var(--color-brand-400);
+}
+
+.mission-report__gain--decline {
+  color: var(--color-boss-hp-edge);
+}
+
+.mission-report__gain-value {
   font-family: var(--font-display);
   font-size: 1.375rem;
   font-weight: 600;
@@ -261,36 +284,37 @@
   white-space: nowrap;
 }
 
-.rep-gain > span:last-child {
+.mission-report__gain-label {
   font-size: 0.9375rem;
   line-height: 1.2;
   color: var(--color-text-secondary);
 }
 
-/* Honours. */
-.rep-honours {
+/* ---------- Honours ---------- */
+
+.mission-report__honours {
   display: grid;
   grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
   gap: 0.75rem;
   padding: 1.5rem var(--pad);
 }
 
-.rep-champ {
+.mission-report__champion {
   display: grid;
   align-content: center;
   justify-items: center;
   gap: 0.375rem;
   padding: 1rem;
+  border: 1px solid tint(brand-500, 45%);
+  background: tint(brand-500, 8%);
   text-align: center;
-  background: rgb(217 149 74 / 8%);
-  border: 1px solid rgb(217 149 74 / 45%);
 }
 
-.rep-champ-avatar {
+.mission-report__champion-avatar {
   display: flex;
 }
 
-.rep-champ-crown {
+.mission-report__champion-crown {
   display: flex;
   align-items: center;
   gap: 0.375rem;
@@ -298,11 +322,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--color-brand-500);
+  text-transform: uppercase;
 }
 
-.rep-champ b {
+.mission-report__champion-name {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 600;
@@ -310,41 +334,34 @@
   letter-spacing: 0.03em;
 }
 
-.rep-champ small {
+.mission-report__champion-points {
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
 }
 
-.rep-champ--none {
-  background: none;
+.mission-report__champion--vacant {
   border-color: var(--color-edge);
+  background: none;
+
+  .mission-report__champion-name {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
 }
 
-.rep-champ--none b {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
-}
-
-.rep-medals {
-  display: grid;
+.mission-report__medals {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.rep-medal {
+/* `--tone` is the title's, overriding the dialog's for this card only. */
+.mission-report__medal {
   border: 1px solid var(--color-edge);
+  color: var(--tone);
 }
 
-.rep-medal > .rep-hex {
-  --hex: 2.75rem;
-  --glyph: 1.125rem;
-}
-
-.rep-medal em {
+.mission-report__medal-name {
   font-family: var(--font-display);
   font-size: 0.875rem;
   font-style: normal;
@@ -353,43 +370,44 @@
   text-transform: uppercase;
 }
 
-.rep-holder {
+.mission-report__medal-holder {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
 }
 
-.rep-holder b {
-  overflow: hidden;
+.mission-report__medal-holder-name {
+  @include truncate;
+
   font-family: var(--font-display);
   font-size: 1.0625rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--color-text-primary);
 }
 
-.rep-medal--none {
+.mission-report__medal--vacant {
   opacity: 0.55;
+
+  .mission-report__hex {
+    color: var(--color-text-muted);
+  }
+
+  .mission-report__medal-holder-name {
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
 }
 
-.rep-medal--none .rep-hex {
-  color: var(--color-text-muted);
-}
-
-.rep-medal--none .rep-holder b {
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
-.rep-not-frozen {
+.mission-report__not-frozen {
   padding: 1.5rem var(--pad);
   color: var(--color-text-muted);
 }
 
-.rep-foot {
+/* ---------- Footer ---------- */
+
+.mission-report__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -398,67 +416,73 @@
   border-top: 1px solid var(--color-edge);
 }
 
-.rep-next {
+.mission-report__next {
   min-width: 0;
   font-size: 1rem;
   color: var(--color-text-secondary);
 }
 
-.rep-next b {
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
+/* Fill and notch come from `appButton="primary"`; size and placement here. */
+.mission-report__continue {
+  --notch: 0.5rem;
 
-/* Fill and notch come from `appButton="primary"`; only placement here. */
-.rep-continue {
+  display: flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
   margin-left: auto;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 /* Short desktop screens (768px laptops): tighter so the report fits without scrolling. */
 @media (width >= 48rem) and (height < 50rem) {
-  .rep-head {
+  .mission-report__header {
     padding-block: 0.625rem;
   }
 
-  .rep-banner {
+  .mission-report__banner {
     padding-block: 1.125rem 1rem;
   }
 
-  .rep-verdict {
+  .mission-report__verdict {
     font-size: 2rem;
   }
 
-  .rep-line {
+  .mission-report__summary {
     margin-top: 0.375rem;
   }
 
-  .rep-loot {
+  .mission-report__loot {
     gap: 1rem;
     padding-top: 1.125rem;
   }
 
-  .rep-main-fig strong {
+  .mission-report__rescue-count {
     font-size: 2.375rem;
   }
 
-  .rep-gain {
+  .mission-report__gain,
+  .mission-report__medal {
     padding-block: 0.5rem;
   }
 
-  .rep-gain > .rep-hex,
-  .rep-medal > .rep-hex {
+  .mission-report__hex--gain,
+  .mission-report__hex--medal {
     --hex: 2.25rem;
     --glyph: 1rem;
   }
 
-  .rep-honours {
+  .mission-report__honours {
     grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr);
     padding-block: 1rem;
   }
 
   /* Side by side, the champion must not outgrow the two rows of medals. */
-  .rep-champ {
+  .mission-report__champion {
     grid-template-columns: auto minmax(0, 1fr);
     justify-items: start;
     column-gap: 0.875rem;
@@ -466,27 +490,23 @@
     text-align: left;
   }
 
-  .rep-champ-avatar {
+  .mission-report__champion-avatar {
     grid-row: 1 / span 3;
   }
 
-  .rep-champ-crown {
+  .mission-report__champion-crown {
     letter-spacing: 0.05em;
     white-space: nowrap;
   }
 
-  .rep-medal {
-    padding-block: 0.5rem;
-  }
-
-  .rep-foot {
+  .mission-report__footer {
     padding-block: 0.75rem;
   }
 }
 
 /* Phone: full-screen sheet, one column. */
-@media (width < 48rem) {
-  .rep {
+@include below(md) {
+  .mission-report {
     --pad: 1.25rem;
 
     inset: 0;
@@ -497,24 +517,24 @@
     border-width: 1.5px 0 0;
   }
 
-  .rep-verdict {
+  .mission-report__verdict {
     font-size: 2rem;
   }
 
-  .rep-gains,
-  .rep-honours {
+  .mission-report__gains,
+  .mission-report__honours {
     grid-template-columns: 1fr;
   }
 
-  .rep-gains {
+  .mission-report__gains {
     gap: 0.75rem;
   }
 
-  .rep-gain {
+  .mission-report__gain {
     padding: 1rem;
   }
 
-  .rep-champ {
+  .mission-report__champion {
     grid-template-columns: auto minmax(0, 1fr);
     justify-items: start;
     column-gap: 1.25rem;
@@ -522,11 +542,11 @@
     text-align: left;
   }
 
-  .rep-champ-avatar {
+  .mission-report__champion-avatar {
     grid-row: 1 / span 3;
   }
 
-  .rep-medal {
+  .mission-report__medal {
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 0.375rem;
@@ -534,83 +554,83 @@
     text-align: center;
   }
 
-  .rep-medal > .rep-hex {
+  .mission-report__hex--medal {
     grid-row: auto;
   }
 
-  .rep-foot {
+  .mission-report__footer {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
   }
 
-  .rep-continue {
+  .mission-report__continue {
     margin-left: 0;
   }
 }
 
 /* One reveal on open: verdict, then loot, then honours. */
 @media (prefers-reduced-motion: no-preference) {
-  .rep-verdict {
-    animation: rep-stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  .mission-report__verdict {
+    animation: mission-report-stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
   }
 
-  .rep-line {
-    animation: rep-fade 0.4s 0.3s both;
+  .mission-report__summary {
+    animation: mission-report-fade 0.4s 0.3s both;
   }
 
-  .rep-main {
-    animation: rep-rise 0.45s 0.2s both;
+  .mission-report__rescue {
+    animation: mission-report-rise 0.45s 0.2s both;
   }
 
-  .rep-leds i.on {
-    animation: rep-led 0.2s both;
+  .mission-report__led--lit {
+    animation: mission-report-led 0.2s both;
     animation-delay: calc(0.45s + var(--i) * 40ms);
   }
 
-  .rep-gain {
-    animation: rep-rise 0.4s both;
+  .mission-report__gain {
+    animation: mission-report-rise 0.4s both;
     animation-delay: calc(0.5s + var(--i) * 120ms);
   }
 
-  .rep-champ {
-    animation: rep-rise 0.45s 0.9s both;
+  .mission-report__champion {
+    animation: mission-report-rise 0.45s 0.9s both;
   }
 
-  .rep-medal {
-    animation: rep-pop 0.35s both;
+  .mission-report__medal {
+    animation: mission-report-pop 0.35s both;
     animation-delay: calc(1.1s + var(--i) * 110ms);
   }
 }
 
-@keyframes rep-stamp {
+@keyframes mission-report-stamp {
   from {
     opacity: 0;
     transform: scale(1.35);
   }
 }
 
-@keyframes rep-fade {
+@keyframes mission-report-fade {
   from {
     opacity: 0;
   }
 }
 
-@keyframes rep-rise {
+@keyframes mission-report-rise {
   from {
     opacity: 0;
     transform: translateY(0.75rem);
   }
 }
 
-@keyframes rep-pop {
+@keyframes mission-report-pop {
   from {
     opacity: 0;
     transform: scale(0.85);
   }
 }
 
-@keyframes rep-led {
+@keyframes mission-report-led {
   from {
     background: var(--color-surface-800);
   }

@@ -1,3 +1,4 @@
+import type { LucideIcon } from '@lucide/angular';
 import { ConsistencyMatch } from '@core/players/progression/player-progression.model';
 
 /**
@@ -75,7 +76,7 @@ export interface ConsistencyTooltip {
   readonly result: string;
 
   /**
-   * Tailwind classes of the outcome chip.
+   * Modifier of the outcome chip, empty for the neutral one.
    */
   readonly resultClass: string;
 
@@ -118,4 +119,24 @@ export interface ConsistencyBandLabels {
    * Caption of the ceiling rule.
    */
   readonly ceiling: string;
+}
+
+/**
+ * One captioned line of the tooltip, under the score.
+ */
+export interface ConsistencyTooltipFact {
+  /**
+   * Icon drawn before the caption.
+   */
+  readonly icon: LucideIcon;
+
+  /**
+   * Translation key of the caption.
+   */
+  readonly labelKey: string;
+
+  /**
+   * Value on the right edge.
+   */
+  readonly value: string;
 }

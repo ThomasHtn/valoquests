@@ -14,6 +14,20 @@
   --color-surface-700: #253645;
   --color-surface-600: #33495b;
 
+  /* Night sky of the overview's base scene, darker than any surface. */
+  --color-night-sky: #040a11;
+  /* Wells, dial tracks and scrims laid on the night scene; a hair less blue than `night-sky`. */
+  --color-night-well: #040a0f;
+
+  /* Rocket blueprint: ink lines on their paper, apart from the amber theme like a drawing. */
+  --color-blueprint-ink: #7fb6d8;
+  --color-blueprint-paper: #0c1b28;
+
+  /* Illustration line between `surface-600` and the text greys (empty plates, rocket ghost). */
+  --color-ghost-line: #5b7688;
+  /* Cold starlight, paler than any text grey. */
+  --color-starlight: #cfe4ee;
+
   /* Panel edges; translucent so the shell's `ambient-field` shows through. */
   --color-edge: --alpha(var(--color-text-primary) / 12%);
   --color-edge-strong: --alpha(var(--color-text-primary) / 20%);

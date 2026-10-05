@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-4">
-  <h3 class="label-caption text-sm text-text-primary">
+  <h3 class="consistency__title label-caption">
     <span [appTooltip]="keys + '.tooltip' | translate" class="focus-ring" tabindex="0">{{
       keys + '.title' | translate
     }}</span>
@@ -17,41 +17,27 @@
       <app-chart-tooltip [anchor]="hovered()">
         @if (tooltip(); as tip) {
           <div class="flex items-baseline gap-2">
-            <span class="font-display text-3xl leading-none font-bold tabular-nums">{{
-              tip.acs
-            }}</span>
-            <span class="text-sm text-text-muted">{{
+            <span class="consistency__tip-score">{{ tip.acs }}</span>
+            <span class="consistency__tip-unit">{{
               'playerProfile.matches.columns.acs' | translate
             }}</span>
           </div>
-          <div class="flex flex-wrap gap-1.5 text-sm font-semibold">
-            <span [class]="tip.resultClass" class="px-2 py-0.5">{{ tip.result }}</span>
+          <div class="consistency__chips flex flex-wrap gap-1.5">
+            <span [class]="tip.resultClass" class="consistency__chip">{{ tip.result }}</span>
             <span
-              [class]="
-                tip.zone === 'inside'
-                  ? 'bg-brand-500/14 text-brand-500'
-                  : 'bg-text-primary/4 text-text-secondary'
-              "
-              class="px-2 py-0.5"
+              [class.consistency__chip--inside]="tip.zone === 'inside'"
+              class="consistency__chip"
               >{{ tip.zoneLabel }}</span
             >
           </div>
-          <ul class="flex flex-col gap-1.5 border-t border-edge pt-2.5 text-sm text-text-muted">
-            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-              <svg aria-hidden="true" class="size-4" lucideMap></svg>
-              <span>{{ keys + '.tip.map' | translate }}</span>
-              <b class="text-right font-semibold text-text-primary">{{ tip.mapName }}</b>
-            </li>
-            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-              <svg aria-hidden="true" class="size-4" lucideUser></svg>
-              <span>{{ keys + '.tip.agent' | translate }}</span>
-              <b class="text-right font-semibold text-text-primary">{{ tip.agentName }}</b>
-            </li>
-            <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-              <svg aria-hidden="true" class="size-4" lucideCalendar></svg>
-              <span>{{ keys + '.tip.date' | translate }}</span>
-              <b class="text-right font-semibold text-text-primary">{{ tip.date }}</b>
-            </li>
+          <ul class="consistency__tip-facts flex flex-col gap-1.5">
+            @for (fact of tipFacts(); track fact.labelKey) {
+              <li class="consistency__tip-fact">
+                <svg [lucideIcon]="fact.icon" aria-hidden="true" class="size-4"></svg>
+                <span>{{ fact.labelKey | translate }}</span>
+                <b class="consistency__tip-value">{{ fact.value }}</b>
+              </li>
+            }
           </ul>
         }
       </app-chart-tooltip>
@@ -60,7 +46,7 @@
 
     <app-key-figures [figures]="figures()" />
   } @else {
-    <p class="text-sm text-text-secondary">
+    <p class="consistency__empty">
       {{ keys + '.empty' | translate: { count: minimumSample } }}
     </p>
   }

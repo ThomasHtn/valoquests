@@ -1,111 +1,244 @@
-/* Night sky; stars are a `box-shadow` list on one pseudo-element, not template nodes. */
-.landing-sky {
-  background:
-    radial-gradient(115% 58% at 50% 108%, rgb(217 149 74 / 18%) 0%, transparent 64%),
-    radial-gradient(80% 44% at 84% 104%, rgb(45 212 191 / 9%) 0%, transparent 62%);
+@use 'sass:list';
+@use 'tools' as *;
+
+/* Star coordinates and opacities, `x y alpha`; the first one is the pseudo-element itself. */
+$stars-wide: (
+  40px 30px 55%,
+  180px 78px 30%,
+  320px 22px 45%,
+  470px 96px 25%,
+  610px 44px 50%,
+  760px 130px 28%,
+  905px 60px 42%,
+  1050px 18px 33%,
+  1180px 104px 46%,
+  96px 158px 26%,
+  250px 190px 38%,
+  402px 146px 22%,
+  548px 208px 34%,
+  690px 172px 44%,
+  830px 226px 24%,
+  980px 154px 36%,
+  1120px 196px 29%,
+  14px 244px 40%,
+  336px 272px 21%,
+  636px 296px 27%,
+  892px 264px 32%,
+  1164px 312px 23%,
+  /* Lower band, thinning toward the horizon so a tall viewport's middle is not flat black. */ 168px
+    356px 18%,
+  470px 402px 22%,
+  742px 372px 15%,
+  1046px 424px 20%,
+  296px 468px 14%,
+  880px 496px 17%
+);
+
+/* Narrow viewports: desktop coordinates would fall off the page. */
+$stars-narrow: (
+  28px 24px 55%,
+  96px 66px 30%,
+  164px 18px 45%,
+  232px 88px 25%,
+  300px 40px 50%,
+  52px 122px 28%,
+  130px 158px 42%,
+  206px 132px 33%,
+  284px 176px 46%,
+  18px 196px 26%,
+  160px 226px 38%,
+  262px 248px 22%,
+  74px 274px 34%,
+  318px 300px 24%,
+  36px 344px 18%,
+  212px 380px 22%,
+  308px 424px 15%,
+  118px 462px 20%,
+  268px 512px 14%
+);
+
+/**
+ * One `box-shadow` per star, so the sky needs no template nodes.
+ */
+@function star-shadows($stars) {
+  $shadows: ();
+  @each $x, $y, $alpha in $stars {
+    $shadows: list.append($shadows, $x $y tint(text-primary, $alpha), comma);
+  }
+  @return $shadows;
 }
 
-.landing-sky::before {
-  content: '';
+/* `h-dvh`: no sized ancestor. Stable gutter: compass hover would toggle the scrollbar. */
+.landing {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 1.75rem 1.5rem;
+  background-color: var(--color-surface-950);
+  color: var(--color-text-primary);
+  scrollbar-gutter: stable;
+
+  @include from(sm) {
+    padding: 3.75rem 5rem;
+  }
+}
+
+/* Night sky over the horizon glow. */
+.landing__sky {
   position: absolute;
-  top: 16px;
-  left: 14px;
-  width: 1px;
-  height: 1px;
-  border-radius: 50%;
-  background: rgb(236 232 225 / 55%);
-  box-shadow:
-    40px 30px rgb(236 232 225 / 55%),
-    180px 78px rgb(236 232 225 / 30%),
-    320px 22px rgb(236 232 225 / 45%),
-    470px 96px rgb(236 232 225 / 25%),
-    610px 44px rgb(236 232 225 / 50%),
-    760px 130px rgb(236 232 225 / 28%),
-    905px 60px rgb(236 232 225 / 42%),
-    1050px 18px rgb(236 232 225 / 33%),
-    1180px 104px rgb(236 232 225 / 46%),
-    96px 158px rgb(236 232 225 / 26%),
-    250px 190px rgb(236 232 225 / 38%),
-    402px 146px rgb(236 232 225 / 22%),
-    548px 208px rgb(236 232 225 / 34%),
-    690px 172px rgb(236 232 225 / 44%),
-    830px 226px rgb(236 232 225 / 24%),
-    980px 154px rgb(236 232 225 / 36%),
-    1120px 196px rgb(236 232 225 / 29%),
-    14px 244px rgb(236 232 225 / 40%),
-    336px 272px rgb(236 232 225 / 21%),
-    636px 296px rgb(236 232 225 / 27%),
-    892px 264px rgb(236 232 225 / 32%),
-    1164px 312px rgb(236 232 225 / 23%),
-    /* Lower band, thinning toward the horizon so a tall viewport's
-       middle is not flat black. */
-    168px 356px rgb(236 232 225 / 18%),
-    470px 402px rgb(236 232 225 / 22%),
-    742px 372px rgb(236 232 225 / 15%),
-    1046px 424px rgb(236 232 225 / 20%),
-    296px 468px rgb(236 232 225 / 14%),
-    880px 496px rgb(236 232 225 / 17%);
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(115% 58% at 50% 108%, tint(brand-500, 18%) 0%, transparent 64%),
+    radial-gradient(80% 44% at 84% 104%, tint(accent-cyan, 9%) 0%, transparent 62%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 14px;
+    width: 1px;
+    height: 1px;
+    border-radius: 50%;
+    background: tint(text-primary, 55%);
+    box-shadow: star-shadows($stars-wide);
+
+    @include below(sm) {
+      box-shadow: star-shadows($stars-narrow);
+    }
+  }
 }
 
-/* Leaves a slice of viewport under the compass; `min-height` so short viewports scroll instead. */
-div.landing-poster {
+/* Promise on top, door below; leaves a slice of viewport under the compass, scrolls when short. */
+.landing__poster {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3rem;
   min-height: calc(100% - 8vh);
+
+  @include from(sm) {
+    gap: 4rem;
+  }
+}
+
+/* Wordmark: not a heading, not translated. */
+.landing__wordmark {
+  background-image: linear-gradient(
+    to bottom right in oklab,
+    var(--color-brand-400) 0%,
+    var(--color-brand-500) 100%
+  );
+  background-clip: text;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: calc(1 / 0.75);
+  letter-spacing: var(--tracking-label-wide);
+  color: transparent;
+  text-transform: uppercase;
+}
+
+/* Leading above 1: Oswald's capital accents would hit the line above. */
+.landing__title {
+  max-width: 18.5rem;
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.12;
+  text-transform: uppercase;
+
+  @include from(sm) {
+    max-width: 31rem;
+    font-size: 3.75rem;
+  }
+
+  @include from(lg) {
+    max-width: 37rem;
+    font-size: 4.5rem;
+  }
+}
+
+.landing__title-highlight {
+  color: var(--color-brand-500);
+}
+
+/* Measure in `rem`: `ch` is a third narrower in a condensed face. */
+.landing__lead {
+  max-width: 32rem;
+  font-size: var(--text-lead);
+  line-height: var(--text-lead--line-height);
+  color: var(--color-text-secondary);
+  text-wrap: balance;
+}
+
+.landing__lead-emphasis {
+  color: var(--color-text-primary);
+}
+
+.landing__marks {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.75rem;
+
+  @include from(sm) {
+    column-gap: 2.25rem;
+  }
+}
+
+.landing__mark-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-brand-500);
+}
+
+.landing__mark-label {
+  color: var(--color-text-muted);
 }
 
 /* Horizon fading toward the compass; an even rule would read as a section divider. */
-.landing-rule {
-  background: linear-gradient(90deg, transparent, rgb(236 232 225 / 22%));
-}
+.landing__rule {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, tint(text-primary, 22%));
 
-.landing-rule-end {
-  background: linear-gradient(90deg, rgb(236 232 225 / 22%), transparent);
-}
+  /* Full width below `lg`: fades at both ends, brighter middle to stay visible. */
+  @include below(lg) {
+    background: linear-gradient(90deg, transparent, tint(text-primary, 34%) 50%, transparent);
+  }
 
-/* Full-width rule below `lg`: fades at both ends, brighter middle to stay visible. */
-@media (width < 64rem) {
-  .landing-rule {
-    background: linear-gradient(90deg, transparent, rgb(236 232 225 / 34%) 50%, transparent);
+  @include from(lg) {
+    flex: 1;
   }
 }
 
-/*
- * Short laptop screens: shrink the headline, never the compass, to keep both above the fold.
- * Width-guarded so phones are untouched; the type selector beats Tailwind's size utilities.
- */
+/* The second rule only exists beside the compass, from `lg`. */
+.landing__rule--end {
+  display: none;
+  background: linear-gradient(90deg, tint(text-primary, 22%), transparent);
+
+  @include from(lg) {
+    display: block;
+  }
+}
+
+/* Short laptop screens: shrink the headline, never the compass, to keep both above the fold. */
 @media (width >= 40rem) and (height < 56rem) {
-  h1.landing-title {
+  .landing__title {
     font-size: 2.75rem;
   }
 
-  div.landing-poster {
+  .landing__poster {
     gap: 2rem;
     /* Gives the room under the compass back to the composition. */
     min-height: 100%;
-  }
-}
-
-/* Narrow viewports: desktop star coordinates would fall off the page. */
-@media (width < 40rem) {
-  .landing-sky::before {
-    box-shadow:
-      28px 24px rgb(236 232 225 / 55%),
-      96px 66px rgb(236 232 225 / 30%),
-      164px 18px rgb(236 232 225 / 45%),
-      232px 88px rgb(236 232 225 / 25%),
-      300px 40px rgb(236 232 225 / 50%),
-      52px 122px rgb(236 232 225 / 28%),
-      130px 158px rgb(236 232 225 / 42%),
-      206px 132px rgb(236 232 225 / 33%),
-      284px 176px rgb(236 232 225 / 46%),
-      18px 196px rgb(236 232 225 / 26%),
-      160px 226px rgb(236 232 225 / 38%),
-      262px 248px rgb(236 232 225 / 22%),
-      74px 274px rgb(236 232 225 / 34%),
-      318px 300px rgb(236 232 225 / 24%),
-      36px 344px rgb(236 232 225 / 18%),
-      212px 380px rgb(236 232 225 / 22%),
-      308px 424px rgb(236 232 225 / 15%),
-      118px 462px rgb(236 232 225 / 20%),
-      268px 512px rgb(236 232 225 / 14%);
   }
 }

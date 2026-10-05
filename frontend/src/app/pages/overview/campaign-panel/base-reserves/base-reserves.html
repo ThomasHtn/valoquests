@@ -1,112 +1,87 @@
 @let reserves = this.reserves();
-<div class="reserve">
-  <div class="card">
-    <div class="tank">
-      <span aria-hidden="true" class="hex-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-5" [lucideIcon]="concepts.food"></svg></span
-      ></span>
-      <div class="tank-body">
-        <p class="tank-top">
-          <span class="label-caption text-2xs text-text-secondary">{{
-            'campaign.reserves.food' | translate
-          }}</span>
-          <span [appCountUp]="reserves.food.stock" class="tank-v tabular-nums"></span>
-        </p>
-        <span
-          [style.--lvl]="percent(reserves.food.fraction)"
-          appInView
-          aria-hidden="true"
-          class="tank-bar"
-          ><i></i
+<div class="base-reserves">
+  <div class="base-reserves__card">
+    @for (key of tankKeys; track key) {
+      @let tank = reserves[key];
+      <div [class]="'base-reserves__tank base-reserves__tank--' + key">
+        <span aria-hidden="true" class="hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-5" [lucideIcon]="concepts[key]"></svg></span
         ></span>
-        <p class="tank-sub">
-          {{ 'campaign.reserves.foodCapacity' | translate }}
-          <b class="tabular-nums">{{
-            'campaign.reserves.capacity' | translate: { count: format(reserves.food.capacity) }
-          }}</b>
-          {{
-            'campaign.reserves.of'
-              | translate: { wounded: format(reserves.wounded), planet: reserves.planetName }
-          }}
-        </p>
-        <p class="label-caption text-2xs leading-snug text-text-muted">
-          {{ 'campaign.reserves.upkeep' | translate: { count: format(reserves.dailyUpkeep) } }}
-        </p>
+        <div class="base-reserves__tank-body">
+          <p class="base-reserves__tank-head">
+            <span class="label-caption text-2xs text-text-secondary">{{
+              'campaign.reserves.' + key | translate
+            }}</span>
+            <span [appCountUp]="tank.stock" class="base-reserves__tank-stock tabular-nums"></span>
+          </p>
+          <span
+            [style.--level]="percent(tank.fraction)"
+            appInView
+            aria-hidden="true"
+            class="base-reserves__tank-gauge"
+            ><i class="base-reserves__tank-fill"></i
+          ></span>
+          <p class="base-reserves__tank-capacity">
+            {{ 'campaign.reserves.' + key + 'Capacity' | translate }}
+            <b class="base-reserves__strong tabular-nums">{{
+              'campaign.reserves.capacity' | translate: { count: format(tank.capacity) }
+            }}</b>
+            {{
+              'campaign.reserves.of'
+                | translate: { wounded: format(reserves.wounded), planet: reserves.planetName }
+            }}
+          </p>
+          @if (key === 'food') {
+            <p class="label-caption text-2xs leading-snug text-text-muted">
+              {{ 'campaign.reserves.upkeep' | translate: { count: format(reserves.dailyUpkeep) } }}
+            </p>
+          }
+        </div>
       </div>
-    </div>
-    <div class="tank tank--comp">
-      <span aria-hidden="true" class="hex-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-5" [lucideIcon]="concepts.components"></svg></span
-      ></span>
-      <div class="tank-body">
-        <p class="tank-top">
-          <span class="label-caption text-2xs text-text-secondary">{{
-            'campaign.reserves.components' | translate
-          }}</span>
-          <span [appCountUp]="reserves.components.stock" class="tank-v tabular-nums"></span>
-        </p>
-        <span
-          [style.--lvl]="percent(reserves.components.fraction)"
-          appInView
-          aria-hidden="true"
-          class="tank-bar"
-          ><i></i
-        ></span>
-        <p class="tank-sub">
-          {{ 'campaign.reserves.componentsCapacity' | translate }}
-          <b class="tabular-nums">{{
-            'campaign.reserves.capacity'
-              | translate: { count: format(reserves.components.capacity) }
-          }}</b>
-          {{
-            'campaign.reserves.of'
-              | translate: { wounded: format(reserves.wounded), planet: reserves.planetName }
-          }}
-        </p>
-      </div>
-    </div>
+    }
   </div>
 
-  <div class="card">
+  <div class="base-reserves__card">
     <p class="label-caption text-2xs text-text-secondary">
       {{ 'campaign.reserves.rescued' | translate }}
     </p>
-    <p class="rescue-fig">
-      <span [appCountUp]="reserves.rescued" class="rescue-n tabular-nums"></span>
-      <span class="rescue-of">{{
+    <p class="base-reserves__rescued">
+      <span
+        [appCountUp]="reserves.rescued"
+        class="base-reserves__rescued-count tabular-nums"
+      ></span>
+      <span class="base-reserves__rescued-spotted">{{
         'campaign.reserves.spotted' | translate: { count: format(reserves.spotted) }
       }}</span>
     </p>
-    <div appInView aria-hidden="true" class="stackbar">
-      <span [style.width.%]="reserves.shares[0]" class="bg-brand-400"></span>
-      <span [style.width.%]="reserves.shares[1]" class="bg-accent-blue"></span>
-      <span [style.width.%]="reserves.shares[2]" class="bg-text-primary/20"></span>
+    <div appInView aria-hidden="true" class="base-reserves__rescue-bar">
+      @for (share of rescueShares(); track share.tone) {
+        <span
+          [class]="'base-reserves__rescue-share base-reserves__rescue-share--' + share.tone"
+          [style.width.%]="share.percent"
+        ></span>
+      }
     </div>
-    <ul class="stack-legend">
-      <li>
-        <i class="bg-brand-400"></i><b class="tabular-nums">{{ format(reserves.byExtraction) }}</b>
-        {{ 'campaign.reserves.byExtraction' | translate }}
-      </li>
-      <li>
-        <i class="bg-accent-blue"></i
-        ><b class="tabular-nums">{{ format(reserves.byChallenges) }}</b>
-        {{
-          'campaign.reserves.byChallenges' | translate: { percent: reserves.byChallengesPercent }
-        }}
-      </li>
-      <li>
-        <i class="bg-text-primary/20"></i
-        ><b class="tabular-nums">{{ format(reserves.leftBehind) }}</b>
-        {{ 'campaign.reserves.leftBehind' | translate }}
-      </li>
+    <ul class="base-reserves__rescue-legend">
+      @for (share of rescueShares(); track share.tone) {
+        <li class="base-reserves__rescue-legend-item">
+          <i
+            [class]="'base-reserves__rescue-swatch base-reserves__rescue-swatch--' + share.tone"
+          ></i
+          ><b class="base-reserves__strong tabular-nums">{{ format(share.count) }}</b>
+          {{ share.labelKey | translate: { percent: reserves.byChallengesPercent } }}
+        </li>
+      }
     </ul>
-    <p class="rescue-note">
+    <p class="base-reserves__guardians">
       <svg
         aria-hidden="true"
-        class="size-4 text-boss-hp-edge"
+        class="base-reserves__guardians-icon size-4"
         [lucideIcon]="concepts.guardian"
       ></svg>
-      <b>{{ 'campaign.reserves.guardians' | translate: { count: reserves.guardiansDefeated } }}</b>
+      <b class="base-reserves__strong">{{
+        'campaign.reserves.guardians' | translate: { count: reserves.guardiansDefeated }
+      }}</b>
       {{ 'campaign.reserves.weeksPlayed' | translate: { count: reserves.weeksSettled } }}
     </p>
   </div>
@@ -114,49 +89,27 @@
 
 <!-- What capped each Sunday; hidden before the first one to avoid a row of zeros. -->
 @if (reserves.weeksSettled > 0) {
-  <div class="limit-band">
-    <div class="limit-lead">
+  <div class="base-reserves__limits">
+    <div class="base-reserves__limits-lead">
       <span class="label-caption text-2xs text-brand-400">{{
         'campaign.reserves.limitTitle' | translate
       }}</span>
-      <span>{{
+      <span class="base-reserves__limits-weeks">{{
         'campaign.reserves.weeksPlayed' | translate: { count: reserves.weeksSettled }
       }}</span>
     </div>
-    <div class="limit-item limit-item--food">
-      <span aria-hidden="true" class="hex-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-4" [lucideIcon]="concepts.food"></svg></span
-      ></span>
-      <div>
-        <p class="limit-n">{{ reserves.limitedByFood }} / {{ reserves.weeksSettled }}</p>
-        <p class="limit-t">
-          {{ 'campaign.reserves.limitFood' | translate: { count: reserves.limitedByFood } }}
-        </p>
+    @for (limit of sundayLimits(); track limit.tone) {
+      <div [class]="'base-reserves__limit base-reserves__limit--' + limit.tone">
+        <span aria-hidden="true" class="base-reserves__limit-mark hex-mark clip-hex"
+          ><span class="clip-hex"><svg class="size-4" [lucideIcon]="limit.icon"></svg></span
+        ></span>
+        <div>
+          <p class="base-reserves__limit-count">{{ limit.count }} / {{ reserves.weeksSettled }}</p>
+          <p class="base-reserves__limit-caption">
+            {{ limit.labelKey | translate: { count: limit.count } }}
+          </p>
+        </div>
       </div>
-    </div>
-    <div class="limit-item limit-item--comp">
-      <span aria-hidden="true" class="hex-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-4" [lucideIcon]="concepts.components"></svg></span
-      ></span>
-      <div>
-        <p class="limit-n">{{ reserves.limitedByComponents }} / {{ reserves.weeksSettled }}</p>
-        <p class="limit-t">
-          {{
-            'campaign.reserves.limitComponents' | translate: { count: reserves.limitedByComponents }
-          }}
-        </p>
-      </div>
-    </div>
-    <div class="limit-item limit-item--group">
-      <span aria-hidden="true" class="hex-mark clip-hex"
-        ><span class="clip-hex"><svg class="size-4" [lucideIcon]="concepts.wounded"></svg></span
-      ></span>
-      <div>
-        <p class="limit-n">{{ reserves.wholeGroup }} / {{ reserves.weeksSettled }}</p>
-        <p class="limit-t">
-          {{ 'campaign.reserves.limitGroup' | translate: { count: reserves.wholeGroup } }}
-        </p>
-      </div>
-    </div>
+    }
   </div>
 }

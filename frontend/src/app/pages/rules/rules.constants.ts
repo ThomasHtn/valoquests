@@ -1,3 +1,4 @@
+import { GuardianCategory } from '@core/campaign/campaign-week.model';
 import { TitleKey } from '@core/campaign/titles/campaign-title.model';
 import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
 import {
@@ -12,9 +13,7 @@ import {
   SundayExampleRow,
 } from './rules.model';
 
-/**
- * Figures copied from `docs/GAMEPLAY.md`; static because the page explains the game as written.
- */
+/* Figures copied from `docs/GAMEPLAY.md`; static because the page explains the game as written. */
 
 /**
  * Reference the worked examples use, the document's own.
@@ -122,6 +121,15 @@ export const GUARDIAN_LOSS_LADDER: readonly LossStep[] = [
 ];
 
 /**
+ * Heading modifier per guardian category, matching the campaign page's colours.
+ */
+export const GUARDIAN_CATEGORY_MODIFIERS: Readonly<Record<GuardianCategory, string>> = {
+  MINOR: 'rules__heading--minor',
+  STANDARD: 'rules__heading--standard',
+  ELITE: 'rules__heading--elite',
+};
+
+/**
  * The ten weeks: guardian class, hit points and group size.
  */
 export const CAMPAIGN_WEEKS: readonly CampaignWeekShape[] = [
@@ -176,10 +184,10 @@ export const RULE_TITLES: readonly TitleKey[] = ['CHAMPION', ...WEEKLY_TITLES];
  * Closing sheet: the constants a player can picture, in reading order.
  */
 export const RULE_CONSTANTS: readonly RuleConstant[] = [
-  { key: 'syncInterval', icon: 'sync', tone: 'text-brand-500' },
-  { key: 'growth', icon: 'base', tone: 'text-brand-500' },
-  { key: 'upkeep', icon: 'food', tone: 'text-accent-green' },
-  { key: 'componentsPerRescue', icon: 'components', tone: 'text-accent-cyan' },
-  { key: 'foodPerRescue', icon: 'bed', tone: 'text-accent-green' },
-  { key: 'famine', icon: 'food', tone: 'text-accent-green' },
+  { key: 'syncInterval', icon: 'sync', tone: 'brand' },
+  { key: 'growth', icon: 'base', tone: 'brand' },
+  { key: 'upkeep', icon: 'food', tone: 'food' },
+  { key: 'componentsPerRescue', icon: 'components', tone: 'components' },
+  { key: 'foodPerRescue', icon: 'bed', tone: 'food' },
+  { key: 'famine', icon: 'food', tone: 'food' },
 ];

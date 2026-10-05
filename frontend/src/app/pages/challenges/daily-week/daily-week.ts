@@ -37,4 +37,13 @@ export class DailyWeek {
    * Index of the day whose challenge is on screen.
    */
   public readonly selected = model<number | null>(null);
+
+  /**
+   * Shows a drawn day's challenge; an undrawn day has none to show.
+   */
+  protected pick(day: DayCell): void {
+    if (day.drawn) {
+      this.selected.set(day.index);
+    }
+  }
 }

@@ -1,21 +1,11 @@
-<span [attr.aria-label]="label() || null" class="countdown" role="timer">
-  <span aria-hidden="true" class="cd-dot"></span>
-  @if (withDays()) {
-    <span class="cd-unit"
-      ><b class="tabular-nums">{{ parts().days }}</b
-      ><small>j</small></span
-    >
+<span [attr.aria-label]="label() || null" class="countdown__timer" role="timer">
+  <span aria-hidden="true" class="countdown__beat"></span>
+  @for (unit of units(); track unit.key) {
+    <span [class.countdown__unit--seconds]="unit.key === 'seconds'" class="countdown__unit">
+      <b class="countdown__value">{{ unit.value }}</b>
+      <small class="countdown__suffix">{{
+        'common.countdown.units.' + unit.key | translate
+      }}</small>
+    </span>
   }
-  <span class="cd-unit"
-    ><b class="tabular-nums">{{ parts().hours }}</b
-    ><small>h</small></span
-  >
-  <span class="cd-unit"
-    ><b class="tabular-nums">{{ parts().minutes }}</b
-    ><small>m</small></span
-  >
-  <span class="cd-unit cd-unit--s"
-    ><b class="tabular-nums">{{ parts().seconds }}</b
-    ><small>s</small></span
-  >
 </span>

@@ -1,16 +1,19 @@
 <!-- No section titles; the rocket leads since the tab's badge counts it. -->
-<div class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)]">
+<div class="campaign-panel">
   <section [attr.aria-label]="'campaign.rocket.title' | translate">
     @defer (on viewport; prefetch on idle) {
       <app-rocket-showcase [campaignNumber]="campaign()?.number ?? 0" [parts]="rocketParts()" />
     } @placeholder {
-      <div class="min-h-[20rem]"></div>
+      <div class="campaign-panel__rocket-placeholder"></div>
     }
   </section>
 
   <div>
     @if (reserves(); as reserves) {
-      <section [attr.aria-label]="'campaign.reserves.title' | translate">
+      <section
+        [attr.aria-label]="'campaign.reserves.title' | translate"
+        class="campaign-panel__reserves"
+      >
         <app-base-reserves [reserves]="reserves" />
         @if (ledger().length > 0) {
           @defer (on viewport; prefetch on idle) {
@@ -23,32 +26,32 @@
     }
 
     <!-- Folded like the ledger; nothing renders before it opens. -->
-    <details (toggle)="toggleHistory($event)" class="fold">
-      <summary class="fold-sum focus-ring">
-        <b class="fold-title">
+    <details (toggle)="toggleHistory($event)" class="campaign-fold">
+      <summary class="campaign-fold__summary focus-ring">
+        <b class="campaign-fold__title">
           <svg aria-hidden="true" class="size-4" lucideHistory></svg>
           {{ 'campaign.history.title' | translate }}
         </b>
-        <span class="fold-cue label-caption text-2xs">
+        <span class="campaign-fold__cue label-caption text-2xs">
           {{ (historyOpen() ? 'campaign.history.hide' : 'campaign.history.show') | translate }}
-          <svg aria-hidden="true" class="fold-chev size-4" lucideChevronDown></svg>
+          <svg aria-hidden="true" class="campaign-fold__chevron size-4" lucideChevronDown></svg>
         </span>
       </summary>
       @if (historyOpen()) {
-        <div class="fold-body">
+        <div class="campaign-fold__body campaign-panel__history-body">
           <app-resource-state
             (retry)="retryHistory()"
             [errorText]="'campaign.history.error' | translate"
             [isError]="historyError()"
             [isLoading]="historyLoading()"
             [loadingText]="'campaign.history.loading' | translate"
-            padding="py-8"
+            padding="fold"
           >
             <!-- Deferred to keep chart.js out of the overview bundle. -->
             @defer (on immediate) {
               <app-campaign-history [curves]="curves()" [rows]="historyRows()" />
             } @placeholder {
-              <div class="min-h-[17rem]"></div>
+              <div class="campaign-panel__history-placeholder"></div>
             }
           </app-resource-state>
         </div>

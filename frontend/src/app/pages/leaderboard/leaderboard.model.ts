@@ -1,11 +1,12 @@
+import type { LucideIcon } from '@lucide/angular';
+
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
-import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**
- * Title held on the board, with its icon and colour.
+ * Title held on the board; the badge resolves its own icon and colour.
  */
-export interface BoardTitle extends TitleVisual {
+export interface BoardTitle {
   /**
    * Weekly title.
    */
@@ -190,4 +191,34 @@ export interface WeekOption {
    * Week winner, `null` while running or when nobody was ranked.
    */
   readonly winner: WeekWinner | null;
+}
+
+/**
+ * Figure a board column holds.
+ */
+export type BoardColumnKey = 'score' | 'damage' | 'points' | 'challenges' | 'matches' | 'streak';
+
+/**
+ * Figure column of the board: a header name when wide, a caption in each row otherwise.
+ */
+export interface BoardColumn {
+  /**
+   * Figure the column holds.
+   */
+  readonly key: BoardColumnKey;
+
+  /**
+   * Concept icon before the row caption.
+   */
+  readonly icon: LucideIcon;
+
+  /**
+   * Translation key of the column name.
+   */
+  readonly label: string;
+
+  /**
+   * Translation key of the header tooltip.
+   */
+  readonly help: string;
 }

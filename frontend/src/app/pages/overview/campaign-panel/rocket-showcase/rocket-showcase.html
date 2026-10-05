@@ -1,50 +1,57 @@
-<div class="showcase">
-  <div class="viewer">
+<div class="rocket-showcase">
+  <div class="rocket-showcase__viewer">
     <svg
       #viewer
       [attr.aria-label]="
         'campaign.rocket.viewerAria' | translate: { built: builtCount(), total: total }
       "
-      class="viewer-svg"
+      class="rocket-showcase__drawing"
       preserveAspectRatio="xMidYMid meet"
       role="img"
       viewBox="0 0 600 520"
     ></svg>
   </div>
 
-  <ol [attr.aria-label]="'campaign.rocket.partsAria' | translate" class="parts">
+  <ol [attr.aria-label]="'campaign.rocket.partsAria' | translate" class="rocket-showcase__parts">
     @for (part of parts(); track part.index) {
       <li>
+        <!-- Only a built part can be shown on the blueprint. -->
         @if (part.state === 'built') {
           <button
             (click)="select(part)"
             [attr.aria-pressed]="part.index === shown()"
-            class="focus-ring part part--built"
+            class="rocket-showcase__part rocket-showcase__part--built focus-ring"
             type="button"
           >
-            <span class="part-no">{{ part.label }}</span>
-            <span class="part-name">{{ part.name }}</span>
-            <span class="part-sub">
-              <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
-              {{ 'campaign.rocket.built' | translate: { week: part.week ?? 0 } }}
-            </span>
+            <ng-container *ngTemplateOutlet="partContent; context: { $implicit: part }" />
           </button>
         } @else {
-          <div [class]="'part part--' + part.state">
-            <span class="part-no">{{ part.label }}</span>
-            <span class="part-name">{{ part.name }}</span>
-            <span class="part-sub">
-              @if (part.state === 'next') {
-                <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
-                {{ 'campaign.rocket.next' | translate }}
-              } @else {
-                <svg aria-hidden="true" class="size-3.5" lucideLock></svg>
-                {{ 'campaign.rocket.locked' | translate: { index: part.index } }}
-              }
-            </span>
+          <div [class]="'rocket-showcase__part rocket-showcase__part--' + part.state">
+            <ng-container *ngTemplateOutlet="partContent; context: { $implicit: part }" />
           </div>
         }
       </li>
     }
   </ol>
 </div>
+
+<ng-template #partContent let-part>
+  <span class="rocket-showcase__part-number">{{ part.label }}</span>
+  <span class="rocket-showcase__part-name">{{ part.name }}</span>
+  <span class="rocket-showcase__part-status">
+    @switch (part.state) {
+      @case ('built') {
+        <svg aria-hidden="true" class="size-3.5" lucideCheck></svg>
+        {{ 'campaign.rocket.built' | translate: { week: part.week ?? 0 } }}
+      }
+      @case ('next') {
+        <svg aria-hidden="true" class="size-3.5" lucideTarget></svg>
+        {{ 'campaign.rocket.next' | translate }}
+      }
+      @default {
+        <svg aria-hidden="true" class="size-3.5" lucideLock></svg>
+        {{ 'campaign.rocket.locked' | translate: { index: part.index } }}
+      }
+    }
+  </span>
+</ng-template>

@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-4">
-  <h3 class="label-caption text-sm text-text-primary">
+  <h3 class="rank-journey__title label-caption">
     <span [appTooltip]="keys + '.tooltip' | translate" class="focus-ring" tabindex="0">{{
       keys + '.title' | translate
     }}</span>
@@ -17,50 +17,37 @@
 
       <app-chart-tooltip [anchor]="hovered()">
         @if (tooltip(); as tip) {
-          <span class="text-sm text-text-muted">{{ tip.heading }}</span>
+          <span class="rank-journey__tip-muted">{{ tip.heading }}</span>
           <div class="flex items-center gap-2.5">
             @if (tip.tier.iconUrl) {
               <img [ngSrc]="tip.tier.iconUrl" alt="" class="size-10" height="40" width="40" />
             }
             <span class="flex flex-col gap-0.5">
-              <strong
-                [class]="tip.tierClass"
-                class="font-display text-xl leading-tight font-semibold"
-                >{{ tip.tier.label }}</strong
-              >
-              <span class="text-sm text-text-muted">{{ tip.caption }}</span>
+              <strong [style.--tone]="tip.tierTone" class="rank-journey__tip-tier">{{
+                tip.tier.label
+              }}</strong>
+              <span class="rank-journey__tip-muted">{{ tip.caption }}</span>
             </span>
           </div>
 
-          <ul class="flex flex-col gap-1.5 border-t border-edge pt-2.5 text-sm text-text-muted">
+          <ul class="rank-journey__tip-facts flex flex-col gap-1.5">
             @if (tip.delta; as delta) {
-              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-                @switch (delta.icon) {
-                  @case ('trendUp') {
-                    <svg aria-hidden="true" class="size-4" lucideTrendingUp></svg>
-                  }
-                  @case ('trendDown') {
-                    <svg aria-hidden="true" class="size-4" lucideTrendingDown></svg>
-                  }
-                  @default {
-                    <svg aria-hidden="true" class="size-4" lucideMinus></svg>
-                  }
-                }
+              <li class="rank-journey__tip-fact">
+                <svg [lucideIcon]="icons[delta.icon]" aria-hidden="true" class="size-4"></svg>
                 <span>{{ tip.deltaCaption }}</span>
                 <b
-                  [class.text-danger]="delta.tone === 'bad'"
-                  [class.text-success]="delta.tone === 'good'"
-                  [class.text-text-primary]="delta.tone === 'neutral'"
-                  class="text-right font-semibold"
+                  [class.rank-journey__tip-value--bad]="delta.tone === 'bad'"
+                  [class.rank-journey__tip-value--good]="delta.tone === 'good'"
+                  class="rank-journey__tip-value"
                   >{{ delta.label }}</b
                 >
               </li>
             }
             @if (tip.lowest && tip.highest) {
-              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-                <svg aria-hidden="true" class="size-4" lucideArrowDownUp></svg>
+              <li class="rank-journey__tip-fact">
+                <svg [lucideIcon]="icons.range" aria-hidden="true" class="size-4"></svg>
                 <span>{{ keys + '.tip.range' | translate }}</span>
-                <b class="flex items-center justify-end gap-1 font-semibold text-text-primary">
+                <b class="rank-journey__tip-value flex items-center justify-end gap-1">
                   @if (tip.lowest.iconUrl) {
                     <img
                       [ngSrc]="tip.lowest.iconUrl"
@@ -71,9 +58,7 @@
                     />
                   }
                   {{ tip.lowest.label }}
-                  <span class="font-normal text-text-muted">{{
-                    keys + '.tip.to' | translate
-                  }}</span>
+                  <span class="rank-journey__tip-range-to">{{ keys + '.tip.to' | translate }}</span>
                   @if (tip.highest.iconUrl) {
                     <img
                       [ngSrc]="tip.highest.iconUrl"
@@ -88,19 +73,17 @@
               </li>
             }
             @if (tip.matchesPlayed !== null && tip.wins !== null) {
-              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-                <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.matches"></svg>
+              <li class="rank-journey__tip-fact">
+                <svg [lucideIcon]="icons.matches" aria-hidden="true" class="size-4"></svg>
                 <span>{{ keys + '.tip.matches' | translate }}</span>
-                <b class="text-right font-semibold text-text-primary tabular-nums">{{
+                <b class="rank-journey__tip-value rank-journey__tip-value--count">{{
                   tip.matchesPlayed
                 }}</b>
               </li>
-              <li class="grid grid-cols-[1rem_auto_1fr] items-center gap-2">
-                <svg aria-hidden="true" class="size-4" lucideTrophy></svg>
+              <li class="rank-journey__tip-fact">
+                <svg [lucideIcon]="icons.wins" aria-hidden="true" class="size-4"></svg>
                 <span>{{ keys + '.tip.wins' | translate }}</span>
-                <b class="text-right font-semibold text-text-primary tabular-nums">{{
-                  tip.wins
-                }}</b>
+                <b class="rank-journey__tip-value rank-journey__tip-value--count">{{ tip.wins }}</b>
               </li>
             }
           </ul>
@@ -111,6 +94,6 @@
 
     <app-key-figures [figures]="figures()" />
   } @else {
-    <p class="text-sm text-text-secondary">{{ keys + '.empty' | translate }}</p>
+    <p class="rank-journey__empty">{{ keys + '.empty' | translate }}</p>
   }
 </div>

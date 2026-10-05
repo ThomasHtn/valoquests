@@ -1,6 +1,7 @@
 import {
   afterNextRender,
   Component,
+  computed,
   ElementRef,
   input,
   output,
@@ -19,6 +20,7 @@ import { DRAWER_EXIT_FALLBACK_MS } from './drawer.constants';
   selector: 'app-drawer',
   imports: [LucideX],
   templateUrl: './drawer.html',
+  styleUrl: './drawer.scss',
 })
 export class Drawer {
   /**
@@ -50,6 +52,17 @@ export class Drawer {
    * Whether the exit animation plays; the dialog closes only once it ends.
    */
   protected readonly closing = signal(false);
+
+  /**
+   * Anchor modifier plus the global enter or exit animation of that anchor.
+   */
+  protected readonly dialogClass = computed(() => {
+    if (this.anchor() === 'center') {
+      return this.closing() ? 'drawer--center fx-modal-out' : 'drawer--center fx-modal-in';
+    }
+
+    return this.closing() ? 'drawer--end fx-sheet-out' : 'drawer--end fx-sheet-in';
+  });
 
   /**
    * Opens the modal once rendered and closes it on backdrop clicks.

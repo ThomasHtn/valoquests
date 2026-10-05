@@ -1,20 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  LucideChevronDown,
-  LucideChevronUp,
-  LucideTrophy,
-  LucideDynamicIcon,
-} from '@lucide/angular';
+import { LucideChevronDown, LucideChevronUp, LucideDynamicIcon } from '@lucide/angular';
 
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { weekDayIndex } from '@core/campaign/calendar/campaign-calendar.utils';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { CampaignHistory } from '@core/campaign/campaign-history.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
 import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { daysBetween } from '@core/date/date.utils';
@@ -22,6 +17,7 @@ import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resou
 import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
@@ -32,6 +28,7 @@ import {
   RankingHistoryWeek,
 } from '@core/ranking/ranking.model';
 import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate';
@@ -45,8 +42,8 @@ import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import {
+  boardColumns,
   formatWeekSpan,
   placeWeekInCampaign,
   resolveSelectedWeek,
@@ -56,7 +53,6 @@ import {
 import { BoardRow, BoardStreak, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Weekly ranking, live or a closed week browsed back to.
@@ -66,7 +62,8 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   selector: 'app-leaderboard',
   imports: [
     LucideDynamicIcon,
-    LucideTrophy,
+    LucideChevronDown,
+    LucideChevronUp,
     TranslatePipe,
     NgTemplateOutlet,
     RouterLink,
@@ -81,8 +78,6 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
     TitleBadge,
     Tooltip,
     WeekPicker,
-    LucideChevronDown,
-    LucideChevronUp,
   ],
   templateUrl: './leaderboard.html',
   styleUrl: './leaderboard.scss',
@@ -90,11 +85,6 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Leaderboard {
-  /**
-   * Concept icons for the template.
-   */
-  protected readonly concepts = CONCEPT_ICONS;
-
   /**
    * Ranking feed: live week, closed weeks and today's board.
    */
@@ -118,12 +108,12 @@ export class Leaderboard {
   /**
    * The live week's ranking.
    */
-  protected readonly currentResource = this.rankingApi.current;
+  private readonly currentResource = this.rankingApi.current;
 
   /**
    * Closed weeks' rankings, offered in the week picker.
    */
-  protected readonly historyResource = this.rankingApi.history;
+  private readonly historyResource = this.rankingApi.history;
 
   /**
    * The running campaign, for its weeks and difficulty.
@@ -268,12 +258,17 @@ export class Leaderboard {
   /**
    * Whether the week belongs to a campaign (damage and wounded) rather than plain points.
    */
-  protected readonly rescueActive = computed(() => this.board()?.weekIndex != null);
+  private readonly rescueActive = computed(() => this.board()?.weekIndex != null);
+
+  /**
+   * Figure columns, named for the week's kind.
+   */
+  protected readonly columns = computed(() => boardColumns(this.rescueActive()));
 
   /**
    * Eyebrow: the week, then the campaign difficulty.
    */
-  protected readonly headerEyebrow = computed(() => {
+  private readonly headerEyebrow = computed(() => {
     const board = this.board();
     const campaign = this.campaign();
     if (!board) {
@@ -316,7 +311,7 @@ export class Leaderboard {
   protected readonly nobodyPlate = computed<EmptyPlateContent>(() => {
     const board = this.board();
     const current = this.current();
-    const t = (suffix: string, params?: Readonly<Record<string, number>>) =>
+    const t: TranslateFn = (suffix, params) =>
       this.translation.translate(`leaderboard.board.nobody.${suffix}`, params);
     const readouts: EmptyReadout[] = [];
     if (board?.live && current) {
@@ -324,8 +319,7 @@ export class Leaderboard {
         tone: 'info',
         label: t('day'),
         value: t('dayValue', {
-          day:
-            Math.min(WEEK_DAYS - 1, Math.max(0, daysBetween(current.weekStart, current.today))) + 1,
+          day: weekDayIndex(current.weekStart, current.today) + 1,
           days: WEEK_DAYS,
         }),
       });
@@ -358,7 +352,7 @@ export class Leaderboard {
    * Formats a score in the reader's language.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 
   /**
@@ -478,11 +472,7 @@ export class Leaderboard {
       return null;
     }
     const value = measures[key];
-    return {
-      key,
-      ...resolveTitleVisual(key),
-      measure: value === undefined ? null : this.measure(key, value),
-    };
+    return { key, measure: value === undefined ? null : this.measure(key, value) };
   }
 
   /**

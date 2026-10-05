@@ -1,0 +1,26 @@
+@use 'tools' as *;
+
+/* The coloured rule is the host's leading border. */
+:host {
+  display: block;
+  padding-left: 0.75rem;
+  border-left: 2px solid;
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  text-wrap: pretty;
+}
+
+:host(.inline-message--info) {
+  border-color: tint(brand-500, 60%);
+  color: var(--color-text-secondary);
+}
+
+:host(.inline-message--success) {
+  border-color: tint(success, 60%);
+  color: var(--color-success);
+}
+
+:host(.inline-message--danger) {
+  border-color: tint(danger, 60%);
+  color: var(--color-danger);
+}

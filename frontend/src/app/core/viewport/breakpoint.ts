@@ -1,5 +1,5 @@
 import { DestroyRef, Service, inject, signal, Signal } from '@angular/core';
-import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX, XL_BREAKPOINT_PX } from './breakpoint.constants';
+import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX } from './breakpoint.constants';
 
 /**
  * Viewport breakpoints as signals, so `@if` keeps one layout in the DOM instead of hiding one.
@@ -20,11 +20,6 @@ export class Breakpoint {
    * Whether the viewport is at least `lg` (1024px).
    */
   public readonly isLarge: Signal<boolean> = this.track(LG_BREAKPOINT_PX);
-
-  /**
-   * Whether the viewport is at least `xl` (1280px).
-   */
-  public readonly isWide: Signal<boolean> = this.track(XL_BREAKPOINT_PX);
 
   /**
    * `min-width` query as a signal, wide when `matchMedia` is missing.

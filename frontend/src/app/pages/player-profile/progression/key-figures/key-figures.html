@@ -1,56 +1,27 @@
 <!-- One column on a phone, as many as fit above: four figures share a row on desktop. -->
-<ul
-  class="grid grid-cols-1 gap-x-6 gap-y-4 border-t border-edge pt-4 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]"
->
+<ul class="key-figures__list grid gap-x-6 gap-y-4 pt-4">
   @for (figure of figures(); track figure.caption) {
-    <li class="flex min-w-0 items-center gap-3">
+    <li class="key-figures__item flex min-w-0 items-center gap-3">
       @if (figure.rankIconUrl) {
         <img [ngSrc]="figure.rankIconUrl" alt="" class="size-10 shrink-0" height="40" width="40" />
       } @else {
         <span
-          [class]="toneClasses[figure.tone ?? 'brand']"
+          [class]="toneModifiers[figure.tone ?? 'brand']"
           aria-hidden="true"
-          class="grid size-10 shrink-0 place-items-center"
+          class="key-figures__icon"
         >
-          @switch (figure.icon) {
-            @case ('trendUp') {
-              <svg class="size-5" lucideTrendingUp></svg>
-            }
-            @case ('trendDown') {
-              <svg class="size-5" lucideTrendingDown></svg>
-            }
-            @case ('floor') {
-              <svg class="size-5" lucideArrowDownToLine></svg>
-            }
-            @case ('median') {
-              <svg class="size-5" lucideGitCommitHorizontal></svg>
-            }
-            @case ('ceiling') {
-              <svg class="size-5" lucideArrowUpToLine></svg>
-            }
-            @case ('tighter') {
-              <svg class="size-5" lucideChevronsDownUp></svg>
-            }
-            @case ('looser') {
-              <svg class="size-5" lucideChevronsUpDown></svg>
-            }
-            @case ('matches') {
-              <svg class="size-5" [lucideIcon]="concepts.matches"></svg>
-            }
-            @default {
-              <svg class="size-5" lucideMinus></svg>
-            }
-          }
+          <svg [lucideIcon]="icons[figure.icon ?? 'flat']" class="size-5"></svg>
         </span>
       }
       <span class="flex min-w-0 flex-col gap-1">
-        <span class="label-caption text-2xs text-text-muted">{{ figure.caption }}</span>
+        <span class="key-figures__caption label-caption">{{ figure.caption }}</span>
         <span
-          [class]="figure.valueClass ?? 'text-text-primary'"
-          class="font-display text-lg leading-none font-semibold tabular-nums"
+          [class.key-figures__value--toned]="figure.valueTone"
+          [style.--tone]="figure.valueTone"
+          class="key-figures__value"
           >{{ figure.value }}</span
         >
-        <span class="text-sm leading-tight text-text-muted">{{ figure.detail }}</span>
+        <span class="key-figures__detail">{{ figure.detail }}</span>
       </span>
     </li>
   }

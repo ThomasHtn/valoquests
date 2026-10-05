@@ -1,12 +1,12 @@
 import { ROCKET_PALETTE } from '@shared/rocket/rocket-drawing.constants';
-import { planCity } from './town-plan.utils';
-import { LotRow, SkyKey, SkyState } from './town-scene.model';
+import { LotRow, RowLayout, SkyKey, SkyState } from './town-scene.model';
 
 /**
- * Scene colours that do not follow the hour, matching the site.
+ * Scene colours that do not follow the hour (`night` is `--color-night-sky`, `star` `--color-starlight`).
  */
 export const TOWN_PALETTE = {
   night: '#040a11',
+  seaMid: '#081820',
   seaDeep: '#050f15',
   quayEdge: '#22303a',
   quayFace: '#111a20',
@@ -18,6 +18,7 @@ export const TOWN_PALETTE = {
   sunLow: '#ff9a5c',
   dayGlint: '#e2eef2',
   vapor: '#dfe8ec',
+  star: '#cfe4ee',
   ...ROCKET_PALETTE,
 } as const;
 
@@ -64,9 +65,14 @@ export const TOWN_HEIGHT = 322;
 export const HORIZON = 228;
 
 /**
+ * Height of sky drawn above the frame, since phones crop to show the headroom.
+ */
+export const SKY_OVERDRAW = 60;
+
+/**
  * X of the rocket, the centre of the frame.
  */
-export const RX = 600;
+export const ROCKET_X = 600;
 
 /**
  * Scale of the shared ship drawing, so the finished launcher fits under the sky.
@@ -76,17 +82,25 @@ export const SHIP_SCALE = 0.52;
 /**
  * Half-width of the launch pad deck.
  */
-export const PAD_HALF = 112;
+export const PAD_HALF_WIDTH = 112;
 
 /**
  * Launch plot kept free of buildings, so the rocket stands against the sky.
  */
-export const PLOT: readonly [number, number] = [RX - PAD_HALF - 8, RX + PAD_HALF + 8];
+export const LAUNCH_PLOT: readonly [number, number] = [
+  ROCKET_X - PAD_HALF_WIDTH - 8,
+  ROCKET_X + PAD_HALF_WIDTH + 8,
+];
 
 /**
  * Population share to growth exponent; below 1 so the early colony changes almost daily.
  */
 export const GROWTH_CURVE = 0.8;
+
+/**
+ * Lamp brightness above which lamps are drawn lit and the water reflects night lights.
+ */
+export const LAMPS_ON_THRESHOLD = 0.35;
 
 /**
  * Distance between two lamps along the quay, in viewBox units.
@@ -101,7 +115,7 @@ export const QUAY_LAMP_CLEARANCE = 40;
 /**
  * Growth raising the last building; under 1 so a full campaign ends on a finished city.
  */
-export const COMPLETE_AT = 0.97;
+export const FINISHED_CITY_GROWTH = 0.97;
 
 /**
  * Buildings standing from day one: the founding camp around the pad.
@@ -111,7 +125,7 @@ export const FOUNDING_CAMP = 4;
 /**
  * Order key of the farthest lot (the nearest is built at zero).
  */
-export const SPREAD = 0.62;
+export const FARTHEST_LOT_ORDER = 0.62;
 
 /**
  * Order key between two tiers of a lot: fast villages, towers only in the second half.
@@ -144,24 +158,42 @@ export const SMALL_BUILDING_TIER = 2;
 export const BLOCK_TIER = 3;
 
 /**
- * Highest tier, the skyscraper.
- */
-export const TOP_TIER = TIER_HEIGHTS.length - 1;
-
-/**
  * Tier of the tower: first with a setback and ribbon windows.
  */
 export const TOWER_TIER = 4;
 
 /**
+ * Highest tier, the skyscraper.
+ */
+export const TOP_TIER = TIER_HEIGHTS.length - 1;
+
+/**
  * Plot sizes of a row, in viewBox units.
  */
-export const ROW_LAYOUT: Readonly<
-  Record<LotRow, { start: number; minW: number; maxW: number; minGap: number; maxGap: number }>
-> = {
-  back: { start: -8, minW: 32, maxW: 50, minGap: 1, maxGap: 6 },
-  front: { start: 6, minW: 22, maxW: 36, minGap: 4, maxGap: 9 },
+export const ROW_LAYOUT: Readonly<Record<LotRow, RowLayout>> = {
+  back: { start: -8, minWidth: 32, maxWidth: 50, minGap: 1, maxGap: 6 },
+  front: { start: 6, minWidth: 22, maxWidth: 36, minGap: 4, maxGap: 9 },
 };
+
+/**
+ * Time a building takes to rise to its new height, in milliseconds.
+ */
+export const RISE_DURATION_MS = 1100;
+
+/**
+ * Pause before the first building rises, in milliseconds.
+ */
+export const RISE_DELAY_MS = 400;
+
+/**
+ * Total time the rising buildings are spread over, in milliseconds.
+ */
+export const RISE_SPREAD_MS = 2400;
+
+/**
+ * Longest wait between two rising buildings, in milliseconds.
+ */
+export const RISE_MAX_STAGGER_MS = 160;
 
 /**
  * Darkness of the side fade at the very edge of the frame.
@@ -196,7 +228,7 @@ export const MOON_HOURS: readonly [number, number] = [19.8, 30.2];
 /**
  * Highest point the sun and the moon reach, in viewBox units.
  */
-export const ARC_TOP = 30;
+export const SKY_ARC_TOP = 30;
 
 /**
  * Clouds drawn a given day: fewest and most.
@@ -209,7 +241,7 @@ export const CLOUD_RANGE: readonly [number, number] = [2, 6];
 export const CLOUD_CROSSING_S: readonly [number, number] = [260, 520];
 
 /**
- * Deep night, the reference the other hours are tinted from.
+ * Deep night, the reference the other hours are tinted from (`skyTop` is `--color-night-sky`).
  */
 const NIGHT: SkyState = {
   skyTop: '#040a11',
@@ -354,8 +386,3 @@ export const SKY_KEYS: readonly SkyKey[] = [
   { hour: 22, sky: { ...NIGHT, lit: 0.56 } },
   { hour: 24, sky: { ...NIGHT, lit: 0.44 } },
 ];
-
-/**
- * City lots, planned once since the plan depends on no input.
- */
-export const CITY = planCity();

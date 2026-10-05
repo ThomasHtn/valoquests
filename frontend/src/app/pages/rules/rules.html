@@ -3,7 +3,7 @@
   <a
     [attr.aria-label]="'rules.replayTour' | translate"
     [state]="{ replay: true }"
-    class="focus-ring label-caption flex h-10 shrink-0 cursor-pointer items-center gap-2 px-2 text-text-secondary transition-colors hover:text-text-primary motion-safe:active:scale-[0.96]"
+    class="rules__replay-link label-caption focus-ring press"
     routerLink="/tour"
   >
     <svg aria-hidden="true" class="size-4 shrink-0" lucidePlay></svg>
@@ -23,35 +23,35 @@
       index="01"
     >
       <div class="flex flex-col gap-6">
-        <div class="rule-table">
-          <div
-            class="rule-table-head grid grid-cols-[minmax(0,1fr)_repeat(3,4.875rem)] gap-x-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)] sm:gap-x-3"
-          >
-            <span class="label-caption text-text-muted">
+        <div class="rule-table rule-table--modes">
+          <div class="rule-table__head">
+            <span class="rule-table__caption label-caption">
               {{ 'rules.sections.match.modeLabel' | translate }}
             </span>
-            <span class="label-caption text-right text-text-muted">
+            <span class="rule-table__caption rule-table__caption--end label-caption">
               {{ 'rules.sections.match.loss' | translate }}
             </span>
-            <span class="label-caption text-right text-text-muted">
+            <span class="rule-table__caption rule-table__caption--end label-caption">
               {{ 'rules.sections.match.draw' | translate }}
             </span>
-            <span class="label-caption text-right text-brand-500">
+            <span
+              class="rule-table__caption rule-table__caption--end rule-table__caption--accent label-caption"
+            >
               {{ 'rules.sections.match.win' | translate }}
             </span>
           </div>
           <!-- The split belongs to the group, so it is stated once per group. -->
           @for (group of modeGroups; track group.key) {
-            <div class="rule-table-group">
-              <span class="label-caption text-text-secondary">
+            <div class="rule-table__group">
+              <span class="rule-table__group-label label-caption">
                 {{ 'rules.sections.match.groups.' + group.key | translate }}
               </span>
-              <span class="ml-auto flex items-center gap-3 font-mono text-2xs font-semibold">
-                <span class="inline-flex items-center gap-1 text-accent-green">
+              <span class="rule-table__shares">
+                <span class="rule-table__share rule-table__share--food">
                   <svg aria-hidden="true" class="size-3" lucideWheat></svg>
                   {{ 'rules.sections.match.foodShare' | translate: { percent: group.foodPercent } }}
                 </span>
-                <span class="inline-flex items-center gap-1 text-accent-cyan">
+                <span class="rule-table__share rule-table__share--components">
                   <svg aria-hidden="true" class="size-3" lucideWrench></svg>
                   {{
                     'rules.sections.match.componentsShare'
@@ -60,40 +60,30 @@
                 </span>
               </span>
             </div>
-            <ul class="rule-table">
+            <ul class="rule-table__rows">
               @for (mode of group.modes; track mode.key) {
-                <li
-                  class="rule-table-row grid grid-cols-[minmax(0,1fr)_repeat(3,4.875rem)] gap-x-2 sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)] sm:gap-x-3"
-                >
-                  <span
-                    class="min-w-0 font-display text-base leading-tight font-semibold text-text-primary"
-                  >
+                <li class="rule-table__row">
+                  <span class="rule-table__name min-w-0">
                     {{ 'rules.sections.match.modes.' + mode.key | translate }}
                   </span>
-                  <span
-                    class="font-display text-right text-lg leading-none font-bold text-text-muted tabular-nums"
-                  >
+                  <span class="rule-table__figure rule-table__figure--muted">
                     {{ amount(mode.loss) }}
                   </span>
-                  <span
-                    class="font-display text-right text-lg leading-none font-bold text-text-secondary tabular-nums"
-                  >
+                  <span class="rule-table__figure">
                     {{ mode.draw === null ? '—' : amount(mode.draw) }}
                   </span>
-                  <span
-                    class="font-display text-right text-lg leading-none font-bold text-brand-500 tabular-nums"
-                  >
+                  <span class="rule-table__figure rule-table__figure--accent">
                     {{ amount(mode.win) }}
                   </span>
                 </li>
               }
             </ul>
           }
-          <div class="rule-table-group">
-            <span class="label-caption text-text-secondary">
+          <div class="rule-table__group">
+            <span class="rule-table__group-label label-caption">
               {{ 'rules.sections.match.groups.none' | translate }}
             </span>
-            <span class="ml-auto font-mono text-2xs font-semibold text-text-muted">
+            <span class="rule-table__group-note">
               {{ 'rules.sections.match.noneModes' | translate }}
             </span>
           </div>
@@ -101,28 +91,24 @@
 
         <!-- What each resource buys. -->
         <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rule-note border-l-2 border-accent-green">
-            <p
-              class="flex items-center gap-2 font-display text-sm font-semibold tracking-[0.08em] text-accent-green uppercase"
-            >
+          <div class="rule-note rule-note--food">
+            <p class="rule-note__resource rule-note__resource--food">
               <svg aria-hidden="true" class="size-4" lucideWheat></svg>
               {{ 'common.resource.food' | translate }}
             </p>
             <app-rule-text
               [text]="'rules.sections.match.foodUse' | translate"
-              class="mt-2 block text-prose text-text-secondary"
+              class="rules__prose mt-2"
             />
           </div>
-          <div class="rule-note border-l-2 border-accent-cyan">
-            <p
-              class="flex items-center gap-2 font-display text-sm font-semibold tracking-[0.08em] text-accent-cyan uppercase"
-            >
+          <div class="rule-note rule-note--components">
+            <p class="rule-note__resource rule-note__resource--components">
               <svg aria-hidden="true" class="size-4" lucideWrench></svg>
               {{ 'common.resource.components' | translate }}
             </p>
             <app-rule-text
               [text]="'rules.sections.match.componentsUse' | translate"
-              class="mt-2 block text-prose text-text-secondary"
+              class="rules__prose mt-2"
             />
           </div>
         </div>
@@ -139,24 +125,20 @@
     >
       <div class="flex flex-col gap-6">
         <div>
-          <p class="label-caption text-text-muted">
+          <p class="rules__caption label-caption">
             {{ 'rules.sections.multipliers.decayLabel' | translate }}
           </p>
           <ul class="mt-2.5 grid grid-cols-3 gap-2">
             @for (step of decayLadder; track step.key) {
               <li class="rule-tile">
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
+                <span class="rule-tile__label">
                   {{ 'rules.sections.multipliers.decayRanks.' + step.key | translate }}
                 </span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  {{ percent(step.percent) }}
-                </span>
+                <span class="rule-tile__value">{{ percent(step.percent) }}</span>
               </li>
             }
           </ul>
-          <p class="mt-3 text-prose text-text-secondary">
+          <p class="rules__prose mt-3">
             {{ 'rules.sections.multipliers.decayNote' | translate }}
           </p>
         </div>
@@ -164,42 +146,30 @@
         <div>
           <app-rule-text
             [text]="'rules.sections.multipliers.streakLabel' | translate"
-            class="label-caption block text-text-muted"
+            class="rules__caption label-caption block"
           />
           <ul class="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-6">
             @for (step of streakLadder; track step.days) {
               <li class="rule-tile">
-                <span class="font-mono text-2xs font-semibold text-text-secondary">
-                  @if (step.open) {
-                    {{
-                      'rules.sections.multipliers.streakDaysMore' | translate: { count: step.days }
-                    }}
-                  } @else {
-                    {{ 'rules.sections.multipliers.streakDays' | translate: { count: step.days } }}
-                  }
+                <span class="rule-tile__label">
+                  {{ step.labelKey | translate: { count: step.days } }}
                 </span>
-                <span
-                  class="font-display text-base leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  +{{ percent(step.percent) }}
-                </span>
+                <span class="rule-tile__value">+{{ percent(step.percent) }}</span>
               </li>
             }
           </ul>
-          <p class="mt-3 text-prose text-text-secondary">
+          <p class="rules__prose mt-3">
             {{ 'rules.sections.multipliers.streakNote' | translate }}
           </p>
         </div>
 
-        <div class="rule-note border-l-2 border-brand-500">
-          <p
-            class="font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-          >
+        <div class="rule-note rule-note--brand">
+          <p class="rules__heading">
             {{ 'rules.sections.multipliers.exampleLabel' | translate }}
           </p>
           <app-rule-text
             [text]="'rules.sections.multipliers.example' | translate"
-            class="mt-1.5 block text-prose text-text-secondary"
+            class="rules__prose mt-1.5"
           />
         </div>
       </div>
@@ -216,24 +186,18 @@
       <div class="flex flex-col gap-6">
         <ol>
           @for (step of weekStepKeys; track step; let index = $index) {
-            <li class="rule-row flex items-baseline gap-3.5">
-              <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
-                0{{ index + 1 }}
-              </span>
+            <li class="rule-step">
+              <span aria-hidden="true" class="rule-step__number">0{{ index + 1 }}</span>
               <span class="min-w-0">
-                <span
-                  class="block font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-                >
+                <span class="rules__heading block">
                   {{ 'rules.sections.week.steps.' + step + '.title' | translate }}
-                  <span
-                    class="ml-1.5 font-mono text-2xs font-medium tracking-normal text-text-muted normal-case"
-                  >
+                  <span class="rule-step__when ml-1.5">
                     {{ 'rules.sections.week.steps.' + step + '.when' | translate }}
                   </span>
                 </span>
                 <app-rule-text
                   [text]="'rules.sections.week.steps.' + step + '.text' | translate"
-                  class="mt-1 block text-prose text-text-secondary"
+                  class="rules__prose mt-1"
                 />
               </span>
             </li>
@@ -243,11 +207,11 @@
         <div class="grid gap-3 sm:grid-cols-2">
           <app-rule-text
             [text]="'rules.sections.week.guardianNote' | translate: { factor: guardianFactor() }"
-            class="rule-note block border-l-2 border-edge-strong text-prose text-text-secondary"
+            class="rule-note rules__prose"
           />
           <app-rule-text
             [text]="'rules.sections.week.famineNote' | translate"
-            class="rule-note block border-l-2 border-edge-strong text-prose text-text-secondary"
+            class="rule-note rules__prose"
           />
         </div>
       </div>
@@ -264,21 +228,19 @@
       <div class="flex flex-col gap-6">
         <!-- The settlement, as the lines of the document. -->
         <div>
-          <p class="label-caption text-text-muted">
+          <p class="rules__caption label-caption">
             {{ 'rules.sections.sunday.settlementLabel' | translate }}
           </p>
-          <dl class="mt-2 border-l-2 border-brand-500 bg-text-primary/4 px-4 py-3">
+          <dl class="rule-settlement mt-2">
             @for (term of sundayTermKeys; track term) {
-              <div class="grid gap-x-4 py-1.5 sm:grid-cols-[9rem_minmax(0,1fr)]">
-                <dt
-                  class="font-display text-sm font-semibold tracking-[0.06em] text-brand-400 uppercase"
-                >
+              <div class="rule-settlement__line">
+                <dt class="rules__heading rules__heading--brand">
                   {{ 'rules.sections.sunday.terms.' + term + '.term' | translate }}
                 </dt>
                 <dd>
                   <app-rule-text
                     [text]="'rules.sections.sunday.terms.' + term + '.value' | translate"
-                    class="block text-prose text-text-secondary"
+                    class="rules__prose"
                   />
                 </dd>
               </div>
@@ -287,46 +249,34 @@
         </div>
 
         <div>
-          <p class="label-caption text-text-muted">
+          <p class="rules__caption label-caption">
             {{ 'rules.sections.sunday.exampleLabel' | translate }}
           </p>
-          <ul class="rule-table mt-2.5">
+          <ul class="rule-table rule-table--sunday mt-2.5">
             @for (line of sundayExample; track line.key) {
-              <li
-                [class.rule-table-row--lead]="line.emphasised"
-                class="rule-table-row grid grid-cols-[minmax(0,1fr)_auto] gap-x-3"
-              >
+              <li [class.rule-table__row--lead]="line.emphasised" class="rule-table__row">
                 <app-rule-text
                   [text]="'rules.sections.sunday.example.' + line.key | translate"
-                  class="block font-display text-base leading-tight font-semibold text-text-primary"
+                  class="rule-table__name"
                 />
-                <span
-                  [class]="line.emphasised ? 'text-brand-500' : 'text-text-secondary'"
-                  class="font-display text-right text-lg leading-none font-bold tabular-nums"
-                >
-                  {{ line.value }}
-                </span>
+                <span class="rule-table__figure">{{ line.value }}</span>
               </li>
             }
           </ul>
-          <p class="mt-3 text-prose text-text-secondary">
+          <p class="rules__prose mt-3">
             {{ 'rules.sections.sunday.exampleNote' | translate }}
           </p>
         </div>
 
         <div>
-          <p class="label-caption text-text-muted">
+          <p class="rules__caption label-caption">
             {{ 'rules.sections.sunday.lossLabel' | translate }}
           </p>
           <ul class="mt-2.5 grid grid-cols-5 gap-2">
             @for (step of guardianLossLadder; track step.breach) {
               <li class="rule-tile rule-tile--danger">
-                <span class="font-mono text-2xs font-semibold text-text-secondary tabular-nums">
-                  {{ percent(step.breach) }}
-                </span>
-                <span
-                  class="font-display text-sm leading-none font-bold text-boss-hp-edge tabular-nums sm:text-base"
-                >
+                <span class="rule-tile__label">{{ percent(step.breach) }}</span>
+                <span class="rule-tile__value rule-tile__value--danger">
                   {{ percent(step.percent) }}
                 </span>
               </li>
@@ -334,7 +284,7 @@
           </ul>
           <app-rule-text
             [text]="'rules.sections.sunday.lossNote' | translate"
-            class="mt-3 block text-prose text-text-secondary"
+            class="rules__prose mt-3"
           />
         </div>
       </div>
@@ -350,97 +300,71 @@
     >
       <div class="flex flex-col gap-6">
         <div>
-          <!-- The "how it plays" column only exists from `sm`. -->
-          <div
-            class="rule-table-head grid grid-cols-[2.5rem_5.5rem_5.5rem_5rem] gap-x-3 sm:grid-cols-[2.5rem_6rem_9rem_5.5rem_minmax(0,1fr)]"
-          >
-            <span class="label-caption text-text-muted">
-              {{ 'rules.sections.campaign.weekLabel' | translate }}
-            </span>
-            <span class="label-caption text-text-muted">
-              {{ 'rules.sections.campaign.guardianLabel' | translate }}
-            </span>
-            <span
-              class="label-caption inline-flex items-center justify-end gap-1 text-right text-text-muted"
-            >
-              <svg aria-hidden="true" class="size-3 text-boss-hp-edge" lucideSkull></svg>
-              {{ 'rules.sections.campaign.hpLabel' | translate }}
-            </span>
-            <span
-              class="label-caption inline-flex items-center justify-end gap-1 text-right text-text-muted"
-            >
-              <svg aria-hidden="true" class="size-3 text-brand-400" lucideHeartPulse></svg>
-              {{ 'rules.sections.campaign.woundedLabel' | translate }}
-            </span>
-            <span class="label-caption hidden pl-4 text-text-muted sm:block">
-              {{ 'rules.sections.campaign.howLabel' | translate }}
-            </span>
-          </div>
-          <ol class="rule-table mt-1">
-            @for (week of campaignWeeks; track week.number) {
-              <li
-                [class.rule-table-row--lead]="week.category === 'ELITE'"
-                class="rule-table-row grid grid-cols-[2.5rem_5.5rem_5.5rem_5rem] gap-x-3 sm:grid-cols-[2.5rem_6rem_9rem_5.5rem_minmax(0,1fr)]"
-              >
-                <span
-                  class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums"
+          <div class="rule-table rule-table--weeks">
+            <div class="rule-table__head">
+              <span class="rule-table__caption label-caption">
+                {{ 'rules.sections.campaign.weekLabel' | translate }}
+              </span>
+              <span class="rule-table__caption label-caption">
+                {{ 'rules.sections.campaign.guardianLabel' | translate }}
+              </span>
+              <span class="rule-table__caption rule-table__caption--with-icon label-caption">
+                <svg
+                  aria-hidden="true"
+                  class="rule-table__icon rule-table__icon--danger size-3"
+                  lucideSkull
+                ></svg>
+                {{ 'rules.sections.campaign.hpLabel' | translate }}
+              </span>
+              <span class="rule-table__caption rule-table__caption--with-icon label-caption">
+                <svg aria-hidden="true" class="rule-table__icon size-3" lucideHeartPulse></svg>
+                {{ 'rules.sections.campaign.woundedLabel' | translate }}
+              </span>
+              <span class="rule-table__caption label-caption hidden pl-4 sm:block">
+                {{ 'rules.sections.campaign.howLabel' | translate }}
+              </span>
+            </div>
+            <ol class="rule-table__rows">
+              @for (week of campaignWeeks; track week.number) {
+                <li
+                  [class.rule-table__row--lead]="week.category === 'ELITE'"
+                  class="rule-table__row"
                 >
-                  {{ week.number }}
-                </span>
-                <span
-                  [class]="categoryClass[week.category]"
-                  class="font-display text-sm font-semibold tracking-[0.06em] uppercase"
-                >
-                  {{ 'common.guardianCategory.' + week.category | translate }}
-                </span>
-                <span
-                  [class]="week.category === 'ELITE' ? 'text-brand-500' : 'text-text-secondary'"
-                  class="font-display text-right text-lg leading-none font-bold tabular-nums"
-                >
-                  {{ amount(week.hitPoints) }}
-                </span>
-                <span
-                  [class]="week.category === 'ELITE' ? 'text-brand-500' : 'text-text-secondary'"
-                  class="font-display text-right text-lg leading-none font-bold tabular-nums"
-                >
-                  {{ amount(week.wounded) }}
-                </span>
-                <span class="hidden pl-4 text-sm text-text-secondary sm:block">
-                  @if (week.how) {
-                    {{ 'rules.sections.campaign.how.' + week.number | translate }}
-                  }
-                </span>
-              </li>
-            }
-          </ol>
-          <p class="mt-3 text-prose text-text-secondary">
-            {{
-              'rules.sections.campaign.exampleNote'
-                | translate
-                  : {
-                      operators: exampleOperators,
-                      reference: amount(exampleReference),
-                      weekly: amount(exampleReference * exampleOperators),
+                  <span
+                    class="rule-table__figure rule-table__figure--start rule-table__figure--accent"
+                  >
+                    {{ week.number }}
+                  </span>
+                  <span [class]="categoryModifier[week.category]" class="rules__heading">
+                    {{ 'common.guardianCategory.' + week.category | translate }}
+                  </span>
+                  <span class="rule-table__figure">{{ amount(week.hitPoints) }}</span>
+                  <span class="rule-table__figure">{{ amount(week.wounded) }}</span>
+                  <span class="rule-table__detail hidden pl-4 sm:block">
+                    @if (week.how) {
+                      {{ 'rules.sections.campaign.how.' + week.number | translate }}
                     }
-            }}
+                  </span>
+                </li>
+              }
+            </ol>
+          </div>
+          <p class="rules__prose mt-3">
+            {{ 'rules.sections.campaign.exampleNote' | translate: exampleParams() }}
           </p>
         </div>
 
         <ol>
           @for (step of lifecycleKeys; track step; let index = $index) {
-            <li class="rule-row flex items-baseline gap-3.5">
-              <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
-                0{{ index + 1 }}
-              </span>
+            <li class="rule-step">
+              <span aria-hidden="true" class="rule-step__number">0{{ index + 1 }}</span>
               <span class="min-w-0">
-                <span
-                  class="block font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-                >
+                <span class="rules__heading block">
                   {{ 'rules.sections.campaign.lifecycle.' + step + '.title' | translate }}
                 </span>
                 <app-rule-text
                   [text]="'rules.sections.campaign.lifecycle.' + step + '.text' | translate"
-                  class="mt-1 block text-prose text-text-secondary"
+                  class="rules__prose mt-1"
                 />
               </span>
             </li>
@@ -458,41 +382,33 @@
       index="06"
     >
       <div class="flex flex-col gap-6">
-        <div>
-          <div
-            class="rule-table-head grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[6rem_9rem_minmax(0,1fr)]"
-          >
-            <span class="label-caption text-text-muted">
+        <div class="rule-table rule-table--difficulties">
+          <div class="rule-table__head">
+            <span class="rule-table__caption label-caption">
               {{ 'rules.sections.calibration.difficultyLabel' | translate }}
             </span>
-            <span class="label-caption text-text-muted">
+            <span class="rule-table__caption label-caption">
               {{ 'rules.sections.calibration.referenceLabel' | translate }}
             </span>
-            <span class="label-caption hidden text-text-muted sm:block">
+            <span class="rule-table__caption label-caption hidden sm:block">
               {{ 'rules.sections.calibration.exampleLabel' | translate }}
             </span>
           </div>
-          <ul class="rule-table mt-1">
+          <ul class="rule-table__rows">
             @for (band of difficultyBands; track band.key) {
-              <li
-                class="rule-table-row grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[6rem_9rem_minmax(0,1fr)]"
-              >
-                <span
-                  class="font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-                >
+              <li class="rule-table__row">
+                <span class="rules__heading">
                   {{ 'common.difficulty.' + band.key | translate }}
                 </span>
                 <span
-                  class="font-display text-lg leading-none font-bold text-brand-500 tabular-nums"
+                  class="rule-table__figure rule-table__figure--start rule-table__figure--accent"
                 >
                   {{ amount(band.reference) }}
-                  <span
-                    class="mt-1.5 block text-sm leading-snug font-normal text-text-muted sm:hidden"
-                  >
+                  <span class="rule-table__example mt-1.5 block sm:hidden">
                     {{ 'rules.sections.calibration.examples.' + band.key | translate }}
                   </span>
                 </span>
-                <span class="hidden text-sm text-text-secondary sm:block">
+                <span class="rule-table__detail hidden sm:block">
                   {{ 'rules.sections.calibration.examples.' + band.key | translate }}
                 </span>
               </li>
@@ -502,16 +418,14 @@
 
         <ol>
           @for (fact of calibrationFactKeys; track fact; let index = $index) {
-            <li class="rule-row flex items-baseline gap-3.5">
-              <span aria-hidden="true" class="shrink-0 font-mono text-sm font-bold text-brand-500">
-                0{{ index + 1 }}
-              </span>
+            <li class="rule-step">
+              <span aria-hidden="true" class="rule-step__number">0{{ index + 1 }}</span>
               <app-rule-text
                 [text]="
                   'rules.sections.calibration.facts.' + fact
                     | translate: { factor: guardianFactor() }
                 "
-                class="block text-prose text-text-secondary"
+                class="rules__prose"
               />
             </li>
           }
@@ -529,109 +443,82 @@
     >
       <div class="flex flex-col gap-6">
         <div>
-          <div
-            class="rule-table-head grid grid-cols-[2.25rem_minmax(0,1fr)_3.5rem_4.5rem] gap-x-2 sm:gap-x-3"
-          >
-            <span></span>
-            <span class="label-caption text-text-muted">
-              {{ 'rules.sections.challenges.challengeLabel' | translate }}
-            </span>
-            <span class="label-caption text-right text-text-muted">
-              {{ 'rules.sections.challenges.weightLabel' | translate }}
-            </span>
-            <span
-              class="label-caption inline-flex items-center justify-end gap-1 text-right text-text-muted"
-            >
-              <svg aria-hidden="true" class="size-3 text-brand-400" lucideHeartPulse></svg>
-              {{ 'rules.sections.challenges.woundedLabel' | translate }}
-            </span>
-          </div>
-          <ul class="rule-table mt-1">
-            @for (worth of challengeWorth; track worth.weight) {
-              <li
-                [style.--tone]="worth.visual.tierColor"
-                class="rule-table-row grid grid-cols-[2.25rem_minmax(0,1fr)_3.5rem_4.5rem] gap-x-2 sm:gap-x-3"
-              >
-                <span aria-hidden="true" class="hex-mark clip-hex !h-[2.55rem] !w-[2.25rem]">
-                  <span class="clip-hex font-display text-xs font-bold">
-                    @if (worth.difficulty === null) {
-                      <svg class="size-3.5" lucideZap></svg>
-                    } @else {
-                      {{ worth.visual.tier }}
-                    }
+          <div class="rule-table rule-table--challenges">
+            <div class="rule-table__head">
+              <span></span>
+              <span class="rule-table__caption label-caption">
+                {{ 'rules.sections.challenges.challengeLabel' | translate }}
+              </span>
+              <span class="rule-table__caption rule-table__caption--end label-caption">
+                {{ 'rules.sections.challenges.weightLabel' | translate }}
+              </span>
+              <span class="rule-table__caption rule-table__caption--with-icon label-caption">
+                <svg aria-hidden="true" class="rule-table__icon size-3" lucideHeartPulse></svg>
+                {{ 'rules.sections.challenges.woundedLabel' | translate }}
+              </span>
+            </div>
+            <ul class="rule-table__rows">
+              @for (worth of challengeWorth; track worth.weight) {
+                <li [style.--tone]="worth.visual.tierColor" class="rule-table__row">
+                  <span aria-hidden="true" class="rule-table__hex hex-mark clip-hex">
+                    <span class="rule-table__tier clip-hex">
+                      @if (worth.difficulty === null) {
+                        <svg class="size-3.5" lucideZap></svg>
+                      } @else {
+                        {{ worth.visual.tier }}
+                      }
+                    </span>
                   </span>
-                </span>
-                <span class="font-display text-base leading-tight font-semibold text-text-primary">
-                  @if (worth.difficulty === null) {
-                    {{ 'rules.sections.challenges.daily' | translate }}
-                  } @else {
-                    {{ 'common.challengeDifficulty.' + worth.difficulty | translate }}
-                  }
-                </span>
-                <span class="font-mono text-right text-xs text-text-secondary tabular-nums">
-                  {{ times(worth.weight) }}
-                </span>
-                <span
-                  class="font-display text-right text-lg leading-none font-bold text-brand-500 tabular-nums"
-                >
-                  {{ worth.survivors }}
-                </span>
-              </li>
-            }
-          </ul>
-          <p class="mt-3 text-prose text-text-secondary">
-            {{
-              'rules.sections.challenges.worthNote'
-                | translate: { reference: amount(exampleReference) }
-            }}
+                  <span class="rule-table__name">{{ worth.labelKey | translate }}</span>
+                  <span class="rule-table__weight">{{ times(worth.weight) }}</span>
+                  <span class="rule-table__figure rule-table__figure--accent">
+                    {{ worth.survivors }}
+                  </span>
+                </li>
+              }
+            </ul>
+          </div>
+          <p class="rules__prose mt-3">
+            {{ 'rules.sections.challenges.worthNote' | translate: exampleParams() }}
           </p>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rule-note border-l-2 border-brand-500">
-            <p
-              class="font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-            >
+          <div class="rule-note rule-note--brand">
+            <p class="rules__heading">
               {{ 'rules.sections.challenges.survivorsFormula.title' | translate }}
             </p>
-            <p class="mt-1.5 font-mono text-xs text-brand-400">
+            <p class="rule-note__formula mt-1.5">
               {{ 'rules.sections.challenges.survivorsFormula.formula' | translate }}
             </p>
             <app-rule-text
               [text]="'rules.sections.challenges.survivorsFormula.text' | translate"
-              class="mt-2 block text-prose text-text-secondary"
+              class="rules__prose mt-2"
             />
           </div>
-          <div class="rule-note border-l-2 border-accent-blue">
-            <p
-              class="font-display text-sm font-semibold tracking-[0.06em] text-text-primary uppercase"
-            >
+          <div class="rule-note rule-note--points">
+            <p class="rules__heading">
               {{ 'rules.sections.challenges.pointsFormula.title' | translate }}
             </p>
-            <p class="mt-1.5 font-mono text-xs text-accent-blue">
+            <p class="rule-note__formula rule-note__formula--points mt-1.5">
               {{ 'rules.sections.challenges.pointsFormula.formula' | translate }}
             </p>
             <app-rule-text
               [text]="'rules.sections.challenges.pointsFormula.text' | translate"
-              class="mt-2 block text-prose text-text-secondary"
+              class="rules__prose mt-2"
             />
           </div>
         </div>
 
         <!-- Champion first: it outranks the four weekly titles. -->
         <div>
-          <p class="label-caption text-text-muted">
+          <p class="rules__caption label-caption">
             {{ 'rules.sections.challenges.titlesLabel' | translate }}
           </p>
           <ul class="mt-2.5 grid grid-cols-2 gap-1.5 md:grid-cols-5">
             @for (title of titles; track title.key) {
-              <li
-                class="grid content-start gap-1 bg-text-primary/4 px-3 py-2.5 first:col-span-2 md:first:col-span-1"
-              >
-                <span
-                  [class]="title.colorClass"
-                  class="inline-flex items-center gap-2 font-display text-sm font-semibold tracking-[0.06em] uppercase"
-                >
+              <li class="rule-title-card">
+                <span [style.--tone]="title.tone" class="rule-title-card__name">
                   @switch (title.icon) {
                     @case ('crown') {
                       <svg aria-hidden="true" class="size-4" lucideCrown></svg>
@@ -651,13 +538,13 @@
                   }
                   {{ 'common.title.' + title.key | translate }}
                 </span>
-                <span class="text-sm leading-snug text-text-secondary">
+                <span class="rule-title-card__hint">
                   {{ 'common.titleHint.' + title.key | translate }}
                 </span>
               </li>
             }
           </ul>
-          <p class="mt-3 text-prose text-text-secondary">
+          <p class="rules__prose mt-3">
             {{ 'rules.sections.challenges.titlesNote' | translate }}
           </p>
         </div>
@@ -671,13 +558,16 @@
       [statement]="'rules.sections.constants.statement' | translate"
       index="08"
     >
-      <dl class="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-x-8">
+      <dl class="rule-constants">
         @for (constant of constants; track constant.key) {
-          <div class="grid content-start gap-0.5 border-b border-text-primary/8 py-2.5">
-            <dt
-              class="flex items-center gap-2 font-display text-[1.0625rem] font-medium text-text-primary"
-            >
-              <span [class]="constant.tone" aria-hidden="true" class="inline-flex shrink-0">
+          <div class="rule-constants__item">
+            <dt class="rule-constants__label">
+              <span
+                [class.rule-constants__icon--components]="constant.tone === 'components'"
+                [class.rule-constants__icon--food]="constant.tone === 'food'"
+                aria-hidden="true"
+                class="rule-constants__icon"
+              >
                 @switch (constant.icon) {
                   @case ('sync') {
                     <svg class="size-4" lucideRefreshCw></svg>
@@ -698,7 +588,7 @@
               </span>
               {{ 'rules.sections.constants.items.' + constant.key + '.label' | translate }}
             </dt>
-            <dd class="pl-6 text-[0.9375rem] text-text-secondary">
+            <dd class="rule-constants__value">
               {{ 'rules.sections.constants.items.' + constant.key + '.value' | translate }}
             </dd>
           </div>

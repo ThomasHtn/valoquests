@@ -6,6 +6,21 @@ import { MatchResult } from '@core/matches/match-result.model';
 export type TourStepId = 'intro' | 'base' | 'week' | 'resources' | 'challenges' | 'ranking';
 
 /**
+ * A stretch of a step's claim, emphasized when it sat between `*` markers.
+ */
+export interface ClaimRun {
+  /**
+   * Text of the stretch, spaces kept.
+   */
+  readonly text: string;
+
+  /**
+   * Whether the stretch is emphasized.
+   */
+  readonly strong: boolean;
+}
+
+/**
  * One match of the tracker excerpt the first step shows, in the profile's own row shape.
  */
 export interface TourSampleMatch {

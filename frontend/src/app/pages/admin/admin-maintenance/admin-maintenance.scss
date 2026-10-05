@@ -1,0 +1,85 @@
+@use 'tools' as *;
+
+.admin-maintenance__reset {
+  --notch: 0.875rem;
+
+  padding: 1.25rem;
+  border: 1px solid tint(danger, 40%);
+  background-color: tint(danger, 5%);
+
+  @include from(sm) {
+    padding: 1.5rem;
+  }
+}
+
+.admin-maintenance__heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-danger);
+  text-transform: uppercase;
+}
+
+.admin-maintenance__description {
+  max-width: 42rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.admin-maintenance__group-label--cleared {
+  color: var(--color-danger);
+}
+
+.admin-maintenance__group-label--kept {
+  color: var(--color-text-muted);
+}
+
+.admin-maintenance__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Diamond aligned on the first line of its item. */
+.admin-maintenance__bullet {
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-top: 0.375rem;
+  rotate: 45deg;
+}
+
+.admin-maintenance__bullet--cleared {
+  background-color: var(--color-danger);
+}
+
+/* Hollow: kept records survive the reset. */
+.admin-maintenance__bullet--kept {
+  border: 1px solid var(--color-text-muted);
+}
+
+.admin-maintenance__item-text {
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+.admin-maintenance__reset-button {
+  --notch: 0.5rem;
+
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: calc(1.25 / 0.875);
+}

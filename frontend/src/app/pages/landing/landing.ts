@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { LandingVisit } from '@core/landing/landing-visit';
 import { Compass } from './compass/compass';
+import { LANDING_MARKS } from './landing.constants';
 
 /**
  * First-visit landing page, chrome-free so the compass is its only control.
@@ -17,6 +18,11 @@ import { Compass } from './compass/compass';
   host: { class: 'block' },
 })
 export class Landing {
+  /**
+   * Figures on the horizon.
+   */
+  protected readonly marks = LANDING_MARKS;
+
   /**
    * Landing visit record, so returning visitors skip the landing.
    */

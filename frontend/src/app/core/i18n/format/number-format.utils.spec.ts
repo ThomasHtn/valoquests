@@ -25,7 +25,12 @@ describe('formatPercent', () => {
 
 describe('formatFigure', () => {
   it('keeps the French grouping beside a decimal point', () => {
-    expect(plain(formatFigure(1234.5, 'fr-FR'))).toBe('1 234.5');
-    expect(formatFigure(12700, 'fr-FR', true)).toBe('12.7k');
+    expect(plain(formatFigure(1234.5, 'fr'))).toBe('1 234.5');
+    expect(formatFigure(12700, 'fr', true)).toBe('12.7k');
+  });
+
+  it('groups whole amounts in the reader notation', () => {
+    expect(plain(formatFigure(9000, 'fr'))).toBe('9 000');
+    expect(formatFigure(9000, 'en')).toBe('9,000');
   });
 });

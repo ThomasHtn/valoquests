@@ -1,14 +1,11 @@
 import { DOCUMENT, effect, inject, Service } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, fromEvent, interval } from 'rxjs';
-import { CampaignApi } from '@core/campaign/campaign-api';
-import { ChallengesApi } from '@core/challenges/challenges-api';
-import { PlayersApi } from '@core/players/players-api';
-import { RankingApi } from '@core/ranking/ranking-api';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 import { Connectivity } from '../connectivity';
+import { PublicResources } from '../public-resources';
 import { liveRefreshStamp } from './live-refresh.utils';
-import { reloadAll, resourceValue } from '../resource-state.utils';
+import { resourceValue } from '../resource-state.utils';
 import { LIVE_REFRESH_POLL_MS } from './live-refresh.constants';
 
 /**
@@ -27,24 +24,9 @@ export class LiveRefresh {
   private readonly synchronizationApi = inject(SynchronizationApi);
 
   /**
-   * Players API, whose roster is reloaded on a refresh.
+   * Shared resources reloaded on a refresh.
    */
-  private readonly playersApi = inject(PlayersApi);
-
-  /**
-   * Campaign API, whose campaign, day and history are reloaded on a refresh.
-   */
-  private readonly campaignApi = inject(CampaignApi);
-
-  /**
-   * Ranking API, whose rankings are reloaded on a refresh.
-   */
-  private readonly rankingApi = inject(RankingApi);
-
-  /**
-   * Challenges API, whose current challenges are reloaded on a refresh.
-   */
-  private readonly challengesApi = inject(ChallengesApi);
+  private readonly publicResources = inject(PublicResources);
 
   /**
    * Online state, to pause polling offline and catch the reconnection.
@@ -74,7 +56,7 @@ export class LiveRefresh {
     effect(() => {
       const online = this.connectivity.online();
       if (online && !this.wasOnline) {
-        this.reloadEverything();
+        this.publicResources.reload();
       }
       this.wasOnline = online;
     });
@@ -100,27 +82,9 @@ export class LiveRefresh {
       // The completion instant moves only once challenges and campaign are rebuilt.
       const stamp = liveRefreshStamp(status.lastCompletedAt, new Date());
       if (this.stamp !== null && stamp !== this.stamp) {
-        this.reloadEverything();
+        this.publicResources.reload();
       }
       this.stamp = stamp;
     });
-  }
-
-  /**
-   * Reloads every shared resource, so all screens reflect the latest synchronization.
-   */
-  private reloadEverything(): void {
-    reloadAll(
-      this.synchronizationApi.status,
-      this.playersApi.players,
-      this.campaignApi.campaign,
-      this.campaignApi.today,
-      this.campaignApi.history,
-      this.rankingApi.current,
-      this.rankingApi.latestFinalizedWeek,
-      this.rankingApi.history,
-      this.rankingApi.daily,
-      this.challengesApi.current,
-    );
   }
 }

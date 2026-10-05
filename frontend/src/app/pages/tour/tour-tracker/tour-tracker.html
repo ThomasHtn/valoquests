@@ -1,71 +1,62 @@
 <div class="flex flex-col gap-2">
   <!-- Day header of the profile's match list. -->
-  <div
-    class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
-  >
-    <span class="clip-hex relative size-8 shrink-0 bg-brand-500/50">
-      <span
-        class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
-      >
-        {{ matches().length }}
-      </span>
+  <div class="tour-tracker__day">
+    <span class="tour-tracker__count clip-hex">
+      <span class="tour-tracker__count-value clip-hex">{{ matches().length }}</span>
     </span>
-    <span class="label-caption text-text-secondary">
+    <span class="tour-tracker__day-label label-caption">
       {{ 'tour.samples.tracker.day' | translate }}
     </span>
-    <span class="label-caption text-brand-500 tabular-nums">
+    <span class="tour-tracker__day-damage label-caption">
       {{ 'playerProfile.matches.columns.damage' | translate }}
       {{ format(totalDamage()) }}
     </span>
-    <span class="ml-auto text-sm font-semibold tabular-nums">
-      <span class="text-accent-green">
+    <span class="tour-tracker__record">
+      <span class="tour-tracker__wins">
         {{ 'playerProfile.stats.wins' | translate: { count: wins() } }}
       </span>
-      <span class="text-text-muted">/</span>
-      <span class="text-accent-red">
+      <span class="tour-tracker__muted">/</span>
+      <span class="tour-tracker__losses">
         {{ 'playerProfile.stats.losses' | translate: { count: losses() } }}
       </span>
     </span>
   </div>
 
   @for (match of matches(); track match.time) {
-    <div [class]="resultAccentClass(match.result)" class="row bg-text-primary/4">
+    <div
+      [class]="'tour-tracker__match--' + match.result.toLowerCase()"
+      class="tour-tracker__match row"
+    >
       <div class="flex min-w-0 items-center gap-3.5">
         <app-media-thumbnail
           [monogram]="agentInitial(match.agentName)"
           [src]="mapImageUrl(match.mapName)"
         />
         <span class="flex min-w-0 flex-col gap-1.5">
-          <span
-            class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-          >
-            {{ match.mapName }}
-          </span>
-          <span class="truncate text-sm text-text-muted">
+          <span class="tour-tracker__map">{{ match.mapName }}</span>
+          <span class="tour-tracker__meta">
             {{ match.time }} ·
             {{ 'playerProfile.matches.gameMode.' + match.gameMode | translate }}
           </span>
         </span>
       </div>
 
-      <p class="font-display text-center text-lg leading-none font-bold tabular-nums">
-        <span [class]="resultTextClass(match.result)">{{ match.allyScore }}</span>
-        <span class="text-text-muted"> : {{ match.enemyScore }}</span>
+      <p class="tour-tracker__score">
+        <span class="tour-tracker__ally-score">{{ match.allyScore }}</span>
+        <span class="tour-tracker__muted"> : {{ match.enemyScore }}</span>
       </p>
 
       <app-media-thumbnail
         [monogram]="agentInitial(match.agentName)"
         [src]="agentImageUrl(match.agentName)"
-        class="agent"
+        class="tour-tracker__agent"
       />
 
-      <p class="stat kda">
-        <span class="label-caption block text-text-muted">
+      <p class="tour-tracker__stat tour-tracker__kda">
+        <span class="tour-tracker__stat-label label-caption">
           {{ 'playerProfile.matches.columns.kda' | translate }}
         </span>
-        <span
-          class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
-        >
+        <span class="tour-tracker__stat-value">
           {{ match.kills }}/{{ match.deaths }}/{{ match.assists }}
         </span>
       </p>
@@ -76,17 +67,15 @@
           damageHintKey(match.damagePercent) | translate: { percent: match.damagePercent }
         "
         appTooltipPosition="above"
-        class="stat cursor-help"
+        class="tour-tracker__stat tour-tracker__stat--hinted"
       >
-        <span class="label-caption block text-text-muted">
+        <span class="tour-tracker__stat-label label-caption">
           {{ 'playerProfile.matches.columns.damage' | translate }}
         </span>
-        <span
-          class="font-display mt-2 flex items-center justify-center gap-1 text-base leading-none font-semibold text-brand-500 tabular-nums"
-        >
+        <span class="tour-tracker__stat-value tour-tracker__stat-value--damage">
           {{ format(match.damage) }}
           @if (match.damagePercent < 100) {
-            <svg aria-hidden="true" class="size-3.5 shrink-0 text-danger" lucideArrowDown></svg>
+            <svg aria-hidden="true" class="tour-tracker__damage-cut" lucideArrowDown></svg>
             <span class="sr-only">
               {{
                 'playerProfile.matches.damage.share' | translate: { percent: match.damagePercent }

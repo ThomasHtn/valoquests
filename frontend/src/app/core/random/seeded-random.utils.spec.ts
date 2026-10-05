@@ -22,4 +22,19 @@ describe('createSeededRandom', () => {
       expect(value).toBeLessThan(1);
     }
   });
+
+  it('stays within [0, 1) for a negative or fractional seed', () => {
+    for (const seed of [-1, -20260905, 0.5, -7.25]) {
+      const random = createSeededRandom(seed);
+      for (let i = 0; i < 100; i++) {
+        const value = random();
+        expect(value).toBeGreaterThanOrEqual(0);
+        expect(value).toBeLessThan(1);
+      }
+    }
+  });
+
+  it('keeps the sequence of a positive integer seed', () => {
+    expect(createSeededRandom(42)()).toBe((42 * 1664525 + 1013904223) / 4294967296);
+  });
 });

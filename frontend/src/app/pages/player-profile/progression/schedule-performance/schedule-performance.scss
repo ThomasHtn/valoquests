@@ -1,0 +1,33 @@
+@use 'tools' as *;
+
+.schedule-performance__title {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-primary);
+}
+
+.schedule-performance__chart-title {
+  color: var(--color-text-muted);
+}
+
+.schedule-performance__best {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}
+
+/* Same green diamond as the highlighted bar. */
+.schedule-performance__best-mark {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-accent-green);
+  rotate: 45deg;
+}
+
+.schedule-performance__note {
+  margin-top: auto;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}

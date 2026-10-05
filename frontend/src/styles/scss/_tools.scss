@@ -1,0 +1,58 @@
+/* Sass helpers for component stylesheets: `@use 'tools' as *;` at the top of the file. */
+
+@use 'sass:map';
+
+/* Tailwind's breakpoints, so a component switches layout at the same widths as the utilities. */
+$breakpoints: (
+  sm: 40rem,
+  md: 48rem,
+  lg: 64rem,
+  xl: 80rem,
+  2xl: 96rem,
+);
+
+/**
+ * A theme color at `$opacity`, mixed like Tailwind's `bg-x/NN` so both render the same pixels.
+ * Usage: `background: tint(text-primary, 4%);`
+ */
+@function tint($token, $opacity) {
+  @return color-mix(in oklab, var(--color-#{$token}) $opacity, transparent);
+}
+
+/**
+ * Styles from breakpoint `$name` up, like Tailwind's `sm:`/`lg:` prefixes.
+ */
+@mixin from($name) {
+  @media (width >= map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+/**
+ * Styles below breakpoint `$name`, like Tailwind's `max-sm:`/`max-lg:` prefixes.
+ */
+@mixin below($name) {
+  @media (width < map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+/**
+ * Hover styles for pointers that can hover, like Tailwind's `hover:`, so taps never stick.
+ */
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+/**
+ * One line cut with an ellipsis, like Tailwind's `truncate`.
+ */
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

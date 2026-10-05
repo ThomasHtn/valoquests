@@ -1,5 +1,6 @@
 import { KeyFigureIcon, KeyFigureTone } from '../key-figures/key-figures.model';
 import { ConsistencyTrend } from './consistency.model';
+import { MatchResult } from '@core/matches/match-result.model';
 
 /**
  * Width of one column of dots, in combat score.
@@ -65,17 +66,12 @@ export const CONSISTENCY_TREND_TONES: Readonly<Record<ConsistencyTrend, KeyFigur
 export const CONSISTENCY_I18N = 'playerProfile.progression.consistency';
 
 /**
- * Tailwind classes of the outcome chip in the tooltip.
+ * Chip modifier of a won or lost match in the tooltip; any other outcome keeps the neutral chip.
  */
-export const CONSISTENCY_RESULT_CLASSES: Readonly<Record<string, string>> = {
-  WIN: 'bg-success/14 text-success',
-  LOSS: 'bg-danger/14 text-danger',
+export const CONSISTENCY_RESULT_MODIFIERS: Readonly<Partial<Record<MatchResult, string>>> = {
+  WIN: 'consistency__chip--win',
+  LOSS: 'consistency__chip--loss',
 };
-
-/**
- * Tailwind classes of the outcome chip for any other outcome.
- */
-export const CONSISTENCY_RESULT_FALLBACK_CLASS = 'bg-text-primary/4 text-text-secondary';
 
 /**
  * Matches with a combat score a season needs before the backend reports its spread.

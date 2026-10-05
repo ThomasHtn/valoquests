@@ -10,7 +10,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { LucideCalendar, LucideMap, LucideUser } from '@lucide/angular';
+import { LucideCalendar, LucideDynamicIcon, LucideMap, LucideUser } from '@lucide/angular';
 import { Chart, ScriptableContext } from 'chart.js';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -39,7 +39,7 @@ import {
   CONSISTENCY_MIN_SAMPLE,
   CONSISTENCY_OUTSIDE_COLOR,
 } from './consistency.constants';
-import { ConsistencyAxis, ConsistencyDot } from './consistency.model';
+import { ConsistencyAxis, ConsistencyDot, ConsistencyTooltipFact } from './consistency.model';
 import {
   buildConsistencyAxis,
   buildConsistencyFigures,
@@ -54,16 +54,9 @@ import {
  */
 @Component({
   selector: 'app-consistency',
-  imports: [
-    TranslatePipe,
-    Tooltip,
-    ChartTooltip,
-    KeyFigures,
-    LucideCalendar,
-    LucideMap,
-    LucideUser,
-  ],
+  imports: [TranslatePipe, Tooltip, ChartTooltip, KeyFigures, LucideDynamicIcon],
   templateUrl: './consistency.html',
+  styleUrl: './consistency.scss',
 })
 export class Consistency {
   /**
@@ -134,6 +127,20 @@ export class Consistency {
     return dot
       ? buildConsistencyTooltip(dot, this.translator(), this.translation.language())
       : null;
+  });
+
+  /**
+   * Map, agent and day lines of the tooltip, empty while nothing is hovered.
+   */
+  protected readonly tipFacts = computed<readonly ConsistencyTooltipFact[]>(() => {
+    const tip = this.tooltip();
+    return tip
+      ? [
+          { icon: LucideMap, labelKey: `${CONSISTENCY_I18N}.tip.map`, value: tip.mapName },
+          { icon: LucideUser, labelKey: `${CONSISTENCY_I18N}.tip.agent`, value: tip.agentName },
+          { icon: LucideCalendar, labelKey: `${CONSISTENCY_I18N}.tip.date`, value: tip.date },
+        ]
+      : [];
   });
 
   /**

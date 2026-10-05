@@ -1,0 +1,44 @@
+@use 'tools' as *;
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-surface-950);
+
+  @include from(lg) {
+    flex-direction: row;
+  }
+}
+
+/* Skip link (WCAG 2.4.1): visually hidden like `sr-only` until focused. */
+.shell__skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+
+  &:focus {
+    top: 1rem;
+    left: 1rem;
+    z-index: 50;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    overflow: visible;
+    clip-path: none;
+    border: 1px solid tint(brand-500, 45%);
+    background-color: var(--color-surface-800);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: calc(1.25 / 0.875);
+    color: var(--color-text-primary);
+    white-space: normal;
+  }
+}

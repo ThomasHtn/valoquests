@@ -10,7 +10,7 @@ export type RuleIcon = (typeof RULE_ICONS)[number];
  */
 export interface RuleRun {
   /**
-   * Words of the run.
+   * Words of the run, empty for an icon.
    */
   readonly text: string;
 
@@ -23,8 +23,9 @@ export interface RuleRun {
    * Icon standing for the word, or `null` for plain text.
    */
   readonly icon: RuleIcon | null;
+
   /**
-   * Icon text colour: the resource's own, brand otherwise.
+   * Icon colour modifier, empty for the brand default.
    */
-  readonly tone: string;
+  readonly modifier: string;
 }

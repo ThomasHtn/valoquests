@@ -9,15 +9,23 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
+
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
+import { svgElement } from '@core/svg/svg-element.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { TitleBadge } from '@shared/title-badge/title-badge';
-import { svgElement as el } from '@core/svg/svg-element.utils';
 import { BoardRow } from '../leaderboard.model';
+import {
+  EMBER_COLOR,
+  SKY_HEIGHT,
+  SKY_SEED,
+  SKY_WIDTH,
+  STAR_COLOR,
+  STAR_COUNT,
+} from './podium.constants';
 import { groupPodium } from './podium.utils';
-import { WIDTH, HEIGHT, STAR_COUNT, STAR, EMBER, SKY_SEED } from './podium.constants';
 
 /**
  * The week's top three on plinths under a star field.
@@ -43,10 +51,18 @@ export class Podium {
   protected readonly places = computed(() => groupPodium(this.rows()));
 
   /**
+   * Sky viewBox, the frame the stars are drawn in.
+   */
+  protected readonly viewBox = `0 0 ${SKY_WIDTH} ${SKY_HEIGHT}`;
+
+  /**
    * Star field canvas, filled once after the first render.
    */
   private readonly sky = viewChild.required<ElementRef<SVGSVGElement>>('sky');
 
+  /**
+   * Draws the sky once the canvas exists.
+   */
   constructor() {
     afterNextRender(() => this.draw(this.sky().nativeElement));
   }
@@ -56,19 +72,19 @@ export class Podium {
    */
   private draw(svg: SVGSVGElement): void {
     const random = createSeededRandom(SKY_SEED);
-    const frag = document.createDocumentFragment();
+    const stars = document.createDocumentFragment();
     for (let i = 0; i < STAR_COUNT; i++) {
       const y = random();
-      frag.append(
-        el('circle', {
-          cx: (random() * WIDTH).toFixed(1),
-          cy: (y * y * (HEIGHT - 30)).toFixed(1),
+      stars.append(
+        svgElement('circle', {
+          cx: (random() * SKY_WIDTH).toFixed(1),
+          cy: (y * y * (SKY_HEIGHT - 30)).toFixed(1),
           r: (0.5 + random() * 1.1).toFixed(2),
-          fill: random() < 0.15 ? EMBER : STAR,
+          fill: random() < 0.15 ? EMBER_COLOR : STAR_COLOR,
           opacity: (0.15 + random() * 0.55).toFixed(2),
         }),
       );
     }
-    svg.replaceChildren(frag);
+    svg.replaceChildren(stars);
   }
 }

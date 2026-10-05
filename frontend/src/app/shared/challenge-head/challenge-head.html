@@ -1,9 +1,10 @@
 @let row = this.row();
+@let gain = this.gain();
 
-<span aria-hidden="true" class="hex-mark clip-hex">
-  <span class="clip-hex">
+<span aria-hidden="true" class="challenge-head__hex hex-mark clip-hex">
+  <span class="challenge-head__mark clip-hex">
     @if (row.mark === 'D') {
-      <svg class="glyph" [lucideIcon]="concepts.points"></svg>
+      <svg class="challenge-head__glyph" [lucideIcon]="concepts.points"></svg>
     } @else {
       {{ row.mark }}
     }
@@ -11,36 +12,26 @@
 </span>
 
 <!-- Paragraphs, not a heading: a table row header cannot hold one. -->
-<div class="title">
-  <p class="key-line">
-    <span class="key label-caption text-2xs">{{ row.kind }}</span>
+<div class="challenge-head__title">
+  <p class="challenge-head__key-line">
+    <span class="challenge-head__kind label-caption">{{ row.kind }}</span>
     @if (row.daily && row.closesAt === null) {
-      <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
+      <span class="challenge-head__closed">{{ 'challenges.daily.closedDay' | translate }}</span>
     }
   </p>
-  <p class="name">{{ row.name }}</p>
+  <p class="challenge-head__name">{{ row.name }}</p>
 </div>
 
-<p class="pay">
-  @if (row.rescueActive) {
-    <span
-      [appTooltip]="'challenges.card.woundedTooltip' | translate: { count: row.survivors }"
-      class="pay-figure focus-ring"
-      tabindex="0"
-    >
-      <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
-      <b class="tabular-nums">+{{ row.survivors | figure }}</b>
-    </span>
-  } @else {
-    <span
-      [appTooltip]="'challenges.card.pointsTooltip' | translate: { count: row.rankingPoints }"
-      class="pay-figure focus-ring"
-      tabindex="0"
-    >
-      <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.points"></svg>
-      <b class="tabular-nums">+{{ row.rankingPoints | figure }}</b>
-    </span>
-  }
+<p class="challenge-head__gain">
+  <!-- Icon and figure share one tooltip, on the line's baseline. -->
+  <span
+    [appTooltip]="gain.tooltipKey | translate: { count: gain.count }"
+    class="challenge-head__gain-figure focus-ring"
+    tabindex="0"
+  >
+    <svg aria-hidden="true" class="challenge-head__gain-icon" [lucideIcon]="gain.icon"></svg>
+    <b class="challenge-head__gain-value">+{{ gain.count | figure }}</b>
+  </span>
 </p>
 
-<p class="desc">{{ row.description }}</p>
+<p class="challenge-head__description">{{ row.description }}</p>

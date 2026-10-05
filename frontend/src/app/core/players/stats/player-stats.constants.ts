@@ -16,25 +16,22 @@ export const KDA_GOOD_THRESHOLD = 1.3;
 export const KD_GOOD_THRESHOLD = 1;
 
 /**
- * Colours of a figure not synchronized yet.
+ * Colour of a figure not synchronized yet.
  */
 export const UNKNOWN_STAT_VISUAL: StatVisual = {
-  textClass: 'text-text-secondary',
-  barClass: 'bg-text-secondary',
+  tone: 'var(--color-text-secondary)',
 };
 
 /**
- * Colours of a figure at or above its good threshold.
+ * Colour of a figure at or above its good threshold.
  */
 export const GOOD_STAT_VISUAL: StatVisual = {
-  textClass: 'text-accent-green',
-  barClass: 'bg-accent-green',
+  tone: 'var(--color-accent-green)',
 };
 
 /**
- * Colours of a figure below its good threshold.
+ * Colour of a figure below its good threshold.
  */
 export const AVERAGE_STAT_VISUAL: StatVisual = {
-  textClass: 'text-accent-gold',
-  barClass: 'bg-accent-gold',
+  tone: 'var(--color-accent-gold)',
 };

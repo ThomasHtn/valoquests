@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { LedgerCell, LedgerRow } from '../../campaign-panel.model';
@@ -15,14 +15,19 @@ import { LedgerCell, LedgerRow } from '../../campaign-panel.model';
   styleUrl: './ledger-cell.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[class]': 'hostClass()',
+    class: 'ledger-cell',
+    '[class.ledger-cell--food]': "row().key === 'food'",
+    '[class.ledger-cell--components]': "row().key === 'components'",
+    '[class.ledger-cell--now]': "cell().kind === 'now'",
+    '[class.ledger-cell--ahead]': 'ahead()',
+    '[class.focus-ring]': '!ahead()',
     '[attr.aria-hidden]': 'ahead() ? true : null',
     '[attr.aria-label]': 'ahead() ? null : label()',
     '[attr.role]': 'ahead() ? null : "img"',
     '[attr.tabindex]': 'ahead() ? null : 0',
-    '[style.--got]': 'cell().gotShare',
-    '[style.--spent]': 'cell().spentShare',
-    '[style.--carry]': 'cell().carryShare',
+    '[style.--gained-share]': 'cell().gotShare',
+    '[style.--spent-share]': 'cell().spentShare',
+    '[style.--carried-share]': 'cell().carryShare',
   },
 })
 export class LedgerCellView {
@@ -52,18 +57,9 @@ export class LedgerCellView {
   protected readonly ahead = computed(() => this.cell().kind === 'ahead');
 
   /**
-   * Host classes for the resource, the week state and focusability.
-   */
-  protected readonly hostClass = computed(() => {
-    const kind = this.cell().kind;
-    const state = kind === 'now' ? ' lg-cell--now' : kind === 'ahead' ? ' lg-cell--ahead' : '';
-    return `lg-cell lg-cell--${this.row().key}${state}${kind === 'ahead' ? '' : ' focus-ring'}`;
-  });
-
-  /**
    * Formats an amount in the active language for the bar values.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 }

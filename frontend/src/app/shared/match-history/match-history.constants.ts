@@ -1,5 +1,11 @@
+import { MatchStatTone } from './match-history.model';
+
 /**
- * Column grid of every desktop row; a grid, not a `<table>`, since `<tr>` ignores margin.
+ * Modifier colouring a stat figure, by tone.
  */
-export const MATCH_ROW_GRID_CLASS =
-  'grid grid-cols-[minmax(0,2fr)_repeat(8,minmax(0,1fr))] items-center';
+export const STAT_TONE_CLASSES: Readonly<Record<MatchStatTone, string>> = {
+  primary: '',
+  muted: 'match-history__stat-value--muted',
+  good: 'match-history__stat-value--good',
+  average: 'match-history__stat-value--average',
+};

@@ -1,12 +1,12 @@
 <!-- The tabs share a section rule's hairline across the full width. -->
-<div [attr.aria-label]="'overview.tabs.aria' | translate" class="bar" role="tablist">
+<div [attr.aria-label]="'overview.tabs.aria' | translate" class="overview-tabs__bar" role="tablist">
   @for (tab of tabs(); track tab.key; let index = $index) {
     <!-- Star beside the tab, not inside: a button cannot hold another. -->
     <div
       #slot
       [attr.data-tab]="tab.key"
-      [class.slot--on]="selected() === tab.key"
-      class="slot"
+      [class.overview-tabs__slot--selected]="selected() === tab.key"
+      class="overview-tabs__slot"
       role="presentation"
     >
       <button
@@ -15,28 +15,15 @@
         (keydown)="onKeydown($event, index)"
         [attr.aria-controls]="selected() === tab.key ? panelId() : null"
         [attr.aria-selected]="selected() === tab.key"
-        [class.tab--on]="selected() === tab.key"
+        [class.overview-tabs__tab--selected]="selected() === tab.key"
         [id]="tabId(tab.key)"
         [tabindex]="selected() === tab.key ? 0 : -1"
-        class="tab focus-ring-inset"
+        class="overview-tabs__tab focus-ring-inset"
         role="tab"
         type="button"
       >
-        @switch (tab.key) {
-          @case ('challenges') {
-            <svg aria-hidden="true" class="tab-icon" lucideSunrise></svg>
-          }
-          @case ('contributions') {
-            <svg aria-hidden="true" class="tab-icon" lucideUserPen></svg>
-          }
-          @case ('matches') {
-            <svg aria-hidden="true" class="tab-icon" lucideRadio></svg>
-          }
-          @case ('campaign') {
-            <svg aria-hidden="true" class="tab-icon" lucideMap></svg>
-          }
-        }
-        <span class="tab-label">{{ tab.label }}</span>
+        <svg aria-hidden="true" class="overview-tabs__tab-icon" [lucideIcon]="icons[tab.key]"></svg>
+        <span class="overview-tabs__tab-label">{{ tab.label }}</span>
         @if (favorite() === tab.key) {
           <span class="sr-only">, {{ 'overview.tabs.favorite.marker' | translate }}</span>
         }
@@ -45,23 +32,24 @@
       <!-- Only the selected tab can be pinned; the pinned one keeps its star as a mark. -->
       @if (selected() === tab.key) {
         @let pinned = favorite() === tab.key;
+        @let starLabel =
+          (pinned ? 'overview.tabs.favorite.unset' : 'overview.tabs.favorite.set') | translate;
         <button
           (click)="toggleFavorite(tab.key)"
-          [attr.aria-label]="
-            (pinned ? 'overview.tabs.favorite.unset' : 'overview.tabs.favorite.set') | translate
-          "
-          [appTooltip]="
-            (pinned ? 'overview.tabs.favorite.unset' : 'overview.tabs.favorite.set') | translate
-          "
-          [class.star--pinned]="pinned"
-          class="star focus-ring-inset"
+          [appTooltip]="starLabel"
+          [attr.aria-label]="starLabel"
+          [class.overview-tabs__star--pinned]="pinned"
+          class="overview-tabs__star focus-ring-inset"
           type="button"
         >
-          <svg aria-hidden="true" class="star-icon" lucideStar></svg>
+          <svg aria-hidden="true" class="overview-tabs__star-icon" lucideStar></svg>
         </button>
       } @else if (favorite() === tab.key) {
-        <span aria-hidden="true" class="star star--pinned star--mark">
-          <svg class="star-icon" lucideStar></svg>
+        <span
+          aria-hidden="true"
+          class="overview-tabs__star overview-tabs__star--pinned overview-tabs__star--mark"
+        >
+          <svg class="overview-tabs__star-icon" lucideStar></svg>
         </span>
       }
     </div>

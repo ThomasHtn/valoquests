@@ -1,16 +1,10 @@
 import { MatchResult } from '../match-result.model';
-import { RESULT_ACCENT_CLASSES, RESULT_TEXT_CLASSES } from './match-visual.constants';
+import { RESULT_TONES } from './match-visual.constants';
+import { ResultTone } from './match-visual.model';
 
 /**
- * Tailwind shadow utility accenting a match row's leading edge.
+ * Tone of a match result.
  */
-export function resolveResultAccentClass(result: MatchResult): string {
-  return RESULT_ACCENT_CLASSES[result];
-}
-
-/**
- * Tailwind text colour of the player's own score.
- */
-export function resolveResultTextClass(result: MatchResult): string {
-  return RESULT_TEXT_CLASSES[result];
+export function resolveResultTone(result: MatchResult): ResultTone {
+  return RESULT_TONES[result];
 }

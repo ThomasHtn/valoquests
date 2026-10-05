@@ -1,10 +1,11 @@
 import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignHistory } from '@core/campaign/campaign-history.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { daysBetween, localMidnight } from '@core/date/date.utils';
 import { RankingEntry } from '@core/ranking/ranking.model';
-import { WeekOption } from './leaderboard.model';
+import { BoardColumn, WeekOption } from './leaderboard.model';
 
 /**
  * Figure each title is awarded on, as the backend awards them.
@@ -75,4 +76,48 @@ export function formatWeekSpan(weekStart: string, locale: string): string {
     return `${monday.getDate()} – ${short.format(sunday)}`;
   }
   return `${short.format(monday)} – ${short.format(sunday)}`;
+}
+
+/**
+ * The board's six figure columns; outside a campaign challenges earn points, not wounded.
+ */
+export function boardColumns(rescueActive: boolean): BoardColumn[] {
+  return [
+    {
+      key: 'score',
+      icon: CONCEPT_ICONS.score,
+      label: 'leaderboard.board.score',
+      help: rescueActive ? 'leaderboard.board.scoreHelp' : 'leaderboard.board.scoreHelpOff',
+    },
+    {
+      key: 'damage',
+      icon: CONCEPT_ICONS.damage,
+      label: 'leaderboard.board.damage',
+      help: rescueActive ? 'leaderboard.board.damageHelp' : 'leaderboard.board.damageHelpOff',
+    },
+    {
+      key: 'points',
+      icon: rescueActive ? CONCEPT_ICONS.wounded : CONCEPT_ICONS.points,
+      label: rescueActive ? 'leaderboard.board.points' : 'leaderboard.board.pointsOff',
+      help: rescueActive ? 'leaderboard.board.pointsHelp' : 'leaderboard.board.pointsHelpOff',
+    },
+    {
+      key: 'challenges',
+      icon: CONCEPT_ICONS.challenge,
+      label: 'leaderboard.board.challenges',
+      help: 'leaderboard.board.challengesHelp',
+    },
+    {
+      key: 'matches',
+      icon: CONCEPT_ICONS.matches,
+      label: 'leaderboard.board.matches',
+      help: 'leaderboard.board.matchesHelp',
+    },
+    {
+      key: 'streak',
+      icon: CONCEPT_ICONS.streak,
+      label: 'leaderboard.board.streak',
+      help: 'leaderboard.board.streakHelp',
+    },
+  ];
 }

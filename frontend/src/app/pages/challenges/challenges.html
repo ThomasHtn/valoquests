@@ -3,7 +3,7 @@
 </app-page-header>
 
 <div class="page-body">
-  <main class="flex flex-col gap-[clamp(2.5rem,4vw,3.25rem)] pb-20">
+  <main class="challenges__content flex flex-col pb-20">
     <app-resource-state
       (retry)="retry()"
       [emptyPlate]="emptyPlate()"
@@ -13,9 +13,9 @@
       [isLoading]="isLoading()"
       [loadingText]="'challenges.state.loading' | translate"
       emptyKind="waiting"
-      padding="px-4 py-10 sm:px-6"
+      padding="page"
     >
-      <section [attr.aria-label]="'challenges.board.title' | translate" class="board">
+      <section [attr.aria-label]="'challenges.board.title' | translate" class="challenges__board">
         <app-challenge-board
           (pin)="togglePin($event)"
           [(pickedDay)]="pickedDay"
@@ -24,7 +24,7 @@
           [period]="period()"
           [rescueActive]="rescueActive()"
           [rows]="boardRows()"
-          class="board-table"
+          class="challenges__table"
         />
         <app-challenge-deck
           (pin)="togglePin($event)"
@@ -32,7 +32,7 @@
           [days]="days()"
           [operators]="boardOperators()"
           [rows]="boardRows()"
-          class="board-deck"
+          class="challenges__deck"
         />
       </section>
     </app-resource-state>
@@ -41,28 +41,20 @@
     @if (!isLoading()) {
       <!-- Folded: none of its rows exist before it opens. -->
       <section aria-labelledby="catalogue-title">
-        <details (toggle)="toggleCatalogue($event)" class="fold">
-          <summary class="fold-bar focus-ring">
-            <h2
-              class="font-display text-[clamp(1.5rem,1.1rem+1.1vw,2rem)] leading-tight font-semibold tracking-[0.01em] text-brand-400 uppercase"
-              id="catalogue-title"
-            >
+        <details (toggle)="toggleCatalogue($event)" class="challenges__fold">
+          <summary class="challenges__fold-bar focus-ring">
+            <h2 class="challenges__fold-title" id="catalogue-title">
               {{ 'challenges.catalogue.title' | translate }}
             </h2>
-            <span
-              aria-hidden="true"
-              class="h-px flex-[1_1_3rem] bg-linear-to-r from-brand-500/50 to-transparent max-sm:basis-4"
-            ></span>
+            <span aria-hidden="true" class="challenges__fold-rule"></span>
             <!-- Same cue as a section rule's link. -->
-            <span
-              class="fold-cue tracking-label font-mono text-xs font-medium text-brand-400 uppercase transition-colors"
-            >
+            <span class="challenges__fold-cue">
               {{
                 (catalogueOpen() ? 'challenges.catalogue.hide' : 'challenges.catalogue.show')
                   | translate
               }}
             </span>
-            <span aria-hidden="true" class="size-2 rotate-45 border border-brand-500/70"></span>
+            <span aria-hidden="true" class="challenges__fold-diamond"></span>
           </summary>
           @if (catalogueOpen()) {
             <app-resource-state
@@ -71,7 +63,7 @@
               [isError]="catalogueError()"
               [isLoading]="catalogueLoading()"
               [loadingText]="'challenges.catalogue.loading' | translate"
-              padding="py-8"
+              padding="fold"
             >
               <app-challenge-catalogue [groups]="catalogueGroups()" />
             </app-resource-state>

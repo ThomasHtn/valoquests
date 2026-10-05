@@ -17,6 +17,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   templateUrl: './board-head.html',
   styleUrl: './board-head.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.board-head--weekly]': '!row().daily' },
 })
 export class BoardHead {
   /**

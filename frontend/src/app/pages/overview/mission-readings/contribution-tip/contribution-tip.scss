@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 /* Challenges board's bubble rhythm, in the squad's violet. */
 :host {
   --tone: var(--color-accent-violet);
@@ -7,13 +9,13 @@
   min-width: 10.5rem;
 }
 
-.name {
+.contribution-tip__name {
   font-weight: 600;
   line-height: 1.1;
   color: var(--color-text-secondary);
 }
 
-.figures {
+.contribution-tip__figures {
   display: flex;
   align-items: baseline;
   gap: 0.3rem;
@@ -21,18 +23,18 @@
   line-height: 1;
 }
 
-.value {
+.contribution-tip__damage {
   font-size: 1.5rem;
   font-weight: 600;
   color: color-mix(in srgb, var(--tone) 55%, white);
 }
 
-.unit {
+.contribution-tip__unit {
   font-size: 1rem;
   color: var(--color-text-muted);
 }
 
-.status {
+.contribution-tip__status {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -41,15 +43,15 @@
   white-space: nowrap;
 }
 
-.share {
+.contribution-tip__share {
   color: var(--color-text-secondary);
 }
 
-.points {
+.contribution-tip__points {
   color: var(--color-text-muted);
 }
 
-.points b {
+.contribution-tip__points-value {
   font-family: var(--font-display);
   font-weight: 600;
   color: var(--color-brand-400);

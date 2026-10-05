@@ -11,7 +11,7 @@ export type ExtractionLimiter = 'NONE' | 'GROUP' | 'FOOD' | 'COMPONENTS';
 /**
  * Base at a week's close (or last replayed day); mirrors `CampaignWeekBaseResponse`.
  */
-export interface CampaignWeekBase {
+interface CampaignWeekBase {
   /**
    * Inhabitants of the base.
    */
@@ -46,7 +46,7 @@ export interface CampaignWeekBase {
 /**
  * Match that brought a week's guardian down.
  */
-export interface FatalBlow {
+interface FatalBlow {
   /**
    * Name of the map.
    */

@@ -1,5 +1,5 @@
 <!-- Chart.js sizes the canvas from this box (`maintainAspectRatio: false`). -->
-<div [class]="heightClass()" class="relative">
+<div [class.line-chart__frame--fill]="fill()" class="line-chart__frame">
   <canvas
     #canvas
     [attr.aria-label]="ariaLabel()"

@@ -1,6 +1,10 @@
-<div class="squad">
-  <p class="squad-hint">{{ 'challenges.board.pinHint' | translate }}</p>
-  <div [attr.aria-label]="'challenges.board.squad' | translate" class="squad-row" role="group">
+<div class="challenge-deck__squad">
+  <p class="challenge-deck__hint">{{ 'challenges.board.pinHint' | translate }}</p>
+  <div
+    [attr.aria-label]="'challenges.board.squad' | translate"
+    class="challenge-deck__squad-row"
+    role="group"
+  >
     @for (operator of operators(); track operator.playerId) {
       <button
         (click)="pin.emit(operator.playerId)"
@@ -13,13 +17,13 @@
         "
         [attr.aria-pressed]="operator.pinned"
         appTooltipPosition="below"
-        class="sq focus-ring"
+        class="challenge-deck__operator focus-ring"
         type="button"
       >
         <app-avatar [src]="operator.portrait" size="sm" />
-        <span aria-hidden="true" class="sq-name">{{ operator.name }}</span>
+        <span aria-hidden="true" class="challenge-deck__operator-name">{{ operator.name }}</span>
         @if (operator.pinned) {
-          <svg aria-hidden="true" class="sq-star" lucideStar></svg>
+          <svg aria-hidden="true" class="challenge-deck__operator-star" lucideStar></svg>
         }
       </button>
     }
@@ -29,7 +33,12 @@
 @for (row of rows(); track row.key) {
   <app-deck-card [row]="row">
     @if (row.daily) {
-      <app-daily-week [(selected)]="pickedDay" [days]="days()" [initials]="true" class="tally" />
+      <app-daily-week
+        [(selected)]="pickedDay"
+        [days]="days()"
+        [initials]="true"
+        class="challenge-deck__tally"
+      />
     }
   </app-deck-card>
 }

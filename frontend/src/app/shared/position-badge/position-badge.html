@@ -1,6 +1,6 @@
 @if (position() !== null) {
   <!-- No whitespace around the figure: it would widen the badge. -->
-  <span [class]="colorClass()" class="shrink-0 text-sm font-bold tabular-nums"
+  <span [class.position-badge--first]="position() === 1" class="position-badge"
     >#{{ position() }}</span
   >
 }

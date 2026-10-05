@@ -9,6 +9,7 @@ import { RuleText } from '../rule-text/rule-text';
   selector: 'app-rule-section',
   imports: [RuleText],
   templateUrl: './rule-section.html',
+  styleUrl: './rule-section.scss',
   // A box, not `display: contents`, so the page stack's gutter reaches it.
   host: { class: 'block' },
 })

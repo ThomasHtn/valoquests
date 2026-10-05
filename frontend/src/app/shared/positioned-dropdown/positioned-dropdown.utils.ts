@@ -4,7 +4,7 @@ import {
   PositionedDropdownRefs,
   PositionedDropdown,
 } from './positioned-dropdown.model';
-import { DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
+import { DROPDOWN_GAP_PX, DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
 
 /**
  * Pins a fixed dropdown panel under its trigger, closing it on outside click, resize or scroll.
@@ -61,8 +61,8 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
     // Upwards when the list does not fit below but has more room above.
     const upwards = below < DROPDOWN_ROOM_PX && rect.top > below;
     panelPosition.set({
-      top: upwards ? null : rect.bottom + 8,
-      bottom: upwards ? window.innerHeight - rect.top + 8 : null,
+      top: upwards ? null : rect.bottom + DROPDOWN_GAP_PX,
+      bottom: upwards ? window.innerHeight - rect.top + DROPDOWN_GAP_PX : null,
       right: window.innerWidth - rect.right,
       minWidth: rect.width,
     });
@@ -73,18 +73,10 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
     isOpen.set(false);
   }
 
-  function toggle(): void {
-    if (isOpen()) {
-      close();
-    } else {
-      open();
-    }
-  }
-
   function closeAndRefocus(): void {
     close();
     trigger().nativeElement.focus();
   }
 
-  return { isOpen, panelPosition, open, close, toggle, closeAndRefocus };
+  return { isOpen, panelPosition, open, close, closeAndRefocus };
 }

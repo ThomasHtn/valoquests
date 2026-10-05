@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-4">
   <!-- Metric switch, segmented like the page's filters so it reads as a control, not tabs. -->
   <div class="flex flex-wrap items-center justify-between gap-3">
-    <h3 class="label-caption text-sm text-text-primary">
+    <h3 class="evolution-chart__title label-caption">
       <span
         [appTooltip]="'playerProfile.progression.evolution.tooltip' | translate"
         class="focus-ring"
@@ -12,7 +12,7 @@
 
     <div
       [attr.aria-label]="'playerProfile.progression.evolution.metricLabel' | translate"
-      class="flex items-center bg-text-primary/4 px-1"
+      class="evolution-chart__metrics flex items-center px-1"
       role="group"
     >
       @for (option of metrics; track option) {
@@ -20,12 +20,7 @@
           (click)="onMetricChange(option)"
           [appTooltip]="'playerProfile.stats.tooltip.' + option | translate"
           [attr.aria-pressed]="metric() === option"
-          [class]="
-            metric() === option
-              ? 'bg-brand-500/15 text-brand-500'
-              : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-          "
-          class="focus-ring-inset min-h-10 cursor-pointer px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+          class="segment focus-ring-inset"
           type="button"
         >
           {{ 'playerProfile.progression.evolution.metric.' + option | translate }}
@@ -50,13 +45,13 @@
       @for (entry of legend(); track entry.label) {
         <li class="flex items-center gap-2">
           <span [style.background-color]="entry.color" aria-hidden="true" class="size-2.5"></span>
-          <span class="text-sm text-text-secondary">{{ entry.label }}</span>
-          <span class="font-mono text-xs text-text-muted tabular-nums">{{ entry.average }}</span>
+          <span class="evolution-chart__legend-label">{{ entry.label }}</span>
+          <span class="evolution-chart__legend-average">{{ entry.average }}</span>
         </li>
       }
     </ul>
   } @else if (legend().length === 1) {
-    <p class="font-mono text-sm text-text-muted tabular-nums">
+    <p class="evolution-chart__single-average">
       {{
         'playerProfile.progression.evolution.singleAverage'
           | translate: { average: legend()[0].average }
@@ -65,7 +60,7 @@
   }
 
   @if (isComparing()) {
-    <p class="text-sm text-text-muted">
+    <p class="evolution-chart__note">
       {{ 'playerProfile.progression.evolution.alignmentNote' | translate }}
     </p>
   }

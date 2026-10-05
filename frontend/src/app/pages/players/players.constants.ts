@@ -1,4 +1,12 @@
-import { PlayerSortColumn } from './players.model';
+import type { LucideIcon } from '@lucide/angular';
+import {
+  LucideArrowDownAZ,
+  LucideArrowDownNarrowWide,
+  LucideArrowDownWideNarrow,
+  LucideArrowDownZA,
+} from '@lucide/angular';
+
+import { PlayerSortColumn, PlayerSortOrder } from './players.model';
 
 /**
  * Query parameters holding the sort (`/players?sort=kda&dir=asc`).
@@ -41,3 +49,15 @@ export const PLAYER_SORT_COLUMNS: readonly PlayerSortColumn[] = [
     helpKey: 'players.columns.matchesHelp',
   },
 ];
+
+/**
+ * Arrow of the phone's sort toggle per order: letters for names, bar widths for figures.
+ */
+export const PLAYER_SORT_ORDER_ICONS: Readonly<Record<PlayerSortOrder, LucideIcon>> = {
+  az: LucideArrowDownAZ,
+  za: LucideArrowDownZA,
+  best: LucideArrowDownWideNarrow,
+  worst: LucideArrowDownNarrowWide,
+  high: LucideArrowDownWideNarrow,
+  low: LucideArrowDownNarrowWide,
+};

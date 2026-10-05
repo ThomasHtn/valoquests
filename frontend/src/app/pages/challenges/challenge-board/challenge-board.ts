@@ -14,13 +14,16 @@ import {
 import {
   LucideChevronLeft,
   LucideChevronRight,
-  LucideStar,
   LucideDynamicIcon,
+  LucideStar,
 } from '@lucide/angular';
 
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { FigurePipe } from '@core/i18n/format/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
+import { ProgressMark } from '@shared/progress-mark/progress-mark';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { BoardHead } from '../board-head/board-head';
 import {
@@ -32,10 +35,7 @@ import {
   BOARD_ROW_STAGGER_MS,
 } from '../challenges.constants';
 import { BoardOperator, DayCell } from '../challenges.model';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DailyWeek } from '../daily-week/daily-week';
-import { ProgressMark } from '@shared/progress-mark/progress-mark';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * The week as a table; operator columns slide under the challenge column when they overflow.
@@ -59,9 +59,9 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   styleUrl: './challenge-board.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[style.--col.px]': 'columnPx()',
-    '[class.board--sliding]': 'slidable()',
-    '[class.board--dragging]': 'dragging()',
+    '[style.--column-width.px]': 'columnPx()',
+    '[class.challenge-board--sliding]': 'slidable()',
+    '[class.challenge-board--dragging]': 'dragging()',
     '(pointerdown)': 'pressStart($event)',
     '(pointermove)': 'pressMove($event)',
     '(pointerup)': 'pressEnd()',
@@ -72,11 +72,6 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   },
 })
 export class ChallengeBoard {
-  /**
-   * The one icon of each concept.
-   */
-  protected readonly concepts = CONCEPT_ICONS;
-
   /**
    * The squad, in board order.
    */
@@ -111,6 +106,13 @@ export class ChallengeBoard {
    * Emits the operator whose header was pressed.
    */
   public readonly pin = output<number>();
+
+  /**
+   * Icon of the footer's rewards: wounded during a campaign, points otherwise.
+   */
+  protected readonly rewardIcon = computed(() =>
+    this.rescueActive() ? CONCEPT_ICONS.wounded : CONCEPT_ICONS.points,
+  );
 
   /**
    * Delay between rows entering, so the table cascades in.
@@ -183,7 +185,7 @@ export class ChallengeBoard {
   });
 
   /**
-   * Operator column width (`--col`), in whole pixels so hairlines land on a pixel.
+   * Operator column width (`--column-width`), in whole pixels so hairlines land on a pixel.
    */
   protected readonly columnPx = computed(() => {
     const lead = this.leadShare();
@@ -237,6 +239,9 @@ export class ChallengeBoard {
     return { from, to: from + this.visibleCount() - 1, total: this.operators().length };
   });
 
+  /**
+   * Measures the board once rendered and on every resize.
+   */
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
@@ -279,7 +284,7 @@ export class ChallengeBoard {
       !this.slidable() ||
       event.button !== 0 ||
       target.closest('button') ||
-      !target.closest('.slide')
+      !target.closest('.challenge-board__operator-cell')
     ) {
       return;
     }

@@ -11,14 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import {
-  LucideArrowDownUp,
-  LucideMinus,
-  LucideTrendingDown,
-  LucideTrendingUp,
-  LucideTrophy,
-  LucideDynamicIcon,
-} from '@lucide/angular';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { Chart } from 'chart.js';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -49,6 +42,7 @@ import {
   RANK_JOURNEY_COMPACT_QUERY,
   RANK_JOURNEY_COMPACT_SIZES,
   RANK_JOURNEY_I18N,
+  RANK_JOURNEY_TOOLTIP_ICONS,
   RANK_JOURNEY_WIDE_SIZES,
 } from './rank-journey.constants';
 import { RankJourneySeries } from './rank-journey.model';
@@ -61,7 +55,6 @@ import {
   loadRankBadge,
   resolveRankColor,
 } from './rank-journey.utils';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Rank per selected season, or match by match for a single season.
@@ -69,26 +62,15 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
  */
 @Component({
   selector: 'app-rank-journey',
-  imports: [
-    LucideDynamicIcon,
-    NgOptimizedImage,
-    TranslatePipe,
-    Tooltip,
-    ChartTooltip,
-    KeyFigures,
-    LucideArrowDownUp,
-    LucideMinus,
-    LucideTrendingDown,
-    LucideTrendingUp,
-    LucideTrophy,
-  ],
+  imports: [LucideDynamicIcon, NgOptimizedImage, TranslatePipe, Tooltip, ChartTooltip, KeyFigures],
   templateUrl: './rank-journey.html',
+  styleUrl: './rank-journey.scss',
 })
 export class RankJourney {
   /**
-   * Concept icons, for the template's `svg[lucideIcon]`.
+   * Icons of the tooltip's lines.
    */
-  protected readonly concepts = CONCEPT_ICONS;
+  protected readonly icons = RANK_JOURNEY_TOOLTIP_ICONS;
 
   /**
    * Selected seasons, oldest first.

@@ -1,69 +1,21 @@
-.fold {
+@use 'tools' as *;
+@use '../campaign-fold';
+
+.reserve-ledger {
   margin-top: 1.25rem;
-  background: rgb(236 232 225 / 4%);
 }
 
-.fold-sum {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1.5rem;
-  min-height: 3.5rem;
-  padding: 1.1rem 1.25rem;
-  list-style: none;
-  cursor: pointer;
-}
-
-.fold-sum::-webkit-details-marker {
+/* The cue names the action the fold will take. */
+.reserve-ledger__cue-hide,
+.reserve-ledger[open] .reserve-ledger__cue-show {
   display: none;
 }
 
-.fold-sum:hover .fold-cue {
-  color: var(--color-text-primary);
-}
-
-.chart-head b {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-brand-400);
-}
-
-.fold-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: auto;
-  color: var(--color-text-muted);
-}
-
-.fold-hide,
-.fold[open] .fold-show {
-  display: none;
-}
-
-.fold[open] .fold-hide {
+.reserve-ledger[open] .reserve-ledger__cue-hide {
   display: inline;
 }
 
-.fold-chev {
-  transition: rotate 0.25s var(--ease-out-quart);
-}
-
-.fold[open] .fold-chev {
-  rotate: 180deg;
-}
-
-.fold-body {
-  animation: campaign-open 0.3s var(--ease-out-quart) both;
-}
-
-.ledger-key {
+.reserve-ledger__legend {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.25rem;
@@ -72,19 +24,20 @@
   color: var(--color-text-secondary);
 }
 
-.ledger-key li {
+.reserve-ledger__legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.ledger-key i {
+.reserve-ledger__swatch {
   width: 0.9rem;
   height: 0.9rem;
   background: var(--color-text-secondary);
 }
 
-.ledger-key .k-spent {
+/* Same hatching as a cell's spent bar. */
+.reserve-ledger__swatch--spent {
   background: repeating-linear-gradient(
     135deg,
     var(--color-text-secondary) 0 2px,
@@ -92,46 +45,63 @@
   );
 }
 
-.ledger-key .k-carry {
+.reserve-ledger__swatch--carried {
   width: 1.2rem;
   height: 0;
   border-top: 2px dashed var(--color-text-secondary);
   background: none;
 }
 
-.ledger-scroll {
+.reserve-ledger__scroll {
   overflow-x: auto;
 }
 
-.ledger {
-  --up: 7rem;
+/* `--ledger-bar-max` is the tallest bar, read by every `app-ledger-cell`. */
+.reserve-ledger__grid {
+  --ledger-bar-max: 7rem;
 
   display: grid;
   grid-template-columns: 11.5rem repeat(10, minmax(0, 1fr));
   min-width: 64rem;
 }
 
-.lg-col {
+.reserve-ledger__week {
   --tone: var(--color-text-primary);
 
   padding: 0.75rem 0.4rem 0.6rem;
   text-align: center;
 }
 
-.lg-col b,
-.lg-col span {
+.reserve-ledger__week--won {
+  --tone: var(--color-brand-400);
+}
+
+.reserve-ledger__week--lost {
+  --tone: var(--color-boss-hp-edge);
+}
+
+.reserve-ledger__week--now {
+  --tone: var(--color-accent-cyan);
+}
+
+.reserve-ledger__week--ahead {
+  --tone: var(--color-text-muted);
+}
+
+.reserve-ledger__week-index,
+.reserve-ledger__week-name {
   display: block;
   font-family: var(--font-display);
   font-weight: 600;
   color: var(--tone);
 }
 
-.lg-col b {
+.reserve-ledger__week-index {
   font-size: 0.875rem;
   line-height: 1;
 }
 
-.lg-col span {
+.reserve-ledger__week-name {
   margin-top: 0.3rem;
   font-size: 1rem;
   line-height: 1.1;
@@ -139,28 +109,13 @@
   text-transform: uppercase;
 }
 
-.lg-col--won {
-  --tone: var(--color-brand-400);
-}
-
-.lg-col--lost {
-  --tone: var(--color-boss-hp-edge);
-}
-
-.lg-col--won span,
-.lg-col--lost span {
+/* A settled planet keeps its outcome on the index only. */
+.reserve-ledger__week--won .reserve-ledger__week-name,
+.reserve-ledger__week--lost .reserve-ledger__week-name {
   color: var(--color-text-primary);
 }
 
-.lg-col--now {
-  --tone: var(--color-accent-cyan);
-}
-
-.lg-col--ahead {
-  --tone: var(--color-text-muted);
-}
-
-.lg-lead {
+.reserve-ledger__resource {
   --tone: var(--color-text-secondary);
 
   display: grid;
@@ -173,21 +128,21 @@
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.lg-lead--components {
+.reserve-ledger__resource--components {
   --tone: var(--color-accent-cyan);
 }
 
-.lg-lead--food {
+.reserve-ledger__resource--food {
   --tone: var(--color-accent-green);
 }
 
-.lg-lead .hex-mark {
+.reserve-ledger__mark {
   grid-row: span 3;
   width: 2.5rem;
   height: 2.85rem;
 }
 
-.lg-total {
+.reserve-ledger__total {
   font-family: var(--font-display);
   font-size: 1.625rem;
   font-weight: 600;
@@ -195,30 +150,39 @@
   color: var(--tone);
 }
 
-.lg-total small {
+.reserve-ledger__total-unit {
   font-family: var(--font-sans);
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
-.lg-spent-total {
+.reserve-ledger__spent {
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
 
-.lg-spent-total b {
+.reserve-ledger__spent-value {
   font-family: var(--font-display);
   font-weight: 600;
   color: var(--color-text-secondary);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .fold-body {
-    animation: none;
-  }
+.reserve-ledger__tip {
+  display: block;
+  font-size: 0.9375rem;
+  line-height: 1.375;
+  text-align: left;
+  color: var(--color-text-secondary);
+}
 
-  .fold-chev {
-    transition: none;
-  }
+.reserve-ledger__tip-title {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
 }

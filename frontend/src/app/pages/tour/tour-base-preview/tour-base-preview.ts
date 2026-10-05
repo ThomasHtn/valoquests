@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { LucideRocket, LucideUsers } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { BaseScene } from '@pages/overview/base-scene/base-scene';
@@ -92,7 +92,7 @@ export class TourBasePreview {
    * Formats a population in the current language.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 
   /**

@@ -2,7 +2,6 @@ import { Component, computed, inject, input } from '@angular/core';
 import { LucideHourglass } from '@lucide/angular';
 
 import { RemainingTime } from '@core/date/date.model';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 
 /**
@@ -10,9 +9,9 @@ import { Translation } from '@core/i18n/translation';
  */
 @Component({
   selector: 'app-week-countdown',
-  imports: [TranslatePipe, LucideHourglass],
+  imports: [LucideHourglass],
   templateUrl: './week-countdown.html',
-  // Children trim to cap height: the mono label and Oswald figure have different metrics.
+  styleUrl: './week-countdown.scss',
   host: { class: 'flex items-center gap-2' },
 })
 export class WeekCountdown {
@@ -22,26 +21,28 @@ export class WeekCountdown {
   public readonly remaining = input.required<RemainingTime | null>();
 
   /**
-   * Builds the one-string accessible name.
+   * Translation service, to word the label and the time left.
    */
   private readonly translation = inject(Translation);
 
   /**
-   * Full "closes in 2d 14h" phrase for assistive technology.
+   * Translated "closes in" label.
    */
-  protected readonly accessibleLabel = computed(() => {
+  protected readonly timeLabel = computed(() =>
+    this.translation.translate('common.week.timeLabel'),
+  );
+
+  /**
+   * Translated time left ("2d 14h"), empty while the week loads.
+   */
+  protected readonly remainingText = computed(() => {
     const remaining = this.remaining();
 
-    if (!remaining) {
-      return '';
-    }
-
-    const label = this.translation.translate('common.week.timeLabel');
-    const value = this.translation.translate('common.week.timeRemaining', {
-      days: remaining.days,
-      hours: remaining.hours,
-    });
-
-    return `${label} ${value}`;
+    return remaining
+      ? this.translation.translate('common.week.timeRemaining', {
+          days: remaining.days,
+          hours: remaining.hours,
+        })
+      : '';
   });
 }

@@ -12,13 +12,11 @@
   >
     <ul class="flex flex-col gap-2" skeleton>
       @for (placeholder of skeletonRows; track $index) {
-        <li
-          class="flex items-center gap-4 border-l-2 border-surface-700 bg-text-primary/4 px-4 py-4"
-        >
-          <span class="size-10 shrink-0 bg-surface-700"></span>
+        <li class="match-history__skeleton-row">
+          <span class="match-history__skeleton-block size-10 shrink-0"></span>
           <span class="flex min-w-0 flex-1 flex-col gap-2">
-            <span class="h-3 w-24 bg-surface-700"></span>
-            <span [style.width.%]="placeholder" class="h-2.5 bg-surface-700"></span>
+            <span class="match-history__skeleton-block h-3 w-24"></span>
+            <span [style.width.%]="placeholder" class="match-history__skeleton-block h-2.5"></span>
           </span>
         </li>
       }
@@ -27,292 +25,121 @@
     <!-- Grid from `lg` up: no header row, each stat cell carries its own label. -->
     @if (isLarge()) {
       <div class="flex flex-col gap-6">
-        @for (day of days(); track day.dayKey) {
+        @for (day of historyDays(); track day.dayKey) {
           <div class="flex flex-col gap-2">
             <!-- Day summary row: record beside the date so it is not read as an ACS value. -->
-            <div
-              [class]="rowGridClass"
-              class="border-l-2 border-brand-500 bg-text-primary/8 py-2.5 pr-4"
-            >
+            <div class="match-history__grid match-history__day-header pr-4">
               <div class="flex items-center gap-4 px-4">
-                <span aria-hidden="true" class="clip-hex relative size-8 shrink-0 bg-brand-500/50">
-                  <span
-                    class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
-                  >
-                    {{ day.matches.length }}
-                  </span>
-                </span>
+                <ng-container *ngTemplateOutlet="dayCount; context: { $implicit: day }" />
                 <span class="flex min-w-0 items-baseline gap-3">
-                  <span class="label-caption truncate text-text-secondary">
+                  <span class="match-history__date label-caption truncate">
                     {{ day.dateLabel }}
                   </span>
-                  <span class="text-sm font-semibold whitespace-nowrap tabular-nums">
-                    <span class="text-accent-green">
-                      {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
-                    </span>
-                    <span class="text-text-muted">/</span>
-                    <span class="text-accent-red">
-                      {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
-                    </span>
+                  <span class="match-history__record whitespace-nowrap">
+                    <ng-container *ngTemplateOutlet="dayRecord; context: { $implicit: day }" />
                   </span>
                 </span>
               </div>
               <div></div>
               <div></div>
-              <p class="px-2 text-center">
-                <span
-                  [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
-                  tabindex="0"
-                >
-                  {{ 'playerProfile.matches.columns.kda' | translate }}
-                </span>
-                <span
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold text-text-primary tabular-nums"
-                >
-                  {{ day.totalKills }}/{{ day.totalDeaths }}/{{ day.totalAssists }}
-                </span>
-              </p>
-              <p class="px-2 text-center">
-                <span
-                  [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
-                  tabindex="0"
-                >
-                  {{ 'playerProfile.matches.columns.kd' | translate }}
-                </span>
-                <span
-                  [class]="statTextClass(day.avgKd)"
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
-                >
-                  {{ formatKda(day.avgKd) }}
-                </span>
-              </p>
-              <p class="px-2 text-center">
-                <span
-                  [appTooltip]="'playerProfile.matches.columnHints.headshotPercentage' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
-                  tabindex="0"
-                >
-                  {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                </span>
-                <span
-                  [class]="statTextClass(day.avgHeadshotPercentage)"
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
-                >
-                  {{ formatHeadshotPercentage(day.avgHeadshotPercentage) }}
-                </span>
-              </p>
-              <p class="px-2 text-center">
-                <span
-                  [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
-                  tabindex="0"
-                >
-                  {{ 'playerProfile.matches.columns.adr' | translate }}
-                </span>
-                <span
-                  [class]="statTextClass(day.avgAdr)"
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
-                >
-                  {{ formatScore(day.avgAdr) }}
-                </span>
-              </p>
-              <p class="px-2 text-center">
-                <span
-                  [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
-                  tabindex="0"
-                >
-                  {{ 'playerProfile.matches.columns.acs' | translate }}
-                </span>
-                <span
-                  [class]="statTextClass(day.avgAcs)"
-                  class="font-display mt-1.5 block text-sm leading-none font-semibold tabular-nums"
-                >
-                  {{ formatScore(day.avgAcs) }}
-                </span>
-              </p>
+              @for (stat of day.stats; track stat.column) {
+                <p class="px-2 text-center">
+                  <span
+                    [appTooltip]="'playerProfile.matches.columnHints.' + stat.column | translate"
+                    class="match-history__stat-label match-history__stat-label--hint label-caption truncate focus-ring"
+                    tabindex="0"
+                  >
+                    {{ 'playerProfile.matches.columns.' + stat.column | translate }}
+                  </span>
+                  <span
+                    [class]="statToneClasses[stat.tone]"
+                    class="match-history__stat-value match-history__stat-value--day"
+                  >
+                    {{ stat.value }}
+                  </span>
+                </p>
+              }
               <!-- Totaled, not averaged: diminishing returns apply per day. -->
               <p class="px-2 text-center">
                 <span
                   [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
-                  class="label-caption block truncate text-text-muted cursor-help focus-ring"
+                  class="match-history__stat-label match-history__stat-label--hint label-caption truncate focus-ring"
                   tabindex="0"
                 >
                   {{ 'playerProfile.matches.columns.damage' | translate }}
                 </span>
                 <span
-                  class="font-display mt-1.5 flex items-center justify-center gap-1 text-sm leading-none font-semibold text-brand-500 tabular-nums"
+                  class="match-history__stat-value match-history__stat-value--day match-history__damage justify-center"
                 >
                   <svg
                     aria-hidden="true"
                     class="size-3.5 shrink-0"
                     [lucideIcon]="concepts.damage"
                   ></svg>
-                  {{ formatDamageAmount(day.totalValoquestsDamage) }}
+                  {{ day.damage }}
                 </span>
               </p>
             </div>
 
-            @for (row of day.matches; track row.id) {
+            @for (row of day.rows; track row.match.id) {
               <a
-                [class]="rowGridClass + ' ' + resultAccentClass(row.result)"
-                [routerLink]="matchLink(row)"
-                class="focus-ring-inset bg-text-primary/4 transition-colors hover:bg-brand-500/15"
+                [class.match-history__match--loss]="row.resultTone === 'loss'"
+                [class.match-history__match--win]="row.resultTone === 'win'"
+                [routerLink]="row.link"
+                class="match-history__grid match-history__match match-history__match--hoverable focus-ring-inset"
               >
                 <div class="flex items-center gap-3.5 px-4 py-3.5">
-                  <!-- Squad history: the player leads, the map moves under the name. -->
-                  @if (row.player; as player) {
-                    <app-avatar [src]="player.portrait" size="sm" />
-                  } @else {
-                    <app-media-thumbnail
-                      [monogram]="agentInitial(row.agentName)"
-                      [src]="mapImageUrl(row.mapName)"
-                    />
-                  }
-                  <span class="flex min-w-0 flex-col gap-1.5">
-                    <span
-                      class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-                    >
-                      {{ row.player?.name ?? row.mapName }}
-                      <!-- The result is otherwise only shown visually. -->
-                      <span class="sr-only">
-                        — {{ 'playerProfile.matches.result.' + row.result | translate }}
-                      </span>
-                    </span>
-                    <span class="truncate text-sm text-text-muted">
-                      @if (row.player) {
-                        {{ row.mapName }} ·
-                      }
-                      {{ matchTime(row.startedAt) }} ·
-                      {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
-                    </span>
-                  </span>
+                  <ng-container *ngTemplateOutlet="matchIdentity; context: { $implicit: row }" />
                 </div>
 
-                <p
-                  class="font-display px-4 text-center text-lg leading-none font-bold tabular-nums"
-                >
-                  @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                    <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                    <span class="text-text-muted"> : {{ score.enemy }}</span>
-                  } @else {
-                    <span class="text-text-muted">—</span>
-                  }
+                <p class="match-history__score px-4 text-center">
+                  <ng-container *ngTemplateOutlet="matchScore; context: { $implicit: row }" />
                 </p>
 
                 <div class="flex items-center justify-center px-2">
-                  <app-media-thumbnail
-                    [accessibleName]="row.agentName"
-                    [monogram]="agentInitial(row.agentName)"
-                    [src]="agentImageUrl(row.agentName)"
-                  />
+                  <ng-container *ngTemplateOutlet="agentThumbnail; context: { $implicit: row }" />
                 </div>
 
-                <p class="px-2 text-center">
-                  <span
-                    [appTooltip]="'playerProfile.matches.columnHints.kda' | translate"
-                    class="label-caption block text-text-muted cursor-help"
-                  >
-                    {{ 'playerProfile.matches.columns.kda' | translate }}
-                  </span>
-                  <span
-                    class="font-display mt-2 block text-base leading-none font-semibold text-text-primary tabular-nums"
-                  >
-                    {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                  </span>
-                </p>
-
-                <p class="px-2 text-center">
-                  <span
-                    [appTooltip]="'playerProfile.matches.columnHints.kd' | translate"
-                    class="label-caption block text-text-muted cursor-help"
-                  >
-                    {{ 'playerProfile.matches.columns.kd' | translate }}
-                  </span>
-                  <span
-                    [class]="statTextClass(row.kd, kdVisual(row.kd).textClass)"
-                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
-                  >
-                    {{ formatKda(row.kd) }}
-                  </span>
-                </p>
-
-                <p class="px-2 text-center">
-                  <span
-                    [appTooltip]="
-                      'playerProfile.matches.columnHints.headshotPercentage' | translate
-                    "
-                    class="label-caption block text-text-muted cursor-help"
-                  >
-                    {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                  </span>
-                  <span
-                    [class]="statTextClass(row.headshotPercentage)"
-                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
-                  >
-                    {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                  </span>
-                </p>
-
-                <p class="px-2 text-center">
-                  <span
-                    [appTooltip]="'playerProfile.matches.columnHints.adr' | translate"
-                    class="label-caption block text-text-muted cursor-help"
-                  >
-                    {{ 'playerProfile.matches.columns.adr' | translate }}
-                  </span>
-                  <span
-                    [class]="statTextClass(row.adr)"
-                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
-                  >
-                    {{ formatScore(row.adr) }}
-                  </span>
-                </p>
-
-                <p class="px-2 text-center">
-                  <span
-                    [appTooltip]="'playerProfile.matches.columnHints.acs' | translate"
-                    class="label-caption block text-text-muted cursor-help"
-                  >
-                    {{ 'playerProfile.matches.columns.acs' | translate }}
-                  </span>
-                  <span
-                    [class]="statTextClass(row.acs)"
-                    class="font-display mt-2 block text-base leading-none font-semibold tabular-nums"
-                  >
-                    {{ formatScore(row.acs) }}
-                  </span>
-                </p>
+                @for (stat of row.stats; track stat.column) {
+                  <p class="px-2 text-center">
+                    <span
+                      [appTooltip]="'playerProfile.matches.columnHints.' + stat.column | translate"
+                      class="match-history__stat-label match-history__stat-label--hint label-caption"
+                    >
+                      {{ 'playerProfile.matches.columns.' + stat.column | translate }}
+                    </span>
+                    <span [class]="statToneClasses[stat.tone]" class="match-history__stat-value">
+                      {{ stat.value }}
+                    </span>
+                  </p>
+                }
 
                 <!-- Damage dealt; the tooltip explains the day's ladder reduction. -->
                 <p
-                  [appTooltip]="damageExplanation(row)"
+                  [appTooltip]="row.damage.explanation"
                   appTooltipPosition="above"
-                  class="cursor-help px-2 text-center"
+                  class="match-history__stat-label--hint px-2 text-center"
                 >
-                  <span class="label-caption block text-text-muted">
+                  <span class="match-history__stat-label label-caption block">
                     {{ 'playerProfile.matches.columns.damage' | translate }}
                   </span>
                   <span
-                    [class.text-brand-500]="row.valoquestsDamage > 0"
-                    [class.text-text-muted]="row.valoquestsDamage === 0"
-                    class="font-display mt-2 flex items-center justify-center gap-1 text-base leading-none font-semibold tabular-nums"
+                    [class.match-history__stat-value--muted]="row.damage.isZero"
+                    class="match-history__stat-value match-history__damage justify-center"
                   >
                     <svg
                       aria-hidden="true"
                       class="size-3.5 shrink-0"
                       [lucideIcon]="concepts.damage"
                     ></svg>
-                    {{ formatDamageAmount(row.valoquestsDamage) }}
-                    @if (damageShareLabel(row); as share) {
+                    {{ row.damage.amount }}
+                    @if (row.damage.reducedShareLabel; as shareLabel) {
                       <svg
                         aria-hidden="true"
-                        class="size-3.5 shrink-0 text-danger"
+                        class="match-history__reduced-arrow size-3.5 shrink-0"
                         lucideArrowDown
                       ></svg>
-                      <span class="sr-only">{{ share }}</span>
+                      <span class="sr-only">{{ shareLabel }}</span>
                     }
                   </span>
                 </p>
@@ -324,182 +151,94 @@
     } @else {
       <!-- Card list below `lg`, same day grouping as the grid. -->
       <div class="flex flex-col gap-6">
-        @for (day of days(); track day.dayKey) {
+        @for (day of historyDays(); track day.dayKey) {
           <div class="flex flex-col gap-2">
-            <div
-              class="flex flex-wrap items-center gap-x-4 gap-y-2 border-l-2 border-brand-500 bg-text-primary/8 px-4 py-2.5"
-            >
-              <span aria-hidden="true" class="clip-hex relative size-8 shrink-0 bg-brand-500/50">
-                <span
-                  class="clip-hex font-display absolute inset-0.5 flex items-center justify-center bg-surface-950 text-xs leading-none font-bold text-text-primary tabular-nums"
-                >
-                  {{ day.matches.length }}
-                </span>
-              </span>
-              <span class="label-caption text-text-secondary">
+            <div class="match-history__day-header flex flex-wrap items-center gap-x-4 gap-y-2 px-4">
+              <ng-container *ngTemplateOutlet="dayCount; context: { $implicit: day }" />
+              <span class="match-history__date label-caption">
                 {{ day.dateLabel }}
               </span>
               <!-- Day total: diminishing returns apply per day. -->
               <span
                 [appTooltip]="'playerProfile.matches.columnHints.damage' | translate"
-                class="label-caption text-brand-500 tabular-nums cursor-help focus-ring"
+                class="match-history__day-damage label-caption focus-ring"
                 tabindex="0"
               >
                 {{ 'playerProfile.matches.columns.damage' | translate }}
                 <svg
                   aria-hidden="true"
-                  class="inline-block size-3.5 -translate-y-px"
+                  class="match-history__day-damage-icon"
                   [lucideIcon]="concepts.damage"
                 ></svg>
-                {{ formatDamageAmount(day.totalValoquestsDamage) }}
+                {{ day.damage }}
               </span>
-              <span class="ml-auto text-sm font-semibold tabular-nums">
-                <span class="text-accent-green">
-                  {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
-                </span>
-                <span class="text-text-muted">/</span>
-                <span class="text-accent-red">
-                  {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
-                </span>
+              <span class="match-history__record ml-auto">
+                <ng-container *ngTemplateOutlet="dayRecord; context: { $implicit: day }" />
               </span>
             </div>
 
             <ul class="flex flex-col gap-2">
-              @for (row of day.matches; track row.id) {
+              @for (row of day.rows; track row.match.id) {
                 <li>
                   <a
-                    [class]="resultAccentClass(row.result)"
-                    [routerLink]="matchLink(row)"
-                    class="focus-ring-inset flex flex-col gap-4 bg-text-primary/4 px-4 py-4"
+                    [class.match-history__match--loss]="row.resultTone === 'loss'"
+                    [class.match-history__match--win]="row.resultTone === 'win'"
+                    [routerLink]="row.link"
+                    class="match-history__match focus-ring-inset flex flex-col gap-4 p-4"
                   >
                     <div class="flex items-center gap-3.5">
-                      @if (row.player; as player) {
-                        <app-avatar [src]="player.portrait" size="sm" />
-                      } @else {
-                        <app-media-thumbnail
-                          [monogram]="agentInitial(row.agentName)"
-                          [src]="mapImageUrl(row.mapName)"
-                        />
-                      }
-                      <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                        <p
-                          class="font-display truncate text-base leading-none font-semibold text-text-primary uppercase"
-                        >
-                          {{ row.player?.name ?? row.mapName }}
-                          <!-- The result is otherwise only shown visually. -->
-                          <span class="sr-only">
-                            —
-                            {{ 'playerProfile.matches.result.' + row.result | translate }}
-                          </span>
-                        </p>
-                        <p class="truncate text-sm text-text-muted">
-                          @if (row.player) {
-                            {{ row.mapName }} ·
-                          }
-                          {{ matchTime(row.startedAt) }} ·
-                          {{ 'playerProfile.matches.gameMode.' + row.gameMode | translate }}
-                        </p>
-                      </div>
-                      <p class="font-display shrink-0 text-lg leading-none font-bold tabular-nums">
-                        @if (matchScore(row.allyScore, row.enemyScore); as score) {
-                          <span [class]="resultTextClass(row.result)">{{ score.ally }}</span>
-                          <span class="text-text-muted"> : {{ score.enemy }}</span>
-                        } @else {
-                          <span class="text-text-muted">—</span>
-                        }
+                      <ng-container
+                        *ngTemplateOutlet="matchIdentity; context: { $implicit: row, grows: true }"
+                      />
+                      <p class="match-history__score shrink-0">
+                        <ng-container *ngTemplateOutlet="matchScore; context: { $implicit: row }" />
                       </p>
-                      <app-media-thumbnail
-                        [accessibleName]="row.agentName"
-                        [monogram]="agentInitial(row.agentName)"
-                        [src]="agentImageUrl(row.agentName)"
+                      <ng-container
+                        *ngTemplateOutlet="agentThumbnail; context: { $implicit: row }"
                       />
                     </div>
 
                     <dl
-                      class="grid grid-cols-3 gap-3 border-t border-text-primary/10 pt-4 sm:grid-cols-6"
+                      class="match-history__card-stats grid grid-cols-3 gap-3 pt-4 sm:grid-cols-6"
                     >
-                      <div>
-                        <dt class="label-caption text-text-muted">
-                          {{ 'playerProfile.matches.columns.kda' | translate }}
-                        </dt>
-                        <dd
-                          class="font-display mt-2 text-base leading-none font-semibold text-text-primary tabular-nums"
-                        >
-                          {{ row.kills }}/{{ row.deaths }}/{{ row.assists }}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt class="label-caption text-text-muted">
-                          {{ 'playerProfile.matches.columns.kd' | translate }}
-                        </dt>
-                        <dd
-                          [class]="statTextClass(row.kd, kdVisual(row.kd).textClass)"
-                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                        >
-                          {{ formatKda(row.kd) }}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt class="label-caption text-text-muted">
-                          {{ 'playerProfile.matches.columns.headshotPercentage' | translate }}
-                        </dt>
-                        <dd
-                          [class]="statTextClass(row.headshotPercentage)"
-                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                        >
-                          {{ formatHeadshotPercentage(row.headshotPercentage) }}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt class="label-caption text-text-muted">
-                          {{ 'playerProfile.matches.columns.adr' | translate }}
-                        </dt>
-                        <dd
-                          [class]="statTextClass(row.adr)"
-                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                        >
-                          {{ formatScore(row.adr) }}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt class="label-caption text-text-muted">
-                          {{ 'playerProfile.matches.columns.acs' | translate }}
-                        </dt>
-                        <dd
-                          [class]="statTextClass(row.acs)"
-                          class="font-display mt-2 text-base leading-none font-semibold tabular-nums"
-                        >
-                          {{ formatScore(row.acs) }}
-                        </dd>
-                      </div>
+                      @for (stat of row.stats; track stat.column) {
+                        <div>
+                          <dt class="match-history__stat-label label-caption">
+                            {{ 'playerProfile.matches.columns.' + stat.column | translate }}
+                          </dt>
+                          <dd
+                            [class]="statToneClasses[stat.tone]"
+                            class="match-history__stat-value"
+                          >
+                            {{ stat.value }}
+                          </dd>
+                        </div>
+                      }
                       <!-- Share written out: a tooltip inside a link would navigate on tap. -->
                       <div>
-                        <dt class="label-caption text-text-muted">
+                        <dt class="match-history__stat-label label-caption">
                           {{ 'playerProfile.matches.columns.damage' | translate }}
                         </dt>
                         <dd
-                          [class.text-brand-500]="row.valoquestsDamage > 0"
-                          [class.text-text-muted]="row.valoquestsDamage === 0"
-                          class="font-display mt-2 flex items-center gap-1 text-base leading-none font-semibold tabular-nums"
+                          [class.match-history__stat-value--muted]="row.damage.isZero"
+                          class="match-history__stat-value match-history__damage"
                         >
                           <svg
                             aria-hidden="true"
                             class="size-3.5 shrink-0"
                             [lucideIcon]="concepts.damage"
                           ></svg>
-                          {{ formatDamageAmount(row.valoquestsDamage) }}
-                          @if (damageShareLabel(row); as share) {
+                          {{ row.damage.amount }}
+                          @if (row.damage.reducedShareLabel; as shareLabel) {
                             <svg
                               aria-hidden="true"
-                              class="size-3.5 shrink-0 text-danger"
+                              class="match-history__reduced-arrow size-3.5 shrink-0"
                               lucideArrowDown
                             ></svg>
-                            <span
-                              aria-hidden="true"
-                              class="font-sans text-xs font-medium text-danger"
-                              >{{ formatShare(row.damageCoefficientPercent) }}</span
-                            >
-                            <span class="sr-only">{{ share }}</span>
+                            <span aria-hidden="true" class="match-history__reduced-share">{{
+                              row.damage.reducedShare
+                            }}</span>
+                            <span class="sr-only">{{ shareLabel }}</span>
                           }
                         </dd>
                       </div>
@@ -520,28 +259,93 @@
 
     @if (isLoadingMore()) {
       <div
-        class="label-caption flex items-center justify-center gap-2 pt-4 text-text-muted"
+        class="match-history__loading-more label-caption flex items-center justify-center gap-2 pt-4"
         role="status"
       >
-        <svg aria-hidden="true" class="size-3.5 animate-spin" lucideLoaderCircle></svg>
+        <app-spinner size="sm" />
         {{ 'playerProfile.matches.loadingMore' | translate }}
       </div>
     }
 
     @if (loadMoreFailed()) {
       <div
-        class="flex flex-wrap items-center justify-center gap-3 pt-4 text-sm text-text-secondary"
+        class="match-history__load-error flex flex-wrap items-center justify-center gap-3 pt-4"
         role="alert"
       >
         {{ 'playerProfile.matches.loadMoreError' | translate }}
-        <button
-          (click)="retry.emit()"
-          class="focus-ring min-h-11 px-3 font-semibold text-brand-400 transition-colors hover:text-brand-300"
-          type="button"
-        >
+        <button (click)="retry.emit()" class="match-history__retry focus-ring" type="button">
           {{ 'retry' | translate }}
         </button>
       </div>
     }
   </app-resource-state>
 </section>
+
+<!-- Hexagon with the day's match count. -->
+<ng-template #dayCount let-day>
+  <span aria-hidden="true" class="match-history__day-count clip-hex">
+    <span class="match-history__day-count-value clip-hex">
+      {{ day.rows.length }}
+    </span>
+  </span>
+</ng-template>
+
+<ng-template #dayRecord let-day>
+  <span class="match-history__wins">
+    {{ 'playerProfile.stats.wins' | translate: { count: day.wins } }}
+  </span>
+  <span class="match-history__record-separator">/</span>
+  <span class="match-history__losses">
+    {{ 'playerProfile.stats.losses' | translate: { count: day.losses } }}
+  </span>
+</ng-template>
+
+<!-- Squad history: the player leads, the map moves under the name. -->
+<ng-template #matchIdentity let-grows="grows" let-row>
+  @if (row.match.player; as player) {
+    <app-avatar [src]="player.portrait" size="sm" />
+  } @else {
+    <app-media-thumbnail
+      [monogram]="agentInitial(row.match.agentName)"
+      [src]="mapImageUrl(row.match.mapName)"
+    />
+  }
+  <span [class.match-history__identity--grow]="grows" class="flex min-w-0 flex-col gap-1.5">
+    <span class="match-history__match-title">
+      {{ row.match.player?.name ?? row.match.mapName }}
+      <!-- The result is otherwise only shown visually. -->
+      <span class="sr-only">
+        — {{ 'playerProfile.matches.result.' + row.match.result | translate }}
+      </span>
+    </span>
+    <span class="match-history__match-meta">
+      @if (row.match.player) {
+        {{ row.match.mapName }} ·
+      }
+      {{ row.time }} ·
+      {{ 'playerProfile.matches.gameMode.' + row.match.gameMode | translate }}
+    </span>
+  </span>
+</ng-template>
+
+<ng-template #matchScore let-row>
+  @if (row.score; as score) {
+    <span
+      [class.match-history__score-ally--loss]="row.resultTone === 'loss'"
+      [class.match-history__score-ally--win]="row.resultTone === 'win'"
+      class="match-history__score-ally"
+      >{{ score.ally }}</span
+    >
+    <span class="match-history__score-rest"> : {{ score.enemy }}</span>
+  } @else {
+    <span class="match-history__score-rest">—</span>
+  }
+</ng-template>
+
+<ng-template #agentThumbnail let-row>
+  <app-media-thumbnail
+    [accessibleName]="row.match.agentName"
+    [monogram]="agentInitial(row.match.agentName)"
+    [src]="agentImageUrl(row.match.agentName)"
+  />
+</ng-template>

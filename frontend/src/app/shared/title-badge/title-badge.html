@@ -1,26 +1,11 @@
 @let look = visual();
 <span
-  [appTooltip]="('common.titleHint.' + title() | translate) + (measure() ? ' · ' + measure() : '')"
-  [class]="'title-badge title-badge--' + size() + ' ' + look.colorClass"
+  [appTooltip]="hint()"
   [attr.tabindex]="inLink() ? null : 0"
-  class="focus-ring"
+  [class]="'title-badge--' + size()"
+  [style.--tone]="look.tone"
+  class="title-badge focus-ring"
 >
-  @switch (look.icon) {
-    @case ('crown') {
-      <svg aria-hidden="true" class="title-badge-icon" lucideCrown></svg>
-    }
-    @case ('wrench') {
-      <svg aria-hidden="true" class="title-badge-icon" lucideWrench></svg>
-    }
-    @case ('wheat') {
-      <svg aria-hidden="true" class="title-badge-icon" lucideWheat></svg>
-    }
-    @case ('flame') {
-      <svg aria-hidden="true" class="title-badge-icon" lucideFlame></svg>
-    }
-    @case ('target') {
-      <svg aria-hidden="true" class="title-badge-icon" lucideTarget></svg>
-    }
-  }
-  <span class="title-badge-label">{{ 'common.title.' + title() | translate }}</span>
+  <svg aria-hidden="true" class="title-badge__icon" [lucideIcon]="icons[look.icon]"></svg>
+  <span class="title-badge__label">{{ 'common.title.' + title() | translate }}</span>
 </span>

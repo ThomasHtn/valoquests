@@ -1,14 +1,9 @@
 /**
- * Text and bar colours of a statistic; full literal classes so Tailwind's scanner finds them.
+ * Colour of a judged statistic, shared by its figure and its bar.
  */
 export interface StatVisual {
   /**
-   * Tailwind text colour class.
+   * CSS colour, bound as `--tone` and read by the consumer's stylesheet.
    */
-  readonly textClass: string;
-
-  /**
-   * Tailwind background class of the bar.
-   */
-  readonly barClass: string;
+  readonly tone: string;
 }

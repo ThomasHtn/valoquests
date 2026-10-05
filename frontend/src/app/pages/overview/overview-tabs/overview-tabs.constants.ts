@@ -1,3 +1,6 @@
+import type { LucideIcon } from '@lucide/angular';
+import { LucideMap, LucideRadio, LucideSunrise, LucideUserPen } from '@lucide/angular';
+
 import { OverviewTabKey } from './overview-tabs.model';
 
 /**
@@ -24,3 +27,13 @@ export const OVERVIEW_TABS: readonly OverviewTabKey[] = [
   'matches',
   'campaign',
 ];
+
+/**
+ * Icon drawn before each tab's label.
+ */
+export const OVERVIEW_TAB_ICONS: Readonly<Record<OverviewTabKey, LucideIcon>> = {
+  challenges: LucideSunrise,
+  contributions: LucideUserPen,
+  matches: LucideRadio,
+  campaign: LucideMap,
+};

@@ -1,7 +1,4 @@
-import {
-  ProgressionMatchPoint,
-  SeasonEvolution,
-} from '@core/players/progression/player-progression.model';
+import { SeasonEvolution } from '@core/players/progression/player-progression.model';
 import { ChartSeries } from '@shared/chart/chart.model';
 import { EvolutionMetric } from './evolution-chart.model';
 
@@ -21,14 +18,7 @@ export function buildEvolutionSeries(
     color: colorOf(season.seasonId),
     points: [
       ...Array<number | null>(longest - season.points.length).fill(null),
-      ...season.points.map((point) => readMetric(point, metric)),
+      ...season.points.map((point) => point[metric]),
     ],
   }));
-}
-
-/**
- * One metric of a plotted match, `null` for a mode that did not report it.
- */
-export function readMetric(point: ProgressionMatchPoint, metric: EvolutionMetric): number | null {
-  return point[metric];
 }

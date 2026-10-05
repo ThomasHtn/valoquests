@@ -1,22 +1,24 @@
-@let d = detail();
+@let mark = detail();
 
-<span class="name">{{ d.name }}</span>
-<span [class]="'state state--' + d.state">
-  @if (d.state === 'done') {
-    <svg class="state-icon" lucideCheck></svg>
+<span class="progress-tip__name">{{ mark.name }}</span>
+<span [class]="'progress-tip__state--' + mark.state" class="progress-tip__state">
+  @if (mark.state === 'done') {
+    <svg class="progress-tip__state-icon" lucideCheck></svg>
   }
-  {{ 'challenges.board.markDetail.' + d.state | translate }}
+  {{ 'challenges.board.markDetail.' + mark.state | translate }}
 </span>
 
-<span class="figures tabular-nums">
-  <b [class.value--idle]="d.state === 'idle'" class="value">{{ d.value }}</b>
-  @if (d.target) {
-    <span class="target">/ {{ d.target }}</span>
+<span class="progress-tip__figures">
+  <b [class.progress-tip__value--idle]="mark.state === 'idle'" class="progress-tip__value">{{
+    mark.value
+  }}</b>
+  @if (mark.target) {
+    <span class="progress-tip__target">/ {{ mark.target }}</span>
   }
 </span>
-@if (d.gap !== 'none') {
-  <span [class]="'gap gap--' + d.gap">
-    <b class="tabular-nums">{{ d.gapLabel }}</b>
-    {{ 'challenges.board.markDetail.' + d.gap | translate: { count: d.gapCount } }}
+@if (mark.gap !== 'none') {
+  <span [class]="'progress-tip__gap--' + mark.gap" class="progress-tip__gap">
+    <b class="progress-tip__gap-value">{{ mark.gapLabel }}</b>
+    {{ 'challenges.board.markDetail.' + mark.gap | translate: { count: mark.gapCount } }}
   </span>
 }

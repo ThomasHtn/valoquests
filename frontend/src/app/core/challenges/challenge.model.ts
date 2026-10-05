@@ -11,7 +11,7 @@ export type ChallengeCadence = 'WEEKLY' | 'DAILY';
 /**
  * Fields shared by drawn and catalogue challenges; targets come scaled by the backend.
  */
-export interface ChallengeIdentity {
+interface ChallengeIdentity {
   /**
    * Internal identifier.
    */
@@ -106,7 +106,7 @@ export interface ChallengeProgress extends ChallengeIdentity {
 /**
  * One active operator on one challenge; mirrors `PlayerProgressResponse`.
  */
-export interface PlayerChallengeProgress {
+interface PlayerChallengeProgress {
   /**
    * Player id, one of the roster.
    */

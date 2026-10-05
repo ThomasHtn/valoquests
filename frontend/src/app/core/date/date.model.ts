@@ -17,3 +17,23 @@ export interface RemainingTime {
    */
   readonly minutes: number;
 }
+
+/**
+ * Numeric fields of a `YYYY-MM-DD` date.
+ */
+export interface IsoDateParts {
+  /**
+   * Full year.
+   */
+  readonly year: number;
+
+  /**
+   * Month, 1 for January.
+   */
+  readonly month: number;
+
+  /**
+   * Day of the month.
+   */
+  readonly day: number;
+}

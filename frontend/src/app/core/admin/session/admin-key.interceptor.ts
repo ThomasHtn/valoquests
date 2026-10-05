@@ -3,15 +3,16 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
-import { ADMIN_API_PREFIX, ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
+import { ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
 import { AdminSession } from './admin-session';
+import { isAdminApiUrl } from './admin-session.utils';
 
 /**
  * Adds the admin key to `/api/admin` requests only, and signs out on a 401 or 403.
  * Requests already carrying the header (the sign-in probe) are left alone, failures included.
  */
 export const adminKeyInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith(ADMIN_API_PREFIX) || request.headers.has(ADMIN_KEY_HEADER)) {
+  if (!isAdminApiUrl(request.url) || request.headers.has(ADMIN_KEY_HEADER)) {
     return next(request);
   }
 

@@ -1,10 +1,8 @@
 import {
-  ArcElement,
   BarController,
   BarElement,
   CategoryScale,
   Chart,
-  DoughnutController,
   Filler,
   LinearScale,
   LineController,
@@ -36,12 +34,10 @@ export function registerChartComponents(): void {
   Chart.register(
     LineController,
     BarController,
-    DoughnutController,
     ScatterController,
     LineElement,
     PointElement,
     BarElement,
-    ArcElement,
     LinearScale,
     CategoryScale,
     Tooltip,
@@ -75,6 +71,7 @@ export function resolveCssColor(expression: string): string {
  * Chart palette from the current design tokens.
  */
 export function resolveChartTheme(): ChartTheme {
+  // Translucent fills stay literals: canvas cannot mix a token; they are text-primary and brand-500.
   return {
     grid: 'rgb(236 232 225 / 0.08)',
     tick: token('--color-text-muted', '#8f9496'),
@@ -82,6 +79,7 @@ export function resolveChartTheme(): ChartTheme {
     tooltipBorder: 'rgb(217 149 74 / 0.5)',
     tooltipText: token('--color-text-primary', '#ece8e1'),
     highlight: token('--color-accent-green', '#5fb88a'),
+    bar: 'rgb(217 149 74 / 0.55)',
     muted: 'rgb(236 232 225 / 0.12)',
   };
 }

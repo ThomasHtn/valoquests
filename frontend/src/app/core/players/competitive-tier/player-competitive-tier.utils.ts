@@ -1,9 +1,17 @@
 import {
   COMPETITIVE_TIER_GROUPS,
   COMPETITIVE_TIER_ORDER,
-  TIER_GROUP_COLOR_CLASSES,
+  TIER_GROUP_COLOR_TOKENS,
 } from './player-competitive-tier.constants';
-import { CompetitiveTier, CompetitiveTierVisual } from './player-competitive-tier.model';
+import { CompetitiveTier, CompetitiveTierVisual, TierGroup } from './player-competitive-tier.model';
+import { TranslateFn } from '@core/i18n/translation.model';
+
+/**
+ * Rank group of a tier, `undefined` for a tier the backend added since this build.
+ */
+function findTierGroup(tier: CompetitiveTier): TierGroup | undefined {
+  return COMPETITIVE_TIER_GROUPS[tier];
+}
 
 /**
  * Zero-based position of a tier on the ladder, lowest first.
@@ -13,18 +21,18 @@ export function resolveTierOrdinal(tier: CompetitiveTier): number {
 }
 
 /**
- * Translated label (e.g. `"Diamant 2"`) and colour class of a tier.
+ * Translated label (e.g. `"Diamant 2"`) and colour of a tier, unranked for an unknown one.
  */
 export function resolveCompetitiveTierVisual(
   tier: CompetitiveTier,
-  translate: (key: string) => string,
+  translate: TranslateFn,
 ): CompetitiveTierVisual {
-  const group = COMPETITIVE_TIER_GROUPS[tier];
+  const group = findTierGroup(tier) ?? COMPETITIVE_TIER_GROUPS.UNRANKED;
   const groupLabel = translate(`players.tiers.${group.key}`);
 
   return {
     label: group.number ? `${groupLabel} ${group.number}` : groupLabel,
-    colorClass: TIER_GROUP_COLOR_CLASSES[group.key] ?? TIER_GROUP_COLOR_CLASSES['unranked'],
+    tone: `var(--color-${TIER_GROUP_COLOR_TOKENS[group.key]})`,
   };
 }
 
@@ -32,7 +40,7 @@ export function resolveCompetitiveTierVisual(
  * Path of a tier's `public/ranks` SVG, `null` for an unknown tier.
  */
 export function resolveCompetitiveTierIconUrl(tier: CompetitiveTier): string | null {
-  const group = COMPETITIVE_TIER_GROUPS[tier];
+  const group = findTierGroup(tier);
   if (!group) {
     return null;
   }
@@ -42,13 +50,10 @@ export function resolveCompetitiveTierIconUrl(tier: CompetitiveTier): string | n
 }
 
 /**
- * CSS variable of a tier's colour (e.g. `--color-accent-gold`), for charts that take no class.
+ * CSS variable of a tier's colour (e.g. `--color-accent-gold`), for charts that read tokens.
  */
 export function resolveCompetitiveTierColorVariable(tier: CompetitiveTier): string {
-  const group = COMPETITIVE_TIER_GROUPS[tier];
-  const colorClass =
-    TIER_GROUP_COLOR_CLASSES[group?.key ?? 'unranked'] ?? TIER_GROUP_COLOR_CLASSES['unranked'];
-  return `--color-${colorClass.replace(/^text-/, '')}`;
+  return `--color-${TIER_GROUP_COLOR_TOKENS[findTierGroup(tier)?.key ?? 'unranked']}`;
 }
 
 /**

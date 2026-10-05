@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Translation } from '@core/i18n/translation';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
@@ -36,6 +36,7 @@ import { SchedulePerformance } from './schedule-performance/schedule-performance
     Consistency,
   ],
   templateUrl: './progression.html',
+  styleUrl: './progression.scss',
 })
 export class Progression {
   /**
@@ -59,11 +60,6 @@ export class Progression {
   private readonly playersApi = inject(PlayersApi);
 
   /**
-   * Translates the table tooltips.
-   */
-  private readonly translation = inject(Translation);
-
-  /**
    * Analytics of the current player and seasons.
    */
   protected readonly progressionResource = this.playersApi.progression(
@@ -74,8 +70,8 @@ export class Progression {
   /**
    * Analytics, `null` while loading or on error (`value()` throws on error).
    */
-  protected readonly progression = computed(() =>
-    this.progressionResource.hasValue() ? this.progressionResource.value() : null,
+  protected readonly progression = computed(
+    () => resourceValue(this.progressionResource, undefined) ?? null,
   );
 
   /**
@@ -120,11 +116,4 @@ export class Progression {
    * Placeholder line widths of the loading skeleton.
    */
   protected readonly skeletonRows = SKELETON_ROWS;
-
-  /**
-   * Translates a key for the tables' translated inputs.
-   */
-  protected translate(key: string): string {
-    return this.translation.translate(key);
-  }
 }

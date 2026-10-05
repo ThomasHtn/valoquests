@@ -1,17 +1,18 @@
+@use 'tools' as *;
+
 /* The overview's gauge cells, two side by side at every width, shrunk on a phone to fit. */
-.tiles {
+.tour-capacity {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
-}
 
-@media (width >= 40rem) {
-  .tiles {
+  @include from(sm) {
     gap: 1.25rem;
   }
 }
 
-.tile {
+/* Subgrid rows keep both tiles' name, dial, stock and base level. */
+.tour-capacity__tile {
   --pad: 0.75rem;
 
   display: grid;
@@ -20,13 +21,11 @@
   row-gap: 0.75rem;
   justify-items: center;
   padding: 1rem var(--pad) 0;
-  background: rgb(236 232 225 / 4%);
+  background: tint(text-primary, 4%);
   box-shadow: inset 3px 0 0 var(--tone);
   text-align: center;
-}
 
-@media (width >= 40rem) {
-  .tile {
+  @include from(sm) {
     --pad: 1.25rem;
 
     row-gap: 0.9rem;
@@ -34,60 +33,68 @@
   }
 }
 
-.name {
+.tour-capacity__tile--carry {
+  --tone: var(--color-accent-cyan);
+}
+
+/* The second dial sweeps in a beat after the first. */
+.tour-capacity__tile--shelter {
+  --tone: var(--color-accent-green);
+  --fx-delay: 120ms;
+}
+
+.tour-capacity__name {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
 
-@media (width >= 40rem) {
-  .name {
+  @include from(sm) {
     font-size: 1.125rem;
   }
 }
 
-.gauge {
+.tour-capacity__gauge {
   position: relative;
   display: block;
   width: 6.5rem;
   height: 6.5rem;
-}
 
-@media (width >= 40rem) {
-  .gauge {
+  @include from(sm) {
     width: 8.75rem;
     height: 8.75rem;
   }
 }
 
 /* The sweep starts at noon. */
-.gauge > svg {
+.tour-capacity__dial {
   display: block;
   width: 100%;
   height: 100%;
   rotate: -90deg;
 }
 
-.g-track {
+/* The overview's dial ground, darker than `surface-sunken`. */
+.tour-capacity__dial-track {
   fill: none;
-  stroke: rgb(4 10 15 / 70%);
+  stroke: tint(night-well, 70%);
   stroke-width: 7;
 }
 
-.g-arc {
+/* Dash length is the circumference, 2 pi r with r = 43. */
+.tour-capacity__dial-arc {
   --arc-empty: 270.18;
 
   fill: none;
   stroke: var(--tone);
   stroke-width: 7;
-  stroke-dasharray: 270.18; /* 2 pi r, r = 43 */
+  stroke-dasharray: 270.18;
   stroke-dashoffset: calc(270.18 * (1 - var(--pct)));
 }
 
-.gauge-mid {
+.tour-capacity__gauge-center {
   position: absolute;
   inset: 0;
   display: grid;
@@ -96,26 +103,37 @@
   gap: 0.3rem;
 }
 
-.gauge-mid svg {
+.tour-capacity__gauge-icon {
   color: var(--tone);
   opacity: 0.9;
 }
 
-.gauge-mid b {
+.tour-capacity__gauge-value {
   font-family: var(--font-display);
   font-size: 1.625rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--tone);
-}
 
-@media (width >= 40rem) {
-  .gauge-mid b {
+  @include from(sm) {
     font-size: 2rem;
   }
 }
 
-.stock {
+.tour-capacity__icon {
+  color: var(--tone);
+}
+
+.tour-capacity__stock,
+.tour-capacity__lever,
+.tour-capacity__mode,
+.tour-capacity__rescue-cost {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+.tour-capacity__stock {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -124,17 +142,14 @@
   color: var(--color-text-muted);
 }
 
-.stock svg {
-  color: var(--tone);
-}
-
-.stock b {
+.tour-capacity__stock-value {
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
 }
 
 /* The base touches both edges of its tile. */
-.foot {
+.tour-capacity__foot {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,10 +157,14 @@
   width: calc(100% + var(--pad) * 2);
   margin: 0 calc(var(--pad) * -1);
   padding: 0.75rem var(--pad) 0.85rem;
-  background: rgb(4 10 15 / 45%);
+  background: tint(night-well, 45%);
 }
 
-.modes {
+.tour-capacity__lever {
+  color: var(--color-brand-400);
+}
+
+.tour-capacity__modes {
   display: flex;
   flex-wrap: wrap;
   align-content: center;
@@ -153,7 +172,7 @@
   gap: 4px;
 }
 
-.mode-tag {
+.tour-capacity__mode {
   padding: 0.25rem 0.4rem;
   letter-spacing: 0.1em;
   background: color-mix(in srgb, var(--tone) 16%, transparent);
@@ -161,27 +180,27 @@
 }
 
 /* Two rows reserved from the tablet up, so both bases start level. */
-@media (width >= 40rem) {
-  .modes {
+@include from(sm) {
+  .tour-capacity__modes {
     min-height: 3.95rem;
     gap: 5px;
   }
 
-  .mode-tag {
+  .tour-capacity__mode {
     padding: 0.3rem 0.45rem;
     letter-spacing: 0.12em;
   }
 }
 
-/* Phones: six mode tags do not fit a half-width tile, only the rate stays. */
-@media (width < 40rem) {
-  .lever,
-  .modes {
+/* Phones: six mode tags do not fit a half-width tile, only the rescue cost stays. */
+@include below(sm) {
+  .tour-capacity__lever,
+  .tour-capacity__modes {
     display: none;
   }
 }
 
-.rate {
+.tour-capacity__rescue-cost {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -191,12 +210,9 @@
   color: var(--color-text-secondary);
 }
 
-.rate svg {
-  color: var(--tone);
-}
-
-.rate b {
+.tour-capacity__rescue-cost-value {
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: var(--tone);
   white-space: nowrap;
 }

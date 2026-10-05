@@ -3,7 +3,7 @@ import { WeeklyTitle } from './titles/campaign-title.model';
 /**
  * One operator's day; mirrors the backend `CampaignPlayerDayResponse`.
  */
-export interface CampaignPlayerDay {
+interface CampaignPlayerDay {
   /**
    * Internal identifier of the player.
    */

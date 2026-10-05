@@ -1,12 +1,10 @@
 <!-- The projected input is associated by wrapping, which the lint rule cannot see. -->
 <!-- eslint-disable-next-line @angular-eslint/template/label-has-associated-control -->
 <label class="block">
-  <span class="label-caption block text-text-muted">{{ label() }}</span>
+  <span class="text-field__label label-caption">{{ label() }}</span>
 
-  <div
-    class="notch-tr mt-2 h-11 bg-text-muted p-px transition-colors [--notch:0.5rem] focus-within:bg-brand-500 has-[:disabled]:opacity-60"
-  >
-    <div class="notch-tr flex h-full items-center bg-surface-sunken [--notch:0.5rem]">
+  <div class="text-field__frame notch-tr">
+    <div class="text-field__well notch-tr">
       <ng-content />
     </div>
   </div>

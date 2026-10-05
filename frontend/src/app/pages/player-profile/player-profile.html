@@ -4,10 +4,7 @@
   [backLabel]="'playerProfile.breadcrumb.players' | translate"
 >
   @if (details(); as playerDetails) {
-    <span
-      class="flex min-w-0 items-center gap-2 truncate font-mono text-2xs text-text-muted"
-      backAside
-    >
+    <span class="player-profile__back-aside flex min-w-0 items-center gap-2 truncate" backAside>
       <span aria-hidden="true">|</span>
       <span class="truncate">{{ playerDetails.displayName }}</span>
     </span>
@@ -17,7 +14,7 @@
   @if (details()) {
     @if (viewMode() === 'MATCHES') {
       <app-season-picker
-        (selectionChange)="onSeasonFilterChange($event[0] ?? null)"
+        (selectionChange)="onSeasonSelectionChange($event)"
         [ariaLabel]="'playerProfile.filters.seasonLabel' | translate"
         [seasons]="seasons()"
         [selection]="seasonSelection()"
@@ -47,12 +44,12 @@
     [isLoading]="detailsResource.isLoading()"
     [loadingText]="'playerProfile.loading' | translate"
     emptyKind="anomaly"
-    padding="py-6"
+    padding="flush"
     (retry)="detailsResource.reload()"
   >
     <a
       appButton="primary"
-      class="mt-3 inline-flex min-h-12 items-center gap-2 px-5 font-display text-sm font-semibold tracking-wide uppercase [--notch:0.625rem]"
+      class="player-profile__not-found-action mt-3 inline-flex items-center gap-2 px-5"
       emptyAction
       routerLink="/players"
     >
@@ -61,22 +58,19 @@
     </a>
 
     <!-- Same silhouette as the loaded banner so arriving data does not shift the page. -->
-    <div
-      class="flex items-center gap-5 border-l-2 border-surface-700 bg-text-primary/4 p-5"
-      skeleton
-    >
-      <span class="size-24 shrink-0 rounded-full bg-surface-700"></span>
+    <div class="player-profile__banner-skeleton flex items-center gap-5 p-5" skeleton>
+      <span
+        class="player-profile__skeleton-bar player-profile__skeleton-bar--round size-24 shrink-0"
+      ></span>
       <span class="flex flex-col gap-3">
-        <span class="h-6 w-48 bg-surface-700"></span>
-        <span class="h-3 w-24 bg-surface-700"></span>
+        <span class="player-profile__skeleton-bar h-6 w-48"></span>
+        <span class="player-profile__skeleton-bar h-3 w-24"></span>
       </span>
     </div>
 
     @if (details(); as playerDetails) {
       <!-- Identity banner: same surface as a registry row, read as that row opened up. -->
-      <section
-        class="flex flex-col gap-5 border-l-2 border-text-primary/15 bg-text-primary/4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
-      >
+      <section class="player-profile__banner">
         <div class="flex items-center gap-5">
           <app-avatar [priority]="true" [src]="avatarUrl()" size="lg" />
 
@@ -84,20 +78,19 @@
             <!-- The page's `<h1>`; wraps rather than truncates. The title sits beside it. -->
             <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <h1
-                [class.text-accent-gold]="isChampion()"
-                [class.text-text-primary]="!isChampion()"
-                class="font-display flex min-w-0 flex-wrap items-center gap-2 text-2xl leading-tight font-bold uppercase sm:text-3xl"
+                [class.player-profile__name--champion]="isChampion()"
+                class="player-profile__name"
               >
-                <span class="min-w-0 break-words">{{ playerDetails.displayName }}</span>
+                <span class="player-profile__name-text">{{ playerDetails.displayName }}</span>
               </h1>
               @if (isChampion()) {
                 <app-champion-badge size="md" />
               } @else if (title(); as playerTitle) {
-                <app-title-badge [title]="playerTitle.key" size="md" />
+                <app-title-badge [title]="playerTitle" size="md" />
               }
             </div>
             @if (tag()) {
-              <p class="mt-2.5 font-mono text-2xs text-text-muted">#{{ tag() }}</p>
+              <p class="player-profile__tag">#{{ tag() }}</p>
             }
           </div>
         </div>
@@ -105,18 +98,15 @@
         @if (tier(); as tierVisual) {
           <div class="flex items-center gap-4 sm:justify-end">
             <div class="sm:text-right">
-              <p
-                [class]="tierVisual.colorClass"
-                class="font-display text-xl leading-none font-bold"
-              >
+              <p [style.--tone]="tierVisual.tone" class="player-profile__tier">
                 {{ tierVisual.label }}
               </p>
               @if (playerDetails.rankRating !== null) {
-                <p class="mt-2 font-mono text-sm text-text-muted tabular-nums">
+                <p class="player-profile__rating">
                   {{ playerDetails.rankRating }}
                   <span
                     [appTooltip]="'players.columns.rankHelp' | translate"
-                    class="focus-ring cursor-help underline decoration-dotted underline-offset-2"
+                    class="player-profile__rating-unit focus-ring"
                     tabindex="0"
                     >RR</span
                   >
@@ -129,15 +119,12 @@
       </section>
 
       <!-- Filter bar: one scrolling line from `sm`, wrapping below so no block hides. -->
-      <div
-        #filterRow
-        class="scroll-subtle flex flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto sm:pb-1"
-      >
+      <div #filterRow class="player-profile__filters scroll-subtle flex items-center gap-2">
         @if (viewMode() === 'MATCHES') {
           <!-- As many modes as fit (`GAME_MODE_BUTTON_COUNTS`), the rest in the dropdown. -->
           <div
             [attr.aria-label]="'playerProfile.filters.gameModeLabel' | translate"
-            class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:w-full"
+            class="player-profile__segment-group"
             role="group"
           >
             <div class="flex items-center">
@@ -145,12 +132,7 @@
               <button
                 (click)="onGameModeFilterChange(null)"
                 [attr.aria-pressed]="gameModeFilter() === null"
-                [class]="
-                  gameModeFilter() === null
-                    ? 'bg-brand-500/15 text-brand-500'
-                    : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-                "
-                class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+                class="player-profile__segment segment focus-ring-inset"
                 type="button"
               >
                 {{ 'playerProfile.filters.allModes' | translate }}
@@ -159,12 +141,7 @@
                 <button
                   (click)="onGameModeFilterChange(mode)"
                   [attr.aria-pressed]="gameModeFilter() === mode"
-                  [class]="
-                    gameModeFilter() === mode
-                      ? 'bg-brand-500/15 text-brand-500'
-                      : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-                  "
-                  class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+                  class="player-profile__segment segment focus-ring-inset"
                   type="button"
                 >
                   {{ 'playerProfile.matches.gameMode.' + mode | translate }}
@@ -174,9 +151,7 @@
               <!-- Remaining modes; dots trigger since the picked mode shows in the segments. -->
               <app-select
                 [ariaLabel]="'playerProfile.filters.moreGameModes' | translate"
-                [class]="
-                  isOverflowGameModeActive() ? 'notch-tr bg-brand-500/15 [--notch:0.5rem]' : ''
-                "
+                [class.player-profile__overflow-modes--active]="isOverflowGameModeActive()"
                 [options]="overflowGameModeOptions()"
                 [value]="gameModeFilter()"
                 (valueChange)="onGameModeFilterChange($event!)"
@@ -187,7 +162,7 @@
           @if (hasActiveFilters()) {
             <button
               (click)="resetFilters()"
-              class="focus-ring-inset label-caption min-h-10 shrink-0 cursor-pointer px-2 text-2xs text-text-muted transition-colors hover:text-text-primary"
+              class="player-profile__reset label-caption focus-ring-inset"
               type="button"
             >
               {{ 'playerProfile.filters.reset' | translate }}
@@ -198,36 +173,20 @@
         <!-- Display switch; first and full width on a phone since it changes the whole page. -->
         <div
           [attr.aria-label]="'playerProfile.display.label' | translate"
-          class="flex shrink-0 items-center gap-2 bg-text-primary/4 px-3 py-1.5 max-sm:order-first max-sm:w-full sm:ms-auto"
+          class="player-profile__segment-group player-profile__segment-group--view"
           role="group"
         >
-          <div class="flex items-center max-sm:w-full max-sm:*:flex-1">
-            <button
-              (click)="onViewModeChange('MATCHES')"
-              [attr.aria-pressed]="viewMode() === 'MATCHES'"
-              [class]="
-                viewMode() === 'MATCHES'
-                  ? 'bg-brand-500/15 text-brand-500'
-                  : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-              "
-              class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
-              type="button"
-            >
-              {{ 'playerProfile.display.matches' | translate }}
-            </button>
-            <button
-              (click)="onViewModeChange('PROGRESS')"
-              [attr.aria-pressed]="viewMode() === 'PROGRESS'"
-              [class]="
-                viewMode() === 'PROGRESS'
-                  ? 'bg-brand-500/15 text-brand-500'
-                  : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-              "
-              class="focus-ring-inset min-h-10 cursor-pointer self-stretch px-2.5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
-              type="button"
-            >
-              {{ 'playerProfile.display.progress' | translate }}
-            </button>
+          <div class="player-profile__view-segments flex items-center">
+            @for (view of profileViews; track view.mode) {
+              <button
+                (click)="onViewModeChange(view.mode)"
+                [attr.aria-pressed]="viewMode() === view.mode"
+                class="player-profile__segment segment focus-ring-inset"
+                type="button"
+              >
+                {{ view.labelKey | translate }}
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -235,94 +194,77 @@
       @if (viewMode() === 'MATCHES') {
         <!-- One mode at a time: an every-mode aggregate would mix incomparable queues. -->
         @if (gameModeFilter() !== null) {
-          @if (statistics(); as stats) {
-            <section [class]="statStripGridClass" animate.enter="fx-swap-in">
-              <!-- Without matches every figure is judged `null` so the strip greys out. -->
-              @let hasSample = stats.matchesPlayed > 0;
-              @let winRate = winRateVisual(hasSample ? stats.winRate : null);
-              <!-- `border-current` since `StatVisual` has no border utility. -->
+          @if (statStrip(); as strip) {
+            <section class="player-profile__stat-strip" animate.enter="fx-swap-in">
               <div
-                [class]="winRate.textClass"
-                class="col-span-2 border-t-2 border-current bg-text-primary/4 px-4 py-3.5 sm:col-span-3 lg:col-span-1"
+                [style.--tone]="strip.winRateVisual.tone"
+                class="player-profile__win-rate player-profile__stat--lead"
               >
                 <p class="label-caption flex items-center gap-2">
-                  <span
-                    [class]="winRate.barClass"
-                    aria-hidden="true"
-                    class="size-1.5 shrink-0 rotate-45"
-                  ></span>
+                  <span aria-hidden="true" class="player-profile__win-rate-mark"></span>
                   <span
                     [appTooltip]="'playerProfile.stats.tooltip.winRate' | translate"
-                    class="focus-ring cursor-help text-text-muted"
+                    class="player-profile__win-rate-label focus-ring"
                     tabindex="0"
                     >{{ 'playerProfile.stats.winRate' | translate }}</span
                   >
                 </p>
                 <p class="mt-2.5 flex items-baseline gap-2.5">
-                  <span
-                    [class]="winRate.textClass"
-                    class="font-display text-2xl leading-none font-bold"
-                  >
-                    {{ formatWinRate(hasSample ? stats.winRate : null) }}
-                  </span>
-                  <span class="text-sm text-text-muted tabular-nums">
+                  <span class="player-profile__win-rate-value">{{ strip.winRateLabel }}</span>
+                  <span class="player-profile__record">
                     {{
                       'playerProfile.stats.record'
-                        | translate: { wins: stats.wins, losses: stats.losses }
+                        | translate: { wins: strip.wins, losses: strip.losses }
                     }}
                   </span>
                 </p>
                 <app-progress-bar
-                  class="mt-3 w-full"
-                  heightClass="h-1.5"
-                  [colorClass]="winRate.barClass"
-                  [percentage]="stats.winRate"
+                  class="player-profile__win-rate-bar mt-3 w-full"
+                  [percentage]="strip.winRate"
+                  [tone]="strip.winRateVisual.tone"
                 />
               </div>
 
               <app-stat-tile
                 [label]="'playerProfile.stats.kda' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.kda' | translate"
-                [value]="formatKda(hasSample ? stats.kda : null)"
-                [valueClass]="kdaVisual(hasSample ? stats.kda : null).textClass"
+                [value]="strip.kdaLabel"
+                [tone]="strip.kdaTone"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.headshotPercentage' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.headshotPercentage' | translate"
-                [value]="formatHeadshotPercentage(hasSample ? stats.headshotPercentage : null)"
+                [value]="strip.headshotPercentageLabel"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.adr' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.adr' | translate"
-                [value]="formatScore(hasSample ? stats.adr : null)"
+                [value]="strip.adrLabel"
               />
 
               <app-stat-tile
                 [label]="'playerProfile.stats.acs' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.acs' | translate"
-                [value]="formatScore(hasSample ? stats.acs : null)"
+                [value]="strip.acsLabel"
               />
 
               <!-- Fills the trailing gap of the two- and three-column grids. -->
               <app-stat-tile
                 [label]="'playerProfile.stats.matchesPlayed' | translate"
                 [tooltip]="'playerProfile.stats.tooltip.matchesPlayed' | translate"
-                [value]="stats.matchesPlayed"
-                class="col-span-2 lg:col-span-1"
+                [value]="strip.matchesPlayed"
+                class="player-profile__stat--trail"
               />
             </section>
           } @else if (scopedDetailsResource.isLoading()) {
             <!-- Same silhouette as the strip so arriving figures do not shift the history. -->
-            <div [class]="statStripGridClass" aria-hidden="true">
-              @for (span of statSkeletonTileSpans; track $index) {
-                <div
-                  [class]="span"
-                  class="border-t-2 border-surface-700 bg-text-primary/4 px-4 py-3.5"
-                >
-                  <span class="mb-3 block h-2.5 w-14 bg-surface-700"></span>
-                  <span class="block h-6 w-12 bg-surface-700"></span>
+            <div aria-hidden="true" class="player-profile__stat-strip">
+              @for (modifier of statSkeletonTileModifiers; track $index) {
+                <div [class]="modifier" class="player-profile__stat-skeleton">
+                  <span class="player-profile__skeleton-bar mb-3 block h-2.5 w-14"></span>
+                  <span class="player-profile__skeleton-bar block h-6 w-12"></span>
                 </div>
               }
             </div>
@@ -330,45 +272,42 @@
         }
 
         <!-- Today's place on the diminishing-returns ladder, hidden on an untouched day. -->
-        @if (details()?.dailyYield; as yield) {
-          @if (yield.matchesToday > 0) {
-            <section
-              class="notch-tr flex flex-wrap items-center gap-x-5 gap-y-2 border-l-2 border-l-brand-500 panel px-4 py-3 [--notch:0.625rem]"
-            >
-              <p class="label-caption text-text-muted">
-                {{ 'playerProfile.dailyYield.title' | translate }}
-              </p>
+        @if (todayYield(); as yield) {
+          <section class="player-profile__yield notch-tr panel">
+            <p class="player-profile__yield-title label-caption">
+              {{ 'playerProfile.dailyYield.title' | translate }}
+            </p>
 
-              <p class="text-prose text-text-secondary">
-                <span class="font-display font-bold text-text-primary tabular-nums">
-                  {{ yield.matchesToday }}
-                </span>
-                {{ 'playerProfile.dailyYield.played' | translate: { count: yield.matchesToday } }}
-                <span [class]="yieldToneClass(yield.nextMatchPercent)" class="font-semibold">
+            <p class="player-profile__yield-text">
+              <span class="player-profile__yield-count"> {{ yield.matchesToday }} </span>
+              {{ 'playerProfile.dailyYield.played' | translate: { count: yield.matchesToday } }}
+              <span
+                [class.player-profile__yield-next--full]="yield.nextMatchPercent >= 100"
+                class="player-profile__yield-next"
+              >
+                {{
+                  'playerProfile.dailyYield.next' | translate: { percent: yield.nextMatchPercent }
+                }}
+              </span>
+              @if (yield.dropsAtRank !== null && yield.dropsToPercent !== null) {
+                <span class="player-profile__yield-drops">
                   {{
-                    'playerProfile.dailyYield.next' | translate: { percent: yield.nextMatchPercent }
+                    'playerProfile.dailyYield.drops'
+                      | translate: { rank: yield.dropsAtRank, percent: yield.dropsToPercent }
                   }}
                 </span>
-                @if (yield.dropsAtRank !== null && yield.dropsToPercent !== null) {
-                  <span class="text-text-muted">
-                    {{
-                      'playerProfile.dailyYield.drops'
-                        | translate: { rank: yield.dropsAtRank, percent: yield.dropsToPercent }
-                    }}
-                  </span>
-                }
-              </p>
+              }
+            </p>
 
-              <a
-                [fragment]="ruleAnchor.dailyYield"
-                [routerLink]="'/rules'"
-                class="focus-ring label-caption ml-auto text-text-muted transition-colors hover:text-brand-500"
-              >
-                {{ 'playerProfile.dailyYield.link' | translate }}
-                <span aria-hidden="true">→</span>
-              </a>
-            </section>
-          }
+            <a
+              [fragment]="ruleAnchor.dailyYield"
+              [routerLink]="'/rules'"
+              class="player-profile__yield-link label-caption focus-ring"
+            >
+              {{ 'playerProfile.dailyYield.link' | translate }}
+              <span aria-hidden="true">→</span>
+            </a>
+          </section>
         }
 
         <app-match-history

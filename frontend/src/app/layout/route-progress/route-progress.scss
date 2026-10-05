@@ -1,7 +1,20 @@
-/* Scale only, no layout. */
+/* A rail across the top of the content, never in the way of clicks. */
+:host {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 40;
+  display: block;
+  height: 0.125rem;
+  pointer-events: none;
+}
 
+/* Scale only, no layout. */
 .route-progress {
+  height: 100%;
+  background-color: var(--color-brand-500);
   transform: scaleX(0.85);
+  transform-origin: left;
   animation: route-progress-creep 8s cubic-bezier(0.1, 0.7, 0.2, 1) both;
 }
 

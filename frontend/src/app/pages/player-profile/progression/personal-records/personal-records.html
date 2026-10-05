@@ -1,5 +1,5 @@
-<div [class]="compact() ? 'gap-3' : 'gap-4'" class="flex flex-col">
-  <h3 [class]="compact() ? 'text-xs' : 'text-sm'" class="label-caption text-text-primary">
+<div class="flex flex-col gap-4">
+  <h3 class="personal-records__title label-caption">
     <span
       [appTooltip]="'playerProfile.progression.records.tooltipSection' | translate"
       class="focus-ring"
@@ -9,83 +9,34 @@
   </h3>
 
   @if (tiles().length > 0) {
-    <ul
-      [class]="
-        compact() ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
-      "
-      class="grid gap-2"
-    >
+    <ul class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       @for (tile of tiles(); track tile.key) {
-        <li
-          [class]="compact() ? 'gap-2.5 px-3 py-2.5' : 'gap-3 px-4 py-3.5'"
-          class="flex items-center border-t-2 border-brand-500/40 bg-text-primary/4"
-        >
+        <li class="personal-records__tile flex items-center gap-3">
           <!-- One icon per record, so the grid reads by shape before words. -->
-          @switch (tile.key) {
-            @case ('mostKills') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideCrosshair></svg>
-            }
-            @case ('bestAcs') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideGauge></svg>
-            }
-            @case ('mostDamage') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideBomb></svg>
-            }
-            @case ('bestKda') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideMedal></svg>
-            }
-            @case ('bestHeadshotPercentage') {
-              <svg
-                aria-hidden="true"
-                class="size-5 shrink-0 text-brand-500"
-                lucideLocateFixed
-              ></svg>
-            }
-            @case ('longestWinStreak') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideTrendingUp></svg>
-            }
-            @case ('longestActiveDayStreak') {
-              <svg
-                aria-hidden="true"
-                class="size-5 shrink-0 text-brand-500"
-                lucideCalendarCheck
-              ></svg>
-            }
-            @case ('mvps') {
-              <svg aria-hidden="true" class="size-5 shrink-0 text-brand-500" lucideStar></svg>
-            }
-            @default {
-              @if (tile.rankIcon; as rankIcon) {
-                <!-- The tier's badge shows the rank at a glance; the label keeps its name. -->
-                <app-rank-icon-view [src]="rankIcon.src" [tierLabel]="rankIcon.label" size="sm" />
-              } @else {
-                <svg
-                  aria-hidden="true"
-                  class="size-5 shrink-0 text-brand-500"
-                  lucideShieldCheck
-                ></svg>
-              }
-            }
+          @if (tile.rankIcon; as rankIcon) {
+            <!-- The tier's badge shows the rank at a glance; the label keeps its name. -->
+            <app-rank-icon-view [src]="rankIcon.src" [tierLabel]="rankIcon.label" size="sm" />
+          } @else {
+            <svg
+              [lucideIcon]="icons[tile.key]"
+              aria-hidden="true"
+              class="personal-records__icon"
+            ></svg>
           }
 
           <span class="flex min-w-0 flex-col gap-1">
-            <span class="label-caption text-text-muted">
+            <span class="personal-records__label label-caption">
               <span [appTooltip]="tile.tooltip" class="focus-ring" tabindex="0">{{
                 'playerProfile.progression.records.label.' + tile.key | translate
               }}</span>
             </span>
-            <span
-              [class]="compact() ? 'text-base' : 'text-xl'"
-              class="font-display truncate leading-none font-bold text-text-primary tabular-nums"
-            >
-              {{ tile.value }}
-            </span>
+            <span class="personal-records__value">{{ tile.value }}</span>
           </span>
         </li>
       }
     </ul>
   } @else {
-    <p class="text-sm text-text-secondary">
+    <p class="personal-records__empty">
       {{ 'playerProfile.progression.records.empty' | translate }}
     </p>
   }

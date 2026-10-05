@@ -9,27 +9,20 @@ import {
   model,
   viewChildren,
 } from '@angular/core';
-import { LucideMap, LucideRadio, LucideStar, LucideSunrise, LucideUserPen } from '@lucide/angular';
+import { LucideDynamicIcon, LucideStar } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { OverviewTab, OverviewTabKey } from './overview-tabs.model';
-import { TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
+import { keyedTabIndex } from './overview-tabs.utils';
+import { OVERVIEW_TAB_ICONS, TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 
 /**
  * Overview tab bar (WAI-ARIA tabs pattern); a star pins the default tab, which leads the bar.
  */
 @Component({
   selector: 'app-overview-tabs',
-  imports: [
-    Tooltip,
-    TranslatePipe,
-    LucideMap,
-    LucideRadio,
-    LucideStar,
-    LucideSunrise,
-    LucideUserPen,
-  ],
+  imports: [Tooltip, TranslatePipe, LucideDynamicIcon, LucideStar],
   templateUrl: './overview-tabs.html',
   styleUrl: './overview-tabs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,6 +47,11 @@ export class OverviewTabs {
    * Id of the panel the selected tab controls.
    */
   public readonly panelId = input.required<string>();
+
+  /**
+   * Icon of each tab, for the template's `svg[lucideIcon]`.
+   */
+  protected readonly icons = OVERVIEW_TAB_ICONS;
 
   /**
    * Tab buttons, to move the focus on arrow keys.
@@ -144,17 +142,7 @@ export class OverviewTabs {
    * Arrow, Home and End keys select and focus another tab, as the tabs pattern expects.
    */
   protected onKeydown(event: KeyboardEvent, index: number): void {
-    const count = this.tabs().length;
-    const target =
-      event.key === 'ArrowRight'
-        ? (index + 1) % count
-        : event.key === 'ArrowLeft'
-          ? (index - 1 + count) % count
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? count - 1
-              : null;
+    const target = keyedTabIndex(event.key, index, this.tabs().length);
     if (target === null) {
       return;
     }

@@ -15,7 +15,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
 import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
 import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode/match-game-mode.constants';
@@ -32,14 +31,7 @@ import {
   resolveCompetitiveTierVisual,
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
-import {
-  extractRiotTag,
-  formatHeadshotPercentage,
-  formatKda,
-  formatScore,
-  formatWinRate,
-} from '@core/players/player-format.utils';
-import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
+import { extractRiotTag } from '@core/players/player-format.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
@@ -61,16 +53,16 @@ import { MatchHistory } from '@shared/match-history/match-history';
 import {
   GAME_MODE_BUTTON_COUNTS,
   MAX_PROGRESSION_SEASONS,
-  STAT_SKELETON_TILE_SPANS,
-  STAT_STRIP_GRID_CLASS,
+  PROFILE_VIEWS,
+  STAT_SKELETON_TILE_MODIFIERS,
 } from './player-profile.constants';
 import { ProfileView } from './player-profile.model';
 import {
   buildNotFoundPlate,
+  buildStatStrip,
   readProfileQuery,
   resolveCurrentSeasonId,
   resolveRequestedSeasonId,
-  resolveYieldToneClass,
   writeProfileQuery,
 } from './player-profile.utils';
 import { Progression } from './progression/progression';
@@ -102,6 +94,7 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     Tooltip,
   ],
   templateUrl: './player-profile.html',
+  styleUrl: './player-profile.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class PlayerProfile {
@@ -158,12 +151,12 @@ export class PlayerProfile {
   /**
    * Numeric `id`, `null` when the route names no valid player.
    */
-  protected readonly playerId = computed(() => parseRouteId(this.id()));
+  private readonly playerId = computed(() => parseRouteId(this.id()));
 
   /**
    * Zero-based index of the last requested history page, advanced on scroll.
    */
-  protected readonly page = signal(0);
+  private readonly page = signal(0);
 
   /**
    * View on screen; the filter bar swaps with it since the two views have different scopes.
@@ -183,20 +176,18 @@ export class PlayerProfile {
   /**
    * Every known season.
    */
-  protected readonly seasonsResource = this.seasonsApi.seasons;
+  private readonly seasonsResource = this.seasonsApi.seasons;
 
   /**
    * Known seasons, empty while loading or on error (`value()` throws on error).
    */
-  protected readonly seasons = computed(() =>
-    this.seasonsResource.hasValue() ? this.seasonsResource.value() : [],
-  );
+  protected readonly seasons = computed(() => resourceValue(this.seasonsResource, []));
 
   /**
    * Season filter, `null` for every season; defaults to the current one once seasons load.
    * A `linkedSignal` keeps a user choice; `previous.source.length` tells "not loaded yet" apart.
    */
-  protected readonly seasonId = linkedSignal<readonly Season[], number | null>({
+  private readonly seasonId = linkedSignal<readonly Season[], number | null>({
     source: this.seasons,
     computation: (seasons, previous) =>
       previous && previous.source.length > 0
@@ -212,9 +203,7 @@ export class PlayerProfile {
   /**
    * Player details, `null` while loading or on error (`value()` throws on error).
    */
-  protected readonly details = computed(() =>
-    this.detailsResource.hasValue() ? this.detailsResource.value() : null,
-  );
+  protected readonly details = computed(() => resourceValue(this.detailsResource, null));
 
   /**
    * Statistics of the filtered matches, idle while every mode is shown.
@@ -226,11 +215,20 @@ export class PlayerProfile {
   );
 
   /**
-   * Filtered statistics, `null` for every mode, while loading or on error.
+   * Stat strip of the filtered matches, `null` for every mode, while loading or on error.
    */
-  protected readonly statistics = computed(
-    () => resourceValue(this.scopedDetailsResource, undefined)?.statistics ?? null,
-  );
+  protected readonly statStrip = computed(() => {
+    const statistics = resourceValue(this.scopedDetailsResource, undefined)?.statistics;
+    return statistics ? buildStatStrip(statistics, this.translation.language()) : null;
+  });
+
+  /**
+   * Today's daily yield, `null` on a day without matches or while loading.
+   */
+  protected readonly todayYield = computed(() => {
+    const dailyYield = this.details()?.dailyYield;
+    return dailyYield && dailyYield.matchesToday > 0 ? dailyYield : null;
+  });
 
   /**
    * Whether the route names no known player: invalid id or backend 404.
@@ -263,7 +261,7 @@ export class PlayerProfile {
   /**
    * Every filterable mode; one never played just shows the empty state.
    */
-  protected readonly gameModeFilterOptions = computed<readonly SelectOption<GameMode>[]>(() =>
+  private readonly gameModeFilterOptions = computed<readonly SelectOption<GameMode>[]>(() =>
     FILTERABLE_GAME_MODES.map((mode) => ({
       value: mode,
       label: this.translation.translate(`playerProfile.matches.gameMode.${mode}`),
@@ -405,12 +403,11 @@ export class PlayerProfile {
     }
     const current = resourceValue(this.rankingApi.current, null);
     const entry = current?.ranking.find((candidate) => candidate.player.id === playerId);
-    const key = entry ? primaryTitle(entry.titles) : null;
-    return key === null ? null : { key, ...resolveTitleVisual(key) };
+    return entry ? primaryTitle(entry.titles) : null;
   });
 
   /**
-   * Rank label and colour class, `null` while loading.
+   * Rank label and colour, `null` while loading.
    */
   protected readonly tier = computed(() => {
     const details = this.details();
@@ -432,58 +429,23 @@ export class PlayerProfile {
   });
 
   /**
-   * Colour of the next match's share.
+   * Skeleton tile span modifiers, mirroring the loaded stat tiles.
    */
-  protected readonly yieldToneClass = resolveYieldToneClass;
+  protected readonly statSkeletonTileModifiers = STAT_SKELETON_TILE_MODIFIERS;
 
   /**
-   * Formats the damage and combat score averages of the stat strip.
+   * Buttons of the display switch.
    */
-  protected readonly formatScore = formatScore;
+  protected readonly profileViews = PROFILE_VIEWS;
 
   /**
-   * Win rate colours of the stat strip.
+   * Wires the filter bar's measure, the address sync and the history paging.
    */
-  protected readonly winRateVisual = resolveWinRateVisual;
-
-  /**
-   * KDA colours of the stat strip.
-   */
-  protected readonly kdaVisual = resolveKdaVisual;
-
-  /**
-   * Grid classes of the stat strip.
-   */
-  protected readonly statStripGridClass = STAT_STRIP_GRID_CLASS;
-
-  /**
-   * Skeleton tile spans, mirroring the loaded stat tiles.
-   */
-  protected readonly statSkeletonTileSpans = STAT_SKELETON_TILE_SPANS;
-
   constructor() {
     this.trackFilterRowWidth();
     this.syncAddressWithFilters();
     this.foldMatchPages();
   }
-
-  /**
-   * Formats the stat strip's win rate in the reader's notation.
-   */
-  protected readonly formatWinRate = (winRate: number | null): string =>
-    formatWinRate(winRate, this.translation.language());
-
-  /**
-   * Formats the stat strip's KDA in the reader's notation.
-   */
-  protected readonly formatKda = (kda: number | null): string =>
-    formatKda(kda, this.translation.language());
-
-  /**
-   * Formats the stat strip's headshot rate in the reader's notation.
-   */
-  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
-    formatHeadshotPercentage(percentage, this.translation.language());
 
   /**
    * Requests the next history page unless it is the last or one is in flight.
@@ -508,9 +470,16 @@ export class PlayerProfile {
   }
 
   /**
+   * Applies the history picker's selection, empty for every season.
+   */
+  protected onSeasonSelectionChange(selection: readonly number[]): void {
+    this.onSeasonFilterChange(selection.length > 0 ? selection[0] : null);
+  }
+
+  /**
    * Applies a season filter (`null` for every season) and restarts the history.
    */
-  protected onSeasonFilterChange(seasonId: number | null): void {
+  private onSeasonFilterChange(seasonId: number | null): void {
     if (seasonId === this.seasonId()) {
       return;
     }

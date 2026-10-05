@@ -17,7 +17,6 @@ import { RouteProgressPhase } from './route-progress.model';
   selector: 'app-route-progress',
   templateUrl: './route-progress.html',
   styleUrl: './route-progress.scss',
-  host: { class: 'pointer-events-none absolute inset-x-0 top-0 z-40 block h-0.5' },
 })
 export class RouteProgress {
   /**

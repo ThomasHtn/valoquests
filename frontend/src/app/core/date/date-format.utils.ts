@@ -4,6 +4,7 @@ import {
   CAMPAIGN_CLOCK,
   CAMPAIGN_TIME_ZONE,
 } from '@core/campaign/calendar/campaign-calendar.constants';
+import { MILLISECONDS_PER_MINUTE } from './date.constants';
 
 /**
  * How long ago an ISO instant was (`3 hr. ago`, "now" under a minute); `now` in milliseconds.
@@ -13,7 +14,7 @@ export function formatElapsed(instant: string, now: number, language: Language):
     numeric: 'auto',
     style: 'short',
   });
-  const minutes = Math.floor(Math.max(0, now - Date.parse(instant)) / 60_000);
+  const minutes = Math.floor(Math.max(0, now - Date.parse(instant)) / MILLISECONDS_PER_MINUTE);
   if (minutes < 1) {
     return format.format(0, 'second');
   }
@@ -40,24 +41,34 @@ export function formatDateRange(weekStart: string, weekEnd: string): string {
 }
 
 /**
- * Day and month of an instant (`7 août`, `August 7`), in the campaign time zone by default.
+ * Day and month of an instant on the campaign calendar (`7 août`, `August 7`).
  */
-export function formatLocalDayMonth(
+export function formatCampaignDayMonth(
   instant: string,
   language: Language,
   month: 'long' | 'short' = 'long',
-  timeZone: string = CAMPAIGN_TIME_ZONE,
 ): string {
   return new Intl.DateTimeFormat(resolveLocale(language), {
     day: 'numeric',
     month,
-    timeZone,
+    timeZone: CAMPAIGN_TIME_ZONE,
   }).format(new Date(instant));
 }
 
 /**
- * `HH:MM` of an instant in the campaign time zone, the one match days are grouped in.
+ * `HH:MM` of an instant on the campaign clock, the one match days are grouped in.
  */
-export function formatLocalTime(instant: string): string {
+export function formatCampaignTime(instant: string): string {
   return CAMPAIGN_CLOCK.format(new Date(instant));
+}
+
+/**
+ * Short date and time of an instant on the campaign clock (`02/10/2026 14:05`).
+ */
+export function formatCampaignDateTime(instant: string, language: Language): string {
+  return new Intl.DateTimeFormat(resolveLocale(language), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: CAMPAIGN_TIME_ZONE,
+  }).format(new Date(instant));
 }

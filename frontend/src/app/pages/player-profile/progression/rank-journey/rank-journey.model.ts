@@ -101,9 +101,9 @@ export interface RankJourneyTooltip {
   readonly tier: RankLabel;
 
   /**
-   * Tailwind text colour of that rank.
+   * CSS colour of that rank, bound as `--tone`.
    */
-  readonly tierClass: string;
+  readonly tierTone: string;
 
   /**
    * What the rank is: the season's final one, or the one held after the match.

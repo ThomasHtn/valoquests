@@ -2,24 +2,18 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
-  LucideArrowDownAZ,
-  LucideArrowDownNarrowWide,
-  LucideArrowDownWideNarrow,
-  LucideArrowDownZA,
   LucideChevronDown,
   LucideChevronRight,
   LucideChevronUp,
+  LucideDynamicIcon,
 } from '@lucide/angular';
 
-import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
-import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
-import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { buildTitlesByPlayer } from '@core/campaign/titles/campaign-title.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
-  resolveTierOrdinal,
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
@@ -44,11 +38,12 @@ import { Select } from '@shared/select/select';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { SelectOption } from '@shared/select/select.model';
 import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
-import { PLAYER_SORT_COLUMNS } from './players.constants';
+import { PLAYER_SORT_COLUMNS, PLAYER_SORT_ORDER_ICONS } from './players.constants';
 import { PlayerRow, PlayerSortKey } from './players.model';
 import {
   defaultSortDirection,
   readPlayerSort,
+  sortPlayerRows,
   toPlayerSortOrder,
   writePlayerSort,
 } from './players.utils';
@@ -66,13 +61,10 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     TranslatePipe,
     NgTemplateOutlet,
     RouterLink,
-    LucideArrowDownAZ,
-    LucideArrowDownNarrowWide,
-    LucideArrowDownWideNarrow,
-    LucideArrowDownZA,
     LucideChevronDown,
     LucideChevronRight,
     LucideChevronUp,
+    LucideDynamicIcon,
     Avatar,
     TitleBadge,
     ChampionBadge,
@@ -82,6 +74,7 @@ import { TitleBadge } from '@shared/title-badge/title-badge';
     PageHeader,
   ],
   templateUrl: './players.html',
+  styleUrl: './players.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class Players {
@@ -110,16 +103,9 @@ export class Players {
   /**
    * Current week's title held by each player id.
    */
-  private readonly titlesByPlayer = computed(() => {
-    const byPlayer = new Map<number, WeeklyTitle>();
-    for (const entry of resourceValue(this.rankingApi.current, null)?.ranking ?? []) {
-      const title = primaryTitle(entry.titles);
-      if (title !== null) {
-        byPlayer.set(entry.player.id, title);
-      }
-    }
-    return byPlayer;
-  });
+  private readonly titlesByPlayer = computed(() =>
+    buildTitlesByPlayer(resourceValue(this.rankingApi.current, null)?.ranking ?? []),
+  );
 
   /**
    * Every tracked player's summary.
@@ -179,14 +165,33 @@ export class Players {
   /**
    * Current order, as the phone's toggle words it.
    */
-  protected readonly sortOrder = computed(() =>
+  private readonly sortOrder = computed(() =>
     toPlayerSortOrder(this.sortKey(), this.sortDirection()),
   );
 
   /**
-   * Unsorted rows; each group sorts its own slice so a sort never moves a row across groups.
+   * Translated current order, the phone toggle's text.
    */
-  private readonly allRows = computed<readonly PlayerRow[]>(() =>
+  protected readonly sortOrderLabel = computed(() =>
+    this.translation.translate(`players.sort.order.${this.sortOrder()}`),
+  );
+
+  /**
+   * Arrow drawn beside the phone toggle's text.
+   */
+  protected readonly sortOrderIcon = computed(() => PLAYER_SORT_ORDER_ICONS[this.sortOrder()]);
+
+  /**
+   * Translation key of the active header's direction, read out to assistive technology.
+   */
+  protected readonly sortDirectionKey = computed(() =>
+    this.sortDirection() === 1 ? 'players.sort.ascending' : 'players.sort.descending',
+  );
+
+  /**
+   * Unsorted rows of both groups; each group sorts its own slice so a sort never moves a row across groups.
+   */
+  protected readonly allRows = computed<readonly PlayerRow[]>(() =>
     resourceValue(this.playersResource, []).map((player) => this.toRow(player)),
   );
 
@@ -194,33 +199,28 @@ export class Players {
    * Sorted rows of players in the campaign.
    */
   protected readonly inCampaignRows = computed(() =>
-    this.sortRows(this.allRows().filter((row) => row.inCampaign)),
+    sortPlayerRows(
+      this.allRows().filter((row) => row.inCampaign),
+      this.sortKey(),
+      this.sortDirection(),
+    ),
   );
 
   /**
    * Sorted rows of players out of the campaign, a group of their own rather than faded.
    */
   protected readonly outOfCampaignRows = computed(() =>
-    this.sortRows(this.allRows().filter((row) => !row.inCampaign)),
+    sortPlayerRows(
+      this.allRows().filter((row) => !row.inCampaign),
+      this.sortKey(),
+      this.sortDirection(),
+    ),
   );
 
   /**
-   * Both groups combined, for the empty and loading states.
+   * Writes the sort into the address, replacing the entry to keep sorting out of the history.
    */
-  protected readonly rows = computed<readonly PlayerRow[]>(() => this.allRows());
-
-  /**
-   * Win rate text and bar colors.
-   */
-  protected readonly winRateVisual = resolveWinRateVisual;
-
-  /**
-   * KDA text color.
-   */
-  protected readonly kdaVisual = resolveKdaVisual;
-
   constructor() {
-    // The sort lives in the address; replacing the entry keeps sorting out of the history.
     effect(() => {
       const queryParams = writePlayerSort(this.sortKey(), this.sortDirection());
       untracked(() =>
@@ -235,35 +235,17 @@ export class Players {
   }
 
   /**
-   * Formats a win rate.
-   */
-  protected readonly formatWinRate = (winRate: number | null): string =>
-    formatWinRate(winRate, this.translation.language());
-
-  /**
-   * Formats a KDA.
-   */
-  protected readonly formatKda = (kda: number | null): string =>
-    formatKda(kda, this.translation.language());
-
-  /**
-   * Formats a headshot rate.
-   */
-  protected readonly formatHeadshotPercentage = (percentage: number | null): string =>
-    formatHeadshotPercentage(percentage, this.translation.language());
-
-  /**
    * Maps a player summary to a display-ready row.
    */
   private toRow(player: PlayerSummary): PlayerRow {
-    const title = this.titlesByPlayer().get(player.id) ?? null;
+    const language = this.translation.language();
     return {
       id: player.id,
       displayName: player.displayName,
       isChampion: player.id === this.championPlayerId(),
       tag: extractRiotTag(player.riotId),
       avatarUrl: resolvePlayerAvatarUrl(player.portrait),
-      title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
+      title: this.titlesByPlayer().get(player.id) ?? null,
       competitiveTier: player.competitiveTier,
       tier: resolveCompetitiveTierVisual(player.competitiveTier, (key) =>
         this.translation.translate(key),
@@ -271,47 +253,16 @@ export class Players {
       rankIconUrl: resolveCompetitiveTierIconUrl(player.competitiveTier),
       rankRating: player.rankRating,
       winRate: player.winRate,
+      winRateLabel: formatWinRate(player.winRate, language),
+      winRateVisual: resolveWinRateVisual(player.winRate),
       kda: player.kda,
+      kdaLabel: formatKda(player.kda, language),
+      kdaVisual: resolveKdaVisual(player.kda),
       headshotPercentage: player.headshotPercentage,
+      headshotPercentageLabel: formatHeadshotPercentage(player.headshotPercentage, language),
       matchesPlayed: player.matchesPlayed,
       inCampaign: player.status === 'ACTIVE',
     };
-  }
-
-  /**
-   * Sorts rows on the current sort; `null` stats always sort last, missing is not worst.
-   */
-  private sortRows(rows: readonly PlayerRow[]): readonly PlayerRow[] {
-    const key = this.sortKey();
-    const direction = this.sortDirection();
-
-    return [...rows].sort((a, b) => {
-      if (key === 'name') {
-        return direction * a.displayName.localeCompare(b.displayName);
-      }
-
-      if (key === 'rank') {
-        const tierComparison =
-          resolveTierOrdinal(b.competitiveTier) - resolveTierOrdinal(a.competitiveTier);
-        const comparison =
-          tierComparison !== 0 ? tierComparison : (b.rankRating ?? -1) - (a.rankRating ?? -1);
-        return direction === -1 ? comparison : -comparison;
-      }
-
-      const valueA = a[key];
-      const valueB = b[key];
-      if (valueA === null && valueB === null) {
-        return 0;
-      }
-      if (valueA === null) {
-        return 1;
-      }
-      if (valueB === null) {
-        return -1;
-      }
-
-      return direction * (valueA - valueB);
-    });
   }
 
   /**
@@ -334,11 +285,9 @@ export class Players {
    */
   protected setSort(key: PlayerSortKey): void {
     if (this.sortKey() === key) {
-      this.sortDirection.update((direction) => (direction === 1 ? -1 : 1));
-      return;
+      this.toggleSortDirection();
+    } else {
+      this.pickSort(key);
     }
-
-    this.sortKey.set(key);
-    this.sortDirection.set(defaultSortDirection(key));
   }
 }

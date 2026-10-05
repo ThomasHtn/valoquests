@@ -1,0 +1,34 @@
+@use 'tools' as *;
+
+.text-field__label {
+  display: block;
+  color: var(--color-text-muted);
+}
+
+/* The 1px padding shows as the border; it lights up while the control has focus. */
+.text-field__frame {
+  --notch: 0.5rem;
+
+  height: 2.75rem;
+  margin-top: 0.5rem;
+  padding: 1px;
+  background-color: var(--color-text-muted);
+  transition: background-color var(--duration-fast) var(--ease-out-quart);
+
+  &:focus-within {
+    background-color: var(--color-brand-500);
+  }
+
+  &:has(:disabled) {
+    opacity: 0.6;
+  }
+}
+
+.text-field__well {
+  --notch: 0.5rem;
+
+  display: flex;
+  align-items: center;
+  height: 100%;
+  background-color: var(--color-surface-sunken);
+}

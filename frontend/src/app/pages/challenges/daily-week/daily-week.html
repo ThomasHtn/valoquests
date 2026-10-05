@@ -1,18 +1,22 @@
-<div [attr.aria-label]="'challenges.daily.strip' | translate" class="week" role="group">
+<div
+  [attr.aria-label]="'challenges.daily.strip' | translate"
+  class="daily-week__strip"
+  role="group"
+>
   @for (day of days(); track day.index) {
     <button
-      (click)="day.drawn && selected.set(day.index)"
+      (click)="pick(day)"
       [appTooltip]="day.tip"
+      [attr.aria-disabled]="day.drawn ? null : true"
       [attr.aria-label]="day.weekday + ' ' + day.date + ', ' + day.tip"
       [attr.aria-pressed]="day.drawn ? selected() === day.index : null"
-      [class.day--hit]="day.drawn && day.doneCount > 0"
-      [class.day--picked]="selected() === day.index"
-      [class]="'day day--' + day.state"
-      [attr.aria-disabled]="day.drawn ? null : true"
-      class="focus-ring-inset"
+      [class]="'daily-week__day--' + day.state"
+      [class.daily-week__day--hit]="day.drawn && day.doneCount > 0"
+      [class.daily-week__day--picked]="selected() === day.index"
+      class="daily-week__day focus-ring-inset"
       type="button"
     >
-      <span aria-hidden="true" class="day-name">
+      <span aria-hidden="true" class="daily-week__day-name">
         @if (initials() || slim()) {
           {{ day.weekday.charAt(0) }}
         } @else {
@@ -20,7 +24,7 @@
         }
       </span>
       @if (!slim()) {
-        <span aria-hidden="true" class="day-score tabular-nums">
+        <span aria-hidden="true" class="daily-week__day-score tabular-nums">
           @if (day.drawn) {
             {{ day.doneCount }}/{{ day.total }}
           } @else {

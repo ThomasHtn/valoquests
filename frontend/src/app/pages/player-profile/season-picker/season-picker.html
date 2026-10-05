@@ -3,7 +3,7 @@
   (click)="step(1)"
   [attr.aria-label]="'playerProfile.seasonPicker.previous' | translate"
   [disabled]="!canGoBack()"
-  class="step focus-ring-inset"
+  class="season-picker__step focus-ring-inset"
   type="button"
 >
   <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
@@ -19,24 +19,24 @@
   [attr.aria-expanded]="isOpen()"
   [attr.aria-label]="ariaLabel()"
   aria-haspopup="listbox"
-  class="trigger notch-tr focus-ring-inset [--notch:0.5rem]"
+  class="season-picker__trigger notch-tr focus-ring-inset"
   role="combobox"
   type="button"
 >
   @if (current(); as current) {
     @if (current.mark) {
-      <span aria-hidden="true" class="mark">{{ current.mark }}</span>
+      <span aria-hidden="true" class="season-picker__mark">{{ current.mark }}</span>
     }
-    <span class="trigger-span">{{ current.label }}</span>
+    <span class="season-picker__trigger-label">{{ current.label }}</span>
     <span class="sr-only">{{ current.fullName }}</span>
   } @else {
-    <span aria-hidden="true" class="mark mark--none">—</span>
-    <span class="trigger-span">{{ summary() }}</span>
+    <span aria-hidden="true" class="season-picker__mark season-picker__mark--none">—</span>
+    <span class="season-picker__trigger-label">{{ summary() }}</span>
   }
   <svg
-    [class.rotate-180]="isOpen()"
+    [class.season-picker__chevron--open]="isOpen()"
     aria-hidden="true"
-    class="size-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+    class="season-picker__chevron"
     lucideChevronDown
   ></svg>
 </button>
@@ -45,7 +45,7 @@
   (click)="step(-1)"
   [attr.aria-label]="'playerProfile.seasonPicker.next' | translate"
   [disabled]="!canGoForward()"
-  class="step focus-ring-inset"
+  class="season-picker__step focus-ring-inset"
   type="button"
 >
   <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
@@ -59,31 +59,33 @@
   [attr.aria-multiselectable]="multiple() || null"
   [hidden]="!isOpen()"
   [id]="listboxId"
-  class="menu-panel listbox"
+  class="season-picker__listbox menu-panel"
   role="listbox"
   tabindex="-1"
 >
-  <div class="panel-scroll">
+  <div class="season-picker__scroll">
     @if (!multiple()) {
       <button
         (click)="selectAll()"
         [attr.aria-selected]="selection().length === 0"
         [attr.data-active]="activeIndex() === 0 || null"
         [id]="optionId(0)"
-        class="menu-option listbox-option option focus-ring-inset"
+        class="season-picker__option menu-option listbox-option focus-ring-inset"
         role="option"
         tabindex="-1"
         type="button"
       >
-        <span aria-hidden="true" class="mark mark--none">—</span>
-        <span class="option-span">{{ 'playerProfile.filters.allSeasons' | translate }}</span>
+        <span aria-hidden="true" class="season-picker__mark season-picker__mark--none">—</span>
+        <span class="season-picker__option-label">{{
+          'playerProfile.filters.allSeasons' | translate
+        }}</span>
         <span></span>
       </button>
-      <hr aria-hidden="true" class="rule" />
+      <hr aria-hidden="true" class="season-picker__divider" />
     }
     @for (option of options(); track option.id) {
       @if (startsGroup($index)) {
-        <hr aria-hidden="true" class="rule" />
+        <hr aria-hidden="true" class="season-picker__divider" />
       }
       <button
         (click)="select(option)"
@@ -92,23 +94,22 @@
         [attr.data-active]="$index + optionOffset() === activeIndex() || null"
         [disabled]="isAtLimit() && !isSelected(option)"
         [id]="optionId($index + optionOffset())"
-        class="menu-option listbox-option option focus-ring-inset disabled:pointer-events-none disabled:opacity-40"
+        class="season-picker__option menu-option listbox-option focus-ring-inset"
         role="option"
         tabindex="-1"
         type="button"
       >
         @if (option.mark) {
-          <span aria-hidden="true" class="mark">{{ option.mark }}</span>
+          <span aria-hidden="true" class="season-picker__mark">{{ option.mark }}</span>
         } @else {
-          <span aria-hidden="true" class="mark mark--none">—</span>
+          <span aria-hidden="true" class="season-picker__mark season-picker__mark--none">—</span>
         }
-        <span class="option-span">{{ option.label }}</span>
-        <!-- Multiple mode tick: the same filled square as the shared multi-select. -->
+        <span class="season-picker__option-label">{{ option.label }}</span>
         @if (multiple()) {
           <span
-            [class]="isSelected(option) ? 'bg-brand-500' : 'border border-text-muted/50'"
+            [class.season-picker__tick--checked]="isSelected(option)"
             aria-hidden="true"
-            class="size-3 justify-self-end"
+            class="season-picker__tick"
           ></span>
         } @else {
           <span></span>
@@ -118,7 +119,7 @@
   </div>
 
   @if (maxSelectionNote() && isAtLimit()) {
-    <p class="border-t border-edge px-4 py-2.5 text-xs text-text-muted">
+    <p class="season-picker__note">
       {{ maxSelectionNote() }}
     </p>
   }

@@ -1,17 +1,19 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { SquadRow } from './squad-sheet.model';
-import { TitleBadge } from '@shared/title-badge/title-badge';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { TitleBadge } from '@shared/title-badge/title-badge';
+import { SQUAD_COLUMNS } from './squad-sheet.constants';
+import { SquadRow } from './squad-sheet.model';
 
 /**
  * Day's tally per operator; the resource columns add up to the tally above.
@@ -20,6 +22,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   selector: 'app-squad-sheet',
   imports: [
     LucideDynamicIcon,
+    NgTemplateOutlet,
     TranslatePipe,
     RouterLink,
     Avatar,
@@ -37,6 +40,11 @@ export class SquadSheet {
    * Icon of each concept, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
+
+  /**
+   * Header columns, named while the sheet lays its rows out as a table.
+   */
+  protected readonly columns = SQUAD_COLUMNS;
 
   /**
    * One row per operator of the roster, most productive first.
@@ -57,6 +65,6 @@ export class SquadSheet {
    * Formats an amount in the active language for the resource columns.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 }

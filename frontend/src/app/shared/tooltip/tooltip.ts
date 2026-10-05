@@ -11,15 +11,10 @@ import {
   input,
   signal,
 } from '@angular/core';
-import {
-  OFFSET,
-  TOOLTIP_FALLBACK_ICON,
-  TOOLTIP_PORTRAIT_CLASS,
-  TOOLTIP_PORTRAIT_FALLBACK_CLASS,
-  TOOLTIP_SURFACE_CLASS,
-} from './tooltip.constants';
-import { TooltipPosition, TooltipTrigger } from './tooltip.model';
+
 import { nextInstanceId } from '@core/dom/instance-id.utils';
+import { TOOLTIP_FALLBACK_ICON, TOOLTIP_OFFSET } from './tooltip.constants';
+import { TooltipLayout, TooltipPosition, TooltipTrigger } from './tooltip.model';
 
 /**
  * Text bubble shown on hover and focus (or tap for an info button), closed on Escape.
@@ -28,10 +23,10 @@ import { nextInstanceId } from '@core/dom/instance-id.utils';
 @Directive({
   selector: '[appTooltip]',
   host: {
-    '(mouseenter)': 'onPointerEnter()',
-    '(mouseleave)': 'onPointerLeave()',
-    '(pointerenter)': 'onMouseOver($event)',
-    '(pointerleave)': 'onMouseOut($event)',
+    '(mouseenter)': 'onMouseEnter()',
+    '(mouseleave)': 'onMouseLeave()',
+    '(pointerenter)': 'onPointerEnter($event)',
+    '(pointerleave)': 'onPointerLeave($event)',
     '(click)': 'toggle($event)',
     // Focus skips the delay, which only guards against a pointer crossing the host.
     '(focusin)': 'showOnHostFocus($event)',
@@ -58,11 +53,6 @@ export class Tooltip implements OnDestroy {
    * Bubble size: `md` for the collapsed sidebar's labels, `sm` elsewhere.
    */
   public readonly appTooltipSize = input<'sm' | 'md'>('sm');
-
-  /**
-   * Hover delay in ms before opening, for large hosts the pointer merely crosses.
-   */
-  public readonly appTooltipDelay = input(0);
 
   /**
    * `click` for an info button: mouse hover opens it, tap or keyboard toggles it.
@@ -130,11 +120,6 @@ export class Tooltip implements OnDestroy {
   private movementListener: (() => void) | null = null;
 
   /**
-   * Pending {@link appTooltipDelay} timer, `null` when none.
-   */
-  private showTimer: ReturnType<typeof setTimeout> | null = null;
-
-  /**
    * The popover lives on the body, so it would otherwise outlive its host.
    */
   public ngOnDestroy(): void {
@@ -153,18 +138,18 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Opens a hover tooltip, after its delay, when the mouse enters the host.
+   * Opens a hover tooltip when the mouse enters the host.
    */
-  protected onPointerEnter(): void {
+  protected onMouseEnter(): void {
     if (!this.isClickTriggered()) {
-      this.scheduleShow();
+      this.show();
     }
   }
 
   /**
    * Closes a hover tooltip when the mouse leaves the host.
    */
-  protected onPointerLeave(): void {
+  protected onMouseLeave(): void {
     if (!this.isClickTriggered()) {
       this.hide();
     }
@@ -173,7 +158,7 @@ export class Tooltip implements OnDestroy {
   /**
    * Opens a click tooltip under a real mouse only; touch must go on tapping.
    */
-  protected onMouseOver(event: PointerEvent): void {
+  protected onPointerEnter(event: PointerEvent): void {
     if (this.isClickTriggered() && event.pointerType === 'mouse') {
       this.show();
     }
@@ -182,7 +167,7 @@ export class Tooltip implements OnDestroy {
   /**
    * Closes a click tooltip that mouse hover opened, once the mouse leaves.
    */
-  protected onMouseOut(event: PointerEvent): void {
+  protected onPointerLeave(event: PointerEvent): void {
     if (this.isClickTriggered() && event.pointerType === 'mouse') {
       this.hide();
     }
@@ -215,24 +200,6 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Opens after {@link appTooltipDelay}, at once without a timer when the delay is zero.
-   */
-  protected scheduleShow(): void {
-    const delay = this.appTooltipDelay();
-    if (delay <= 0) {
-      this.show();
-
-      return;
-    }
-
-    this.cancelScheduledShow();
-    this.showTimer = setTimeout(() => {
-      this.showTimer = null;
-      this.show();
-    }, delay);
-  }
-
-  /**
    * Builds and places the bubble; a no-op when disabled, blank or already shown.
    */
   protected show(): void {
@@ -246,24 +213,17 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(bubble, 'popover', 'manual');
     const portrait = this.appTooltipPortrait();
     const template = this.appTooltipTemplate();
-    let sizeClass =
-      this.appTooltipSize() === 'md'
-        ? 'max-w-80 px-4 py-3 text-base'
-        : 'max-w-72 px-3 py-2 text-sm';
+    let layout: TooltipLayout = this.appTooltipSize();
     if (template) {
       this.fillWithTemplate(bubble, template);
-      sizeClass = 'max-w-72 px-3 py-2.5 text-sm';
+      layout = 'template';
     } else if (portrait === undefined) {
       this.renderer.setProperty(bubble, 'textContent', this.appTooltip());
     } else {
       this.fillWithPortrait(bubble, portrait);
-      sizeClass = 'flex items-center gap-3 py-2 pr-4 pl-2.5 font-display text-base font-semibold';
+      layout = 'portrait';
     }
-    this.renderer.setAttribute(
-      bubble,
-      'class',
-      `${TOOLTIP_SURFACE_CLASS} fx-tip-in pointer-events-none m-0 ${sizeClass}`,
-    );
+    this.renderer.setAttribute(bubble, 'class', `tooltip tooltip--${layout} notch-tr fx-tip-in`);
     this.renderer.setStyle(bubble, 'position', 'fixed');
 
     this.renderer.appendChild(this.document().body, bubble);
@@ -312,7 +272,7 @@ export class Tooltip implements OnDestroy {
     this.renderer.setAttribute(image, 'alt', '');
     this.renderer.setAttribute(image, 'width', '36');
     this.renderer.setAttribute(image, 'height', '36');
-    this.renderer.setAttribute(image, 'class', TOOLTIP_PORTRAIT_CLASS);
+    this.renderer.setAttribute(image, 'class', 'tooltip__portrait');
     return image;
   }
 
@@ -322,10 +282,10 @@ export class Tooltip implements OnDestroy {
   private portraitFallback(): HTMLElement {
     const svgNamespace = 'svg';
     const disc = this.renderer.createElement('span') as HTMLElement;
-    this.renderer.setAttribute(disc, 'class', TOOLTIP_PORTRAIT_FALLBACK_CLASS);
+    this.renderer.setAttribute(disc, 'class', 'tooltip__portrait tooltip__portrait--fallback');
     const icon = this.renderer.createElement('svg', svgNamespace) as SVGElement;
     const iconAttributes: Readonly<Record<string, string>> = {
-      class: 'size-5',
+      class: 'tooltip__portrait-icon',
       viewBox: '0 0 24 24',
       fill: 'none',
       stroke: 'currentColor',
@@ -348,11 +308,9 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Removes the bubble; disarms the delay first so a pending one cannot open after leaving.
+   * Removes the bubble and its listeners.
    */
   protected hide(): void {
-    this.cancelScheduledShow();
-
     const bubble = this.bubble();
     if (!bubble) {
       return;
@@ -372,18 +330,6 @@ export class Tooltip implements OnDestroy {
     this.togglePopover(bubble, false);
     this.renderer.removeChild(this.document().body, bubble);
     this.bubble.set(null);
-  }
-
-  /**
-   * Disarms the pending delay timer.
-   */
-  private cancelScheduledShow(): void {
-    if (this.showTimer === null) {
-      return;
-    }
-
-    clearTimeout(this.showTimer);
-    this.showTimer = null;
   }
 
   /**
@@ -414,19 +360,19 @@ export class Tooltip implements OnDestroy {
 
     switch (this.appTooltipPosition()) {
       case 'below':
-        top = anchor.bottom + OFFSET;
+        top = anchor.bottom + TOOLTIP_OFFSET;
         left = anchor.left + (anchor.width - size.width) / 2;
         break;
       case 'left':
         top = anchor.top + (anchor.height - size.height) / 2;
-        left = anchor.left - size.width - OFFSET;
+        left = anchor.left - size.width - TOOLTIP_OFFSET;
         break;
       case 'right':
         top = anchor.top + (anchor.height - size.height) / 2;
-        left = anchor.right + OFFSET;
+        left = anchor.right + TOOLTIP_OFFSET;
         break;
       default:
-        top = anchor.top - size.height - OFFSET;
+        top = anchor.top - size.height - TOOLTIP_OFFSET;
         left = anchor.left + (anchor.width - size.width) / 2;
         break;
     }
@@ -436,10 +382,10 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Clamps a coordinate between `OFFSET` and `maximum - OFFSET`.
+   * Clamps a coordinate so the bubble keeps {@link TOOLTIP_OFFSET} from the viewport edges.
    */
   private clamp(value: number, maximum: number): number {
-    return Math.max(OFFSET, Math.min(value, maximum - OFFSET));
+    return Math.max(TOOLTIP_OFFSET, Math.min(value, maximum - TOOLTIP_OFFSET));
   }
 
   /**

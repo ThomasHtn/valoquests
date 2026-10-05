@@ -1,11 +1,12 @@
 import { DestroyRef, Directive, effect, ElementRef, inject, input } from '@angular/core';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
-import { DURATION_MS, VISIBILITY_THRESHOLD } from './count-up.constants';
+import { COUNT_UP_DURATION_MS, COUNT_UP_VISIBILITY_THRESHOLD } from './count-up.constants';
+import { easeInOutQuad } from './count-up.utils';
 
 /**
  * Counts a figure up to its value: from zero when first seen, then from its previous value.
- * Writes the text itself (grouped by `formatDamage`), so the host must be empty.
+ * Writes the text itself (grouped by `formatFigure`), so the host must be empty.
  */
 @Directive({
   selector: '[appCountUp]',
@@ -41,6 +42,9 @@ export class CountUp {
    */
   private frame: number | null = null;
 
+  /**
+   * Waits for the host to scroll into view, then climbs on every new value or language.
+   */
   constructor() {
     const observer =
       typeof IntersectionObserver === 'undefined'
@@ -53,7 +57,7 @@ export class CountUp {
                 this.run(this.shown, this.appCountUp());
               }
             },
-            { threshold: VISIBILITY_THRESHOLD },
+            { threshold: COUNT_UP_VISIBILITY_THRESHOLD },
           );
 
     if (observer) {
@@ -97,11 +101,8 @@ export class CountUp {
 
     const start = performance.now();
     const step = (now: number): void => {
-      const progress = Math.min(1, (now - start) / DURATION_MS);
-      // Same ease-in-out as the gauges, so a figure and its bar arrive together.
-      const eased =
-        progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(2 - 2 * progress, 2) / 2;
-      this.write(from + (to - from) * eased);
+      const progress = Math.min(1, (now - start) / COUNT_UP_DURATION_MS);
+      this.write(from + (to - from) * easeInOutQuad(progress));
 
       if (progress < 1) {
         this.frame = requestAnimationFrame(step);
@@ -121,7 +122,7 @@ export class CountUp {
    */
   private write(value: number): void {
     this.shown = value;
-    this.host.nativeElement.textContent = formatDamage(
+    this.host.nativeElement.textContent = formatFigure(
       Math.round(value),
       this.translation.language(),
     );

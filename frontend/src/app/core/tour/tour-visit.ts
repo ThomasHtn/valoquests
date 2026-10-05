@@ -1,6 +1,6 @@
 import { Service } from '@angular/core';
 
-import { STORAGE_KEY } from './tour-visit.constants';
+import { TOUR_COMPLETED_STORAGE_KEY } from './tour-visit.constants';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
@@ -12,13 +12,13 @@ export class TourVisit {
    * Whether the tour completion is recorded.
    */
   public hasCompleted(): boolean {
-    return readStorage(STORAGE_KEY) !== null;
+    return readStorage(TOUR_COMPLETED_STORAGE_KEY) !== null;
   }
 
   /**
    * Records the completion, so later visits skip the tour.
    */
   public markCompleted(): void {
-    writeStorage(STORAGE_KEY, 'true');
+    writeStorage(TOUR_COMPLETED_STORAGE_KEY, 'true');
   }
 }

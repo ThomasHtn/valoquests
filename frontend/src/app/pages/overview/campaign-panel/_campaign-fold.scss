@@ -1,0 +1,71 @@
+/* Folded band shared by the reserve ledger and the campaign history, so the two read as a pair. */
+@use 'tools' as *;
+
+.campaign-fold {
+  background: tint(text-primary, 4%);
+}
+
+.campaign-fold__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  min-height: 3.5rem;
+  padding: 1.1rem 1.25rem;
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.campaign-fold__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-brand-400);
+}
+
+.campaign-fold__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.campaign-fold__summary {
+  @include hover {
+    .campaign-fold__cue {
+      color: var(--color-text-primary);
+    }
+  }
+}
+
+.campaign-fold__chevron {
+  transition: rotate 0.25s var(--ease-out-quart);
+}
+
+.campaign-fold[open] .campaign-fold__chevron {
+  rotate: 180deg;
+}
+
+.campaign-fold__body {
+  animation: campaign-open 0.3s var(--ease-out-quart) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campaign-fold__body {
+    animation: none;
+  }
+
+  .campaign-fold__chevron {
+    transition: none;
+  }
+}

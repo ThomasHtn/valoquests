@@ -1,12 +1,11 @@
 import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
 import { inject, Service, Signal } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
-import { CampaignApi } from '@core/campaign/campaign-api';
 import { CampaignDifficulty, CampaignStartWeek } from '@core/campaign/campaign.model';
-import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
-import { RankingApi } from '@core/ranking/ranking-api';
+import { PublicResources } from '@core/http/public-resources';
+import { reloadAll } from '@core/http/resource-state.utils';
 import { ADMIN_KEY_HEADER } from './session/admin-session.constants';
 import { AdminSession } from './session/admin-session';
 import {
@@ -39,19 +38,9 @@ export class AdminApi {
   private readonly session = inject(AdminSession);
 
   /**
-   * Public campaign resources, refreshed with the admin ones.
+   * Public resources, refreshed with the admin ones so the public screens see admin edits.
    */
-  private readonly campaignApi = inject(CampaignApi);
-
-  /**
-   * Public challenge resources, refreshed with the admin ones.
-   */
-  private readonly challengesApi = inject(ChallengesApi);
-
-  /**
-   * Public ranking resources, refreshed with the admin ones.
-   */
-  private readonly rankingApi = inject(RankingApi);
+  private readonly publicResources = inject(PublicResources);
 
   /**
    * Every tracked player, archived ones included.
@@ -132,13 +121,6 @@ export class AdminApi {
    */
   public async redrawCurrentChallenges(): Promise<void> {
     await this.mutate(this.http.post(API_ENDPOINTS.admin.challengeRedraw, null));
-  }
-
-  /**
-   * Rebuilds the current weekly ranking without touching challenge progress.
-   */
-  public async recalculateRanking(): Promise<void> {
-    await this.mutate(this.http.post(API_ENDPOINTS.admin.rankingRecalculation, null));
   }
 
   /**
@@ -232,16 +214,8 @@ export class AdminApi {
    * Refetches every admin resource; also the polling step, the backend cannot push progress.
    */
   public refresh(): void {
-    this.players.reload();
-    this.latestSynchronization.reload();
-    this.campaignApi.campaign.reload();
-    this.campaignApi.today.reload();
-    this.campaignApi.history.reload();
-    this.challengesApi.current.reload();
-    this.rankingApi.current.reload();
-    this.rankingApi.daily.reload();
-    this.rankingApi.latestFinalizedWeek.reload();
-    this.rankingApi.history.reload();
+    reloadAll(this.players, this.latestSynchronization);
+    this.publicResources.reload();
   }
 
   /**

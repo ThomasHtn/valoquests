@@ -1,0 +1,60 @@
+@use 'tools' as *;
+
+.confirm-dialog__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: tint(surface-950, 80%);
+}
+
+/* Notch 0.875rem outside, 0.5rem on the buttons inside, for concentric corners. */
+.confirm-dialog__panel {
+  --notch: 0.875rem;
+
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 50;
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid tint(brand-500, 40%);
+  outline-style: none;
+  background-color: var(--color-surface-sunken);
+  translate: -50% -50%;
+}
+
+.confirm-dialog__heading {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: calc(1.75 / 1.125);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+.confirm-dialog__body {
+  margin-top: 0.75rem;
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.confirm-dialog__action {
+  --notch: 0.5rem;
+
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: calc(1.25 / 0.875);
+}
+
+.confirm-dialog__action--confirm {
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}

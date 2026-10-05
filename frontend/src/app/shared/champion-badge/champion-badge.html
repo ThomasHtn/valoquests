@@ -1,1 +1,2 @@
-<app-title-badge [inLink]="inLink()" [size]="size()" title="CHAMPION" />
+<!-- Bound, not a static attribute, which would also set a native `title` tooltip on the host. -->
+<app-title-badge [inLink]="inLink()" [size]="size()" [title]="'CHAMPION'" />

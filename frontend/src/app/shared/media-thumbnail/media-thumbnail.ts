@@ -1,5 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Square map or agent thumbnail with a monogram fallback; hidden from AT without a name.
@@ -8,6 +8,7 @@ import { Component, input } from '@angular/core';
   selector: 'app-media-thumbnail',
   imports: [NgOptimizedImage],
   templateUrl: './media-thumbnail.html',
+  styleUrl: './media-thumbnail.scss',
   host: { class: 'contents' },
 })
 export class MediaThumbnail {
@@ -30,4 +31,9 @@ export class MediaThumbnail {
    * Whether the top-right corner is cut.
    */
   public readonly notched = input(true);
+
+  /**
+   * Whether assistive technology skips the thumbnail, as it has no name.
+   */
+  protected readonly decorative = computed(() => this.accessibleName() === null);
 }

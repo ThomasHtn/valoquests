@@ -1,0 +1,32 @@
+@use 'tools' as *;
+
+/* A caller's class on the host overrides the default height. */
+:host {
+  position: relative;
+  display: block;
+  height: 0.25rem;
+  overflow: hidden;
+  background-color: var(--color-surface-sunken);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background-color: var(--tone);
+  transition: width 600ms var(--ease-gauge);
+}
+
+.progress-bar__edge {
+  position: absolute;
+  inset-block: 0;
+  width: 0.125rem;
+  margin-left: -0.125rem;
+  background-color: var(--color-text-primary);
+  transition: left 600ms var(--ease-gauge);
+}
+
+.progress-bar__fill,
+.progress-bar__edge {
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

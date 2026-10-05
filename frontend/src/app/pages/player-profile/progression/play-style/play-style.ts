@@ -15,6 +15,7 @@ import { MINIMUM_OPACITY } from './play-style.constants';
   selector: 'app-play-style',
   imports: [TranslatePipe, Tooltip],
   templateUrl: './play-style.html',
+  styleUrl: './play-style.scss',
 })
 export class PlayStyle {
   /**

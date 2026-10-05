@@ -37,10 +37,10 @@ export function formatPercent(percent: number, language: Language, fractionDigit
 }
 
 /**
- * Figure in the locale, abbreviated (`27k`) when `compact`, for a ring too narrow for it.
+ * Amount with grouped thousands (`9 000`), abbreviated (`27k`) when `compact` for a narrow slot.
  */
-export function formatFigure(amount: number, locale: string, compact = false): string {
-  const label = formatNumber(amount, locale, {
+export function formatFigure(amount: number, language: Language, compact = false): string {
+  const label = formatNumber(amount, resolveLocale(language), {
     notation: compact ? 'compact' : 'standard',
     maximumFractionDigits: compact ? 1 : 2,
   });

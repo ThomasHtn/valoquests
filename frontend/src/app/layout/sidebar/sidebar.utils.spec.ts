@@ -1,12 +1,16 @@
+import { LucideLayoutDashboard } from '@lucide/angular';
 import { describe, expect, it } from 'vitest';
 
 import { NavItem } from './sidebar.model';
 import { isNavItemActive } from './sidebar.utils';
 
+/**
+ * Overview entry, with `overrides` applied.
+ */
 function item(overrides: Partial<NavItem> = {}): NavItem {
   return {
     labelKey: 'overview',
-    icon: 'layout-dashboard',
+    icon: LucideLayoutDashboard,
     routerLink: '/overview',
     ...overrides,
   };

@@ -1,0 +1,19 @@
+@use 'tools' as *;
+
+/* Negative bottom margin pulls it against the block below instead of floating between two. */
+:host {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -0.75rem;
+}
+
+:host(.section-label--empty) {
+  display: none;
+}
+
+.section-label__text {
+  @include truncate;
+
+  min-width: 0;
+  color: var(--color-text-muted);
+}

@@ -1,6 +1,12 @@
 import { ChallengeProgress } from '@core/challenges/challenge.model';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
-import { orderOperators, toRuleParts } from './challenges.utils';
+import {
+  formatDayMonth,
+  formatDayOfMonth,
+  formatWeekday,
+  orderOperators,
+  toRuleParts,
+} from './challenges.utils';
 
 const operator = (playerId: number): ChallengeOperator => ({
   playerId,
@@ -60,5 +66,20 @@ describe('toRuleParts', () => {
     expect(toRuleParts('Gagner une partie.')).toEqual([
       { text: 'Gagner une partie.', number: false },
     ]);
+  });
+});
+
+describe('date labels', () => {
+  it('capitalises a short weekday and drops its dot', () => {
+    expect(formatWeekday('2026-10-05', 'fr-FR', 'short')).toBe('Lun');
+  });
+
+  it('keeps a long weekday as the locale writes it', () => {
+    expect(formatWeekday('2026-10-05', 'fr-FR', 'long')).toBe('lundi');
+  });
+
+  it('spells the month and isolates the day', () => {
+    expect(formatDayMonth('2026-10-05', 'fr-FR')).toBe('5 octobre');
+    expect(formatDayOfMonth('2026-10-05', 'fr-FR')).toBe('5');
   });
 });

@@ -1,274 +1,164 @@
 <!-- Untitled: it breaks down the mission's aboard row just above. -->
 @if (capacity(); as capacity) {
-  <div [attr.aria-label]="'overview.capacity.title' | translate" class="cap mt-8" role="group">
-    <div class="gauges">
-      <div class="gauge-cell" style="--tone: var(--color-accent-cyan)">
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.carry' | translate }}</span>
-        </p>
-        <button
-          [appTooltip]="carryTooltip()"
-          [attr.aria-label]="
-            'overview.capacity.info' | translate: { name: 'overview.capacity.carry' | translate }
-          "
-          appTooltipPosition="below"
-          appTooltipSize="md"
-          appTooltipTrigger="click"
-          class="info focus-ring"
-          type="button"
-        >
-          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
-        </button>
-        <span
-          [attr.aria-label]="
-            'overview.capacity.carryAria'
-              | translate
-                : {
-                    count: format(capacity.carry.value),
-                    wounded: format(capacity.wounded),
-                    percent: percent(capacity.carry.fraction),
-                  }
-          "
-          [style.--pct]="capacity.carry.fraction"
-          appInView
-          class="gauge"
-          role="img"
-        >
-          <svg aria-hidden="true" viewBox="0 0 100 100">
-            <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
-          </svg>
-          <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" [lucideIcon]="concepts.rocket"></svg>
-            <b [appCountUp]="capacity.carry.value" class="tabular-nums"></b>
+  <div [attr.aria-label]="'overview.capacity.title' | translate" class="mt-8" role="group">
+    <div class="extraction-gauges__grid">
+      @for (dial of dials(); track dial.key) {
+        <div [class]="'extraction-gauges__cell--' + dial.key" class="extraction-gauges__cell">
+          <p class="extraction-gauges__head">
+            <span class="extraction-gauges__name">{{ dial.name }}</span>
+          </p>
+          <ng-container
+            *ngTemplateOutlet="
+              infoButton;
+              context: { tooltip: dial.tooltip, label: dial.infoLabel }
+            "
+          />
+          <span
+            [attr.aria-label]="dial.ariaLabel"
+            [style.--pct]="dial.fraction"
+            appInView
+            class="extraction-gauges__dial"
+            role="img"
+          >
+            <svg aria-hidden="true" class="extraction-gauges__ring" viewBox="0 0 100 100">
+              <circle class="extraction-gauges__track" cx="50" cy="50" r="43" />
+              <circle class="extraction-gauges__arc fx-arc" cx="50" cy="50" r="43" />
+            </svg>
+            <span class="extraction-gauges__readout">
+              <svg
+                aria-hidden="true"
+                class="extraction-gauges__readout-icon size-5"
+                [lucideIcon]="dial.icon"
+              ></svg>
+              <b class="extraction-gauges__readout-value tabular-nums"
+                ><span [appCountUp]="dial.value"></span>{{ dial.unit }}</b
+              >
+            </span>
           </span>
-        </span>
-        <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.components"></svg
-          ><b class="tabular-nums">{{ format(capacity.carry.stock) }}</b>
-          {{ 'common.resource.components' | translate | lowercase }}</span
-        >
-        <div class="gauge-foot">
-          <span class="label-caption text-2xs text-brand-400">{{
-            'overview.capacity.lever' | translate
-          }}</span>
-          <p class="modes">
-            @for (mode of carryModes; track mode) {
-              <span class="mode-tag label-caption text-2xs">{{
-                'common.gameMode.' + mode | translate
-              }}</span>
-            }
-          </p>
-          <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.components"></svg>
-            <b class="tabular-nums">{{ capacity.componentsPerRescue }}</b>
-            {{ 'overview.capacity.carryRate' | translate }}
-          </p>
-        </div>
-      </div>
-
-      <div class="gauge-cell" style="--tone: var(--color-accent-green)">
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.shelter' | translate }}</span>
-        </p>
-        <button
-          [appTooltip]="shelterTooltip()"
-          [attr.aria-label]="
-            'overview.capacity.info' | translate: { name: 'overview.capacity.shelter' | translate }
-          "
-          appTooltipPosition="below"
-          appTooltipSize="md"
-          appTooltipTrigger="click"
-          class="info focus-ring"
-          type="button"
-        >
-          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
-        </button>
-        <span
-          [attr.aria-label]="
-            'overview.capacity.shelterAria'
-              | translate
-                : {
-                    count: format(capacity.shelter.value),
-                    wounded: format(capacity.wounded),
-                    percent: percent(capacity.shelter.fraction),
-                  }
-          "
-          [style.--pct]="capacity.shelter.fraction"
-          appInView
-          class="gauge"
-          role="img"
-        >
-          <svg aria-hidden="true" viewBox="0 0 100 100">
-            <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
-          </svg>
-          <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" lucideBuilding2></svg>
-            <b [appCountUp]="capacity.shelter.value" class="tabular-nums"></b>
-          </span>
-        </span>
-        <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.food"></svg
-          ><b class="tabular-nums">{{ format(capacity.shelter.stock) }}</b>
-          {{ 'common.resource.food' | translate | lowercase }}</span
-        >
-        <div class="gauge-foot">
-          <span class="label-caption text-2xs text-brand-400">{{
-            'overview.capacity.lever' | translate
-          }}</span>
-          <p class="modes">
-            @for (mode of shelterModes; track mode) {
-              <span class="mode-tag label-caption text-2xs">{{
-                'common.gameMode.' + mode | translate
-              }}</span>
-            }
-          </p>
-          <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.food"></svg>
-            <b class="tabular-nums">{{ capacity.foodPerRescue }}</b>
-            {{ 'overview.capacity.shelterRate' | translate }}
-          </p>
-        </div>
-      </div>
-
-      <div class="gauge-cell" style="--tone: var(--color-boss-hp-edge)">
-        <p class="gauge-head">
-          <span class="gauge-name">{{ 'overview.capacity.breach' | translate }}</span>
-        </p>
-        <button
-          [appTooltip]="breachTooltip()"
-          [attr.aria-label]="
-            'overview.capacity.info' | translate: { name: 'overview.capacity.breach' | translate }
-          "
-          appTooltipPosition="below"
-          appTooltipSize="md"
-          appTooltipTrigger="click"
-          class="info focus-ring"
-          type="button"
-        >
-          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
-        </button>
-        <span
-          [attr.aria-label]="
-            'overview.capacity.breachAria'
-              | translate: { boss: bossLabel(), percent: capacity.breach.value }
-          "
-          [style.--pct]="capacity.breach.fraction"
-          appInView
-          class="gauge"
-          role="img"
-        >
-          <svg aria-hidden="true" viewBox="0 0 100 100">
-            <circle class="g-track" cx="50" cy="50" r="43" />
-            <circle class="g-arc fx-arc" cx="50" cy="50" r="43" />
-          </svg>
-          <span class="gauge-mid">
-            <svg aria-hidden="true" class="size-5" [lucideIcon]="concepts.damage"></svg>
-            <b class="tabular-nums"><span [appCountUp]="capacity.breach.value"></span> %</b>
-          </span>
-        </span>
-        <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.guardian"></svg
-          ><b class="tabular-nums">{{ format(capacity.breach.stock) }}</b>
-          {{ 'overview.capacity.hpStanding' | translate }}</span
-        >
-        <div class="gauge-foot">
-          <span class="label-caption text-2xs text-brand-400">{{
-            'overview.capacity.lever' | translate
-          }}</span>
-          <p class="modes">
-            <span class="mode-tag label-caption text-2xs">{{
-              'overview.capacity.allModes' | translate
+          <span class="extraction-gauges__stock label-caption text-2xs"
+            ><svg
+              aria-hidden="true"
+              class="extraction-gauges__stock-icon size-3.5"
+              [lucideIcon]="dial.resourceIcon"
+            ></svg
+            ><b class="extraction-gauges__stock-value tabular-nums">{{ dial.stock }}</b>
+            {{ dial.stockLabel }}</span
+          >
+          <div class="extraction-gauges__foot">
+            <span class="extraction-gauges__lever label-caption text-2xs">{{
+              'overview.capacity.lever' | translate
             }}</span>
-          </p>
-          <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.guardian"></svg>
-            <b class="tabular-nums">{{ format(capacity.hitPointsPerPercent) }}</b>
-            {{ 'overview.capacity.breachRate' | translate }}
-          </p>
+            <p class="extraction-gauges__modes">
+              @for (mode of dial.modes; track mode) {
+                <span class="extraction-gauges__mode label-caption text-2xs">{{ mode }}</span>
+              }
+            </p>
+            <p class="extraction-gauges__rate label-caption text-2xs">
+              <svg
+                aria-hidden="true"
+                class="extraction-gauges__rate-icon size-4"
+                [lucideIcon]="dial.resourceIcon"
+              ></svg>
+              <b class="extraction-gauges__rate-value tabular-nums">{{ dial.rate }}</b>
+              {{ dial.rateLabel }}
+            </p>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- Result: extraction rescues plus challenge rescues, the latter acquired regardless. -->
-      <div class="gauge-cell gauge-cell--out" style="--tone: var(--color-brand-400)">
-        <p class="gauge-head">
-          <span class="gauge-name text-brand-400">{{
-            'overview.capacity.aboard' | translate
-          }}</span>
+      <div class="extraction-gauges__cell extraction-gauges__cell--aboard">
+        <p class="extraction-gauges__head">
+          <span class="extraction-gauges__name">{{ 'overview.capacity.aboard' | translate }}</span>
         </p>
-        <button
-          [appTooltip]="aboardTooltip()"
-          [attr.aria-label]="
-            'overview.capacity.info' | translate: { name: 'overview.capacity.aboard' | translate }
+        <ng-container
+          *ngTemplateOutlet="
+            infoButton;
+            context: {
+              tooltip: aboardTooltip(),
+              label:
+                'overview.capacity.info'
+                | translate: { name: 'overview.capacity.aboard' | translate },
+            }
           "
-          appTooltipPosition="below"
-          appTooltipSize="md"
-          appTooltipTrigger="click"
-          class="info focus-ring"
-          type="button"
-        >
-          <svg aria-hidden="true" class="size-4" lucideInfo></svg>
-        </button>
+        />
         <span
-          [attr.aria-label]="
-            'overview.capacity.aboardAria'
-              | translate
-                : {
-                    count: format(capacity.aboard),
-                    wounded: format(capacity.wounded),
-                    percent: percent(capacity.aboardFraction),
-                    extraction: format(capacity.fromGuardian),
-                    challenges: format(capacity.fromChallenges),
-                  }
-          "
+          [attr.aria-label]="aboardLabel()"
           [style.--pct]="capacity.aboardFraction"
           appInView
-          class="gauge gauge--hull"
+          class="extraction-gauges__dial extraction-gauges__dial--hull"
           role="img"
         >
           <!-- Challenges board tank; the mask keeps the level inside the outline. -->
-          <span [style.mask-image]="hullMask" class="hull">
+          <span [style.mask-image]="hullMask" class="extraction-gauges__hull">
             <span
-              [class.hull-fill--full]="capacity.aboardFraction >= 1"
-              class="hull-fill fx-rise"
+              [class.extraction-gauges__hull-fill--full]="capacity.aboardFraction >= 1"
+              class="extraction-gauges__hull-fill fx-rise"
             ></span>
           </span>
-          <svg [attr.viewBox]="hullViewBox" aria-hidden="true" class="hull-line">
+          <svg
+            [attr.viewBox]="hullViewBox"
+            aria-hidden="true"
+            class="extraction-gauges__hull-outline"
+          >
             <path [attr.d]="hullPath" />
             <circle cx="50" cy="44" r="11" />
           </svg>
-          <span class="gauge-mid hull-port">
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
+          <span class="extraction-gauges__readout extraction-gauges__hull-porthole">
+            <svg
+              aria-hidden="true"
+              class="extraction-gauges__readout-icon size-4"
+              [lucideIcon]="concepts.wounded"
+            ></svg>
           </span>
           <!-- Sized on the final figure so it never jumps mid-count. -->
-          <span [style.--fig]="hullFigureSize(capacity.aboard)" class="gauge-mid hull-figure">
-            <b [appCountUp]="capacity.aboard" class="tabular-nums"></b>
+          <span
+            [style.--fig]="hullFigureSize(capacity.aboard)"
+            class="extraction-gauges__readout extraction-gauges__hull-figure"
+          >
+            <b
+              [appCountUp]="capacity.aboard"
+              class="extraction-gauges__readout-value tabular-nums"
+            ></b>
           </span>
         </span>
-        <span class="gauge-stock label-caption text-2xs"
-          ><svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.wounded"></svg
-          ><b class="tabular-nums">{{ format(capacity.wounded) }}</b>
+        <span class="extraction-gauges__stock label-caption text-2xs"
+          ><svg
+            aria-hidden="true"
+            class="extraction-gauges__stock-icon size-3.5"
+            [lucideIcon]="concepts.wounded"
+          ></svg
+          ><b class="extraction-gauges__stock-value tabular-nums">{{ format(capacity.wounded) }}</b>
           {{ 'overview.capacity.spotted' | translate }}</span
         >
-        <div class="gauge-foot">
-          <p class="split">
-            <span class="split-row" style="--tone: var(--color-brand-400)">
-              <b class="tabular-nums">{{ format(capacity.fromGuardian) }}</b>
-              <span class="label-caption text-2xs">{{
+        <div class="extraction-gauges__foot">
+          <p class="extraction-gauges__split">
+            <span class="extraction-gauges__split-row extraction-gauges__split-row--guardian">
+              <b class="extraction-gauges__split-value tabular-nums">{{
+                format(capacity.fromGuardian)
+              }}</b>
+              <span class="extraction-gauges__split-label label-caption text-2xs">{{
                 'overview.capacity.fromGuardian' | translate
               }}</span>
             </span>
-            <span class="split-row" style="--tone: var(--color-accent-blue)">
-              <b class="tabular-nums">{{ format(capacity.fromChallenges) }}</b>
-              <span class="label-caption text-2xs">{{
+            <span class="extraction-gauges__split-row extraction-gauges__split-row--challenges">
+              <b class="extraction-gauges__split-value tabular-nums">{{
+                format(capacity.fromChallenges)
+              }}</b>
+              <span class="extraction-gauges__split-label label-caption text-2xs">{{
                 'overview.capacity.fromChallenges' | translate
               }}</span>
             </span>
           </p>
-          <p class="gauge-rate label-caption text-2xs">
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
-            <b class="tabular-nums">{{ format(capacity.leftBehind) }}</b>
+          <p class="extraction-gauges__rate label-caption text-2xs">
+            <svg
+              aria-hidden="true"
+              class="extraction-gauges__rate-icon size-4"
+              [lucideIcon]="concepts.wounded"
+            ></svg>
+            <b class="extraction-gauges__rate-value tabular-nums">{{
+              format(capacity.leftBehind)
+            }}</b>
             {{ 'overview.capacity.leftBehind' | translate }}
           </p>
         </div>
@@ -276,3 +166,18 @@
     </div>
   </div>
 }
+
+<!-- Out of the grid flow, so the four names stay centred and aligned. -->
+<ng-template #infoButton let-label="label" let-tooltip="tooltip">
+  <button
+    [appTooltip]="tooltip"
+    [attr.aria-label]="label"
+    appTooltipPosition="below"
+    appTooltipSize="md"
+    appTooltipTrigger="click"
+    class="extraction-gauges__info focus-ring"
+    type="button"
+  >
+    <svg aria-hidden="true" class="size-4" lucideInfo></svg>
+  </button>
+</ng-template>

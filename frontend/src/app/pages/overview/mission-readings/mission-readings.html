@@ -1,70 +1,89 @@
-<div class="report bg-text-primary/4">
+<div class="mission-readings">
   @if (showClock()) {
-    <div class="rep-clock">
+    <div class="mission-readings__clock">
       <app-countdown
         [deadline]="mission().extractionDeadline"
         [label]="'overview.report.countdownAria' | translate"
       />
-      <p class="rep-when label-caption text-2xs text-text-muted">
+      <p class="mission-readings__deadline label-caption text-2xs">
         {{ 'overview.report.deadline' | translate }}
       </p>
     </div>
   }
 
   <!-- Squad versus guardian, mirrored over their shared track. -->
-  <div [class.duel--down]="mission().defeated" class="duel" data-card="guardian">
-    <div class="duel-camps">
-      <div class="camp camp--squad">
-        <p class="plate">
-          <svg aria-hidden="true" class="plate-icon" [lucideIcon]="concepts.damage"></svg>
+  <div
+    [class.mission-readings__duel--down]="mission().defeated"
+    class="mission-readings__duel"
+    data-card="guardian"
+  >
+    <div class="mission-readings__camps">
+      <div class="mission-readings__camp mission-readings__camp--squad">
+        <p class="mission-readings__plate">
+          <svg
+            aria-hidden="true"
+            class="mission-readings__plate-icon"
+            [lucideIcon]="concepts.damage"
+          ></svg>
           {{ 'overview.report.squad' | translate }}
         </p>
-        <p class="camp-fig tabular-nums">
+        <p class="mission-readings__camp-figure tabular-nums">
           <span [appCountUp]="hitPointsDealt()"></span>
-          <small>{{ 'overview.report.hpDealt' | translate }}</small>
+          <small class="mission-readings__camp-unit">{{
+            'overview.report.hpDealt' | translate
+          }}</small>
         </p>
       </div>
-      <div class="camp camp--foe">
-        <p class="plate">
+      <div class="mission-readings__camp mission-readings__camp--foe">
+        <p class="mission-readings__plate">
           {{ 'overview.report.boss' | translate: { index: bossIndex() } }}
-          <svg aria-hidden="true" class="plate-icon" [lucideIcon]="concepts.guardian"></svg>
+          <svg
+            aria-hidden="true"
+            class="mission-readings__plate-icon"
+            [lucideIcon]="concepts.guardian"
+          ></svg>
         </p>
-        <p class="camp-fig tabular-nums">
+        <p class="mission-readings__camp-figure tabular-nums">
           <span [appCountUp]="mission().hitPointsLeft"></span>
-          <small>{{ 'overview.report.hpLeft' | translate }}</small>
+          <small class="mission-readings__camp-unit">{{
+            'overview.report.hpLeft' | translate
+          }}</small>
         </p>
       </div>
     </div>
 
-    <div [style.--breach]="breach() * 100 + '%'" appInView class="duel-track">
+    <div [style.--breach]="breachLevel()" appInView class="mission-readings__track">
       @if (breach() > 0) {
-        <span class="duel-front">
+        <span class="mission-readings__front">
           @for (strike of strikes(); track strike.playerId) {
             <!-- Click trigger: hover still opens it, a tap toggles it on a phone. -->
             <button
               [appTooltipTemplate]="tip"
               [appTooltip]="strike.summary"
               [attr.aria-label]="strike.summary"
-              [style.--w]="strike.damage"
+              [style.--weight]="strike.damage"
               appTooltipTrigger="click"
-              class="focus-ring"
+              class="mission-readings__strike focus-ring"
               type="button"
             ></button>
             <ng-template #tip><app-contribution-tip [strike]="strike" /></ng-template>
           } @empty {
-            <i aria-hidden="true"></i>
+            <i
+              aria-hidden="true"
+              class="mission-readings__strike mission-readings__strike--unnamed"
+            ></i>
           }
         </span>
       }
 
       <!-- Breakthrough percentage on hover only; the check replaces it once down. -->
       @if (!mission().defeated) {
-        <span class="duel-post" aria-hidden="true"></span>
+        <span aria-hidden="true" class="mission-readings__breach-post"></span>
         <span
           [appTooltip]="
             'overview.report.breachTooltip' | translate: { percent: mission().breachPercent }
           "
-          class="duel-seam focus-ring"
+          class="mission-readings__breach-seam focus-ring"
           tabindex="0"
         ></span>
       }
@@ -78,21 +97,21 @@
             | translate: { weekday: blow.weekday, time: blow.time, name: blow.by ?? '' }
         "
         appInView
-        class="duel-won"
+        class="mission-readings__defeat"
         role="img"
       >
-        <span class="won-fill"></span>
-        <span class="won-mark">
-          <svg aria-hidden="true" class="won-check" lucideCheck></svg>
+        <span class="mission-readings__defeat-fill"></span>
+        <span class="mission-readings__defeat-mark">
+          <svg aria-hidden="true" class="mission-readings__defeat-check" lucideCheck></svg>
           @for (piece of confetti; track $index) {
             <span
-              [class.piece--pale]="piece.pale"
-              [class.piece--strip]="piece.strip"
+              [class.mission-readings__confetti--pale]="piece.pale"
+              [class.mission-readings__confetti--strip]="piece.strip"
               [style.--angle.deg]="piece.angle"
               [style.--reach.rem]="piece.distance"
               [style.--spin.deg]="piece.spin"
               aria-hidden="true"
-              class="piece"
+              class="mission-readings__confetti"
             ></span>
           }
         </span>
@@ -102,36 +121,48 @@
 
   <!-- What Sunday midnight can still change, as gaps from the forecast. -->
   @if (stakes(); as stakes) {
-    <div class="stakes" data-card="stakes">
+    <div class="mission-readings__stakes" data-card="stakes">
       <div
         [appTooltip]="'overview.report.stakes.gainTooltip' | translate: { count: stakes.gain }"
-        class="stake stake--gain focus-ring"
+        class="mission-readings__stake mission-readings__stake--gain focus-ring"
         tabindex="0"
       >
-        <p class="stake-key label-caption">
-          <svg aria-hidden="true" class="stake-icon" [lucideIcon]="concepts.wounded"></svg>
+        <p class="mission-readings__stake-key label-caption">
+          <svg
+            aria-hidden="true"
+            class="mission-readings__stake-icon"
+            [lucideIcon]="concepts.wounded"
+          ></svg>
           {{ 'overview.report.stakes.gainKey' | translate }}
         </p>
-        <p class="stake-fig tabular-nums">
+        <p class="mission-readings__stake-figure tabular-nums">
           <span>+{{ format(stakes.gain) }}</span>
-          <small>{{ 'overview.report.stakes.gainUnit' | translate: { count: stakes.gain } }}</small>
+          <small class="mission-readings__stake-unit">{{
+            'overview.report.stakes.gainUnit' | translate: { count: stakes.gain }
+          }}</small>
         </p>
       </div>
       <div
         [appTooltip]="
           'overview.report.stakes.lossTooltip' | translate: { percent: mission().breachPercent }
         "
-        class="stake stake--loss focus-ring"
+        class="mission-readings__stake mission-readings__stake--loss focus-ring"
         tabindex="0"
       >
-        <p class="stake-key label-caption">
+        <p class="mission-readings__stake-key label-caption">
           <span class="max-sm:hidden">{{ 'overview.report.stakes.lossKey' | translate }}</span>
           <span class="sm:hidden">{{ 'overview.report.stakes.lossKeyShort' | translate }}</span>
-          <svg aria-hidden="true" class="stake-icon" [lucideIcon]="concepts.base"></svg>
+          <svg
+            aria-hidden="true"
+            class="mission-readings__stake-icon"
+            [lucideIcon]="concepts.base"
+          ></svg>
         </p>
-        <p class="stake-fig tabular-nums">
+        <p class="mission-readings__stake-figure tabular-nums">
           <span>−{{ format(stakes.loss) }}</span>
-          <small>{{ 'overview.report.stakes.lossUnit' | translate: { count: stakes.loss } }}</small>
+          <small class="mission-readings__stake-unit">{{
+            'overview.report.stakes.lossUnit' | translate: { count: stakes.loss }
+          }}</small>
         </p>
       </div>
     </div>

@@ -33,6 +33,11 @@ export interface ChartTheme {
   readonly highlight: string;
 
   /**
+   * Fill of an ordinary bar.
+   */
+  readonly bar: string;
+
+  /**
    * Fill of a bar whose sample is too small to be judged.
    */
   readonly muted: string;

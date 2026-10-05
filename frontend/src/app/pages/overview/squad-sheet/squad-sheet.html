@@ -1,79 +1,57 @@
 <!-- Per-operator detail of the tally above. -->
 <div>
-  <div class="roster">
-    <p class="bar-head bar-head--cols">
-      <span aria-hidden="true" class="bar-count clip-hex"
+  <div class="squad-sheet">
+    <p class="squad-sheet__header bar-head bar-head--cols">
+      <span aria-hidden="true" class="squad-sheet__header-count bar-count clip-hex"
         ><span class="clip-hex">{{ rosterCount() }}</span></span
       >
-      <span
-        [appTooltip]="'overview.squad.operatorTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'overview.squad.operator' | translate }}</span
-      >
-      <span
-        [appTooltip]="'overview.squad.damageTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'overview.squad.damage' | translate }}</span
-      >
-      <span
-        [appTooltip]="'overview.squad.componentsTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'common.resource.components' | translate }}</span
-      >
-      <span
-        [appTooltip]="'overview.squad.foodTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'common.resource.food' | translate }}</span
-      >
-      <span
-        [appTooltip]="'overview.squad.streakTooltip' | translate"
-        class="bar-col label-caption focus-ring"
-        tabindex="0"
-        >{{ 'overview.squad.streak' | translate }}</span
-      >
+      @for (column of columns; track column.label) {
+        <span
+          [appTooltip]="column.tooltip | translate"
+          class="squad-sheet__column-name bar-col label-caption focus-ring"
+          tabindex="0"
+          >{{ column.label | translate }}</span
+        >
+      }
     </p>
 
     @for (row of rows(); track row.playerId) {
       <a
-        [class.ros--1]="row.position === 1"
-        [class.ros--2]="row.position === 2"
-        [class.ros--3]="row.position === 3"
-        [class.ros--idle]="!row.played"
+        [class.squad-sheet__row--gold]="row.position === 1"
+        [class.squad-sheet__row--silver]="row.position === 2"
+        [class.squad-sheet__row--bronze]="row.position === 3"
+        [class.squad-sheet__row--idle]="!row.played"
         [routerLink]="['/players', row.playerId]"
-        class="ros focus-ring"
+        class="squad-sheet__row focus-ring"
       >
-        <span class="ros-pos tabular-nums">{{ row.position ?? '·' }}</span>
+        <span class="squad-sheet__rank tabular-nums">{{ row.position ?? '·' }}</span>
 
-        <span class="ros-who">
+        <span class="squad-sheet__operator">
           <app-avatar [champion]="row.champion" [src]="row.portrait" size="sm" />
-          <span class="min-w-0">
-            <span class="ros-name">{{ row.name }}</span>
+          <span class="squad-sheet__identity">
+            <span class="squad-sheet__name">{{ row.name }}</span>
             @if (row.champion) {
-              <span class="ros-title"><app-champion-badge [inLink]="true" /></span>
+              <span class="squad-sheet__badge"><app-champion-badge [inLink]="true" /></span>
             } @else if (row.title; as title) {
-              <span class="ros-title"><app-title-badge [inLink]="true" [title]="title.key" /></span>
+              <span class="squad-sheet__badge"
+                ><app-title-badge [inLink]="true" [title]="title.key"
+              /></span>
             }
           </span>
         </span>
 
-        <span class="ros-cells">
-          <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs"
-              ><svg
-                aria-hidden="true"
-                class="mr-1 inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.damage"
-              ></svg
-              >{{ 'overview.squad.damage' | translate }}</span
-            >
+        <span class="squad-sheet__cells">
+          <span class="squad-sheet__cell">
+            <ng-container
+              *ngTemplateOutlet="
+                caption;
+                context: { icon: concepts.damage, label: 'overview.squad.damage' }
+              "
+            />
             @if (row.played) {
-              <span class="ros-val tabular-nums" style="--cell: var(--color-boss-hp-edge)"
+              <span class="squad-sheet__value squad-sheet__value--damage tabular-nums"
                 >{{ format(row.damage)
-                }}<small
+                }}<small class="squad-sheet__value-detail"
                   >{{ 'overview.squad.matches' | translate: { count: row.matchCount } }}
                   @if (row.reducedMatchCount > 0) {
                     ·
@@ -82,64 +60,46 @@
                 </small></span
               >
             } @else {
-              <span
-                [attr.aria-label]="'overview.squad.notPlayed' | translate"
-                class="ros-val ros-nil"
-                >—</span
-              >
+              <ng-container *ngTemplateOutlet="notPlayed" />
             }
           </span>
-          <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs"
-              ><svg
-                aria-hidden="true"
-                class="mr-1 inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.components"
-              ></svg
-              >{{ 'common.resource.components' | translate }}</span
-            >
+          <span class="squad-sheet__cell">
+            <ng-container
+              *ngTemplateOutlet="
+                caption;
+                context: { icon: concepts.components, label: 'common.resource.components' }
+              "
+            />
             @if (row.played) {
-              <span class="ros-val tabular-nums" style="--cell: var(--color-accent-cyan)">{{
+              <span class="squad-sheet__value squad-sheet__value--components tabular-nums">{{
                 format(row.components)
               }}</span>
             } @else {
-              <span
-                [attr.aria-label]="'overview.squad.notPlayed' | translate"
-                class="ros-val ros-nil"
-                >—</span
-              >
+              <ng-container *ngTemplateOutlet="notPlayed" />
             }
           </span>
-          <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs"
-              ><svg
-                aria-hidden="true"
-                class="mr-1 inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.food"
-              ></svg
-              >{{ 'common.resource.food' | translate }}</span
-            >
+          <span class="squad-sheet__cell">
+            <ng-container
+              *ngTemplateOutlet="
+                caption;
+                context: { icon: concepts.food, label: 'common.resource.food' }
+              "
+            />
             @if (row.played) {
-              <span class="ros-val tabular-nums" style="--cell: var(--color-accent-green)">{{
+              <span class="squad-sheet__value squad-sheet__value--food tabular-nums">{{
                 format(row.food)
               }}</span>
             } @else {
-              <span
-                [attr.aria-label]="'overview.squad.notPlayed' | translate"
-                class="ros-val ros-nil"
-                >—</span
-              >
+              <ng-container *ngTemplateOutlet="notPlayed" />
             }
           </span>
-          <span class="ros-cell">
-            <span class="ros-cap label-caption text-2xs"
-              ><svg
-                aria-hidden="true"
-                class="mr-1 inline-block size-3.5 -translate-y-px"
-                [lucideIcon]="concepts.streak"
-              ></svg
-              >{{ 'overview.squad.streak' | translate }}</span
-            >
+          <span class="squad-sheet__cell">
+            <ng-container
+              *ngTemplateOutlet="
+                caption;
+                context: { icon: concepts.streak, label: 'overview.squad.streak' }
+              "
+            />
             <app-streak-gauge
               [bonusPercent]="row.streakBonusPercent"
               [days]="row.streakDays"
@@ -150,8 +110,25 @@
       </a>
     }
 
-    <p class="label-caption mt-3.5 text-2xs leading-relaxed text-text-muted">
+    <p class="squad-sheet__footer label-caption text-2xs">
       {{ 'overview.squad.footer' | translate }}
     </p>
   </div>
 </div>
+
+<!-- Column name repeated in each cell while the sheet is stacked. -->
+<ng-template #caption let-icon="icon" let-label="label">
+  <span class="squad-sheet__cell-caption label-caption text-2xs"
+    ><svg aria-hidden="true" class="squad-sheet__cell-icon" [lucideIcon]="icon"></svg
+    >{{ label | translate }}</span
+  >
+</ng-template>
+
+<!-- Not played yet: a dash, never a zero. -->
+<ng-template #notPlayed>
+  <span
+    [attr.aria-label]="'overview.squad.notPlayed' | translate"
+    class="squad-sheet__value squad-sheet__value--empty"
+    >—</span
+  >
+</ng-template>

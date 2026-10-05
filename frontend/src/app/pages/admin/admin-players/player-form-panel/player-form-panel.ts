@@ -1,5 +1,4 @@
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
-import { LucideLoaderCircle } from '@lucide/angular';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -10,8 +9,10 @@ import { Button } from '@shared/button/button';
 import { Drawer } from '@shared/drawer/drawer';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
-import { TextField, TextFieldInput } from '@shared/text-field/text-field';
-import { NO_PORTRAIT } from './player-form-panel.constants';
+import { Spinner } from '@shared/spinner/spinner';
+import { TextField } from '@shared/text-field/text-field';
+import { TextFieldInput } from '@shared/text-field/text-field-input';
+import { INITIAL_STATUSES, NO_PORTRAIT } from './player-form-panel.constants';
 import { PlayerFormResult } from './player-form-panel.model';
 
 /**
@@ -19,17 +20,9 @@ import { PlayerFormResult } from './player-form-panel.model';
  */
 @Component({
   selector: 'app-player-form-panel',
-  imports: [
-    TranslatePipe,
-    Avatar,
-    Button,
-    Drawer,
-    LucideLoaderCircle,
-    Select,
-    TextField,
-    TextFieldInput,
-  ],
+  imports: [TranslatePipe, Avatar, Button, Drawer, Select, TextField, TextFieldInput, Spinner],
   templateUrl: './player-form-panel.html',
+  styleUrl: './player-form-panel.scss',
 })
 export class PlayerFormPanel {
   /**
@@ -56,6 +49,18 @@ export class PlayerFormPanel {
    * Emitted once the drawer is dismissed by any means.
    */
   public readonly closed = output<void>();
+
+  /**
+   * Statuses offered to a new player.
+   */
+  protected readonly initialStatuses = INITIAL_STATUSES;
+
+  /**
+   * Drawer title key, which tells adding from editing.
+   */
+  protected readonly headingKey = computed(() =>
+    this.editedPlayer() ? 'admin.players.form.editHeading' : 'admin.players.form.createHeading',
+  );
 
   /**
    * Game name field, seeded from {@link editedPlayer}.

@@ -1,0 +1,28 @@
+@use 'tools' as *;
+
+/* A top rule over a faint fill. */
+:host {
+  display: block;
+  padding: 0.875rem 1rem;
+  border-top: 2px solid var(--color-brand-500);
+  background-color: tint(text-primary, 4%);
+}
+
+.stat-tile__label {
+  color: var(--color-text-muted);
+}
+
+.stat-tile__term--hinted {
+  cursor: help;
+}
+
+/* Colour comes from the caller's `tone`. */
+.stat-tile__value {
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--tone);
+}

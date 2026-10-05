@@ -81,3 +81,18 @@ export interface SquadRow {
    */
   readonly food: number;
 }
+
+/**
+ * Column of the sheet's header, as translation keys.
+ */
+export interface SquadColumn {
+  /**
+   * Key of the column name.
+   */
+  readonly label: string;
+
+  /**
+   * Key of the tooltip explaining the column.
+   */
+  readonly tooltip: string;
+}

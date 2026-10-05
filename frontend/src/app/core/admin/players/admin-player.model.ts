@@ -61,37 +61,7 @@ export interface AdminPlayer {
 }
 
 /**
- * Body of `POST /api/admin/players`.
- */
-export interface AdminPlayerCreateRequest {
-  /**
-   * Riot ID game name, before the `#`.
-   */
-  readonly gameName: string;
-
-  /**
-   * Riot ID tag line, after the `#`.
-   */
-  readonly tagLine: string;
-
-  /**
-   * Name shown across the application.
-   */
-  readonly displayName: string;
-
-  /**
-   * Bundled agent portrait name, or `null` when none was chosen.
-   */
-  readonly portrait: string | null;
-
-  /**
-   * Status the player is created with.
-   */
-  readonly status: AdminPlayerStatus;
-}
-
-/**
- * Body of `PUT /api/admin/players/{id}`.
+ * Body of `PUT /api/admin/players/{id}`: the player's identity.
  */
 export interface AdminPlayerUpdateRequest {
   /**
@@ -116,9 +86,19 @@ export interface AdminPlayerUpdateRequest {
 }
 
 /**
+ * Body of `POST /api/admin/players`: an identity plus the status it starts with.
+ */
+export interface AdminPlayerCreateRequest extends AdminPlayerUpdateRequest {
+  /**
+   * Status the player is created with.
+   */
+  readonly status: AdminPlayerStatus;
+}
+
+/**
  * What a deletion did: a player frozen into a campaign roster is archived instead.
  */
-export type AdminPlayerDeletionOutcome = 'DELETED' | 'ARCHIVED';
+type AdminPlayerDeletionOutcome = 'DELETED' | 'ARCHIVED';
 
 /**
  * Outcome of `DELETE /api/admin/players/{id}`.

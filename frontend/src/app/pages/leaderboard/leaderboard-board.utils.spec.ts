@@ -4,6 +4,7 @@ import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignHistory } from '@core/campaign/campaign-history.model';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import {
+  boardColumns,
   formatWeekSpan,
   placeWeekInCampaign,
   weekChallengeCeiling,
@@ -47,13 +48,32 @@ describe('formatWeekSpan', () => {
 
 describe('formatFigure', () => {
   it('abbreviates on request and strips the spacing', () => {
-    expect(formatFigure(27400, 'en-US', true)).toBe('27.4K');
-    expect(formatFigure(27400, 'en-US')).toBe('27,400');
+    expect(formatFigure(27400, 'en', true)).toBe('27.4K');
+    expect(formatFigure(27400, 'en')).toBe('27,400');
   });
 });
 
 describe('weekChallengeCeiling', () => {
   it('adds one daily per day to the weekly draw', () => {
     expect(weekChallengeCeiling(5)).toBe(12);
+  });
+});
+
+describe('boardColumns', () => {
+  it('lists the six figures in board order', () => {
+    expect(boardColumns(true).map((column) => column.key)).toEqual([
+      'score',
+      'damage',
+      'points',
+      'challenges',
+      'matches',
+      'streak',
+    ]);
+  });
+
+  it('names challenge earnings wounded in a campaign, points outside', () => {
+    expect(boardColumns(true)[2].label).toBe('leaderboard.board.points');
+    expect(boardColumns(false)[2].label).toBe('leaderboard.board.pointsOff');
+    expect(boardColumns(false)[0].help).toBe('leaderboard.board.scoreHelpOff');
   });
 });

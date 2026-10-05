@@ -7,43 +7,14 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
+
 import { CampaignApi } from '@core/campaign/campaign-api';
-import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
-import {
-  ChallengeCatalogue,
-  ChallengeProgress,
-  CurrentChallenges,
-} from '@core/challenges/challenge.model';
-import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
-import { ChallengesApi } from '@core/challenges/challenges-api';
 import {
   campaignMidnight,
   remainingWeekTime,
+  weekDayIndex,
 } from '@core/campaign/calendar/campaign-calendar.utils';
-import { WEEK_DAYS } from '@core/date/date.constants';
-import { localMidnight } from '@core/date/date.utils';
-import { RemainingTime } from '@core/date/date.model';
-import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
-import { resolveLocale } from '@core/i18n/format/locale.utils';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Translation } from '@core/i18n/translation';
-import { PageHeader } from '@layout/page-header/page-header';
-import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
-import { ResourceState } from '@shared/resource-state/resource-state';
-import { WeekCountdown } from '@shared/week-countdown/week-countdown';
-import { formatFigure } from '@core/i18n/format/number-format.utils';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
-import { ChallengeBoard } from './challenge-board/challenge-board';
-import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
-import { ChallengeDeck } from './challenge-deck/challenge-deck';
 import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
-import {
-  BoardOperator,
-  CatalogueGroup,
-  DayCell,
-  DayPickSource,
-  DayState,
-} from './challenges.model';
 import {
   BoardRow,
   ChallengeLook,
@@ -54,8 +25,42 @@ import {
   toBoardRow,
   toOperators,
 } from '@core/challenges/card/challenge-card.utils';
-import { orderOperators, resolvePickedDay, shiftDay } from './challenges.utils';
+import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
+import { ChallengeProgress, CurrentChallenges } from '@core/challenges/challenge.model';
+import { ChallengesApi } from '@core/challenges/challenges-api';
+import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
+import { WEEK_DAYS } from '@core/date/date.constants';
+import { RemainingTime } from '@core/date/date.model';
+import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { TranslateFn } from '@core/i18n/translation.model';
 import { readPinnedPlayer, writePinnedPlayer } from '@core/players/pin/player-pin.utils';
+import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
+import { ResourceState } from '@shared/resource-state/resource-state';
+import { WeekCountdown } from '@shared/week-countdown/week-countdown';
+import { ChallengeBoard } from './challenge-board/challenge-board';
+import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
+import { ChallengeDeck } from './challenge-deck/challenge-deck';
+import {
+  BoardOperator,
+  CatalogueGroup,
+  DayCell,
+  DayPickSource,
+  DayState,
+} from './challenges.model';
+import {
+  formatDayMonth,
+  formatDayOfMonth,
+  formatWeekday,
+  orderOperators,
+  resolvePickedDay,
+  shiftDay,
+} from './challenges.utils';
 
 /**
  * Challenges page: table when wide, cards below, both fed the same rows and picks.
@@ -95,17 +100,17 @@ export class Challenges {
   /**
    * The week's challenges and dailies with everyone's progress.
    */
-  protected readonly challengesResource = this.challengesApi.current;
+  private readonly challengesResource = this.challengesApi.current;
 
   /**
    * The campaign, read for its status.
    */
-  protected readonly campaignResource = this.campaignApi.campaign;
+  private readonly campaignResource = this.campaignApi.campaign;
 
   /**
    * Every challenge the draws can hand out, fetched once the fold opens.
    */
-  protected readonly catalogueResource = this.challengesApi.catalogue;
+  private readonly catalogueResource = this.challengesApi.catalogue;
 
   /**
    * Whether the board still waits on the challenges or the campaign.
@@ -130,7 +135,7 @@ export class Challenges {
   /**
    * The week's challenges, or `null` until loaded.
    */
-  protected readonly current = computed<CurrentChallenges | null>(
+  private readonly current = computed<CurrentChallenges | null>(
     () => resourceValue(this.challengesResource, null) ?? null,
   );
 
@@ -174,15 +179,15 @@ export class Challenges {
       return '';
     }
     return this.translation.translate('challenges.board.period', {
-      start: this.dayMonthLong(current.weekStart),
-      end: this.dayMonthLong(shiftDay(current.weekStart, WEEK_DAYS - 1)),
+      start: formatDayMonth(current.weekStart, this.locale()),
+      end: formatDayMonth(shiftDay(current.weekStart, WEEK_DAYS - 1), this.locale()),
     });
   });
 
   /**
    * Midnight tonight in the campaign time zone, when the day's challenge closes.
    */
-  protected readonly dailyDeadline = computed(() => {
+  private readonly dailyDeadline = computed(() => {
     const current = this.current();
     return current ? campaignMidnight(current.today, 1).getTime() : 0;
   });
@@ -220,7 +225,7 @@ export class Challenges {
     if (!current) {
       return [];
     }
-    const todayIndex = this.dayIndex(current);
+    const todayIndex = weekDayIndex(current.weekStart, current.today);
     return Array.from({ length: WEEK_DAYS }, (_, index) => {
       const isoDate = shiftDay(current.weekStart, index);
       const state: DayState =
@@ -233,8 +238,8 @@ export class Challenges {
       return {
         index,
         state,
-        weekday: this.weekday(isoDate, 'short'),
-        date: this.dayMonth(isoDate),
+        weekday: formatWeekday(isoDate, this.locale(), 'short'),
+        date: formatDayOfMonth(isoDate, this.locale()),
         drawn: daily !== null,
         doneCount,
         total: current.roster.length,
@@ -256,7 +261,7 @@ export class Challenges {
   /**
    * Whether the card shows today's still-running challenge.
    */
-  protected readonly showingToday = computed(
+  private readonly showingToday = computed(
     () => this.days().find((day) => day.index === this.pickedDay())?.state === 'now',
   );
 
@@ -278,8 +283,8 @@ export class Challenges {
       isoDate === current.today
         ? this.translation.translate('challenges.daily.key')
         : this.translation.translate('challenges.daily.keyOn', {
-            weekday: this.weekday(isoDate, 'long'),
-            date: this.dayMonth(isoDate),
+            weekday: formatWeekday(isoDate, this.locale(), 'long'),
+            date: formatDayOfMonth(isoDate, this.locale()),
           });
     const closesAt = this.showingToday() ? this.dailyDeadline() : null;
     return this.row(daily, { tone: DAILY_TONE, mark: 'D', kind }, closesAt);
@@ -330,7 +335,7 @@ export class Challenges {
           (sum, challenge) => sum + (rescue ? challenge.survivors : challenge.rankingPoints),
           0,
         );
-      const t = (key: string, params: Record<string, string | number>): string =>
+      const t: TranslateFn = (key, params) =>
         this.translation.translate(`challenges.board.summary.${key}`, params);
       const summary = [
         t('done', { name: operator.name, count: weeklyDone, total: current.challenges.length }),
@@ -357,8 +362,7 @@ export class Challenges {
    * The catalogue split into the daily pool and the five difficulties, empty ones dropped.
    */
   protected readonly catalogueGroups = computed<readonly CatalogueGroup[]>(() => {
-    const catalogue: ChallengeCatalogue | null =
-      resourceValue(this.catalogueResource, null) ?? null;
+    const catalogue = resourceValue(this.catalogueResource, null) ?? null;
     if (!catalogue) {
       return [];
     }
@@ -384,6 +388,9 @@ export class Challenges {
     return [daily, ...tiers].filter((group) => group.entries.length > 0);
   });
 
+  /**
+   * Ticks the countdown's clock every minute until the page closes.
+   */
   constructor() {
     const timer = setInterval(() => this.now.set(Date.now()), 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
@@ -431,37 +438,26 @@ export class Challenges {
     look: ChallengeLook,
     closesAt: number | null,
   ): BoardRow {
-    const locale = this.locale();
+    const language = this.translation.language();
     const card = buildChallengeCard(
       challenge,
       look,
       this.operators(),
       this.rescueActive(),
-      (amount) => formatFigure(amount, locale, amount >= 1_000),
+      (amount) => formatFigure(amount, language, amount >= 1_000),
     );
     const rungs = new Map(card.rungs.map((rung) => [rung.playerId, rung]));
     const ordered = this.boardOrder().flatMap((operator) => rungs.get(operator.playerId) ?? []);
-    return toBoardRow(challenge, card, ordered, closesAt, locale, (key, params) =>
+    return toBoardRow(challenge, card, ordered, closesAt, language, (key, params) =>
       this.translation.translate(key, params),
     );
-  }
-
-  /**
-   * Today's position in the week, clamped to its seven days.
-   */
-  private dayIndex(current: CurrentChallenges): number {
-    const offset = Math.round(
-      (localMidnight(current.today).getTime() - localMidnight(current.weekStart).getTime()) /
-        86_400_000,
-    );
-    return Math.min(WEEK_DAYS - 1, Math.max(0, offset));
   }
 
   /**
    * Hover text of a day cell: who validated its challenge, or why there is none.
    */
   private tip(drawn: boolean, state: DayState, count: number, total: number): string {
-    const t = (key: string, params?: Record<string, string | number>): string =>
+    const t: TranslateFn = (key, params) =>
       this.translation.translate(`challenges.daily.${key}`, params);
     // Undrawn: a day ahead says when it opens, any other day is unavailable.
     if (!drawn) {
@@ -475,35 +471,5 @@ export class Challenges {
    */
   private locale(): string {
     return resolveLocale(this.translation.language());
-  }
-
-  /**
-   * Day name, capitalised and without the trailing dot when short.
-   */
-  private weekday(isoDate: string, width: 'short' | 'long'): string {
-    const label = new Intl.DateTimeFormat(this.locale(), { weekday: width }).format(
-      localMidnight(isoDate),
-    );
-    return width === 'short'
-      ? label.replace('.', '').charAt(0).toUpperCase() + label.replace('.', '').slice(1)
-      : label;
-  }
-
-  /**
-   * Day and spelled-out month, for the week's span.
-   */
-  private dayMonthLong(isoDate: string): string {
-    return new Intl.DateTimeFormat(this.locale(), { day: 'numeric', month: 'long' }).format(
-      localMidnight(isoDate),
-    );
-  }
-
-  /**
-   * Day of the month alone, under a day cell's weekday.
-   */
-  private dayMonth(isoDate: string): string {
-    return new Intl.DateTimeFormat(this.locale(), { day: 'numeric' }).format(
-      localMidnight(isoDate),
-    );
   }
 }

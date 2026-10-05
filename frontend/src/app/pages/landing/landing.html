@@ -1,72 +1,37 @@
-<!-- `h-dvh`: no sized ancestor. Stable gutter: compass hover would toggle the scrollbar. -->
-<main
-  class="scroll-subtle relative flex h-dvh flex-col overflow-y-auto overscroll-y-contain bg-surface-950 px-6 py-7 text-text-primary [scrollbar-gutter:stable] sm:px-20 sm:py-15"
->
-  <div aria-hidden="true" class="landing-sky pointer-events-none absolute inset-0"></div>
+<main class="landing scroll-subtle">
+  <div aria-hidden="true" class="landing__sky"></div>
 
-  <!-- Poster: promise on top, door below; its height is set in the stylesheet. -->
-  <div class="landing-poster relative flex flex-col justify-between gap-12 sm:gap-16">
+  <div class="landing__poster">
     <div class="flex flex-col items-start gap-3.5 sm:gap-5">
-      <!-- Wordmark: not a heading, not translated. -->
-      <p
-        class="font-display tracking-label-wide bg-linear-to-br from-brand-400 to-brand-500 bg-clip-text text-xs font-bold text-transparent uppercase"
-      >
-        ValoQuests
-      </p>
+      <p class="landing__wordmark">ValoQuests</p>
 
-      <!-- Leading above 1: Oswald's capital accents would hit the line above. -->
-      <h1
-        class="landing-title font-display max-w-[18.5rem] text-4xl/[1.12] sm:max-w-[31rem] lg:max-w-[37rem] font-bold uppercase sm:text-6xl/[1.12] lg:text-7xl/[1.12]"
-      >
+      <h1 class="landing__title">
         {{ 'landing.accroche.lead' | translate }}
-        <span class="text-brand-500">{{ 'landing.accroche.highlight' | translate }}</span>
+        <span class="landing__title-highlight">{{ 'landing.accroche.highlight' | translate }}</span>
       </h1>
 
-      <!-- Measure in `rem`: `ch` is a third narrower in a condensed face. -->
-      <p class="text-lead max-w-[32rem] text-balance text-text-secondary">
+      <p class="landing__lead">
         {{ 'landing.body.lead' | translate }}
-        <span class="text-text-primary">{{ 'landing.body.emphasis' | translate }}</span>
+        <span class="landing__lead-emphasis">{{ 'landing.body.emphasis' | translate }}</span>
       </p>
     </div>
 
     <!-- Horizon; below `lg` it folds into a column and the second rule drops out. -->
     <div class="flex flex-col items-center gap-7 lg:flex-row lg:gap-10">
-      <!-- Written out so every translation key stays greppable. -->
-      <ul class="flex shrink-0 flex-wrap justify-center gap-x-7 gap-y-3 sm:gap-x-9">
-        <li class="flex flex-col gap-1.5">
-          <span class="font-display text-2xl/none font-bold text-brand-500">
-            {{ 'landing.marks.weeks.value' | translate }}
-          </span>
-          <span class="label-caption text-text-muted">
-            {{ 'landing.marks.weeks.label' | translate }}
-          </span>
-        </li>
-        <li class="flex flex-col gap-1.5">
-          <span class="font-display text-2xl/none font-bold text-brand-500">
-            {{ 'landing.marks.challenges.value' | translate }}
-          </span>
-          <span class="label-caption text-text-muted">
-            {{ 'landing.marks.challenges.label' | translate }}
-          </span>
-        </li>
-        <li class="flex flex-col gap-1.5">
-          <span class="font-display text-2xl/none font-bold text-brand-500">
-            {{ 'landing.marks.town.value' | translate }}
-          </span>
-          <span class="label-caption text-text-muted">
-            {{ 'landing.marks.town.label' | translate }}
-          </span>
-        </li>
+      <ul class="landing__marks">
+        @for (mark of marks; track mark.valueKey) {
+          <li class="flex flex-col gap-1.5">
+            <span class="landing__mark-value">{{ mark.valueKey | translate }}</span>
+            <span class="landing__mark-label label-caption">{{ mark.labelKey | translate }}</span>
+          </li>
+        }
       </ul>
 
-      <span aria-hidden="true" class="landing-rule h-px w-full lg:flex-1"></span>
+      <span aria-hidden="true" class="landing__rule"></span>
 
-      <app-compass class="shrink-0" (entered)="enter()" />
+      <app-compass (entered)="enter()" class="shrink-0" />
 
-      <span
-        aria-hidden="true"
-        class="landing-rule landing-rule-end hidden h-px lg:block lg:flex-1"
-      ></span>
+      <span aria-hidden="true" class="landing__rule landing__rule--end"></span>
     </div>
   </div>
 </main>

@@ -1,8 +1,0 @@
-{
-  // Folds each Angular file's companions under it: template, styles, models, constants and tests.
-  "explorer.fileNesting.enabled": true,
-  "explorer.fileNesting.expand": false,
-  "explorer.fileNesting.patterns": {
-    "*.ts": "${capture}.html, ${capture}.scss, ${capture}.css, ${capture}.model.ts, ${capture}.constants.ts, ${capture}.spec.ts, ${capture}.fixtures.ts"
-  }
-}

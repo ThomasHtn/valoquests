@@ -1,3 +1,5 @@
+import type { LucideIcon } from '@lucide/angular';
+
 import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { ExtractionLimiter } from '@core/campaign/campaign-week.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
@@ -190,4 +192,39 @@ export interface MissionReport {
      */
     readonly wounded: number;
   } | null;
+}
+
+/**
+ * Tone of a loot line: its resource, or the base growing or shrinking.
+ */
+export type MissionReportGainTone = 'food' | 'components' | 'growth' | 'decline';
+
+/**
+ * One loot line of the week: food, components or population.
+ */
+export interface MissionReportGain {
+  /**
+   * Colour of the line, unique per line.
+   */
+  readonly tone: MissionReportGainTone;
+
+  /**
+   * Icon of the resource.
+   */
+  readonly icon: LucideIcon;
+
+  /**
+   * Amount counted up on opening.
+   */
+  readonly value: number;
+
+  /**
+   * `+` before a gain, empty otherwise (a loss carries its own minus).
+   */
+  readonly sign: string;
+
+  /**
+   * Translated caption under the amount.
+   */
+  readonly label: string;
 }

@@ -31,6 +31,7 @@ import { ChartBar, ChartValueFormatter } from '../chart.model';
 @Component({
   selector: 'app-bar-chart',
   templateUrl: './bar-chart.html',
+  styleUrl: './bar-chart.scss',
   host: { class: 'block' },
 })
 export class BarChart {
@@ -55,11 +56,6 @@ export class BarChart {
   public readonly valueFormatter = input<ChartValueFormatter | null>(null);
 
   /**
-   * Translation service, for the chart locale and default number format.
-   */
-  private readonly translation = inject(Translation);
-
-  /**
    * Translated x axis name, empty for none.
    */
   public readonly xAxisLabel = input('');
@@ -70,14 +66,14 @@ export class BarChart {
   public readonly yAxisLabel = input('');
 
   /**
-   * Tailwind classes sizing the chart box.
-   */
-  public readonly heightClass = input('h-52 w-full sm:h-56');
-
-  /**
    * Prints every bar's value, not only the highlighted one's.
    */
   public readonly showAllValues = input(false);
+
+  /**
+   * Translation service, for the chart locale and default number format.
+   */
+  private readonly translation = inject(Translation);
 
   /**
    * Canvas the chart paints on.
@@ -146,7 +142,7 @@ export class BarChart {
     if (bar.muted) {
       return this.theme.muted;
     }
-    return bar.highlighted ? this.theme.highlight : 'rgb(217 149 74 / 0.55)';
+    return bar.highlighted ? this.theme.highlight : this.theme.bar;
   }
 
   /**

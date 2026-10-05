@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTourDailyRow, buildTourWeek, endOfDay, startOfWeek } from './tour.utils';
+import {
+  buildTourDailyRow,
+  buildTourWeek,
+  endOfDay,
+  splitEmphasis,
+  startOfWeek,
+} from './tour.utils';
 
 const translate = (key: string, params?: Record<string, string | number>): string =>
   params ? `${key}:${JSON.stringify(params)}` : key;
@@ -54,7 +60,7 @@ describe('buildTourDailyRow', () => {
     { key: 'session', target: 3, survivors: 6, progress: [3, 1] },
     operators,
     0,
-    'fr-FR',
+    'fr',
     translate,
   );
 
@@ -74,5 +80,22 @@ describe('buildTourDailyRow', () => {
 describe('endOfDay', () => {
   it('lands on the next local midnight', () => {
     expect(endOfDay(new Date(2026, 9, 1, 14, 33).getTime())).toBe(new Date(2026, 9, 2).getTime());
+  });
+});
+
+describe('splitEmphasis', () => {
+  it('emphasizes the runs between markers and keeps their spaces', () => {
+    expect(splitEmphasis('Every match *hits the boss* tonight.')).toEqual([
+      { text: 'Every match ', strong: false },
+      { text: 'hits the boss', strong: true },
+      { text: ' tonight.', strong: false },
+    ]);
+  });
+
+  it('drops the empty run of a claim opening on emphasis', () => {
+    expect(splitEmphasis('*Bold* start')).toEqual([
+      { text: 'Bold', strong: true },
+      { text: ' start', strong: false },
+    ]);
   });
 });

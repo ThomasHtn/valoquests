@@ -145,14 +145,14 @@ export function buildRankJourneyFigures(
     {
       caption: translate(`${KEYS}.figures.peak`),
       value: peakVisual.label,
-      valueClass: peakVisual.colorClass,
+      valueTone: peakVisual.tone,
       detail: seasonLabel(peak.seasonName, translate),
       rankIconUrl: resolveCompetitiveTierIconUrl(peak.highestTier),
     },
     {
       caption: translate(`${KEYS}.figures.${single ? 'final' : 'lastSeason'}`),
       value: lastVisual.label,
-      valueClass: lastVisual.colorClass,
+      valueTone: lastVisual.tone,
       detail: seasonLabel(last.seasonName, translate),
       rankIconUrl: resolveCompetitiveTierIconUrl(last.finalTier),
     },
@@ -186,7 +186,7 @@ export function buildRankJourneyTooltip(
   const previous = series.tiers[index - 1];
   const common = {
     tier: rankLabel(tier, translate),
-    tierClass: resolveCompetitiveTierVisual(tier, translate).colorClass,
+    tierTone: resolveCompetitiveTierVisual(tier, translate).tone,
     delta: previous ? describeRankDelta(previous, tier, translate) : null,
   };
 

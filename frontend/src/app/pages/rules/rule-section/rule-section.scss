@@ -1,0 +1,62 @@
+@use 'tools' as *;
+
+/* Title column beside the figures from `lg`, stacked above them on narrower screens. */
+.rule-section {
+  display: grid;
+  align-items: start;
+  gap: 1.25rem 2.5rem;
+  padding-block: 1.75rem;
+  border-top: 1px solid var(--color-edge);
+  /* Keeps a jumped-to heading clear of the context bar. */
+  scroll-margin-top: 1rem;
+
+  @include from(lg) {
+    grid-template-columns: minmax(0, 19rem) minmax(0, 1fr);
+    column-gap: 6rem;
+    padding-block: 2.25rem;
+  }
+
+  @include from(xl) {
+    column-gap: 10rem;
+  }
+}
+
+/* The opening section: no hairline above it, and no gap under the page header. */
+.rule-section--first {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.rule-section__index {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-brand-500);
+}
+
+.rule-section__heading {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+.rule-section__statement {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  line-height: 1.375;
+  font-weight: 500;
+  color: var(--color-brand-400);
+  text-wrap: balance;
+}
+
+.rule-section__description {
+  display: block;
+  font-size: var(--text-prose);
+  line-height: var(--text-prose--line-height);
+  color: var(--color-text-secondary);
+}

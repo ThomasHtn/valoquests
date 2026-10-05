@@ -1,31 +1,10 @@
-import {
-  CHALLENGE_DIFFICULTY_COLORS,
-  CHALLENGE_METRIC_ICONS,
-  DAILY_CHALLENGE_VISUAL,
-  DEFAULT_CHALLENGE_ICON,
-} from './challenge-visual.constants';
+import { CHALLENGE_DIFFICULTY_COLORS, DAILY_CHALLENGE_VISUAL } from './challenge-visual.constants';
 import { ChallengeVisual } from './challenge-visual.model';
 import { ChallengeDifficulty } from '../challenge.model';
 
 /**
- * Tier treatment of a difficulty without icon, `null` for the daily challenge.
+ * Tier treatment of a difficulty, `null` for the daily challenge.
  */
-export function resolveDifficultyVisual(
-  difficulty: ChallengeDifficulty | null,
-): Omit<ChallengeVisual, 'icon'> {
+export function resolveDifficultyVisual(difficulty: ChallengeDifficulty | null): ChallengeVisual {
   return difficulty === null ? DAILY_CHALLENGE_VISUAL : CHALLENGE_DIFFICULTY_COLORS[difficulty];
-}
-
-/**
- * Challenge treatment: icon from the first metric of a composite, colour from the tier.
- */
-export function resolveChallengeVisual(
-  metric: string,
-  difficulty: ChallengeDifficulty | null,
-): ChallengeVisual {
-  const [primaryMetric] = metric.split(' + ');
-  return {
-    icon: CHALLENGE_METRIC_ICONS[primaryMetric] ?? DEFAULT_CHALLENGE_ICON,
-    ...resolveDifficultyVisual(difficulty),
-  };
 }

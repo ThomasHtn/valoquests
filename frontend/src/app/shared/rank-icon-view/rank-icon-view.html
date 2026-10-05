@@ -1,9 +1,9 @@
 @if (src(); as iconUrl) {
   <img
-    [height]="metrics().pixels"
-    [ngSrc]="iconUrl"
-    [width]="metrics().pixels"
     [alt]="tierLabel()"
+    [height]="pixels()"
+    [ngSrc]="iconUrl"
+    [width]="pixels()"
     class="shrink-0"
   />
 }

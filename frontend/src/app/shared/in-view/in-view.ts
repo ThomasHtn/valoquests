@@ -16,6 +16,9 @@ export class InView {
    */
   protected readonly seen = signal(typeof IntersectionObserver === 'undefined');
 
+  /**
+   * Watches the host until it first enters the viewport.
+   */
   constructor() {
     if (this.seen()) {
       return;

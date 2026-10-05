@@ -59,3 +59,23 @@ export interface LiveCampaign {
    */
   readonly daysLeft: number;
 }
+
+/**
+ * Campaign the delete dialog is about.
+ */
+export interface PendingCampaignDeletion {
+  /**
+   * Internal identifier.
+   */
+  readonly id: number;
+
+  /**
+   * One-based campaign ordinal, named in the dialog.
+   */
+  readonly number: number;
+
+  /**
+   * Whether the campaign has not started yet, which changes the dialog body.
+   */
+  readonly opened: boolean;
+}

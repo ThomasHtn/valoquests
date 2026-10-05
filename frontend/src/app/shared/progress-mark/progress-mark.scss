@@ -1,10 +1,12 @@
+@use 'tools' as *;
+
 /* Covers its board cell, whose height the challenge column sets. */
 :host {
   position: absolute;
   inset: 0;
 }
 
-.cell {
+.progress-mark__cell {
   display: grid;
   place-items: center;
   width: 100%;
@@ -13,16 +15,15 @@
   cursor: help;
 }
 
-/* Not started: a dash in the header tint. */
-.dash {
+/* Not started: a dash in the board header's tint. */
+.progress-mark__dash {
   font-family: var(--font-display);
   font-size: 1.125rem;
   line-height: 1;
-  color: var(--head);
+  color: tint(text-primary, 8%);
 }
 
-/* Named `dial`, not `ring`: Tailwind would add its ring utility to the latter. */
-.dial {
+.progress-mark__dial {
   position: relative;
   display: grid;
   place-items: center;
@@ -31,7 +32,12 @@
 }
 
 /* Sweep starts at noon. */
-.dial-face {
+/* A check is a closed ring. */
+.progress-mark__dial--done {
+  --level: 1;
+}
+
+.progress-mark__dial-face {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -40,14 +46,14 @@
   rotate: -90deg;
 }
 
-.track {
+.progress-mark__track {
   fill: none;
   stroke: var(--color-edge-strong);
   stroke-width: 3;
 }
 
 /* 131.95 = 2 pi r (r = 21); clamped so an overshoot closes without wrapping. */
-.arc {
+.progress-mark__arc {
   --arc-empty: 131.95;
   fill: none;
   stroke: var(--tone);
@@ -57,13 +63,13 @@
   stroke-dashoffset: calc(131.95 * (1 - clamp(0, var(--level), 1)));
 }
 
-.disc {
+.progress-mark__disc {
   fill: var(--tone);
   transform-box: fill-box;
   transform-origin: center;
 }
 
-.check {
+.progress-mark__check {
   position: relative;
   width: 1.4rem;
   height: 1.4rem;
@@ -72,27 +78,27 @@
 }
 
 /* Only drawn when motion is allowed: still, it is litter. */
-.piece {
+.progress-mark__piece {
   display: none;
 }
 
 /* Pops once the ring closes and throws confetti, clipped to the cell. */
 @media (prefers-reduced-motion: no-preference) {
-  .cell:has(.dial--done) {
+  .progress-mark__cell:has(.progress-mark__dial--done) {
     overflow: hidden;
   }
 
-  .dial--done {
+  .progress-mark__dial--done {
     --pop-at: calc(var(--fx-delay, 0ms) + var(--duration-gauge-long) * 0.8);
   }
 
-  .disc,
-  .check {
+  .progress-mark__disc,
+  .progress-mark__check {
     animation: check-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     animation-delay: var(--pop-at);
   }
 
-  .piece {
+  .progress-mark__piece {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -109,13 +115,14 @@
     animation-delay: calc(var(--pop-at) + 0.08s);
   }
 
-  .piece--strip {
+  .progress-mark__piece--strip {
     width: 0.25rem;
     height: 0.75rem;
     margin: -0.375rem 0 0 -0.125rem;
   }
 
-  .piece--pale {
+  /* No token: white lifts the row's tone to a pastel. */
+  .progress-mark__piece--pale {
     background: color-mix(in srgb, var(--tone) 55%, white);
   }
 }
@@ -153,22 +160,23 @@
   }
 }
 
-.label {
+.progress-mark__label {
   position: relative;
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   color: var(--tone);
 }
 
 /* Long or compact figures ("12,7k") tighten to fit the ring. */
-.label--long {
+.progress-mark__label--long {
   font-size: 0.8125rem;
   letter-spacing: -0.02em;
 }
 
-.unit {
+.progress-mark__unit {
   margin-left: 0.05em;
   font-size: 0.8em;
 }

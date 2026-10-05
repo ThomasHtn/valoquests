@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { LucideChevronDown, LucideHourglass } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 import {
   FallChart,
@@ -311,7 +311,7 @@ export class FallForecast {
    * Formats hit points in the active language.
    */
   private hitPoints(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 
   /**

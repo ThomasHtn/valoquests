@@ -1,20 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LowerCasePipe } from '@angular/common';
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { LineChart } from '@shared/chart/line-chart/line-chart';
 import { HistoryCurve, HistoryRow } from '../campaign-panel.model';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { ICON_COLUMNS } from './campaign-history.constants';
 
 /**
  * Population curves of every campaign and their ranking by final base.
  */
 @Component({
   selector: 'app-campaign-history',
-  imports: [LucideDynamicIcon, TranslatePipe, LineChart],
+  imports: [LowerCasePipe, LucideDynamicIcon, TranslatePipe, LineChart],
   templateUrl: './campaign-history.html',
   styleUrl: './campaign-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +26,11 @@ export class CampaignHistoryView {
    * Concept icons for the template.
    */
   protected readonly concepts = CONCEPT_ICONS;
+
+  /**
+   * Table columns headed by a concept icon.
+   */
+  protected readonly iconColumns = ICON_COLUMNS;
 
   /**
    * Population curve of each campaign, with its legend figure.
@@ -61,6 +68,6 @@ export class CampaignHistoryView {
    * Formats a figure in the active language for the legend and table.
    */
   protected format(value: number): string {
-    return formatDamage(value, this.translation.language());
+    return formatFigure(value, this.translation.language());
   }
 }

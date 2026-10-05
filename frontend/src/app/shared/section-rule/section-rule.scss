@@ -1,0 +1,44 @@
+@use 'tools' as *;
+
+.section-rule__title {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.1rem + 1.1vw, 2rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: var(--color-brand-400);
+  text-transform: uppercase;
+
+  /* Leaves room for the hairline and diamond on the last line. */
+  @include below(sm) {
+    max-width: calc(100% - 3.5rem);
+  }
+}
+
+/* Fading hairline from the title's end; the half-pixel centres it on the last line. */
+.section-rule__line {
+  display: block;
+  flex: 1 1 3rem;
+  height: 1px;
+  background-image: linear-gradient(to right in oklab, tint(brand-500, 50%) 0%, transparent 100%);
+
+  @include below(sm) {
+    flex-basis: 1rem;
+    align-self: flex-end;
+    margin-bottom: calc(0.9375rem - 0.5px);
+  }
+}
+
+.section-rule__diamond {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: auto;
+  border: 1px solid tint(brand-500, 70%);
+  rotate: 45deg;
+
+  @include below(sm) {
+    align-self: flex-end;
+    margin-bottom: calc(0.9375rem - 4px);
+  }
+}

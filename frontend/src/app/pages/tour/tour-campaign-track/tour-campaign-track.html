@@ -1,23 +1,26 @@
 <div class="flex items-baseline justify-between gap-4">
-  <p class="font-display text-[1.0625rem] font-semibold tracking-[0.02em] uppercase">
+  <p class="tour-campaign-track__week">
     {{ 'tour.track.week' | translate }}
-    <span class="text-brand-500 tabular-nums">{{ weekIndex() }}</span>
+    <span class="tour-campaign-track__week-index">{{ weekIndex() }}</span>
     {{ 'tour.track.total' | translate: { total: weekCount } }}
   </p>
-  <p class="flex items-center gap-1.5 text-sm text-text-secondary">
-    <svg class="block h-4 w-4 shrink-0 text-brand-500" lucideRocket></svg>
+  <p class="tour-campaign-track__stages">
+    <svg class="tour-campaign-track__stages-icon" lucideRocket></svg>
     {{ 'tour.track.stages' | translate: { done: stagesDone(), total: stageCount } }}
   </p>
 </div>
 
 <!-- The line behind is solid up to the current planet. -->
-<ol [style.--done]="doneWidth()" class="track mt-3">
+<ol [style.--done]="doneWidth()" class="tour-campaign-track__planets mt-3">
   @for (planet of planets(); track planet.weekIndex) {
-    <li [class]="'track-cell track-cell--' + planet.state">
-      <span class="track-orb">
-        <img [ngSrc]="planet.art" alt="" fill />
+    <li
+      [class]="'tour-campaign-track__planet--' + planet.state"
+      class="tour-campaign-track__planet"
+    >
+      <span class="tour-campaign-track__orb">
+        <img [ngSrc]="planet.art" alt="" class="tour-campaign-track__art" fill />
       </span>
-      <span class="track-label">{{ planet.label }}</span>
+      <span class="tour-campaign-track__label">{{ planet.label }}</span>
     </li>
   }
 </ol>

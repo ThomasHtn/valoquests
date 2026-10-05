@@ -107,7 +107,9 @@
         "trigger": {
           "scheduled": "planifiée",
           "manual": "manuelle"
-        }
+        },
+        "previousPage": "Page précédente",
+        "nextPage": "Page suivante"
       },
       "lastRun": "Dernière synchronisation",
       "matchesImported": "Matchs importés",
@@ -561,6 +563,14 @@
     "streak": {
       "value": "+{{percent}} %",
       "aria": "{{days}} jours joués sur 7 cette semaine, bonus de +{{percent}} %"
+    },
+    "countdown": {
+      "units": {
+        "days": "j",
+        "hours": "h",
+        "minutes": "m",
+        "seconds": "s"
+      }
     }
   },
   "connectivity": {

@@ -1,14 +1,17 @@
+@use 'tools' as *;
+
 /* The squad page's fills; one gap, the rows' own, sets every column apart. */
 :host {
-  --cell: rgb(236 232 225 / 4%);
-  --head: rgb(236 232 225 / 8%);
+  --cell-fill: #{tint(text-primary, 4%)};
+  --band-fill: #{tint(text-primary, 8%)};
   --gap: 0.375rem;
+
   display: block;
   /* Operator columns that do not fit are clipped, not scrolled. */
   overflow-x: clip;
 }
 
-.board {
+.challenge-board__table {
   width: 100%;
   margin-block: calc(-1 * var(--gap));
   border-collapse: separate;
@@ -16,43 +19,43 @@
   table-layout: fixed;
 }
 
-.col-op {
-  width: var(--col);
+.challenge-board__operator-column {
+  width: var(--column-width);
 }
 
 th,
 td {
   padding: 0;
-  background-color: var(--cell);
+  background-color: var(--cell-fill);
   font-weight: inherit;
   text-align: center;
   vertical-align: middle;
 }
 
-/* Each operator column opens on a gap-wide transparent border, counted in `--col`. */
-.slide {
+/* Each operator column opens on a gap-wide transparent border, counted in `--column-width`. */
+.challenge-board__operator-cell {
   position: relative;
   border-left: var(--gap) solid transparent;
   background-clip: padding-box;
 }
 
 /* Not sticky: its fill is translucent. */
-.lead {
+.challenge-board__lead {
   text-align: left;
 }
 
-tbody .lead {
+tbody .challenge-board__lead {
   padding: 1.25rem 1.5rem 1.25rem 1.35rem;
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--tone) 75%, transparent);
 }
 
 /* Weekly rows hold a two-line rule; a longer one still grows its row. */
-.row--weekly > .lead {
+.challenge-board__row--weekly > .challenge-board__lead {
   height: 8.5rem;
 }
 
 /* Indented like the rule (board-head's hexagon plus its gap). */
-.tally {
+.challenge-board__tally {
   margin: 0.9rem 0 0 3.6rem;
 }
 
@@ -62,16 +65,16 @@ tbody .lead {
 thead th,
 tfoot th,
 tfoot td {
-  background-color: var(--head);
+  background-color: var(--band-fill);
 }
 
 /* Inset like the rows' leads to line up with their emblems. */
-thead .lead {
+thead .challenge-board__lead {
   padding: 0.6rem 1.5rem 0.6rem 1.35rem;
 }
 
 /* Quiet caption, so the rules below are read first. */
-.period {
+.challenge-board__period {
   font-family: var(--font-display);
   font-size: 0.9375rem;
   font-weight: 400;
@@ -80,11 +83,17 @@ thead .lead {
 }
 
 /* The whole tile lights on hover. */
-thead .op:hover {
-  background-color: rgb(236 232 225 / 12%);
+.challenge-board__operator-head {
+  @include hover {
+    background-color: tint(text-primary, 12%);
+
+    .challenge-board__operator-star {
+      opacity: 0.55;
+    }
+  }
 }
 
-.op-btn {
+.challenge-board__operator-button {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -114,20 +123,19 @@ thead .op:hover {
   }
 }
 
-.op-name {
+.challenge-board__operator-name {
+  @include truncate;
+
   max-width: 100%;
-  overflow: hidden;
   font-family: var(--font-display);
   font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.2;
   color: var(--color-text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Outlined on hover, filled once pinned, as on the overview tabs. */
-.op-star {
+.challenge-board__operator-star {
   position: absolute;
   top: 0.4rem;
   right: 0.4rem;
@@ -141,23 +149,22 @@ thead .op:hover {
     fill 0.2s;
 }
 
-.op:hover .op-star,
-.op-btn:focus-visible .op-star {
+.challenge-board__operator-button:focus-visible .challenge-board__operator-star {
   opacity: 0.55;
 }
 
-.op-btn[aria-pressed='true'] .op-star {
+.challenge-board__operator-button[aria-pressed='true'] .challenge-board__operator-star {
   opacity: 1;
   fill: currentColor;
 }
 
 /* Ruled in brand so the totals read as the board's last row. */
-tfoot .lead {
+tfoot .challenge-board__lead {
   padding: 0.9rem 1.5rem 0.9rem 1.35rem;
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-brand-400) 75%, transparent);
+  box-shadow: inset 2px 0 0 tint(brand-400, 75%);
 }
 
-.totals {
+.challenge-board__totals {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -166,7 +173,7 @@ tfoot .lead {
   cursor: help;
 }
 
-.totals svg {
+.challenge-board__totals-icon {
   color: var(--color-brand-400);
 }
 
@@ -174,7 +181,7 @@ tfoot td {
   padding: 0.8rem 0.25rem;
 }
 
-.sum {
+.challenge-board__reward {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -183,13 +190,13 @@ tfoot td {
   cursor: help;
 }
 
-.sum b {
+.challenge-board__reward-value {
   font-family: var(--font-display);
   font-weight: 600;
 }
 
 /* Nothing brought back yet: a dash, like a not-started cell. */
-.sum-dash {
+.challenge-board__reward-dash {
   font-family: var(--font-display);
   font-size: 1.125rem;
   line-height: 1;
@@ -206,31 +213,33 @@ tfoot td {
 }
 
 /* Cells are cut one gap past the challenge column so nothing passes under its translucent fill. */
-:host(.board--sliding) .slide {
+:host(.challenge-board--sliding) .challenge-board__operator-cell {
   transform: translateX(calc(-1 * var(--shift, 0px)));
   clip-path: inset(
-    0 0 0 clamp(0px, calc(var(--shift, 0px) - var(--i) * var(--col) + var(--gap)), 100%)
+    0 0 0
+      clamp(
+        0px,
+        calc(var(--shift, 0px) - var(--column-index) * var(--column-width) + var(--gap)),
+        100%
+      )
   );
-}
-
-:host(.board--sliding) .slide {
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
 }
 
-:host(.board--dragging) .slide {
+:host(.challenge-board--dragging) .challenge-board__operator-cell {
   cursor: grabbing;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :host(.board--sliding:not(.board--dragging)) .board {
+  :host(.challenge-board--sliding:not(.challenge-board--dragging)) .challenge-board__table {
     transition: --shift 0.3s var(--ease-out-quart);
   }
 }
 
 /* The arrows, above the operator columns they slide. */
-.nav {
+.challenge-board__nav {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -238,14 +247,14 @@ tfoot td {
   margin-bottom: 0.75rem;
 }
 
-.nav-range {
+.challenge-board__range {
   margin-right: 0.5rem;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   color: var(--color-text-muted);
 }
 
-.nav-btn {
+.challenge-board__nav-button {
   display: grid;
   place-items: center;
   width: 2.75rem;
@@ -259,10 +268,12 @@ tfoot td {
     color 0.15s,
     border-color 0.15s;
 
-  &:hover:not(:disabled) {
-    border-color: color-mix(in srgb, var(--color-brand-500) 60%, transparent);
-    background: rgb(217 149 74 / 12%);
-    color: var(--color-brand-400);
+  &:not(:disabled) {
+    @include hover {
+      border-color: tint(brand-500, 60%);
+      background: tint(brand-500, 12%);
+      color: var(--color-brand-400);
+    }
   }
 
   &:disabled {

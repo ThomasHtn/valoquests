@@ -9,26 +9,21 @@ import {
   output,
   viewChild,
 } from '@angular/core';
-import {
-  LucideCrown,
-  LucideFileText,
-  LucideFlame,
-  LucideTarget,
-  LucideX,
-  LucideDynamicIcon,
-} from '@lucide/angular';
+import { LucideCrown, LucideDynamicIcon, LucideFileText, LucideX } from '@lucide/angular';
 
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { CountUp } from '@shared/count-up/count-up';
-import { MissionReport as MissionReportView } from './mission-report.model';
-import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
-import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { FocusTrap } from '@shared/focus-trap/focus-trap';
+import { TITLE_BADGE_ICONS } from '@shared/title-badge/title-badge.constants';
+import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
+import { MissionReportGain, MissionReport as MissionReportView } from './mission-report.model';
+import { buildReportGains } from './mission-report.utils';
 
 /**
  * Monday report dialog: verdict, loot and honours of what Sunday settled.
@@ -44,8 +39,6 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
     CountUp,
     LucideCrown,
     LucideFileText,
-    LucideFlame,
-    LucideTarget,
     LucideX,
   ],
   templateUrl: './mission-report.html',
@@ -61,6 +54,11 @@ export class MissionReport {
    * Icon of each concept, for the template's `svg[lucideIcon]`.
    */
   protected readonly concepts = CONCEPT_ICONS;
+
+  /**
+   * Icon of each weekly title, for the medals' `svg[lucideIcon]`.
+   */
+  protected readonly titleIcons = TITLE_BADGE_ICONS;
 
   /**
    * Settled week the dialog reports on.
@@ -105,6 +103,17 @@ export class MissionReport {
   private readonly translation = inject(Translation);
 
   /**
+   * Week's loot lines, empty when no day was replayed.
+   */
+  protected readonly gains = computed<readonly MissionReportGain[]>(() =>
+    buildReportGains(
+      this.report().base,
+      (key, params) => this.translation.translate(key, params),
+      (amount) => this.format(amount),
+    ),
+  );
+
+  /**
    * Dialog panel, focused on opening so keyboard users land inside it.
    */
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
@@ -121,7 +130,7 @@ export class MissionReport {
    * Formats an amount in the active language for the loot figures.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 
   /**

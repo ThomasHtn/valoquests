@@ -89,3 +89,31 @@ export function toRuleParts(rule: string): RulePart[] {
   }
   return parts;
 }
+
+/**
+ * Day name, capitalised and without the trailing dot when short (`Lun`).
+ */
+export function formatWeekday(isoDate: string, locale: string, width: 'short' | 'long'): string {
+  const label = new Intl.DateTimeFormat(locale, { weekday: width }).format(localMidnight(isoDate));
+  if (width === 'long') {
+    return label;
+  }
+  const bare = label.replace('.', '');
+  return bare.charAt(0).toUpperCase() + bare.slice(1);
+}
+
+/**
+ * Day and spelled-out month, for the week's span (`5 octobre`).
+ */
+export function formatDayMonth(isoDate: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(
+    localMidnight(isoDate),
+  );
+}
+
+/**
+ * Day of the month alone, under a day cell's weekday (`5`).
+ */
+export function formatDayOfMonth(isoDate: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(localMidnight(isoDate));
+}

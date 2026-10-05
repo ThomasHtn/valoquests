@@ -1,78 +1,82 @@
-/* The seconds sit back: they give the beat, they are not the information. */
+@use 'tools' as *;
+
 :host {
   display: inline-block;
 }
 
-.countdown {
+.countdown__timer {
   display: flex;
   align-items: baseline;
   gap: 0.55rem;
 }
 
-.cd-unit {
+.countdown__unit {
   display: flex;
   align-items: baseline;
   gap: 0.15rem;
 }
 
-.cd-unit b {
+.countdown__value {
   font-family: var(--font-display);
   font-size: 2.75rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--color-brand-400);
 }
 
-.cd-unit small {
+.countdown__suffix {
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-muted);
 }
 
-.cd-unit--s b {
+/* The seconds sit back: they give the beat, they are not the information. */
+.countdown__unit--seconds .countdown__value {
   font-size: 1.625rem;
   color: var(--color-brand-500);
   opacity: 0.7;
 }
 
-.cd-dot {
+/* Diamond blinking each second; reduced motion only stops it. */
+.countdown__beat {
   align-self: center;
   width: 7px;
   height: 7px;
   rotate: 45deg;
   background: var(--color-brand-400);
-  animation: beat 1s steps(1, end) infinite;
+  animation: countdown-beat 1s steps(1, end) infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
-@keyframes beat {
+@keyframes countdown-beat {
   50% {
     opacity: 0.2;
   }
 }
 
-:host(.is-small) .countdown {
-  gap: 0.4rem;
-}
+:host(.countdown--small) {
+  .countdown__timer {
+    gap: 0.4rem;
+  }
 
-:host(.is-small) .cd-unit b {
-  font-size: 1.375rem;
-}
+  .countdown__value {
+    font-size: 1.375rem;
+  }
 
-:host(.is-small) .cd-unit small {
-  font-size: 0.875rem;
-}
+  .countdown__suffix {
+    font-size: 0.875rem;
+  }
 
-:host(.is-small) .cd-unit--s b {
-  font-size: 1rem;
-}
+  .countdown__unit--seconds .countdown__value {
+    font-size: 1rem;
+  }
 
-:host(.is-small) .cd-dot {
-  width: 5px;
-  height: 5px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cd-dot {
-    animation: none;
+  .countdown__beat {
+    width: 5px;
+    height: 5px;
   }
 }

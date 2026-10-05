@@ -1,14 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { countdownUnits } from './countdown.utils';
+
 /**
  * Deadline counted down every second; reduced motion only stops the beating diamond.
  */
 @Component({
   selector: 'app-countdown',
+  imports: [TranslatePipe],
   templateUrl: './countdown.html',
   styleUrl: './countdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.is-small]': 'size() === "sm"' },
+  host: { '[class.countdown--small]': 'size() === "sm"' },
 })
 export class Countdown {
   /**
@@ -37,21 +41,13 @@ export class Countdown {
   private readonly secondsLeft = signal(0);
 
   /**
-   * Days, then zero-padded hours, minutes and seconds, as the slots show them.
+   * Slots on screen, days first when {@link withDays}.
    */
-  protected readonly parts = computed(() => {
-    const left = this.secondsLeft();
-    const days = Math.floor(left / 86_400);
-    const hours = this.withDays() ? Math.floor(left / 3_600) % 24 : Math.floor(left / 3_600);
+  protected readonly units = computed(() => countdownUnits(this.secondsLeft(), this.withDays()));
 
-    return {
-      days,
-      hours: String(hours).padStart(2, '0'),
-      minutes: String(Math.floor(left / 60) % 60).padStart(2, '0'),
-      seconds: String(left % 60).padStart(2, '0'),
-    };
-  });
-
+  /**
+   * Restarts the one-second clock whenever the deadline changes.
+   */
   constructor() {
     // Effect: the input is unreadable before binding, and a new deadline restarts the clock.
     effect((onCleanup) => {

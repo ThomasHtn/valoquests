@@ -5,7 +5,7 @@ import { CompetitiveTier } from '@core/players/competitive-tier/player-competiti
 /**
  * Player identity and rank of a ranking entry. Mirrors the backend `PlayerRankingResponse`.
  */
-export interface PlayerRanking {
+interface PlayerRanking {
   /**
    * Player identifier.
    */
@@ -35,7 +35,7 @@ export interface PlayerRanking {
 /**
  * Progress on one board challenge, weekly or daily. Mirrors `ChallengeProgressResponse`.
  */
-export interface RankingChallengeProgress {
+interface RankingChallengeProgress {
   /**
    * Identifier of the challenge.
    */

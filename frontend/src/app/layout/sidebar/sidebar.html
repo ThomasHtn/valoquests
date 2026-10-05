@@ -1,9 +1,9 @@
 <!-- Decorative scrim: the close button and Escape also dismiss the drawer. -->
 <div
   (click)="closeMobileMenu()"
-  [class]="drawer().scrim"
+  [class.sidebar__scrim--open]="navigationPanel.isOpen()"
   aria-hidden="true"
-  class="fixed inset-0 z-30 bg-surface-950/70 transition-[opacity,visibility] duration-300 ease-out motion-reduce:transition-none lg:hidden"
+  class="sidebar__scrim"
 ></div>
 
 <!-- Rail from `lg` up, drawer below it, sharing one markup. -->
@@ -12,11 +12,11 @@
 <aside
   (click)="onRailClick($event)"
   [attr.aria-label]="'sidebar.label' | translate"
-  [class]="rail().width + ' ' + drawer().panel + ' ' + rail().cursor"
   [attr.data-open]="navigationPanel.isOpen() ? '' : null"
+  [class.sidebar--collapsed]="collapsed()"
   [appFocusTrap]="navigationPanel.isOpen()"
   [id]="navigationPanel.panelId"
-  class="sidebar group scroll-subtle fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] shrink-0 flex-col justify-between overflow-y-auto border-r border-brand-500/35 bg-surface-sunken pt-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] motion-reduce:transition-none lg:visible lg:static lg:h-full lg:max-w-none lg:translate-x-0 lg:overflow-y-visible lg:py-6 lg:transition-[width] lg:duration-200 motion-reduce:lg:transition-none"
+  class="sidebar scroll-subtle"
 >
   <div>
     <div class="mb-7 px-5">
@@ -26,67 +26,54 @@
           <button
             (click)="toggleCollapsed()"
             [attr.aria-label]="'sidebar.expand' | translate"
-            class="focus-ring relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center bg-brand-500/12 transition-colors clip-hex hover:bg-brand-500/25"
+            class="sidebar__expand-button focus-ring clip-hex"
             type="button"
           >
-            <span
-              class="font-display text-2xl font-bold text-brand-500 transition-opacity group-hover:opacity-0"
-              >V</span
-            >
-            <svg
-              class="absolute h-5 w-5 rotate-180 text-text-primary opacity-0 transition-opacity group-hover:opacity-100"
-              lucideMenu
-            ></svg>
+            <span class="sidebar__expand-letter">V</span>
+            <svg class="sidebar__expand-icon" lucideMenu></svg>
           </button>
         </div>
       }
 
-      <!-- A class, not `@else`, so the drawer keeps the wordmark on a collapsed rail. -->
-      <div [class]="rail().brandBlock" class="flex items-start justify-between gap-2">
+      <!-- Hidden by the collapsed modifier, not `@else`, so the drawer keeps the wordmark. -->
+      <div class="sidebar__brand">
         <div class="min-w-0 flex-1">
-          <div class="font-display text-3xl leading-[0.88] font-bold uppercase">
-            <span class="block text-brand-500">Valo</span>
-            <span class="block text-text-primary">Quests</span>
+          <div class="sidebar__wordmark">
+            <span class="sidebar__wordmark-line sidebar__wordmark-line--brand">Valo</span>
+            <span class="sidebar__wordmark-line">Quests</span>
           </div>
         </div>
 
         <button
           (click)="toggleCollapsed()"
           [attr.aria-label]="'sidebar.collapse' | translate"
-          class="focus-ring -mt-1 hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:text-text-primary lg:flex"
+          class="sidebar__collapse-button focus-ring"
           type="button"
         >
-          <svg class="block h-5 w-5 shrink-0" lucideMenu></svg>
+          <svg class="block size-5 shrink-0" lucideMenu></svg>
         </button>
 
         <button
           #closeMenuButton
           (click)="closeMobileMenu()"
           [attr.aria-label]="'sidebar.closeMenu' | translate"
-          class="focus-ring -mt-1 -mr-2.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-text-muted transition-colors hover:bg-surface-800 hover:text-text-primary motion-safe:active:scale-[0.96] lg:hidden"
+          class="sidebar__close-button focus-ring press"
           type="button"
         >
-          <svg class="block h-5 w-5 shrink-0" lucideX></svg>
+          <svg class="block size-5 shrink-0" lucideX></svg>
         </button>
       </div>
     </div>
 
-    <!-- Tooltips only on the collapsed rail; the active bar is a `::before`. -->
+    <!-- Tooltips only on the collapsed rail. -->
     <nav [attr.aria-label]="'sidebar.navLabel' | translate" class="flex flex-col gap-5">
       @for (group of navGroups(); track group.labelKey) {
         <div class="flex flex-col">
           <!-- Caption, replaced by a hairline on the collapsed rail. -->
           @if (!$first) {
-            <span
-              [class]="rail().navGroupRule"
-              aria-hidden="true"
-              class="mx-6 mb-4 hidden h-px bg-brand-500/25"
-            ></span>
+            <span aria-hidden="true" class="sidebar__group-rule"></span>
           }
-          <p
-            [class]="rail().navGroupLabel"
-            class="label-caption mb-1.5 px-6 text-2xs text-text-muted"
-          >
+          <p class="sidebar__group-label">
             {{ 'sidebar.group.' + group.labelKey | translate }}
           </p>
           @for (item of group.items; track item.labelKey) {
@@ -94,57 +81,16 @@
               (click)="onNavItemActivated()"
               [attr.aria-current]="isNavItemActive(item) ? 'page' : null"
               [attr.aria-disabled]="item.routerLink ? null : 'true'"
-              [class.cursor-default]="!item.routerLink"
-              [class]="rail().navItem + navActiveClass(item)"
+              [class.sidebar__nav-item--inert]="!item.routerLink"
               [appTooltipDisabled]="!collapsed()"
               [appTooltip]="'sidebar.nav.' + item.labelKey | translate"
               [routerLink]="item.routerLink"
-              class="group focus-ring-inset relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 px-6 py-3 text-start text-sm font-medium text-text-secondary transition-colors before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:bg-brand-500/8 hover:text-text-primary"
               appTooltipPosition="right"
               appTooltipSize="md"
+              class="sidebar__nav-item focus-ring-inset"
             >
-              <!-- Active tint keyed off `aria-current`, the single source of truth. -->
-              <span
-                aria-hidden="true"
-                class="block h-5 w-5 shrink-0 group-aria-[current=page]:text-brand-500"
-              >
-                @switch (item.icon) {
-                  @case ('layout-dashboard') {
-                    <svg class="h-full w-full" lucideLayoutDashboard></svg>
-                  }
-                  @case ('target') {
-                    <svg class="h-full w-full" lucideTarget></svg>
-                  }
-                  @case ('trophy') {
-                    <svg class="h-full w-full" lucideTrophy></svg>
-                  }
-                  @case ('users') {
-                    <svg class="h-full w-full" lucideUsers></svg>
-                  }
-                  @case ('book-open') {
-                    <svg class="h-full w-full" lucideBookOpen></svg>
-                  }
-                  @case ('refresh-cw') {
-                    <svg class="h-full w-full" lucideRefreshCw></svg>
-                  }
-                  @case ('user-cog') {
-                    <svg class="h-full w-full" lucideUserCog></svg>
-                  }
-                  @case ('database-backup') {
-                    <svg class="h-full w-full" lucideDatabaseBackup></svg>
-                  }
-                  @case ('palette') {
-                    <svg class="h-full w-full" lucidePalette></svg>
-                  }
-                  @case ('flag') {
-                    <svg class="h-full w-full" lucideFlag></svg>
-                  }
-                }
-              </span>
-              <span
-                [class]="rail().navLabel"
-                class="tracking-label font-display uppercase group-aria-[current=page]:text-brand-500"
-              >
+              <svg aria-hidden="true" class="sidebar__nav-icon" [lucideIcon]="item.icon"></svg>
+              <span class="sidebar__nav-label">
                 {{ 'sidebar.nav.' + item.labelKey | translate }}
               </span>
             </a>
@@ -162,65 +108,53 @@
         (click)="onNavItemActivated()"
         [appTooltip]="'sidebar.admin.viewSite' | translate"
         [appTooltipDisabled]="!collapsed()"
-        [class]="collapsed() ? 'lg:justify-center lg:px-0' : ''"
-        [routerLink]="'/overview'"
         appTooltipPosition="right"
         appTooltipSize="md"
-        class="focus-ring-inset -mx-6 flex min-h-11 cursor-pointer items-center gap-3.5 px-6 py-2 text-start text-sm font-medium text-text-secondary transition-colors hover:bg-brand-500/8 hover:text-text-primary motion-safe:active:scale-[0.96]"
+        class="sidebar__footer-action focus-ring-inset press"
+        routerLink="/overview"
       >
         <!-- Reuses the overview icon rather than importing a new glyph. -->
-        <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideLayoutDashboard></svg>
-        <span [class]="rail().navLabel" class="tracking-label font-display uppercase">
-          {{ 'sidebar.admin.viewSite' | translate }}
-        </span>
+        <svg aria-hidden="true" class="block size-5 shrink-0" lucideLayoutDashboard></svg>
+        <span class="sidebar__nav-label">{{ 'sidebar.admin.viewSite' | translate }}</span>
       </a>
 
-      <!-- The only way out of the backoffice, in danger tones since it discards the session. -->
+      <!-- The only way out of the backoffice. -->
       <button
         (click)="signOutOfAdmin()"
         [appTooltip]="'sidebar.admin.signOut' | translate"
         [appTooltipDisabled]="!collapsed()"
-        [class]="collapsed() ? 'lg:justify-center lg:px-0' : ''"
         appTooltipPosition="right"
         appTooltipSize="md"
-        class="focus-ring-inset -mx-6 flex min-h-11 cursor-pointer items-center gap-3.5 px-6 py-2 text-start text-sm font-medium text-text-secondary transition-colors hover:bg-danger/10 hover:text-danger motion-safe:active:scale-[0.96]"
+        class="sidebar__footer-action sidebar__footer-action--danger focus-ring-inset press"
         type="button"
       >
-        <svg aria-hidden="true" class="block h-5 w-5 shrink-0" lucideLogOut></svg>
-        <span [class]="rail().navLabel" class="tracking-label font-display uppercase">
-          {{ 'sidebar.admin.signOut' | translate }}
-        </span>
+        <svg aria-hidden="true" class="block size-5 shrink-0" lucideLogOut></svg>
+        <span class="sidebar__nav-label">{{ 'sidebar.admin.signOut' | translate }}</span>
       </button>
     }
 
     @if (!collapsed()) {
-      <!-- Divider fading at both ends. -->
-      <span
-        aria-hidden="true"
-        class="block h-px bg-linear-to-r from-transparent via-brand-500/50 to-transparent"
-      ></span>
+      <span aria-hidden="true" class="sidebar__divider"></span>
     }
 
     <!-- One row, stacked only on the collapsed rail. -->
-    <div [class]="rail().footerContent" class="flex items-center justify-between gap-3">
-      <div [class]="rail().syncBlock" class="min-w-0">
+    <div class="sidebar__status-row">
+      <div class="sidebar__sync">
         <!-- Tooltips on label and time, not the block: nesting with the dot's would open both. -->
         <p
           [appTooltip]="'sidebar.lastSync.tooltip' | translate"
           appTooltipPosition="above"
-          class="tracking-label w-fit cursor-help font-mono text-2xs text-text-muted uppercase"
+          class="sidebar__sync-label"
           tabindex="0"
         >
           {{ 'sidebar.lastSync.label' | translate }}
         </p>
-        <p class="mt-2 flex min-w-0 items-center gap-2 text-sm text-text-secondary">
+        <p class="sidebar__sync-value">
           <span
-            [class.bg-brand-500]="apiStatus() === 'online' && syncStale()"
-            [class.bg-success]="apiStatus() === 'online' && !syncStale()"
-            [class.bg-danger]="apiStatus() === 'offline'"
             [appTooltip]="apiStatusLabel()"
-            class="h-1.5 w-1.5 shrink-0 rounded-full"
+            [class]="'sidebar__status-dot--' + syncHealth()"
             appTooltipPosition="right"
+            class="sidebar__status-dot"
             role="status"
           >
             <span class="sr-only">{{ apiStatusLabel() }}</span>
@@ -228,9 +162,10 @@
           <span
             [appTooltip]="lastSyncTooltip()"
             appTooltipPosition="above"
-            class="cursor-help truncate"
-            >{{ lastSyncLabel() }}</span
+            class="sidebar__sync-time"
           >
+            {{ lastSyncLabel() }}
+          </span>
         </p>
       </div>
 
@@ -243,42 +178,33 @@
           [attr.aria-controls]="languageMenuId"
           [attr.aria-expanded]="languageMenuOpen()"
           [attr.aria-label]="'sidebar.language.label' | translate"
-          [class]="languageButtonClass()"
           aria-haspopup="listbox"
           appTooltipPosition="right"
           appTooltipSize="md"
-          class="focus-ring-inset tracking-label flex h-9 shrink-0 cursor-pointer items-center gap-1.5 px-2 font-mono text-2xs font-semibold text-text-muted uppercase transition-colors hover:text-text-primary motion-safe:active:scale-[0.96]"
+          class="sidebar__language-button focus-ring-inset press"
           type="button"
         >
-          <svg class="h-4 w-4 shrink-0" lucideLanguages></svg>
-          <span [class]="rail().languageCode">{{ language() }}</span>
+          <svg class="size-4 shrink-0" lucideLanguages></svg>
+          <span class="sidebar__language-code">{{ language() }}</span>
         </button>
 
         <div
           [attr.aria-label]="'sidebar.language.label' | translate"
-          [class]="rail().languagePanel"
           [hidden]="!languageMenuOpen()"
           [id]="languageMenuId"
-          class="menu-panel absolute right-0 bottom-full z-20 mb-2 w-44"
+          class="sidebar__language-panel menu-panel"
           role="listbox"
         >
           @for (candidate of supportedLanguages; track candidate) {
-            @let languageName = 'sidebar.language.names.' + candidate | translate;
-
             <button
               (click)="switchLanguage(candidate)"
               [attr.aria-selected]="language() === candidate"
-              [class]="
-                language() === candidate
-                  ? 'bg-brand-500/15 text-brand-500'
-                  : 'text-text-secondary hover:bg-brand-500/8 hover:text-text-primary'
-              "
-              class="menu-option focus-ring-inset flex items-center justify-between gap-4"
+              class="sidebar__language-option menu-option focus-ring-inset flex items-center justify-between gap-4"
               role="option"
               type="button"
             >
-              <span>{{ languageName }}</span>
-              <span class="text-xs opacity-70">{{ candidate }}</span>
+              <span>{{ 'sidebar.language.names.' + candidate | translate }}</span>
+              <span class="sidebar__language-option-code">{{ candidate }}</span>
             </button>
           }
         </div>

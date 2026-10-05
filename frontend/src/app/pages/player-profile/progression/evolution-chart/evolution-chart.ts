@@ -22,6 +22,7 @@ import { EvolutionMetric, EvolutionLegendEntry } from './evolution-chart.model';
   selector: 'app-evolution-chart',
   imports: [TranslatePipe, LineChart, Tooltip],
   templateUrl: './evolution-chart.html',
+  styleUrl: './evolution-chart.scss',
 })
 export class EvolutionChart {
   /**
@@ -110,7 +111,7 @@ export class EvolutionChart {
   /**
    * Formats a value of the plotted metric like the profile's tiles.
    */
-  protected format(value: number): string {
+  private format(value: number): string {
     switch (this.metric()) {
       case 'headshotPercentage':
         return formatHeadshotPercentage(value, this.translation.language());

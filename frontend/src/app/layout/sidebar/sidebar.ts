@@ -2,56 +2,37 @@ import {
   afterRenderEffect,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   signal,
   viewChild,
-  DestroyRef,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { filter, map } from 'rxjs';
 import {
-  LucideBookOpen,
-  LucideDatabaseBackup,
-  LucideFlag,
+  LucideDynamicIcon,
   LucideLanguages,
   LucideLayoutDashboard,
   LucideLogOut,
   LucideMenu,
-  LucidePalette,
-  LucideRefreshCw,
-  LucideTarget,
-  LucideTrophy,
-  LucideUserCog,
-  LucideUsers,
   LucideX,
 } from '@lucide/angular';
+import { filter, map } from 'rxjs';
 
 import { AdminSession } from '@core/admin/session/admin-session';
+import { formatCampaignDateTime, formatElapsed } from '@core/date/date-format.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Language } from '@core/i18n/translation.model';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
-import {
-  LANGUAGE_MENU_OPEN_CLASS,
-  NAV_ACTIVE_CLASS,
-  ADMIN_NAV_GROUPS,
-  NAV_GROUPS,
-  SIDEBAR_CLOCK_MS,
-} from './sidebar.constants';
-import { resolveDrawerClasses, resolveRailClasses } from './sidebar-classes.utils';
-import { NavItem } from './sidebar.model';
-import { formatElapsed } from '@core/date/date-format.utils';
-import {
-  formatSynchronizationTimestamp,
-  isNavItemActive,
-  isSynchronizationStale,
-} from './sidebar.utils';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
+import { Tooltip } from '@shared/tooltip/tooltip';
+import { ADMIN_NAV_GROUPS, NAV_GROUPS, SIDEBAR_CLOCK_MS } from './sidebar.constants';
+import { NavItem, SyncHealth } from './sidebar.model';
+import { isNavItemActive, isSynchronizationStale } from './sidebar.utils';
 
 /**
  * Navigation rail from `lg` up (collapsible), drawer below it opened by the page header's burger.
@@ -67,24 +48,17 @@ import { FocusTrap } from '@shared/focus-trap/focus-trap';
   imports: [
     FocusTrap,
     RouterLink,
-    LucideBookOpen,
-    LucideDatabaseBackup,
-    LucideFlag,
+    LucideDynamicIcon,
     LucideLanguages,
     LucideLayoutDashboard,
     LucideLogOut,
     LucideMenu,
-    LucidePalette,
-    LucideRefreshCw,
-    LucideTarget,
-    LucideTrophy,
-    LucideUserCog,
-    LucideUsers,
     LucideX,
     TranslatePipe,
     Tooltip,
   ],
   templateUrl: './sidebar.html',
+  styleUrl: './sidebar.scss',
 })
 export class Sidebar {
   /**
@@ -149,24 +123,6 @@ export class Sidebar {
   protected readonly language = this.translation.language;
 
   /**
-   * Utilities driven by the collapsed state.
-   */
-  protected readonly rail = computed(() => resolveRailClasses(this.collapsed()));
-
-  /**
-   * Utilities driven by the drawer's open state.
-   */
-  protected readonly drawer = computed(() => resolveDrawerClasses(this.navigationPanel.isOpen()));
-
-  /**
-   * Language trigger utilities: collapsed-rail size plus open state.
-   */
-  protected readonly languageButtonClass = computed(() => {
-    const stateClass = this.languageMenuOpen() ? LANGUAGE_MENU_OPEN_CLASS : '';
-    return `${this.rail().languageButton} ${stateClass}`;
-  });
-
-  /**
    * Whether the language panel is open.
    */
   protected readonly languageMenuOpen = signal(false);
@@ -192,6 +148,11 @@ export class Sidebar {
   private readonly statusResource = this.synchronizationApi.status;
 
   /**
+   * Clock of the elapsed time, ticking every half minute.
+   */
+  private readonly now = signal(Date.now());
+
+  /**
    * "In progress", the time since the last synchronization, or a loading/error fallback.
    */
   protected readonly lastSyncLabel = computed(() => {
@@ -213,11 +174,6 @@ export class Sidebar {
   });
 
   /**
-   * Clock of the elapsed time, ticking every half minute.
-   */
-  private readonly now = signal(Date.now());
-
-  /**
    * Whether the last synchronization is late while none runs.
    */
   protected readonly syncStale = computed(() => {
@@ -233,17 +189,17 @@ export class Sidebar {
    * Exact time, lateness warning, then what a synchronization does.
    */
   protected readonly lastSyncTooltip = computed(() => {
-    const t = (key: string, params?: Record<string, string>): string =>
+    const translateSync: TranslateFn = (key, params) =>
       this.translation.translate(`sidebar.lastSync.${key}`, params);
     const lastCompletedAt = resourceValue(this.statusResource, null)?.lastCompletedAt;
     const parts = [
       lastCompletedAt
-        ? t('at', {
-            date: formatSynchronizationTimestamp(lastCompletedAt, this.translation.language()),
+        ? translateSync('at', {
+            date: formatCampaignDateTime(lastCompletedAt, this.translation.language()),
           })
         : null,
-      this.syncStale() ? t('stale') : null,
-      t('tooltip'),
+      this.syncStale() ? translateSync('stale') : null,
+      translateSync('tooltip'),
     ];
     return parts.filter((part) => part !== null).join(' ');
   });
@@ -251,7 +207,7 @@ export class Sidebar {
   /**
    * Backend availability, inferred from the status resource.
    */
-  protected readonly apiStatus = computed<'online' | 'offline'>(() =>
+  private readonly apiStatus = computed<'online' | 'offline'>(() =>
     this.statusResource.error() ? 'offline' : 'online',
   );
 
@@ -261,6 +217,16 @@ export class Sidebar {
   protected readonly apiStatusLabel = computed(() =>
     this.translation.translate(`sidebar.lastSync.status.${this.apiStatus()}`),
   );
+
+  /**
+   * Status dot tone: backend down, synchronization late, or all fresh.
+   */
+  protected readonly syncHealth = computed<SyncHealth>(() => {
+    if (this.apiStatus() === 'offline') {
+      return 'offline';
+    }
+    return this.syncStale() ? 'stale' : 'fresh';
+  });
 
   constructor() {
     const clock = setInterval(() => this.now.set(Date.now()), SIDEBAR_CLOCK_MS);
@@ -279,13 +245,6 @@ export class Sidebar {
    */
   protected isNavItemActive(item: NavItem): boolean {
     return isNavItemActive(this.currentUrl(), item);
-  }
-
-  /**
-   * Active-state utilities of `item`, empty when inactive.
-   */
-  protected navActiveClass(item: NavItem): string {
-    return this.isNavItemActive(item) ? NAV_ACTIVE_CLASS : '';
   }
 
   /**
@@ -330,7 +289,7 @@ export class Sidebar {
   }
 
   /**
-   * Switches language without awaiting: the dictionary swaps in on its own.
+   * Switches language without awaiting: it changes once its dictionary has loaded.
    */
   protected switchLanguage(language: Language): void {
     void this.translation.setLanguage(language);

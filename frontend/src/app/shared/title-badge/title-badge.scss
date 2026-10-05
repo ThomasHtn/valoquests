@@ -1,4 +1,6 @@
-/* Fixed height: the badge never grows a row. */
+@use 'tools' as *;
+
+/* Fixed height: the badge never grows a row. Its tint is the title's tone. */
 .title-badge {
   display: inline-flex;
   align-items: center;
@@ -15,21 +17,22 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   white-space: nowrap;
+  color: var(--tone);
   cursor: help;
 }
 
 /* Trimmed to the cap height so the word centres on the icon. */
-.title-badge-label {
+.title-badge__label {
   text-box: trim-both cap alphabetic;
 }
 
-.title-badge-icon {
+.title-badge__icon {
   flex: 0 0 auto;
   width: 0.75rem;
   height: 0.75rem;
 }
 
-.title-badge--md .title-badge-icon {
+.title-badge--md .title-badge__icon {
   width: 0.875rem;
   height: 0.875rem;
 }

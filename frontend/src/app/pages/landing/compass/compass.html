@@ -1,58 +1,27 @@
-<!-- Layers share one grid cell, leaving each `transform` free for its animation. -->
-<button
-  class="focus-ring relative grid h-[var(--compass-size)] w-[var(--compass-size)] cursor-pointer place-items-center rounded-full transition-transform duration-200 hover:scale-[1.03]"
-  type="button"
-  (click)="entered.emit()"
->
-  <!-- Sonar rings, invisible at rest so reduced motion shows no frozen halos. -->
+<button (click)="entered.emit()" class="compass focus-ring" type="button">
+  <!-- Sonar rings, out of the core. -->
+  <span aria-hidden="true" class="compass__ripple motion-safe:animate-compass-ripple"></span>
   <span
     aria-hidden="true"
-    class="col-start-1 row-start-1 h-[calc(var(--compass-size)*0.62)] w-[calc(var(--compass-size)*0.62)] rounded-full border border-brand-500 opacity-0 motion-safe:animate-compass-ripple"
-  ></span>
-  <span
-    aria-hidden="true"
-    class="col-start-1 row-start-1 h-[calc(var(--compass-size)*0.62)] w-[calc(var(--compass-size)*0.62)] rounded-full border border-brand-500 opacity-0 [animation-delay:1.5s] motion-safe:animate-compass-ripple"
+    class="compass__ripple compass__ripple--late motion-safe:animate-compass-ripple"
   ></span>
 
-  <!-- Outer bezel and cardinal ticks, north in amber. -->
-  <span
-    aria-hidden="true"
-    class="relative col-start-1 row-start-1 h-[var(--compass-size)] w-[var(--compass-size)] rounded-full border border-dashed border-brand-500/40 motion-safe:animate-compass-spin"
-  >
-    <span
-      class="absolute top-1 left-[calc(50%-1px)] h-2.5 w-0.5 bg-brand-500 sm:top-1.5 sm:h-3"
-    ></span>
-    <span
-      class="absolute bottom-1 left-[calc(50%-1px)] h-2.5 w-0.5 bg-text-primary/30 sm:bottom-1.5 sm:h-3"
-    ></span>
-    <span
-      class="absolute top-[calc(50%-1px)] left-1 h-0.5 w-2.5 bg-text-primary/30 sm:left-1.5 sm:w-3"
-    ></span>
-    <span
-      class="absolute top-[calc(50%-1px)] right-1 h-0.5 w-2.5 bg-text-primary/30 sm:right-1.5 sm:w-3"
-    ></span>
+  <!-- Outer bezel and cardinal ticks. -->
+  <span aria-hidden="true" class="compass__bezel motion-safe:animate-compass-spin">
+    <span class="compass__tick compass__tick--north"></span>
+    <span class="compass__tick compass__tick--south"></span>
+    <span class="compass__tick compass__tick--west"></span>
+    <span class="compass__tick compass__tick--east"></span>
   </span>
 
   <!-- Inner bezel, counter-rotating. -->
-  <span
-    aria-hidden="true"
-    class="relative col-start-1 row-start-1 h-[calc(var(--compass-size)*0.8)] w-[calc(var(--compass-size)*0.8)] rounded-full border border-brand-500/55 motion-safe:animate-compass-spin-reverse"
-  >
-    <span
-      class="absolute top-2.5 left-[calc(50%-3px)] h-1.5 w-1.5 rounded-full bg-brand-500 sm:top-3.5"
-    ></span>
+  <span aria-hidden="true" class="compass__inner-bezel motion-safe:animate-compass-spin-reverse">
+    <span class="compass__marker"></span>
   </span>
 
   <!-- Core disc carrying the label. -->
-  <span
-    class="col-start-1 row-start-1 flex h-[calc(var(--compass-size)*0.62)] w-[calc(var(--compass-size)*0.62)] flex-col items-center justify-center gap-1.5 rounded-full border-2 border-brand-500 bg-radial from-brand-400 to-brand-500 text-surface-950 motion-safe:animate-compass-core"
-  >
-    <span class="tracking-label font-display text-sm/none font-bold uppercase sm:text-base">
-      {{ 'landing.compass.action' | translate }}
-    </span>
-    <!-- Tighter than `tracking-label` to fit inside the disc on small viewports. -->
-    <span class="font-mono text-2xs font-semibold tracking-wider uppercase">
-      {{ 'landing.compass.caption' | translate }}
-    </span>
+  <span class="compass__core motion-safe:animate-compass-core">
+    <span class="compass__action">{{ 'landing.compass.action' | translate }}</span>
+    <span class="compass__caption">{{ 'landing.compass.caption' | translate }}</span>
   </span>
 </button>

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { campaignMidnight, remainingWeekTime, toCampaignDayKey } from './campaign-calendar.utils';
+import {
+  campaignMidnight,
+  remainingWeekTime,
+  toCampaignDayKey,
+  weekDayIndex,
+} from './campaign-calendar.utils';
 
 // Explicit UTC instants keep these assertions independent of the runtime time zone.
 describe('campaignMidnight', () => {
@@ -65,5 +70,16 @@ describe('remainingWeekTime', () => {
       hours: 0,
       minutes: 0,
     });
+  });
+});
+
+describe('weekDayIndex', () => {
+  it('counts days from Monday', () => {
+    expect(weekDayIndex('2026-10-05', '2026-10-07')).toBe(2);
+  });
+
+  it('clamps to the seven days of the week', () => {
+    expect(weekDayIndex('2026-10-05', '2026-10-04')).toBe(0);
+    expect(weekDayIndex('2026-10-05', '2026-10-14')).toBe(6);
   });
 });

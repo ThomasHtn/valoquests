@@ -1,36 +1,29 @@
-<div class="border border-edge">
+<div class="tour-base-preview">
   <!-- Hidden: assistive technology gets the sliders' own values. -->
-  <div aria-hidden="true" class="relative overflow-hidden bg-[#040a11]">
+  <div aria-hidden="true" class="tour-base-preview__scene">
     <app-base-scene
       [fullCampaignPopulation]="fullCampaignPopulation()"
       [population]="shownPopulation()"
       [stagesDone]="shownStages()"
       class="block"
     />
-    <div class="preview-wash absolute inset-0"></div>
-    <div class="absolute inset-x-0 bottom-0 px-4 pb-4 sm:px-6 sm:pb-5">
-      <p class="preview-pop flex items-baseline gap-3">
+    <div class="tour-base-preview__wash"></div>
+    <div class="tour-base-preview__readout">
+      <p class="tour-base-preview__population">
         <span [appCountUp]="shownPopulation()" class="tabular-nums"></span>
-        <span
-          class="font-display text-sm font-medium tracking-[0.16em] text-text-secondary uppercase sm:text-lg"
-          >{{ 'overview.scene.unit' | translate }}</span
-        >
+        <span class="tour-base-preview__unit">{{ 'overview.scene.unit' | translate }}</span>
       </p>
     </div>
   </div>
 
-  <div
-    class="grid gap-x-8 gap-y-4 border-t border-edge bg-surface-sunken/60 px-4 py-4 sm:grid-cols-2 sm:px-6 sm:py-5"
-  >
-    <label class="flex flex-col gap-2">
-      <span class="flex items-center justify-between gap-3">
-        <span class="label-caption flex items-center gap-2 text-text-muted">
-          <svg class="block h-4 w-4 shrink-0 text-brand-400" lucideUsers></svg>
+  <div class="tour-base-preview__controls">
+    <label class="tour-base-preview__slider">
+      <span class="tour-base-preview__slider-head">
+        <span class="tour-base-preview__slider-name label-caption">
+          <svg class="tour-base-preview__slider-icon" lucideUsers></svg>
           {{ 'tour.preview.population' | translate }}
         </span>
-        <span class="font-display text-base font-semibold text-text-primary tabular-nums">
-          {{ format(shownPopulation()) }}
-        </span>
+        <span class="tour-base-preview__slider-value">{{ format(shownPopulation()) }}</span>
       </span>
       <input
         (input)="onPopulation($event)"
@@ -39,18 +32,18 @@
         [step]="populationStep"
         [style.--fill]="populationFill()"
         [value]="shownPopulation()"
-        class="preview-slider"
+        class="tour-base-preview__slider-input"
         type="range"
       />
     </label>
 
-    <label class="flex flex-col gap-2">
-      <span class="flex items-center justify-between gap-3">
-        <span class="label-caption flex items-center gap-2 text-text-muted">
-          <svg class="block h-4 w-4 shrink-0 text-brand-400" lucideRocket></svg>
+    <label class="tour-base-preview__slider">
+      <span class="tour-base-preview__slider-head">
+        <span class="tour-base-preview__slider-name label-caption">
+          <svg class="tour-base-preview__slider-icon" lucideRocket></svg>
           {{ 'tour.preview.stages' | translate }}
         </span>
-        <span class="font-display text-base font-semibold text-text-primary tabular-nums">
+        <span class="tour-base-preview__slider-value">
           {{ 'tour.preview.stagesValue' | translate: { done: shownStages(), total: stageCount } }}
         </span>
       </span>
@@ -61,7 +54,7 @@
         [step]="1"
         [style.--fill]="stagesFill()"
         [value]="shownStages()"
-        class="preview-slider"
+        class="tour-base-preview__slider-input"
         type="range"
       />
     </label>

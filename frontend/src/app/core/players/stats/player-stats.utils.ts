@@ -38,13 +38,3 @@ export function resolveKdaVisual(kda: number | null): StatVisual {
 export function resolveKdVisual(kd: number | null): StatVisual {
   return resolveStatVisual(kd, KD_GOOD_THRESHOLD);
 }
-
-/**
- * Text colour of a stat cell: `reportedClass` when reported, muted for the missing-value dash.
- */
-export function resolveStatTextClass(
-  value: number | null | undefined,
-  reportedClass = 'text-text-primary',
-): string {
-  return Number.isFinite(value) ? reportedClass : 'text-text-muted';
-}

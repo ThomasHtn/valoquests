@@ -18,6 +18,7 @@ import { BackTarget } from './page-header.model';
   selector: 'app-page-header',
   imports: [NgTemplateOutlet, RouterLink, TranslatePipe, LucideChevronLeft, LucideMenu],
   templateUrl: './page-header.html',
+  styleUrl: './page-header.scss',
   // `shrink-0`: `page-body` is the one that gives up height.
   host: { class: 'block shrink-0' },
 })

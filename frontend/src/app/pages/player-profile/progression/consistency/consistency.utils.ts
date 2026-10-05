@@ -1,6 +1,6 @@
 import { Plugin } from 'chart.js';
 
-import { formatLocalDayMonth } from '@core/date/date-format.utils';
+import { formatCampaignDayMonth } from '@core/date/date-format.utils';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { formatSeasonName } from '@core/seasons/season-name.utils';
 import { resolveMatchScore } from '@core/matches/display/match-format.utils';
@@ -14,8 +14,7 @@ import {
   CONSISTENCY_I18N as KEYS,
   CONSISTENCY_MIN_STACK,
   CONSISTENCY_SMALL_STACK,
-  CONSISTENCY_RESULT_CLASSES,
-  CONSISTENCY_RESULT_FALLBACK_CLASS,
+  CONSISTENCY_RESULT_MODIFIERS,
   CONSISTENCY_RULE_COLOR,
   CONSISTENCY_STEADY_MARGIN,
   CONSISTENCY_TREND_ICONS,
@@ -104,7 +103,7 @@ export function buildConsistencyFigures(
     {
       caption: translate(`${KEYS}.figures.floor`),
       value: formatScore(summary.floor),
-      valueClass: 'text-brand-500',
+      valueTone: 'var(--color-brand-500)',
       detail: translate(`${KEYS}.figures.floorDetail`),
       icon: 'floor',
     },
@@ -118,7 +117,7 @@ export function buildConsistencyFigures(
     {
       caption: translate(`${KEYS}.figures.ceiling`),
       value: formatScore(summary.ceiling),
-      valueClass: 'text-brand-500',
+      valueTone: 'var(--color-brand-500)',
       detail: translate(`${KEYS}.figures.ceilingDetail`),
       icon: 'ceiling',
     },
@@ -194,12 +193,12 @@ export function buildConsistencyTooltip(
   return {
     acs: Math.round(match.acs),
     result: score ? `${outcome} ${score.ally}-${score.enemy}` : outcome,
-    resultClass: CONSISTENCY_RESULT_CLASSES[match.result] ?? CONSISTENCY_RESULT_FALLBACK_CLASS,
+    resultClass: CONSISTENCY_RESULT_MODIFIERS[match.result] ?? '',
     zone: dot.zone,
     zoneLabel: translate(`${KEYS}.zone.${dot.zone}`),
     mapName: match.mapName,
     agentName: match.agentName,
-    date: formatLocalDayMonth(match.startedAt, language),
+    date: formatCampaignDayMonth(match.startedAt, language),
   };
 }
 

@@ -1,76 +1,74 @@
-.catalogue {
+@use 'tools' as *;
+
+.challenge-catalogue {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
 }
 
-.cgroup {
+.challenge-catalogue__group {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
 /* The group's header is a plate, not a mere title. */
-.cgroup-head {
+.challenge-catalogue__group-head {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr) auto;
   gap: 0.5rem 1.25rem;
   align-items: center;
   padding: 0.6rem 1.2rem;
-  background: rgb(236 232 225 / 7%);
+  background: tint(text-primary, 7%);
   box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.cgroup-head .hex-mark > span {
+.challenge-catalogue__hex-core {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 600;
 }
 
-.cgroup-name {
+.challenge-catalogue__group-name {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: 0.03em;
-  text-transform: uppercase;
   color: var(--tone);
+  text-transform: uppercase;
 }
 
-.cgroup-count {
+.challenge-catalogue__group-count {
   color: var(--color-text-muted);
   text-align: right;
 }
 
 /* Two columns at most: more is too dense to scan. */
-.cgrid {
+.challenge-catalogue__entries {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.6rem;
-}
 
-@media (width < 60rem) {
-  .cgrid {
+  @media (width < 60rem) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
-.crow {
+.challenge-catalogue__entry {
   padding: 1.3rem 1.2rem;
   font-size: 0.9375rem;
   line-height: 1.35;
   color: var(--color-text-secondary);
-  background: rgb(236 232 225 / 4%);
+  background: tint(text-primary, 4%);
   box-shadow: inset 3px 0 0 var(--tone);
-}
 
-.crow:hover {
-  color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--tone) 10%, transparent);
-}
+  @include hover {
+    color: var(--color-text-primary);
+    background: color-mix(in srgb, var(--tone) 10%, transparent);
+  }
 
-@media (prefers-reduced-motion: no-preference) {
-  .crow {
+  @media (prefers-reduced-motion: no-preference) {
     transition:
       color var(--duration-fast) var(--ease-out-quart),
       background-color var(--duration-fast) var(--ease-out-quart);

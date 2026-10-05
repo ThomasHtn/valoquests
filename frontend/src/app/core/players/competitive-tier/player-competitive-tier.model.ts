@@ -30,7 +30,7 @@ export type CompetitiveTier =
   | 'RADIANT';
 
 /**
- * Translated label and colour class of a competitive tier.
+ * Translated label and colour of a competitive tier.
  */
 export interface CompetitiveTierVisual {
   /**
@@ -39,10 +39,25 @@ export interface CompetitiveTierVisual {
   readonly label: string;
 
   /**
-   * Tailwind text colour of the tier.
+   * CSS colour of the tier (`var(--color-accent-gold)`), bound as `--tone`.
    */
-  readonly colorClass: string;
+  readonly tone: string;
 }
+
+/**
+ * Rank group a tier belongs to, also its translation and icon key.
+ */
+export type TierGroupKey =
+  | 'unranked'
+  | 'iron'
+  | 'bronze'
+  | 'silver'
+  | 'gold'
+  | 'platinum'
+  | 'diamond'
+  | 'ascendant'
+  | 'immortal'
+  | 'radiant';
 
 /**
  * Rank group of a {@link CompetitiveTier} (`DIAMOND_2` is `diamond`, 2).
@@ -51,7 +66,7 @@ export interface TierGroup {
   /**
    * Group key (`diamond`).
    */
-  readonly key: string;
+  readonly key: TierGroupKey;
 
   /**
    * Division within the group, `null` for single-division tiers.

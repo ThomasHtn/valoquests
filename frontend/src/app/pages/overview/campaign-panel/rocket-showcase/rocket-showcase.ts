@@ -9,29 +9,34 @@ import {
   linkedSignal,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { LucideCheck, LucideLock, LucideTarget } from '@lucide/angular';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { TranslateFn } from '@core/i18n/translation.model';
 import { drawShip, noseHeight, outline } from '@shared/rocket/rocket-drawing.utils';
 import { ROCKET_PART_COUNT, SHIP, SKIRT } from '@shared/rocket/rocket-drawing.constants';
 import { svgElement as el } from '@core/svg/svg-element.utils';
 import { RocketPart } from '../campaign-panel.model';
 import {
-  VIEW_WIDTH,
   BASE_Y,
+  BUILT_ACCENT,
+  CARTOUCHE_CAPTION,
+  CARTOUCHE_PAPER,
+  CARTOUCHE_TITLE,
   CENTER_X,
-  BLUE,
-  AMBER,
   DISPLAY_FONT,
   MONO_FONT,
+  VIEW_WIDTH,
 } from './rocket-showcase.constants';
+import { blueprintInk } from './rocket-showcase.utils';
 
 /**
  * Rocket blueprint: the built ship over the finished outline, at the selected part's stage.
  */
 @Component({
   selector: 'app-rocket-showcase',
-  imports: [TranslatePipe, LucideCheck, LucideLock, LucideTarget],
+  imports: [NgTemplateOutlet, TranslatePipe, LucideCheck, LucideLock, LucideTarget],
   templateUrl: './rocket-showcase.html',
   styleUrl: './rocket-showcase.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -89,12 +94,10 @@ export class RocketShowcase {
   }
 
   /**
-   * Shows a built part's stage; parts still to build are not selectable.
+   * Shows a built part's stage; only built parts render a button.
    */
   protected select(part: RocketPart): void {
-    if (part.state === 'built') {
-      this.shown.set(part.index);
-    }
+    this.shown.set(part.index);
   }
 
   /**
@@ -108,9 +111,9 @@ export class RocketShowcase {
     };
 
     // Ground line with its hatches.
-    put(this.stroke(120, VIEW_WIDTH - 120, BASE_Y, BASE_Y, 'rgb(127 182 216 / 55%)', 1.5));
+    put(this.stroke(120, VIEW_WIDTH - 120, BASE_Y, BASE_Y, blueprintInk(55), 1.5));
     for (let x = 124; x < VIEW_WIDTH - 120; x += 12) {
-      put(this.stroke(x, x - 8, BASE_Y, BASE_Y + 8, 'rgb(127 182 216 / 35%)', 1));
+      put(this.stroke(x, x - 8, BASE_Y, BASE_Y + 8, blueprintInk(35), 1));
     }
 
     const upright = `translate(${CENTER_X} ${BASE_Y}) scale(1 -1)`;
@@ -119,7 +122,7 @@ export class RocketShowcase {
       el('path', {
         d: outline(SHIP[ROCKET_PART_COUNT]),
         fill: 'none',
-        stroke: BLUE,
+        stroke: blueprintInk(),
         'stroke-width': 1.4,
         'stroke-dasharray': '5 6',
         opacity: 0.55,
@@ -151,20 +154,20 @@ export class RocketShowcase {
         x2: x,
         y1: fullTop,
         y2: BASE_Y,
-        stroke: 'rgb(127 182 216 / 40%)',
+        stroke: blueprintInk(40),
         'stroke-width': 1,
         'stroke-dasharray': '3 4',
       }),
     );
-    put(this.stroke(x, x, nowTop, BASE_Y, AMBER, 1.5));
+    put(this.stroke(x, x, nowTop, BASE_Y, BUILT_ACCENT, 1.5));
     for (const y of [nowTop, BASE_Y]) {
-      put(this.stroke(x - 6, x + 6, y, y, AMBER, 1.5));
+      put(this.stroke(x - 6, x + 6, y, y, BUILT_ACCENT, 1.5));
     }
-    put(this.stroke(x - 6, x + 6, fullTop, fullTop, 'rgb(127 182 216 / 60%)', 1));
+    put(this.stroke(x - 6, x + 6, fullTop, fullTop, blueprintInk(60), 1));
     put(
       this.text(x - 12, nowTop + 4, `${stage} / ${ROCKET_PART_COUNT}`, {
         'text-anchor': 'end',
-        fill: AMBER,
+        fill: BUILT_ACCENT,
         'font-size': 14,
         'font-weight': 600,
         'letter-spacing': 1,
@@ -185,14 +188,14 @@ export class RocketShowcase {
         y,
         width: 200,
         height: 56,
-        fill: 'rgb(12 27 40 / 85%)',
-        stroke: 'rgb(127 182 216 / 45%)',
+        fill: CARTOUCHE_PAPER,
+        stroke: blueprintInk(45),
         'stroke-width': 1,
       }),
     );
-    put(this.stroke(x, x + 200, y + 20, y + 20, 'rgb(127 182 216 / 35%)', 1));
-    const mono = { fill: '#8f9496', 'font-size': 9, 'letter-spacing': 2, style: MONO_FONT };
-    const t = (key: string, params?: Record<string, string | number>): string =>
+    put(this.stroke(x, x + 200, y + 20, y + 20, blueprintInk(35), 1));
+    const mono = { fill: CARTOUCHE_CAPTION, 'font-size': 9, 'letter-spacing': 2, style: MONO_FONT };
+    const t: TranslateFn = (key, params) =>
       this.translation.translate(`campaign.rocket.${key}`, params).toUpperCase();
     put(this.text(x + 10, y + 14, t('cartoucheTitle', { number: this.campaignNumber() }), mono));
     const part = this.shownPart();
@@ -201,7 +204,7 @@ export class RocketShowcase {
       : t('cartoucheEmpty');
     put(
       this.text(x + 10, y + 36, line, {
-        fill: '#ece8e1',
+        fill: CARTOUCHE_TITLE,
         'font-size': 13,
         'font-weight': 600,
         'letter-spacing': 1,

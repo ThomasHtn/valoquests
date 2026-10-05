@@ -48,3 +48,21 @@ export function buildTabs(
     : OVERVIEW_TABS;
   return keys.map((key) => ({ key, label: translate(`overview.tabs.${key}.label`) }));
 }
+
+/**
+ * Tab an arrow, Home or End key moves to, wrapping at both ends; `null` for any other key.
+ */
+export function keyedTabIndex(key: string, index: number, count: number): number | null {
+  switch (key) {
+    case 'ArrowRight':
+      return (index + 1) % count;
+    case 'ArrowLeft':
+      return (index - 1 + count) % count;
+    case 'Home':
+      return 0;
+    case 'End':
+      return count - 1;
+    default:
+      return null;
+  }
+}

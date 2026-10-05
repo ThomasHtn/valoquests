@@ -1,33 +1,23 @@
 import { LowerCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { LucideBuilding2, LucideRocket, LucideWheat, LucideWrench } from '@lucide/angular';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import {
-  CARRY_MODES,
-  SHELTER_MODES,
-} from '@pages/overview/extraction-gauges/extraction-gauges.constants';
 import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
+
+import { TourCapacityTile } from './tour-capacity.model';
+import { buildCapacityTiles } from './tour-capacity.utils';
 
 /**
  * The overview's two resource dials, kept side by side on a phone unlike `ExtractionGauges`.
  */
 @Component({
   selector: 'app-tour-capacity',
-  imports: [
-    LowerCasePipe,
-    TranslatePipe,
-    CountUp,
-    InView,
-    LucideBuilding2,
-    LucideRocket,
-    LucideWheat,
-    LucideWrench,
-  ],
+  imports: [LowerCasePipe, TranslatePipe, CountUp, InView, LucideDynamicIcon],
   templateUrl: './tour-capacity.html',
   styleUrl: './tour-capacity.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,14 +29,11 @@ export class TourCapacity {
   public readonly capacity = input.required<Capacity>();
 
   /**
-   * Game modes listed under the components dial.
+   * The components dial and the food dial.
    */
-  protected readonly carryModes = CARRY_MODES;
-
-  /**
-   * Game modes listed under the food dial.
-   */
-  protected readonly shelterModes = SHELTER_MODES;
+  protected readonly tiles = computed<readonly TourCapacityTile[]>(() =>
+    buildCapacityTiles(this.capacity()),
+  );
 
   /**
    * Translation, to format the stocks in the current language.
@@ -57,6 +44,6 @@ export class TourCapacity {
    * Formats a stock in the current language.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
+    return formatFigure(amount, this.translation.language());
   }
 }

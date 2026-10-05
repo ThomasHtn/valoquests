@@ -1,3 +1,6 @@
+import { LucideArrowDownUp, LucideTrophy } from '@lucide/angular';
+
+import { KEY_FIGURE_ICONS } from '../key-figures/key-figures.constants';
 import { RankJourneyIconSizes } from './rank-journey.model';
 
 /**
@@ -29,3 +32,12 @@ export const RANK_JOURNEY_RAIL_COLOR = 'rgb(236 232 225 / 0.1)';
  * Prefix of every translation key the rank journey reads.
  */
 export const RANK_JOURNEY_I18N = 'playerProfile.progression.rankJourney';
+
+/**
+ * Icons of the tooltip's lines: the key figures' pictograms (delta arrows, matches), range and wins.
+ */
+export const RANK_JOURNEY_TOOLTIP_ICONS = {
+  ...KEY_FIGURE_ICONS,
+  range: LucideArrowDownUp,
+  wins: LucideTrophy,
+} as const;

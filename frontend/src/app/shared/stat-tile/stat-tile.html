@@ -1,14 +1,14 @@
 <!-- Tooltip on the words, focusable only when it has something to show. -->
-<p class="label-caption text-text-muted">
+<p class="stat-tile__label label-caption">
   <span
     [appTooltipDisabled]="!tooltip()"
     [appTooltip]="tooltip()"
     [attr.tabindex]="tooltip() ? 0 : null"
-    [class.cursor-help]="tooltip()"
+    [class.stat-tile__term--hinted]="tooltip()"
     class="focus-ring"
     >{{ label() }}</span
   >
 </p>
-<p [class]="valueClass()" class="font-display mt-3 text-2xl leading-none font-bold tabular-nums">
+<p [style.--tone]="tone()" class="stat-tile__value">
   {{ value() }}
 </p>

@@ -1,0 +1,30 @@
+/*
+ * Control projected into `app-text-field`. In `components`, under Tailwind's utilities like the
+ * chain it replaced; the frame's `focus-within` is its focus ring.
+ */
+
+@layer components {
+  .text-field-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding-inline: 0.75rem;
+    background-color: transparent;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    &:focus {
+      outline-style: none;
+    }
+
+    @media (width >= 40rem) {
+      font-size: 0.875rem;
+      line-height: calc(1.25 / 0.875);
+    }
+  }
+}

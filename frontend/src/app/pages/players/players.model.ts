@@ -1,9 +1,9 @@
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
-import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import {
   CompetitiveTier,
   CompetitiveTierVisual,
 } from '@core/players/competitive-tier/player-competitive-tier.model';
+import { StatVisual } from '@core/players/stats/player-stats.model';
 
 /**
  * One row of the players table, ready to display.
@@ -37,7 +37,7 @@ export interface PlayerRow {
   /**
    * Weekly title held this week, `null` when none.
    */
-  readonly title: (TitleVisual & { readonly key: WeeklyTitle }) | null;
+  readonly title: WeeklyTitle | null;
 
   /**
    * Raw tier, kept for sorting since `tier` only holds the label.
@@ -65,14 +65,39 @@ export interface PlayerRow {
   readonly winRate: number | null;
 
   /**
+   * Formatted win rate.
+   */
+  readonly winRateLabel: string;
+
+  /**
+   * Win rate text and bar colours.
+   */
+  readonly winRateVisual: StatVisual;
+
+  /**
    * KDA, `null` without matches.
    */
   readonly kda: number | null;
 
   /**
+   * Formatted KDA.
+   */
+  readonly kdaLabel: string;
+
+  /**
+   * KDA text colour.
+   */
+  readonly kdaVisual: StatVisual;
+
+  /**
    * Headshot rate in percent, `null` without matches.
    */
   readonly headshotPercentage: number | null;
+
+  /**
+   * Formatted headshot rate.
+   */
+  readonly headshotPercentageLabel: string;
 
   /**
    * Matches played.

@@ -1,20 +1,20 @@
-@let s = strike();
+@let strike = this.strike();
 
-<span class="name">{{ s.name }}</span>
+<span class="contribution-tip__name">{{ strike.name }}</span>
 
-<span class="figures tabular-nums">
-  <b class="value">{{ s.damageLabel }}</b>
-  <span class="unit">{{ 'overview.report.hp' | translate }}</span>
+<span class="contribution-tip__figures tabular-nums">
+  <b class="contribution-tip__damage">{{ strike.damageLabel }}</b>
+  <span class="contribution-tip__unit">{{ 'overview.report.hp' | translate }}</span>
 </span>
 
-<span class="status">
-  <span class="share">{{
-    'overview.report.strike.share' | translate: { percent: s.percent }
+<span class="contribution-tip__status">
+  <span class="contribution-tip__share">{{
+    'overview.report.strike.share' | translate: { percent: strike.percent }
   }}</span>
-  @if (s.challengePoints > 0) {
-    <span class="points">
-      <b class="tabular-nums">+{{ s.challengePoints }}</b>
-      {{ 'overview.report.strike.points' | translate: { count: s.challengePoints } }}
+  @if (strike.challengePoints > 0) {
+    <span class="contribution-tip__points">
+      <b class="contribution-tip__points-value tabular-nums">+{{ strike.challengePoints }}</b>
+      {{ 'overview.report.strike.points' | translate: { count: strike.challengePoints } }}
     </span>
   }
 </span>

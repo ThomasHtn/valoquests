@@ -1,33 +1,44 @@
-.day {
+@use 'tools' as *;
+
+.day-orders__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 2rem;
-}
 
-@media (width >= 60rem) {
-  .day {
+  @media (width >= 60rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 3.5rem;
   }
-
-  .day > * + .day-col {
-    padding-left: 3.5rem;
-    border-left: 1px solid var(--color-edge);
-  }
 }
 
-.day-col {
+.day-orders__column {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-.day-cap {
+/* Ruled off the daily card once both stand side by side. */
+.day-orders__column--tally {
+  @media (width >= 60rem) {
+    padding-left: 3.5rem;
+    border-left: 1px solid var(--color-edge);
+  }
+}
+
+.day-orders__caption {
   color: var(--color-text-muted);
 }
 
+.day-orders__no-daily {
+  font-size: var(--text-lead);
+  line-height: var(--text-lead--line-height);
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Daily card foot ---------- */
+
 /* Pinned to the bottom when the tally beside it stretches the card. */
-.foot {
+.day-orders__card-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -36,7 +47,7 @@
   padding-top: 1rem;
 }
 
-.ends {
+.day-orders__ends {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -45,7 +56,7 @@
   color: var(--color-text-muted);
 }
 
-.count {
+.day-orders__count {
   display: inline-flex;
   align-items: baseline;
   gap: 0.4rem;
@@ -53,7 +64,8 @@
   white-space: nowrap;
 }
 
-.count b {
+/* `--tone` comes from the deck card around it. */
+.day-orders__count-value {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
@@ -62,11 +74,11 @@
   color: var(--tone);
 }
 
-.count b span {
+.day-orders__count-total {
   color: var(--color-text-muted);
 }
 
-.count em {
+.day-orders__count-label {
   font-size: 0.9375rem;
   font-style: normal;
   color: var(--color-text-secondary);
@@ -74,18 +86,24 @@
 
 /* ---------- Tally ---------- */
 
+/* Base flows on the challenge card's ground, ruled in their colour. */
+.day-orders__panel {
+  background: tint(text-primary, 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
+}
+
 /* Guardian damage, the day's headline. */
-.hit {
+.day-orders__damage {
+  --tone: var(--color-boss-hp-edge);
+
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
 }
 
 /* The mission readings' hex mark, one size up. */
-.hit-mark {
+.day-orders__damage-mark {
   display: grid;
   flex: none;
   place-items: center;
@@ -94,7 +112,7 @@
   background: color-mix(in srgb, var(--tone) 55%, transparent);
 }
 
-.hit-mark > span {
+.day-orders__damage-mark-face {
   display: grid;
   place-items: center;
   width: calc(100% - 3px);
@@ -103,14 +121,14 @@
   color: var(--tone);
 }
 
-.hit-key {
+.day-orders__damage-key {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
 }
 
-.hit-name {
+.day-orders__damage-name {
   align-self: flex-start;
   font-family: var(--font-display);
   font-size: 1.125rem;
@@ -120,20 +138,24 @@
   text-transform: uppercase;
 }
 
-.hit-caption {
+.day-orders__damage-caption {
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
 }
 
-.hit-val {
+.day-orders__damage-value,
+.day-orders__crew-value {
   display: inline-flex;
   align-items: baseline;
   gap: 0.4rem;
-  margin-left: auto;
   white-space: nowrap;
 }
 
-.hit-fig {
+.day-orders__damage-value {
+  margin-left: auto;
+}
+
+.day-orders__damage-figure {
   font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 600;
@@ -141,30 +163,50 @@
   color: var(--color-accent-red);
 }
 
-.hit-val small,
-.tile-val small,
-.crew-val small {
+.day-orders__unit {
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
 
-/* Base flows on the challenge card's ground, ruled in the resource's colour. */
-.loot {
+.day-orders__loot {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.tile {
+.day-orders__tile {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.85rem 1rem 0.9rem 1.1rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.tile-key {
+.day-orders__tile--components {
+  --tone: var(--color-accent-cyan);
+}
+
+.day-orders__tile--food {
+  --tone: var(--color-accent-green);
+}
+
+.day-orders__tile--growth {
+  --tone: var(--color-brand-400);
+}
+
+.day-orders__tile--decline {
+  --tone: var(--color-boss-hp-edge);
+}
+
+/* A cost reads as a loss: grey rule and figure. */
+.day-orders__tile--cost {
+  --tone: var(--color-text-muted);
+
+  .day-orders__figure {
+    color: var(--color-text-secondary);
+  }
+}
+
+.day-orders__key {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -172,19 +214,19 @@
   color: var(--color-text-secondary);
 }
 
-.tile-key > svg {
+.day-orders__key-icon {
   flex: none;
   color: var(--tone);
 }
 
-.tile-val {
+.day-orders__tile-value {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.65rem;
 }
 
-.tile-fig {
+.day-orders__figure {
   font-family: var(--font-display);
   font-size: 2.125rem;
   font-weight: 600;
@@ -192,8 +234,14 @@
   color: var(--tone);
 }
 
+.day-orders__figure--crew {
+  font-size: 1.5rem;
+}
+
 /* Capacity bought by the figure, tinted in its resource. */
-.gain {
+.day-orders__gain {
+  --notch: 0.3rem;
+
   align-self: center;
   padding: 0.3rem 0.65rem 0.3rem 0.55rem;
   font-family: var(--font-display);
@@ -204,63 +252,46 @@
   white-space: nowrap;
   color: var(--tone);
   background: color-mix(in srgb, var(--tone) 14%, transparent);
-  --notch: 0.3rem;
-}
-
-/* A cost reads as a loss: grey rule and figure. */
-.tile--cost .tile-fig {
-  color: var(--color-text-secondary);
 }
 
 /* One face per operator who played today. */
-.crew {
+.day-orders__crew {
+  --tone: var(--color-accent-purple);
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem 1rem;
   padding: 0.8rem 1.1rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
 }
 
-.faces {
+.day-orders__faces {
   display: flex;
   gap: 6px;
   margin-left: auto;
 }
 
-.face {
+.day-orders__face {
   display: block;
   width: 2.25rem;
   height: 2.25rem;
 }
 
-.crew-val {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  white-space: nowrap;
-}
-
-.crew-val .tile-fig {
-  font-size: 1.5rem;
-}
-
 /* Phone: one tile per row; faces give way to the count, hover names being unreachable. */
-@media (width < 40rem) {
-  .loot {
+@include below(sm) {
+  .day-orders__loot {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .hit-fig {
+  .day-orders__damage-figure {
     font-size: 2rem;
   }
 
-  .faces {
+  .day-orders__faces {
     display: none;
   }
 
-  .crew-val {
+  .day-orders__crew-value {
     margin-left: auto;
   }
 }

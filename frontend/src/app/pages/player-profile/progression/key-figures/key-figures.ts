@@ -1,53 +1,32 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, input } from '@angular/core';
-import {
-  LucideArrowDownToLine,
-  LucideArrowUpToLine,
-  LucideChevronsDownUp,
-  LucideChevronsUpDown,
-  LucideGitCommitHorizontal,
-  LucideMinus,
-  LucideTrendingDown,
-  LucideTrendingUp,
-  LucideDynamicIcon,
-} from '@lucide/angular';
+import { LucideDynamicIcon } from '@lucide/angular';
 
-import { KEY_FIGURE_TONE_CLASSES } from './key-figures.constants';
+import { KEY_FIGURE_ICONS, KEY_FIGURE_TONE_MODIFIERS } from './key-figures.constants';
 import { KeyFigure } from './key-figures.model';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Key figures closing a progression chart, so its answer reads without hovering.
  */
 @Component({
   selector: 'app-key-figures',
-  imports: [
-    LucideDynamicIcon,
-    NgOptimizedImage,
-    LucideArrowDownToLine,
-    LucideArrowUpToLine,
-    LucideChevronsDownUp,
-    LucideChevronsUpDown,
-    LucideGitCommitHorizontal,
-    LucideMinus,
-    LucideTrendingDown,
-    LucideTrendingUp,
-  ],
+  imports: [LucideDynamicIcon, NgOptimizedImage],
   templateUrl: './key-figures.html',
+  styleUrl: './key-figures.scss',
 })
 export class KeyFigures {
-  /**
-   * Concept icons, for the template's `svg[lucideIcon]`.
-   */
-  protected readonly concepts = CONCEPT_ICONS;
-
   /**
    * Figures to show, in reading order.
    */
   public readonly figures = input.required<readonly KeyFigure[]>();
 
   /**
-   * Tile classes per tone.
+   * Lucide icon of each pictogram.
    */
-  protected readonly toneClasses = KEY_FIGURE_TONE_CLASSES;
+  protected readonly icons = KEY_FIGURE_ICONS;
+
+  /**
+   * Icon tile modifier per tone.
+   */
+  protected readonly toneModifiers = KEY_FIGURE_TONE_MODIFIERS;
 }

@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LucideUserCheck, LucideDynamicIcon } from '@lucide/angular';
 
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
@@ -9,8 +9,9 @@ import { Countdown } from '@shared/countdown/countdown';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DeckCard } from '@shared/deck-card/deck-card';
-import { DayTally } from './day-orders.model';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { DayTally, TallyTile } from './day-orders.model';
+import { buildTallyTiles } from './day-orders.utils';
 
 /**
  * Orders of the day: the daily challenge card beside the day's haul.
@@ -52,18 +53,25 @@ export class DayOrders {
   private readonly translation = inject(Translation);
 
   /**
+   * Day's base flows, empty outside a week in progress.
+   */
+  protected readonly tiles = computed<readonly TallyTile[]>(() => {
+    const tally = this.tally();
+    if (!tally) {
+      return [];
+    }
+    return buildTallyTiles(
+      tally,
+      (key, params) => this.translation.translate(key, params),
+      (amount) => this.format(amount),
+    );
+  });
+
+  /**
    * Formats an amount in the active language for the tally tiles.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
-  }
-
-  /**
-   * Formats a gain or loss with its sign, a true minus for losses.
-   */
-  protected signed(amount: number): string {
-    const sign = amount > 0 ? '+' : amount < 0 ? '−' : '';
-    return `${sign}${this.format(Math.abs(amount))}`;
+    return formatFigure(amount, this.translation.language());
   }
 
   /**

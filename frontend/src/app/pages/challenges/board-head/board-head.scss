@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 /* Hexagon, title and gain on one row; the rule below, aligned on the name. */
 :host {
   display: grid;
@@ -7,49 +9,49 @@
   min-width: 0;
 }
 
-.hex-mark {
+.board-head__hex {
   width: 2.6rem;
   height: 2.95rem;
 }
 
-.hex-mark > span {
+.board-head__hex-core {
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.glyph {
+.board-head__glyph {
   width: 1.1rem;
   height: 1.1rem;
 }
 
-.title {
+.board-head__title {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   min-width: 0;
 }
 
-.key-line {
+.board-head__kind-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.75rem;
 }
 
-.key {
+.board-head__kind {
   color: var(--tone);
 }
 
-.closed {
+.board-head__closed {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1;
   color: var(--color-text-muted);
 }
 
-.name {
+.board-head__name {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 600;
@@ -58,7 +60,7 @@
   text-transform: uppercase;
 }
 
-.pay {
+.board-head__gain {
   display: inline-flex;
   align-self: start;
   align-items: center;
@@ -67,14 +69,14 @@
   cursor: help;
 }
 
-.pay b {
+.board-head__gain-value {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.rule {
+.board-head__rule {
   grid-column: 2 / -1;
   max-width: 23.5rem;
   margin-top: 0.6rem;
@@ -84,13 +86,13 @@
   text-wrap: pretty;
 }
 
-/* The rule's numbers, in the row's tone. */
-.rule b {
-  font-weight: 600;
-  color: var(--tone);
+/* Weekly rows keep room for two lines of rule so they read alike. */
+:host(.board-head--weekly) .board-head__rule {
+  min-height: 3em;
 }
 
-/* Weekly rows keep room for two lines of rule so they read alike. */
-:host(.head--even) .rule {
-  min-height: 3em;
+/* The rule's numbers, in the row's tone. */
+.board-head__rule-number {
+  font-weight: 600;
+  color: var(--tone);
 }

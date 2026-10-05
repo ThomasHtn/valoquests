@@ -1,4 +1,3 @@
-import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
@@ -11,9 +10,7 @@ import {
 
 import { TourSampleDaily, TourSampleMatch } from './tour.model';
 
-/**
- * Sample campaign computed from the rules: week 4, Amateur, 4 operators on a five-day streak.
- */
+// Sample campaign computed from the rules: week 4, Amateur, 4 operators on a five-day streak.
 
 /**
  * The sample squad, in roster order.
@@ -219,7 +216,7 @@ export const TOUR_SAMPLE_PODIUM: readonly BoardRow[] = [
     total: 3_644,
     damage: 3_600,
     challengePoints: 44,
-    title: { key: 'MECHANIC', measure: null, ...resolveTitleVisual('MECHANIC') },
+    title: { key: 'MECHANIC', measure: null },
     challengesCompleted: 6,
     challengesMax: 12,
     matchCount: 11,
@@ -235,7 +232,7 @@ export const TOUR_SAMPLE_PODIUM: readonly BoardRow[] = [
     total: 2_551,
     damage: 2_520,
     challengePoints: 31,
-    title: { key: 'REGULAR', measure: null, ...resolveTitleVisual('REGULAR') },
+    title: { key: 'REGULAR', measure: null },
     challengesCompleted: 4,
     challengesMax: 12,
     matchCount: 9,

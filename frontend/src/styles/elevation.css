@@ -1,6 +1,6 @@
 /* Surfaces and motion. No `box-shadow` here; fills are translucent, so never nest panels. */
 
-@theme {
+@theme static {
   /* Durations: `fast` for hover tints, `base` for state changes, `data` for moving values. */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);

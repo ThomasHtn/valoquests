@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
 import { base, campaign, player, translate, week } from '../overview.fixtures';
-import { buildDailyRow, buildTally } from './day-orders.utils';
+import { DayTally } from './day-orders.model';
+import { buildDailyRow, buildTally, buildTallyTiles } from './day-orders.utils';
 
 describe('buildDailyRow', () => {
   const challenges: CurrentChallenges = {
@@ -143,5 +144,36 @@ describe('buildTally', () => {
     const tally = buildTally(today, week(), campaign({ base: base({ populationChange: -4 }) }));
 
     expect(tally?.populationChange).toBe(-4);
+  });
+});
+
+describe('buildTallyTiles', () => {
+  const tally: DayTally = {
+    weekIndex: 1,
+    damage: 0,
+    components: 300,
+    carryGained: 20,
+    food: 0,
+    shelterGained: 0,
+    upkeep: 63,
+    population: 900,
+    populationChange: -12,
+    presence: 0,
+    roster: 0,
+    pips: [],
+  };
+  const tiles = buildTallyTiles(tally, translate, String);
+
+  it('signs each flow, the upkeep as a loss', () => {
+    expect(tiles.map((tile) => tile.figure)).toEqual(['+300', '0', '−12', '−63']);
+  });
+
+  it('turns the population tile red when the base shrinks', () => {
+    expect(tiles.map((tile) => tile.tone)).toEqual(['components', 'food', 'decline', 'cost']);
+  });
+
+  it('chips the capacity bought by a resource, notes the others', () => {
+    expect(tiles[0]).toMatchObject({ gain: 'overview.orders.carryGain(20)', note: null });
+    expect(tiles[2]).toMatchObject({ gain: null, note: 'overview.orders.tonight(900)' });
   });
 });

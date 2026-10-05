@@ -4,9 +4,9 @@ import { RouterOutlet } from '@angular/router';
 import { LiveRefresh } from '@core/http/live-refresh/live-refresh';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { NavigationHistory } from '@core/navigation/navigation-history';
+import { PageScroll } from '@core/scroll/page-scroll';
 import { Breakpoint } from '@core/viewport/breakpoint';
 import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
-import { PageScroll } from '@core/scroll/page-scroll';
 import { RouteProgress } from '@layout/route-progress/route-progress';
 import { ScrollTop } from '@layout/scroll-top/scroll-top';
 import { Sidebar } from '@layout/sidebar/sidebar';
@@ -18,6 +18,7 @@ import { Sidebar } from '@layout/sidebar/sidebar';
   selector: 'app-shell',
   imports: [RouterOutlet, RouteProgress, ScrollTop, Sidebar, TranslatePipe],
   templateUrl: './shell.html',
+  styleUrl: './shell.scss',
   // `contents` keeps the host out of the full-height flex layout.
   host: { class: 'contents' },
 })
@@ -33,7 +34,7 @@ export class Shell {
   protected readonly navigationPanel = inject(NavigationPanel);
 
   /**
-   * Viewport breakpoints, to pick the layout in the template.
+   * Viewport breakpoints: the drawer only exists below `lg`.
    */
   protected readonly breakpoint = inject(Breakpoint);
 

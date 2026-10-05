@@ -1,6 +1,6 @@
 import { DOCUMENT, inject, Service, signal } from '@angular/core';
 
-import { SnackbarService } from '@core/snackbar/snackbar';
+import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { Translation } from '@core/i18n/translation';
 
 /**
@@ -16,7 +16,7 @@ export class Connectivity {
   /**
    * Snackbar queue, to announce each connectivity change once.
    */
-  private readonly snackbar = inject(SnackbarService);
+  private readonly snackbar = inject(SnackbarQueue);
 
   /**
    * Translation service, to word the connectivity announcements.

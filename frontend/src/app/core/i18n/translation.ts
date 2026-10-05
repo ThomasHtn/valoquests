@@ -2,7 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { effect, inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { DEFAULT_LANGUAGE, STORAGE_KEY, SUPPORTED_LANGUAGES } from './translation.constants';
+import {
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+  SUPPORTED_LANGUAGES,
+} from './translation.constants';
 import { Language, TranslationDictionary } from './translation.model';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
@@ -31,6 +35,11 @@ export class Translation {
    */
   private readonly dictionary = signal<TranslationDictionary>({});
 
+  /**
+   * Language of the latest switch request, ahead of {@link language} while its dictionary loads.
+   */
+  private requestedLanguage = this.language();
+
   constructor() {
     // `<html lang>` follows the language, for assistive technologies.
     effect(() => {
@@ -41,21 +50,35 @@ export class Translation {
   /**
    * Loads the initial dictionary; awaited by an app initializer so no raw key flashes.
    */
-  public initialize(): Promise<void> {
-    return this.load(this.language());
+  public async initialize(): Promise<void> {
+    const dictionary = await this.load(this.language());
+    if (dictionary) {
+      this.dictionary.set(dictionary);
+    }
   }
 
   /**
-   * Switches the language, persists it and loads its dictionary.
+   * Loads the language's dictionary, then switches to it and persists it; a failure keeps the old one.
    */
   public async setLanguage(language: Language): Promise<void> {
-    if (language === this.language()) {
+    if (language === this.requestedLanguage) {
+      return;
+    }
+    this.requestedLanguage = language;
+
+    const dictionary = await this.load(language);
+    // A quicker toggle may have superseded this request.
+    if (language !== this.requestedLanguage) {
+      return;
+    }
+    if (!dictionary) {
+      this.requestedLanguage = this.language();
       return;
     }
 
-    writeStorage(STORAGE_KEY, language);
+    this.dictionary.set(dictionary);
     this.language.set(language);
-    await this.load(language);
+    writeStorage(LANGUAGE_STORAGE_KEY, language);
   }
 
   /**
@@ -88,33 +111,6 @@ export class Translation {
   }
 
   /**
-   * Every string under `key`, lower-cased into one searchable blob (`''` for an unknown key).
-   */
-  public searchText(key: string): string {
-    const entry: unknown = key
-      .split('.')
-      .reduce<unknown>(
-        (node, segment) =>
-          typeof node === 'object' && node !== null
-            ? (node as TranslationDictionary)[segment]
-            : undefined,
-        this.dictionary(),
-      );
-
-    const collect = (node: unknown): readonly string[] => {
-      if (typeof node === 'string') {
-        return [node];
-      }
-
-      return typeof node === 'object' && node !== null
-        ? Object.values(node as TranslationDictionary).flatMap(collect)
-        : [];
-    };
-
-    return collect(entry).join(' ').toLowerCase();
-  }
-
-  /**
    * String to render, `null` if none; French treats 0 as singular, English does not.
    */
   private resolvePluralBranch(entry: unknown, count: string | number | undefined): string | null {
@@ -135,21 +131,18 @@ export class Translation {
 
   /**
    * Fetches a dictionary against `document.baseURI`, so nested URLs and sub-path deployments work.
-   * Errors are swallowed: a rethrow would block bootstrap instead of degrading to raw keys.
+   * Errors resolve to `null`: a rethrow would block bootstrap instead of degrading to raw keys.
    */
-  private async load(language: Language): Promise<void> {
+  private async load(language: Language): Promise<TranslationDictionary | null> {
     try {
-      const dictionary = await firstValueFrom(
+      return await firstValueFrom(
         this.http.get<TranslationDictionary>(
           new URL(`i18n/${language}.json`, document.baseURI).href,
         ),
       );
-      // A quicker toggle back may have superseded this request.
-      if (language === this.language()) {
-        this.dictionary.set(dictionary);
-      }
     } catch (error) {
       console.error(`Failed to load the "${language}" translation dictionary.`, error);
+      return null;
     }
   }
 
@@ -157,7 +150,7 @@ export class Translation {
    * Startup language: stored choice, else browser language, else {@link DEFAULT_LANGUAGE}.
    */
   private detectInitialLanguage(): Language {
-    const stored = readStorage(STORAGE_KEY);
+    const stored = readStorage(LANGUAGE_STORAGE_KEY);
     if (this.isSupportedLanguage(stored)) {
       return stored;
     }

@@ -1,46 +1,39 @@
-.history {
+@use 'tools' as *;
+
+/* Chart over table, side by side once both fit; widths off Tailwind's scale on purpose. */
+.campaign-history {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 2rem;
-}
 
-@media (min-width: 68rem) {
-  .history {
+  @media (width >= 68rem) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 2.5rem;
     align-items: start;
   }
-}
 
-@media (min-width: 84rem) {
-  .history {
+  @media (width >= 84rem) {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   }
 }
 
-.chart {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-/* Sunk like the data cells. */
-.chart-box {
+/* Sunk like the data cells; darker than any surface token. */
+.campaign-history__chart {
   display: flex;
   flex-direction: column;
   height: clamp(17rem, 25vw, 23rem);
   padding: 0.9rem 0.75rem 0.5rem 0.25rem;
-  background: rgb(4 10 15 / 45%);
+  background: tint(night-well, 45%);
 }
 
-.chart-box app-line-chart {
+.campaign-history__line-chart {
   display: block;
   flex: 1 1 auto;
   min-height: 0;
   padding-top: 0.75rem;
 }
 
-.chart-empty {
+.campaign-history__empty {
   margin: auto;
   padding: 1rem;
   text-align: center;
@@ -48,7 +41,7 @@
 }
 
 /* In the chart's hollow so its top lines up with the table. */
-.legend {
+.campaign-history__legend {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.5rem;
@@ -58,42 +51,48 @@
   color: var(--color-text-secondary);
 }
 
-.legend-item {
+.campaign-history__legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.legend-item i {
+.campaign-history__legend-line {
   width: 1rem;
   height: 2px;
-  background: var(--k);
+  background: var(--curve-color);
 }
 
-.legend-item b {
+.campaign-history__legend-figure {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.past-table {
+/* ---------- Ranking table ---------- */
+
+.campaign-history__table {
   width: 100%;
   min-width: 30rem;
   border-collapse: collapse;
 }
 
-.past-table th,
-.past-table td {
+.campaign-history__head,
+.campaign-history__cell,
+.campaign-history__campaign {
   padding: 0.8rem 0.6rem;
   text-align: right;
   white-space: nowrap;
-  border-top: 1px solid var(--color-edge);
   vertical-align: middle;
 }
 
-.past-table thead th {
-  border-top: 0;
+.campaign-history__cell,
+.campaign-history__campaign {
+  border-top: 1px solid var(--color-edge);
+}
+
+.campaign-history__head {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 500;
@@ -102,20 +101,32 @@
   color: var(--color-text-muted);
 }
 
-.ico {
-  width: 0.8125rem;
-  height: 0.8125rem;
-  display: inline;
-  vertical-align: -0.2em;
-}
-
-.past-table th[scope='row'],
-.past-table thead th:nth-child(-n + 3),
-.past-table td:nth-child(3) {
+.campaign-history__head--left,
+.campaign-history__cell--left,
+.campaign-history__campaign {
   text-align: left;
 }
 
-.past-table th[scope='row'] b {
+.campaign-history__column-icon {
+  display: inline;
+  width: 0.8125rem;
+  height: 0.8125rem;
+  vertical-align: -0.2em;
+}
+
+.campaign-history__column-icon--base {
+  color: var(--color-accent-gold);
+}
+
+.campaign-history__column-icon--guardian {
+  color: var(--color-boss-hp-edge);
+}
+
+.campaign-history__column-icon--wounded {
+  color: var(--color-brand-400);
+}
+
+.campaign-history__campaign-name {
   display: block;
   font-family: var(--font-display);
   font-size: 1.125rem;
@@ -123,38 +134,37 @@
   line-height: 1.15;
 }
 
-.past-table th[scope='row'] span {
+.campaign-history__campaign-season {
   font-size: 0.875rem;
   font-weight: 400;
   color: var(--color-text-muted);
 }
 
-.past-table td {
+.campaign-history__cell {
   font-family: var(--font-display);
   font-size: 1.1875rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.past-table td small {
+.campaign-history__cell-unit {
   font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text-muted);
 }
 
-.past-rank {
+.campaign-history__rank {
   width: 2rem;
   color: var(--color-text-muted);
-  text-align: center;
 }
 
-.past-table tr:first-child .past-rank {
+.campaign-history__row:first-child .campaign-history__rank {
   color: var(--color-brand-400);
 }
 
 /* Same tier badge as the page header. */
-.tier {
+.campaign-history__tier {
   display: inline-flex;
   padding: 0.3rem 0.5rem;
   font-family: var(--font-mono);
@@ -164,22 +174,22 @@
   text-transform: uppercase;
 }
 
-.tier--AMATEUR {
-  background: rgb(217 149 74 / 16%);
+.campaign-history__tier--amateur {
+  background: tint(brand-500, 16%);
   color: var(--color-brand-400);
 }
 
-.tier--PRO {
-  background: rgb(224 64 78 / 18%);
+.campaign-history__tier--pro {
+  background: tint(boss-hp-edge, 18%);
   color: var(--color-boss-hp-edge);
 }
 
 /* The running campaign stays warm. */
-.past-row--now {
-  background: rgb(217 149 74 / 9%);
+.campaign-history__row--current {
+  background: tint(brand-500, 9%);
   box-shadow: inset 3px 0 0 var(--color-accent-gold);
 }
 
-.past-row--now td.tabular-nums {
+.campaign-history__row--current .campaign-history__cell--figure {
   color: var(--color-brand-400);
 }

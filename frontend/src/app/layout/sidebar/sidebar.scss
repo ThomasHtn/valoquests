@@ -1,0 +1,487 @@
+@use 'tools' as *;
+
+/* Drawer below `lg`, column from `lg` up; `.sidebar[data-open]` is the open drawer. */
+.sidebar {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  justify-content: space-between;
+  width: 18rem;
+  max-width: 85vw;
+  overflow-y: auto;
+  padding-top: 1.5rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  border-right: 1px solid tint(brand-500, 35%);
+  background-color: var(--color-surface-sunken);
+  visibility: hidden;
+  translate: -100%;
+  /* `visibility` flips only after the slide on close, and at once on open to take focus. */
+  transition:
+    translate 240ms var(--ease-in-quick),
+    visibility 0s 240ms;
+
+  @include from(lg) {
+    position: static;
+    width: 16rem;
+    max-width: none;
+    height: 100%;
+    overflow-y: visible;
+    padding-block: 1.5rem;
+    visibility: visible;
+    translate: 0;
+    transition: width 200ms var(--ease-out-quart);
+  }
+}
+
+.sidebar[data-open] {
+  @include below(lg) {
+    visibility: visible;
+    translate: 0;
+    transition:
+      translate 420ms var(--ease-out-expo),
+      visibility 0s;
+  }
+}
+
+/* Clicking empty rail space expands it. */
+.sidebar--collapsed {
+  @include from(lg) {
+    width: 5rem;
+    cursor: ew-resize;
+  }
+}
+
+/* Last, and as specific as the open state, so it beats both. */
+.sidebar,
+.sidebar[data-open] {
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.sidebar__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background-color: tint(surface-950, 70%);
+  visibility: hidden;
+  opacity: 0;
+  /* Tailwind's `ease-out` curve, whose variable only exists while a template uses it. */
+  transition:
+    opacity 300ms cubic-bezier(0, 0, 0.2, 1),
+    visibility 300ms cubic-bezier(0, 0, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  @include from(lg) {
+    display: none;
+  }
+}
+
+.sidebar__scrim--open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.sidebar__expand-button {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  background-color: tint(brand-500, 12%);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    background-color: tint(brand-500, 25%);
+  }
+}
+
+.sidebar__expand-letter {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: calc(2 / 1.5);
+  color: var(--color-brand-500);
+  transition: opacity var(--duration-fast) var(--ease-out-quart);
+}
+
+.sidebar__expand-icon {
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-text-primary);
+  opacity: 0;
+  rotate: 180deg;
+  transition: opacity var(--duration-fast) var(--ease-out-quart);
+}
+
+/* Hovering anywhere on the collapsed rail swaps the "V" for the expand icon. */
+.sidebar {
+  @include hover {
+    .sidebar__expand-letter {
+      opacity: 0;
+    }
+
+    .sidebar__expand-icon {
+      opacity: 1;
+    }
+  }
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sidebar__wordmark {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 0.88;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+.sidebar__wordmark-line {
+  display: block;
+}
+
+.sidebar__wordmark-line--brand {
+  color: var(--color-brand-500);
+}
+
+.sidebar__collapse-button,
+.sidebar__close-button {
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-top: -0.25rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out-quart),
+    background-color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.sidebar__collapse-button {
+  display: none;
+  width: 2.25rem;
+  height: 2.25rem;
+
+  @include from(lg) {
+    display: flex;
+  }
+}
+
+/* 44px touch target, pulled into the gutter to align its glyph with the edge. */
+.sidebar__close-button {
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.625rem;
+
+  @include hover {
+    background-color: var(--color-surface-800);
+  }
+
+  @include from(lg) {
+    display: none;
+  }
+}
+
+/* Hairline standing in for the chapter caption on the collapsed rail. */
+.sidebar__group-rule {
+  display: none;
+  height: 1px;
+  margin: 0 1.5rem 1rem;
+  background-color: tint(brand-500, 25%);
+}
+
+.sidebar__group-label {
+  margin-bottom: 0.375rem;
+  padding-inline: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+.sidebar__nav-item,
+.sidebar__footer-action {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 2.75rem;
+  padding-inline: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out-quart),
+    background-color var(--duration-fast) var(--ease-out-quart);
+}
+
+/* The active bar is a `::before`, painted only on the current entry. */
+.sidebar__nav-item {
+  position: relative;
+  width: 100%;
+  padding-block: 0.75rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 0.25rem;
+  }
+}
+
+/* Keyed off `aria-current`, the single source of truth. */
+.sidebar__nav-item[aria-current='page'] {
+  background-color: tint(brand-500, 12%);
+  color: var(--color-brand-500);
+
+  &::before {
+    background-color: var(--color-brand-500);
+  }
+}
+
+.sidebar__nav-item--inert {
+  cursor: default;
+}
+
+/* Bleeds into the footer's padding so the hover tint spans the rail. */
+.sidebar__footer-action {
+  margin-inline: -1.5rem;
+  padding-block: 0.5rem;
+}
+
+/* After the active state: hovering the current entry still tints it. */
+.sidebar__nav-item,
+.sidebar__footer-action {
+  @include hover {
+    background-color: tint(brand-500, 8%);
+    color: var(--color-text-primary);
+  }
+}
+
+/* Danger tones: signing out discards the backoffice session. */
+.sidebar__footer-action--danger {
+  @include hover {
+    background-color: tint(danger, 10%);
+    color: var(--color-danger);
+  }
+}
+
+.sidebar__nav-icon {
+  display: block;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sidebar__nav-label {
+  font-family: var(--font-display);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.sidebar__nav-item[aria-current='page'] .sidebar__nav-icon,
+.sidebar__nav-item[aria-current='page'] .sidebar__nav-label {
+  color: var(--color-brand-500);
+}
+
+/* Divider fading at both ends. */
+.sidebar__divider {
+  display: block;
+  height: 1px;
+  background-image: linear-gradient(
+    to right in oklab,
+    transparent 0%,
+    tint(brand-500, 50%) 50%,
+    transparent 100%
+  );
+}
+
+.sidebar__status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sidebar__sync {
+  min-width: 0;
+}
+
+.sidebar__sync-label {
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  cursor: help;
+}
+
+.sidebar__sync-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}
+
+.sidebar__sync-time {
+  @include truncate;
+
+  cursor: help;
+}
+
+.sidebar__status-dot {
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+}
+
+.sidebar__status-dot--fresh {
+  background-color: var(--color-success);
+}
+
+.sidebar__status-dot--stale {
+  background-color: var(--color-brand-500);
+}
+
+.sidebar__status-dot--offline {
+  background-color: var(--color-danger);
+}
+
+.sidebar__language-button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding-inline: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out-quart),
+    background-color var(--duration-fast) var(--ease-out-quart);
+}
+
+.sidebar__language-button[aria-expanded='true'] {
+  background-color: tint(brand-500, 8%);
+  color: var(--color-brand-500);
+}
+
+/* After the open state: hover still lights the open trigger's text. */
+.sidebar__language-button {
+  @include hover {
+    color: var(--color-text-primary);
+  }
+}
+
+.sidebar__language-panel {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  z-index: 20;
+  width: 11rem;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar__language-option {
+  color: var(--color-text-secondary);
+
+  @include hover {
+    background-color: tint(brand-500, 8%);
+    color: var(--color-text-primary);
+  }
+}
+
+/* After hover: the selected row keeps its amber. */
+.sidebar__language-option[aria-selected='true'] {
+  background-color: tint(brand-500, 15%);
+  color: var(--color-brand-500);
+}
+
+.sidebar__language-option-code {
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  opacity: 0.7;
+}
+
+/* Collapsed rail, `lg` and up only: the drawer always shows the full layout. */
+.sidebar--collapsed {
+  @include from(lg) {
+    .sidebar__brand,
+    .sidebar__group-label,
+    .sidebar__nav-label,
+    .sidebar__sync,
+    .sidebar__language-code {
+      display: none;
+    }
+
+    .sidebar__group-rule {
+      display: block;
+    }
+
+    .sidebar__nav-item {
+      justify-content: center;
+    }
+
+    .sidebar__footer-action {
+      justify-content: center;
+      padding-inline: 0;
+    }
+
+    .sidebar__status-row {
+      flex-direction: column;
+    }
+
+    .sidebar__language-button {
+      justify-content: center;
+      width: 2.25rem;
+    }
+
+    /* Opens into the content rather than off the rail's left edge. */
+    .sidebar__language-panel {
+      right: auto;
+      left: 0;
+    }
+  }
+}

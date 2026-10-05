@@ -1,12 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import {
-  LucideChevronLeft,
-  LucideEye,
-  LucideEyeOff,
-  LucideLoaderCircle,
-  LucideLockKeyhole,
-} from '@lucide/angular';
+import { LucideChevronLeft, LucideEye, LucideEyeOff, LucideLockKeyhole } from '@lucide/angular';
 
 import { AdminApi } from '@core/admin/admin-api';
 import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
@@ -14,9 +8,11 @@ import { ADMIN_HOME_ROUTE } from '@core/admin/session/admin-session.constants';
 import { AdminSession } from '@core/admin/session/admin-session';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { SnackbarService } from '@core/snackbar/snackbar';
+import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { Button } from '@shared/button/button';
-import { TextField, TextFieldInput } from '@shared/text-field/text-field';
+import { TextField } from '@shared/text-field/text-field';
+import { TextFieldInput } from '@shared/text-field/text-field-input';
+import { Spinner } from '@shared/spinner/spinner';
 
 /**
  * Chrome-free backoffice sign-in, reached by URL only.
@@ -33,15 +29,12 @@ import { TextField, TextFieldInput } from '@shared/text-field/text-field';
     LucideChevronLeft,
     LucideEye,
     LucideEyeOff,
-    LucideLoaderCircle,
     LucideLockKeyhole,
+    Spinner,
   ],
   templateUrl: './admin-login.html',
-  // Not `PAGE_LAYOUT_CLASS`: one centred composition outside the shell.
-  host: {
-    class:
-      'ambient-field flex min-h-dvh flex-col items-center justify-center bg-surface-950 px-4 py-10',
-  },
+  styleUrl: './admin-login.scss',
+  host: { class: 'ambient-field' },
 })
 export class AdminLogin {
   /**
@@ -67,7 +60,7 @@ export class AdminLogin {
   /**
    * Snackbar, echoing a rejection outside the form.
    */
-  private readonly snackbar = inject(SnackbarService);
+  private readonly snackbar = inject(SnackbarQueue);
 
   /**
    * Typed key.
@@ -88,6 +81,11 @@ export class AdminLogin {
    * Whether the key is shown in plain text.
    */
   protected readonly showKey = signal(false);
+
+  /**
+   * Whether a non-blank key can be sent, never twice at once.
+   */
+  protected readonly canSubmit = computed(() => !this.verifying() && this.key().trim() !== '');
 
   /**
    * Records the typed key and clears the error.

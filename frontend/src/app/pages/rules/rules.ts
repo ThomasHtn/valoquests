@@ -18,13 +18,13 @@ import {
 
 import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { resolveLocale } from '@core/i18n/format/locale.utils';
-import { formatNumber } from '@core/i18n/format/number-format.utils';
+import { formatFigure, formatNumber } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { RuleSection } from './rule-section/rule-section';
 import { RuleText } from './rule-text/rule-text';
 import {
@@ -44,11 +44,11 @@ import {
   SUNDAY_EXAMPLE,
   SUNDAY_TERM_KEYS,
   DIFFICULTY_BANDS,
+  GUARDIAN_CATEGORY_MODIFIERS,
   RULE_CONSTANTS,
   RULE_TITLES,
   WEEK_STEP_KEYS,
 } from './rules.constants';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 
 /**
  * Rules page: `docs/GAMEPLAY.md` in eight sections, with the document's own figures.
@@ -105,16 +105,6 @@ export class Rules implements AfterViewInit {
   protected readonly anchor = RULE_ANCHOR;
 
   /**
-   * Reference the worked examples use.
-   */
-  protected readonly exampleReference = EXAMPLE_REFERENCE;
-
-  /**
-   * Active operators of the squad the campaign example is sized for.
-   */
-  protected readonly exampleOperators = EXAMPLE_OPERATORS;
-
-  /**
    * Game modes grouped by the share of a match going to food.
    */
   protected readonly modeGroups = MODE_GROUPS;
@@ -125,9 +115,14 @@ export class Rules implements AfterViewInit {
   protected readonly decayLadder = DECAY_LADDER;
 
   /**
-   * Bonus per day played in the week.
+   * Bonus per day played in the week, with the label of each step.
    */
-  protected readonly streakLadder = STREAK_LADDER;
+  protected readonly streakLadder = STREAK_LADDER.map((step) => ({
+    ...step,
+    labelKey: step.open
+      ? 'rules.sections.multipliers.streakDaysMore'
+      : 'rules.sections.multipliers.streakDays',
+  }));
 
   /**
    * What a day of the week does, in order.
@@ -180,6 +175,10 @@ export class Rules implements AfterViewInit {
   protected readonly challengeWorth = CHALLENGE_WORTH.map((worth) => ({
     ...worth,
     visual: resolveDifficultyVisual(worth.difficulty),
+    labelKey:
+      worth.difficulty === null
+        ? 'rules.sections.challenges.daily'
+        : `common.challengeDifficulty.${worth.difficulty}`,
   }));
 
   /**
@@ -197,13 +196,9 @@ export class Rules implements AfterViewInit {
   });
 
   /**
-   * The colour a guardian's category is drawn in, the campaign page's own.
+   * Heading modifier colouring each guardian category, the campaign page's own colours.
    */
-  protected readonly categoryClass: Readonly<Record<string, string>> = {
-    MINOR: 'text-accent-green',
-    STANDARD: 'text-brand-400',
-    ELITE: 'text-boss-hp-edge',
-  };
+  protected readonly categoryModifier = GUARDIAN_CATEGORY_MODIFIERS;
 
   /**
    * Locale of the active language, for the number formats.
@@ -218,10 +213,19 @@ export class Rules implements AfterViewInit {
   );
 
   /**
+   * Squad, reference and weekly total of the worked examples, in the reader's notation.
+   */
+  protected readonly exampleParams = computed(() => ({
+    operators: EXAMPLE_OPERATORS,
+    reference: this.amount(EXAMPLE_REFERENCE),
+    weekly: this.amount(EXAMPLE_REFERENCE * EXAMPLE_OPERATORS),
+  }));
+
+  /**
    * Groups an amount in the reader's notation.
    */
   protected amount(value: number): string {
-    return formatDamage(value, this.translation.language());
+    return formatFigure(value, this.translation.language());
   }
 
   /**

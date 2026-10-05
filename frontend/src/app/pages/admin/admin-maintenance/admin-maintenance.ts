@@ -13,7 +13,7 @@ import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { PageHeader } from '@layout/page-header/page-header';
 import { SectionLabel } from '@shared/section-label/section-label';
-import { CLEARED_DATA_KEYS, KEPT_DATA_KEYS } from './admin-maintenance.constants';
+import { RESET_DATA_GROUPS } from './admin-maintenance.constants';
 
 /**
  * Campaign reset, alone on its page behind a typed confirmation so it is never hit by habit.
@@ -22,6 +22,7 @@ import { CLEARED_DATA_KEYS, KEPT_DATA_KEYS } from './admin-maintenance.constants
   selector: 'app-admin-maintenance',
   imports: [TranslatePipe, Button, ConfirmDialog, InlineMessage, PageHeader, SectionLabel],
   templateUrl: './admin-maintenance.html',
+  styleUrl: './admin-maintenance.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminMaintenance {
@@ -41,14 +42,9 @@ export class AdminMaintenance {
   private readonly commandRunner = inject(AdminCommandRunner);
 
   /**
-   * Translation keys of the cleared data.
+   * Records the reset clears, then those it keeps.
    */
-  protected readonly clearedDataKeys = CLEARED_DATA_KEYS;
-
-  /**
-   * Translation keys of the kept data.
-   */
-  protected readonly keptDataKeys = KEPT_DATA_KEYS;
+  protected readonly dataGroups = RESET_DATA_GROUPS;
 
   /**
    * State of the reset command.

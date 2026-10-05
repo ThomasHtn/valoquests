@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { LucideCheck } from '@lucide/angular';
 
 import { InView } from '@shared/in-view/in-view';
@@ -27,4 +27,12 @@ export class ProgressMark {
    * Burst pieces drawn when the mark turns into a check.
    */
   protected readonly confetti = CONFETTI;
+
+  /**
+   * Whether the figure needs the tighter type to fit the ring: a unit or more than two characters.
+   */
+  protected readonly hasLongFigure = computed(() => {
+    const mark = this.mark();
+    return mark.unit !== '' || mark.figure.length > 2;
+  });
 }

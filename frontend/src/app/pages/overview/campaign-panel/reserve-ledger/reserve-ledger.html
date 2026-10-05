@@ -1,52 +1,64 @@
-<details class="fold">
-  <summary class="fold-sum focus-ring">
-    <p class="chart-head">
-      <b>
+<details class="campaign-fold reserve-ledger">
+  <summary class="campaign-fold__summary focus-ring">
+    <!-- Paragraph wrapper: the title wraps as inline text on a phone. -->
+    <p>
+      <b class="campaign-fold__title">
         <svg aria-hidden="true" class="size-4" lucideTrendingUp></svg>
         {{ 'campaign.ledger.title' | translate }}
       </b>
     </p>
-    <span class="fold-cue label-caption text-2xs">
-      <span class="fold-show">{{ 'campaign.ledger.show' | translate }}</span>
-      <span class="fold-hide">{{ 'campaign.ledger.hide' | translate }}</span>
-      <svg aria-hidden="true" class="fold-chev size-4" lucideChevronDown></svg>
+    <span class="campaign-fold__cue label-caption text-2xs">
+      <span class="reserve-ledger__cue-show">{{ 'campaign.ledger.show' | translate }}</span>
+      <span class="reserve-ledger__cue-hide">{{ 'campaign.ledger.hide' | translate }}</span>
+      <svg aria-hidden="true" class="campaign-fold__chevron size-4" lucideChevronDown></svg>
     </span>
   </summary>
 
-  <div class="fold-body">
-    <ul [attr.aria-label]="'campaign.ledger.legend' | translate" class="ledger-key">
-      <li><i class="k-got"></i>{{ 'campaign.ledger.keyGot' | translate }}</li>
-      <li><i class="k-spent"></i>{{ 'campaign.ledger.keySpent' | translate }}</li>
-      <li><i class="k-carry"></i>{{ 'campaign.ledger.keyCarry' | translate }}</li>
+  <div class="campaign-fold__body">
+    <ul [attr.aria-label]="'campaign.ledger.legend' | translate" class="reserve-ledger__legend">
+      <li class="reserve-ledger__legend-item">
+        <i class="reserve-ledger__swatch"></i>{{ 'campaign.ledger.keyGot' | translate }}
+      </li>
+      <li class="reserve-ledger__legend-item">
+        <i class="reserve-ledger__swatch reserve-ledger__swatch--spent"></i
+        >{{ 'campaign.ledger.keySpent' | translate }}
+      </li>
+      <li class="reserve-ledger__legend-item">
+        <i class="reserve-ledger__swatch reserve-ledger__swatch--carried"></i
+        >{{ 'campaign.ledger.keyCarry' | translate }}
+      </li>
     </ul>
-    <div class="ledger-scroll scroll-subtle">
-      <div [attr.aria-label]="'campaign.ledger.aria' | translate" class="ledger" role="group">
-        <div aria-hidden="true" class="lg-col"></div>
+    <div class="reserve-ledger__scroll scroll-subtle">
+      <div
+        [attr.aria-label]="'campaign.ledger.aria' | translate"
+        class="reserve-ledger__grid"
+        role="group"
+      >
+        <div aria-hidden="true" class="reserve-ledger__week"></div>
         @for (column of columns(); track column.index) {
-          <div [class]="'lg-col lg-col--' + column.state">
-            <b>{{ column.index }}</b>
-            <span>{{ column.name }}</span>
+          <div [class]="'reserve-ledger__week reserve-ledger__week--' + column.state">
+            <b class="reserve-ledger__week-index">{{ column.index }}</b>
+            <span class="reserve-ledger__week-name">{{ column.name }}</span>
           </div>
         }
 
         @for (row of rows(); track row.key) {
-          <div [class]="'lg-lead lg-lead--' + row.key">
-            <span aria-hidden="true" class="hex-mark clip-hex"
-              ><span class="clip-hex">
-                @if (row.key === 'food') {
-                  <svg class="size-4" [lucideIcon]="concepts.food"></svg>
-                } @else {
-                  <svg class="size-4" [lucideIcon]="concepts.components"></svg>
-                }</span
+          <div [class]="'reserve-ledger__resource reserve-ledger__resource--' + row.key">
+            <span aria-hidden="true" class="reserve-ledger__mark hex-mark clip-hex"
+              ><span class="clip-hex"
+                ><svg class="size-4" [lucideIcon]="concepts[row.key]"></svg></span
             ></span>
             <span class="label-caption text-2xs text-text-secondary">{{
               'common.resource.' + row.key | translate
             }}</span>
-            <p class="lg-total tabular-nums">
-              {{ format(row.gained) }} <small>{{ 'campaign.ledger.total' | translate }}</small>
+            <p class="reserve-ledger__total tabular-nums">
+              {{ format(row.gained) }}
+              <small class="reserve-ledger__total-unit">{{
+                'campaign.ledger.total' | translate
+              }}</small>
             </p>
-            <p class="lg-spent-total">
-              <b class="tabular-nums">{{ format(row.spent) }}</b>
+            <p class="reserve-ledger__spent">
+              <b class="reserve-ledger__spent-value tabular-nums">{{ format(row.spent) }}</b>
               {{ 'campaign.ledger.spentTotal' | translate }}
             </p>
           </div>
@@ -62,14 +74,10 @@
               [row]="row"
             />
             <ng-template #tip>
-              <span class="block text-left text-[0.9375rem] leading-snug text-text-secondary">
-                <b
-                  class="mb-1 block font-display text-[1.0625rem] font-semibold tracking-[0.03em] text-text-primary uppercase"
-                  >{{
-                    'campaign.ledger.tip'
-                      | translate: { index: cell.index, planet: cell.planetName }
-                  }}</b
-                >
+              <span class="reserve-ledger__tip">
+                <b class="reserve-ledger__tip-title">{{
+                  'campaign.ledger.tip' | translate: { index: cell.index, planet: cell.planetName }
+                }}</b>
                 @if (cell.kind === 'now') {
                   {{
                     'campaign.ledger.tipCarriedIn' | translate: { count: format(cell.carriedIn) }

@@ -1,85 +1,84 @@
+@use 'tools' as *;
+
 /* Drawing left, parts right; stacked on a phone. */
-.showcase {
+.rocket-showcase {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   align-items: stretch;
-}
 
-@media (min-width: 64rem) {
-  .showcase {
+  @include from(lg) {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: 1.5rem;
   }
 }
 
 /* Grid on the container: the letterboxed SVG would leave plain bands. */
-.viewer {
+.rocket-showcase__viewer {
   position: relative;
   min-height: clamp(20rem, 60vw, 30rem);
   background:
-    linear-gradient(rgb(127 182 216 / 13%) 1px, transparent 1px) 0 0 / 100px 100px,
-    linear-gradient(90deg, rgb(127 182 216 / 13%) 1px, transparent 1px) 0 0 / 100px 100px,
-    linear-gradient(rgb(127 182 216 / 6%) 1px, transparent 1px) 0 0 / 25px 25px,
-    linear-gradient(90deg, rgb(127 182 216 / 6%) 1px, transparent 1px) 0 0 / 25px 25px,
-    #0c1b28;
-  box-shadow: inset 0 0 0 1px rgb(127 182 216 / 22%);
+    linear-gradient(tint(blueprint-ink, 13%) 1px, transparent 1px) 0 0 / 100px 100px,
+    linear-gradient(90deg, tint(blueprint-ink, 13%) 1px, transparent 1px) 0 0 / 100px 100px,
+    linear-gradient(tint(blueprint-ink, 6%) 1px, transparent 1px) 0 0 / 25px 25px,
+    linear-gradient(90deg, tint(blueprint-ink, 6%) 1px, transparent 1px) 0 0 / 25px 25px,
+    var(--color-blueprint-paper);
+  box-shadow: inset 0 0 0 1px tint(blueprint-ink, 22%);
 }
 
-.viewer-svg {
+.rocket-showcase__drawing {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.parts {
+.rocket-showcase__parts {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.45rem;
 }
 
-.part {
+.rocket-showcase__part {
   --tone: var(--color-text-muted);
+
   display: grid;
-  width: 100%;
   grid-template-columns: 2.25rem minmax(0, 1fr);
   gap: 0.2rem 0.9rem;
   align-items: center;
+  width: 100%;
   padding: 0.65rem 1rem;
-  background: rgb(236 232 225 / 4%);
-  box-shadow: inset 3px 0 0 var(--tone);
   border: 0;
+  background: tint(text-primary, 4%);
+  box-shadow: inset 3px 0 0 var(--tone);
   font: inherit;
   color: inherit;
   text-align: left;
-  transition: background 0.15s;
+  transition: background-color var(--duration-fast) var(--ease-out-quart);
 }
 
-.part--built {
+.rocket-showcase__part--built {
   --tone: var(--color-brand-400);
+
   cursor: pointer;
+
+  @include hover {
+    background: tint(text-primary, 8%);
+  }
 }
 
-.part--built:hover {
-  background: rgb(236 232 225 / 8%);
-}
-
-.part--next {
+.rocket-showcase__part--next {
   --tone: var(--color-accent-cyan);
 }
 
-.part--locked .part-name {
-  color: var(--color-text-muted);
-}
-
-.part[aria-pressed='true'] {
-  background: rgb(217 149 74 / 12%);
-  outline: 1px solid rgb(217 149 74 / 45%);
+/* The stage on display. */
+.rocket-showcase__part[aria-pressed='true'] {
+  background: tint(brand-500, 12%);
+  outline: 1px solid tint(brand-500, 45%);
   outline-offset: -1px;
 }
 
-.part-no {
+.rocket-showcase__part-number {
   grid-row: span 2;
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -88,7 +87,7 @@
   color: var(--tone);
 }
 
-.part-name {
+.rocket-showcase__part-name {
   font-family: var(--font-display);
   font-size: 1.0625rem;
   font-weight: 600;
@@ -97,7 +96,11 @@
   text-transform: uppercase;
 }
 
-.part-sub {
+.rocket-showcase__part--locked .rocket-showcase__part-name {
+  color: var(--color-text-muted);
+}
+
+.rocket-showcase__part-status {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;

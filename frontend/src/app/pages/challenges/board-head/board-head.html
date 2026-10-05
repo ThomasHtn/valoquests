@@ -1,10 +1,10 @@
 @let row = this.row();
 @let gain = row.rescueActive ? row.survivors : row.rankingPoints;
 
-<span aria-hidden="true" class="hex-mark clip-hex">
-  <span class="clip-hex">
+<span aria-hidden="true" class="board-head__hex hex-mark clip-hex">
+  <span class="board-head__hex-core clip-hex">
     @if (row.mark === 'D') {
-      <svg class="glyph" [lucideIcon]="concepts.points"></svg>
+      <svg class="board-head__glyph" [lucideIcon]="concepts.points"></svg>
     } @else {
       {{ row.mark }}
     }
@@ -12,14 +12,14 @@
 </span>
 
 <!-- Paragraphs rather than a heading: the table's row header cannot hold one. -->
-<div class="title">
-  <p class="key-line">
-    <span class="key label-caption text-2xs">{{ row.kind }}</span>
+<div class="board-head__title">
+  <p class="board-head__kind-line">
+    <span class="board-head__kind label-caption text-2xs">{{ row.kind }}</span>
     @if (row.daily && row.closesAt === null) {
-      <span class="closed">{{ 'challenges.daily.closedDay' | translate }}</span>
+      <span class="board-head__closed">{{ 'challenges.daily.closedDay' | translate }}</span>
     }
   </p>
-  <p class="name">{{ row.name }}</p>
+  <p class="board-head__name">{{ row.name }}</p>
 </div>
 
 <span
@@ -27,13 +27,13 @@
     (row.rescueActive ? 'challenges.card.woundedTooltip' : 'challenges.card.pointsTooltip')
       | translate: { count: gain }
   "
-  class="pay focus-ring"
+  class="board-head__gain focus-ring"
   tabindex="0"
 >
   <svg aria-hidden="true" class="size-3.5" [lucideIcon]="concepts.wounded"></svg>
-  <b class="tabular-nums">+{{ gain | figure }}</b>
+  <b class="board-head__gain-value tabular-nums">+{{ gain | figure }}</b>
 </span>
 
 <!-- Kept on one line: any line break between the stretches would render as a space. -->
 <!-- prettier-ignore -->
-<p class="rule">@for (part of ruleParts(); track $index) {@if (part.number) {<b>{{ part.text }}</b>} @else {{{ part.text }}}}</p>
+<p class="board-head__rule">@for (part of ruleParts(); track $index) {@if (part.number) {<b class="board-head__rule-number">{{ part.text }}</b>} @else {{{ part.text }}}}</p>

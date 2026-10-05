@@ -1,12 +1,18 @@
-.sky {
+@use 'tools' as *;
+
+.podium {
   position: relative;
   display: flex;
   align-items: flex-end;
   min-height: 17.5rem;
   overflow: hidden;
+
+  @include below(sm) {
+    height: 15rem;
+  }
 }
 
-.stars {
+.podium__sky {
   position: absolute;
   inset: 0;
   display: block;
@@ -14,45 +20,45 @@
   height: 100%;
 }
 
-/* `--base` is the 3rd plinth height, the others scale off it. */
-.plinths {
-  --base: clamp(4rem, 6vh, 5rem);
+/* `--plinth-base` is the 3rd plinth height, the others scale off it. */
+.podium__places {
+  --plinth-base: clamp(4rem, 6vh, 5rem);
 
   position: relative;
-  margin: 0 auto;
-  width: 100%;
-  max-width: 48rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: end;
   gap: 0.75rem;
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
 }
 
-.place--1 {
-  --medal: var(--color-accent-gold);
-
-  order: 2;
-}
-
-.place--2 {
-  --medal: var(--color-podium-silver);
-
-  order: 1;
-}
-
-.place--3 {
-  --medal: var(--color-podium-bronze);
-
-  order: 3;
-}
-
-.place {
+.podium__place {
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
-.holders {
+.podium__place--1 {
+  --medal: var(--color-accent-gold);
+
+  order: 2;
+}
+
+.podium__place--2 {
+  --medal: var(--color-podium-silver);
+
+  order: 1;
+}
+
+.podium__place--3 {
+  --medal: var(--color-podium-bronze);
+
+  order: 3;
+}
+
+.podium__holders {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -60,25 +66,29 @@
   gap: 0.75rem 1rem;
 }
 
-.link,
-.holder-link {
+.podium__link,
+.podium__holder-link {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
 }
 
-.link,
-.place--tied {
+/* The holder rises on hover: the column for one, the whole tied place for several. */
+.podium__link,
+.podium__place--tied {
   transition: translate 0.2s ease-out;
+
+  @include hover {
+    translate: 0 -0.25rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
-.link:hover,
-.place--tied:hover {
-  translate: 0 -0.25rem;
-}
-
-.identity {
+.podium__identity {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -87,23 +97,31 @@
   margin-top: 0.75rem;
 }
 
-.name {
+.podium__name {
   display: flex;
   align-items: center;
   gap: 0.375rem;
   font-family: var(--font-display);
   font-size: 1.25rem;
-  line-height: 1;
   font-weight: 600;
+  line-height: 1;
   color: var(--color-text-primary);
+
+  @include below(sm) {
+    font-size: 1rem;
+  }
 }
 
-.place--1 .name {
+.podium__place--1 .podium__name {
   font-size: 1.5rem;
   color: var(--color-accent-gold);
+
+  @include below(sm) {
+    font-size: 1.125rem;
+  }
 }
 
-.plinth {
+.podium__plinth {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,52 +133,31 @@
   border-top: 3px solid;
 }
 
-.place--1 .plinth {
-  height: calc(var(--base) * 1.4);
+.podium__place--1 .podium__plinth {
+  height: calc(var(--plinth-base) * 1.4);
   border-color: var(--color-brand-500);
-  background: rgb(217 149 74 / 18%);
+  background: tint(brand-500, 18%);
 }
 
-.place--2 .plinth {
-  height: calc(var(--base) * 1.15);
+.podium__place--2 .podium__plinth {
+  height: calc(var(--plinth-base) * 1.15);
   border-color: var(--color-podium-silver);
-  background: rgb(236 232 225 / 8%);
+  background: tint(text-primary, 8%);
 }
 
-.place--3 .plinth {
-  height: var(--base);
+.podium__place--3 .podium__plinth {
+  height: var(--plinth-base);
   border-color: var(--color-podium-bronze);
-  background: rgb(236 232 225 / 6%);
+  background: tint(text-primary, 6%);
 }
 
-.tied {
+.podium__tied {
   color: var(--medal);
 }
 
-.plate {
+.podium__number {
   font-family: var(--font-mono);
   font-size: 2.25rem;
   line-height: 1;
   color: var(--medal);
-}
-
-@media (width < 40rem) {
-  .sky {
-    height: 15rem;
-  }
-
-  .name {
-    font-size: 1rem;
-  }
-
-  .place--1 .name {
-    font-size: 1.125rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .link,
-  .place--tied {
-    transition: none;
-  }
 }

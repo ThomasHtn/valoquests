@@ -1,6 +1,6 @@
 <!-- Outside `page-body`, the scroll container, so it stays put without `sticky`. -->
-<header class="border-b border-brand-500/50 bg-surface-sunken">
-  <div class="mx-auto flex min-h-16 w-full items-center gap-3 px-4 sm:gap-4 sm:px-6">
+<header class="page-header">
+  <div class="page-header__bar">
     <!-- Only way into the navigation below `lg`; the margin keeps the 44px target aligned. -->
     <button
       #menuButton
@@ -8,10 +8,10 @@
       [attr.aria-controls]="navigationPanel.panelId"
       [attr.aria-expanded]="navigationPanel.isOpen()"
       [attr.aria-label]="'sidebar.openMenu' | translate"
-      class="focus-ring -ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-text-primary transition-colors hover:bg-brand-500/8 motion-safe:active:scale-[0.96] lg:hidden"
+      class="page-header__menu-button focus-ring press"
       type="button"
     >
-      <svg class="block h-6 w-6 shrink-0" lucideMenu></svg>
+      <svg class="block size-6 shrink-0" lucideMenu></svg>
     </button>
 
     <div class="flex min-w-0 flex-1 items-center">
@@ -23,7 +23,7 @@
               (click)="goBack($event)"
               [attr.aria-label]="'pageHeader.back' | translate: { name: target.label }"
               [href]="target.link"
-              class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+              class="page-header__back label-caption focus-ring"
             >
               <ng-container *ngTemplateOutlet="backContent; context: { $implicit: target }" />
             </a>
@@ -31,7 +31,7 @@
             <a
               [attr.aria-label]="'pageHeader.back' | translate: { name: target.label }"
               [routerLink]="target.link"
-              class="group/back focus-ring tracking-label -mx-1 inline-flex h-11 max-w-full shrink-0 items-center gap-1.5 px-1 font-mono text-xs font-medium text-text-muted uppercase transition-colors hover:text-text-primary"
+              class="page-header__back label-caption focus-ring"
             >
               <ng-container *ngTemplateOutlet="backContent; context: { $implicit: target }" />
             </a>
@@ -40,11 +40,7 @@
         </div>
       } @else if (heading()) {
         <!-- One line, never wrapping: the bar keeps the same height on every page. -->
-        <h1
-          class="truncate font-display text-xl leading-tight font-bold tracking-wide text-brand-500 uppercase sm:text-2xl"
-        >
-          {{ heading() }}
-        </h1>
+        <h1 class="page-header__title">{{ heading() }}</h1>
       }
     </div>
 
@@ -56,10 +52,6 @@
 </header>
 
 <ng-template #backContent let-target>
-  <svg
-    aria-hidden="true"
-    class="size-3.5 shrink-0 transition-transform duration-(--duration-base) group-hover/back:-translate-x-0.5"
-    lucideChevronLeft
-  ></svg>
+  <svg aria-hidden="true" class="page-header__back-icon" lucideChevronLeft></svg>
   <span class="truncate">{{ target.label }}</span>
 </ng-template>

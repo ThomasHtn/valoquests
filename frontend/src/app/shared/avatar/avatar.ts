@@ -2,7 +2,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
 import { LucideUser } from '@lucide/angular';
 
-import { AVATAR_SIZES } from './avatar.constants';
+import { AVATAR_PIXELS } from './avatar.constants';
 import { AvatarSize } from './avatar.model';
 
 /**
@@ -12,6 +12,7 @@ import { AvatarSize } from './avatar.model';
   selector: 'app-avatar',
   imports: [LucideUser, NgOptimizedImage],
   templateUrl: './avatar.html',
+  styleUrl: './avatar.scss',
   host: { class: 'contents' },
 })
 export class Avatar {
@@ -36,12 +37,12 @@ export class Avatar {
   public readonly champion = input(false);
 
   /**
-   * Metrics of the current {@link size}.
+   * Side of the current {@link size} in pixels.
    */
-  protected readonly metrics = computed(() => AVATAR_SIZES[this.size()]);
+  protected readonly pixels = computed(() => AVATAR_PIXELS[this.size()]);
 
   /**
-   * Disc shared by the portrait and the fallback.
+   * Size modifier of the disc.
    */
-  protected readonly frameClass = computed(() => `${this.metrics().containerClass} rounded-full`);
+  protected readonly sizeClass = computed(() => `avatar--${this.size()}`);
 }

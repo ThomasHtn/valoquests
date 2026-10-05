@@ -1,20 +1,25 @@
-<div class="sky">
+<div class="podium">
   <svg
     #sky
+    [attr.viewBox]="viewBox"
     aria-hidden="true"
-    class="stars"
+    class="podium__sky"
     preserveAspectRatio="xMidYMax slice"
-    viewBox="0 0 1600 280"
   ></svg>
 
   <!-- 1st centred via CSS `order`, so the DOM keeps reading order for AT. -->
-  <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="plinths">
+  <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="podium__places">
     @for (place of places(); track place.position) {
-      <li [class.place--tied]="place.rows.length > 1" [class]="'place place--' + place.position">
-        @if (place.rows.length === 1) {
+      @let tied = place.rows.length > 1;
+      <li
+        [class]="'podium__place--' + place.position"
+        [class.podium__place--tied]="tied"
+        class="podium__place"
+      >
+        @if (!tied) {
           <!-- One holder: the whole column is the link. -->
           @let row = place.rows[0];
-          <a [routerLink]="['/players', row.playerId]" class="focus-ring link">
+          <a [routerLink]="['/players', row.playerId]" class="podium__link focus-ring">
             <ng-container
               [ngTemplateOutletContext]="{ $implicit: row, place: place }"
               [ngTemplateOutlet]="holder"
@@ -26,10 +31,10 @@
           </a>
         } @else {
           <!-- A tie: one link per holder over a shared plinth. -->
-          <div class="holders">
+          <div class="podium__holders">
             <!-- Keyed on the place too: NgOptimizedImage throws when a moved avatar resizes. -->
             @for (row of place.rows; track row.playerId + ':' + row.position) {
-              <a [routerLink]="['/players', row.playerId]" class="focus-ring holder-link">
+              <a [routerLink]="['/players', row.playerId]" class="podium__holder-link focus-ring">
                 <ng-container
                   [ngTemplateOutletContext]="{ $implicit: row, place: place }"
                   [ngTemplateOutlet]="holder"
@@ -55,8 +60,8 @@
     [src]="row.portrait"
   />
 
-  <span class="identity">
-    <span class="name">
+  <span class="podium__identity">
+    <span class="podium__name">
       {{ row.name }}
     </span>
     @if (row.isChampion) {
@@ -68,10 +73,10 @@
 </ng-template>
 
 <ng-template #plinth let-place>
-  <span class="plinth">
-    <span aria-hidden="true" class="plate tabular-nums">{{ place.position }}</span>
+  <span class="podium__plinth">
+    <span aria-hidden="true" class="podium__number tabular-nums">{{ place.position }}</span>
     @if (place.rows.length > 1) {
-      <span class="tied label-caption">{{ 'leaderboard.podium.tied' | translate }}</span>
+      <span class="podium__tied label-caption">{{ 'leaderboard.podium.tied' | translate }}</span>
     }
     <span class="sr-only">
       {{ 'leaderboard.podium.rank.' + place.position | translate }}

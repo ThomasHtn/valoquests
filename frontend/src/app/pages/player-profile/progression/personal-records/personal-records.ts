@@ -1,17 +1,8 @@
 import { Component, computed, inject, input } from '@angular/core';
-import {
-  LucideCalendarCheck,
-  LucideCrosshair,
-  LucideShieldCheck,
-  LucideStar,
-  LucideTrendingUp,
-  LucideGauge,
-  LucideBomb,
-  LucideMedal,
-  LucideLocateFixed,
-} from '@lucide/angular';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
-import { formatLocalDayMonth } from '@core/date/date-format.utils';
+import { LucideDynamicIcon } from '@lucide/angular';
+
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { formatCampaignDayMonth } from '@core/date/date-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
@@ -29,6 +20,7 @@ import {
 } from '@core/players/progression/player-progression.model';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { Tooltip } from '@shared/tooltip/tooltip';
+import { RECORD_ICONS } from './personal-records.constants';
 import { RecordKey, RecordTile } from './personal-records.model';
 
 /**
@@ -36,21 +28,9 @@ import { RecordKey, RecordTile } from './personal-records.model';
  */
 @Component({
   selector: 'app-personal-records',
-  imports: [
-    LucideLocateFixed,
-    LucideMedal,
-    LucideBomb,
-    LucideGauge,
-    TranslatePipe,
-    Tooltip,
-    RankIconView,
-    LucideCrosshair,
-    LucideTrendingUp,
-    LucideCalendarCheck,
-    LucideStar,
-    LucideShieldCheck,
-  ],
+  imports: [LucideDynamicIcon, RankIconView, TranslatePipe, Tooltip],
   templateUrl: './personal-records.html',
+  styleUrl: './personal-records.scss',
 })
 export class PersonalRecords {
   /**
@@ -59,19 +39,14 @@ export class PersonalRecords {
   public readonly records = input.required<PersonalRecordsData>();
 
   /**
-   * Most records shown, `null` for all; the guided tour shows a sample.
-   */
-  public readonly max = input<number | null>(null);
-
-  /**
-   * Whether to use the smaller type and spacing of a sample.
-   */
-  public readonly compact = input(false);
-
-  /**
    * Translates each record's context tooltip.
    */
   private readonly translation = inject(Translation);
+
+  /**
+   * Icon of each record.
+   */
+  protected readonly icons = RECORD_ICONS;
 
   /**
    * Records worth showing, in display order.
@@ -82,8 +57,8 @@ export class PersonalRecords {
 
     // Grouped like everywhere else: a best game runs into five figures.
     const language = this.translation.language();
-    const groupedScore = (value: number | null): string =>
-      Number.isFinite(value) ? formatDamage(Math.round(value as number), language) : '—';
+    const groupedScore = (value: number): string =>
+      Number.isFinite(value) ? formatFigure(Math.round(value), language) : '—';
 
     this.pushMatchRecord(tiles, 'mostKills', records.mostKills, (value) => String(value));
     this.pushMatchRecord(tiles, 'bestAcs', records.bestAcs, formatScore);
@@ -112,9 +87,7 @@ export class PersonalRecords {
       });
     }
 
-    const max = this.max();
-
-    return max === null ? tiles : tiles.slice(0, max);
+    return tiles;
   });
 
   /**
@@ -136,7 +109,7 @@ export class PersonalRecords {
       tooltip: this.translation.translate(`playerProfile.progression.records.tooltip.${key}`, {
         map: entry.mapName,
         agent: entry.agentName,
-        date: formatLocalDayMonth(entry.achievedAt, this.translation.language()),
+        date: formatCampaignDayMonth(entry.achievedAt, this.translation.language()),
       }),
       rankIcon: null,
     });

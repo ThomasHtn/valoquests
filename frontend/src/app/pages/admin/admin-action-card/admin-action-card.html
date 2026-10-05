@@ -1,27 +1,21 @@
-<div class="notch-tr flex h-full flex-col panel p-5 [--notch:0.875rem]">
-  <h2 class="tracking-label font-display text-base font-bold text-text-primary uppercase">
-    {{ heading() }}
-  </h2>
+<div class="admin-action-card notch-tr panel">
+  <h2 class="admin-action-card__heading">{{ heading() }}</h2>
 
-  <p class="mt-2 flex-1 text-base text-pretty text-text-secondary">{{ description() }}</p>
+  <p class="admin-action-card__description">{{ description() }}</p>
 
   <!-- Projected parameters, picked before the operation runs. -->
   <div class="mt-4 flex flex-wrap items-end gap-3">
     <ng-content />
 
     <button
-      [appButton]="destructive() ? 'danger' : 'primary'"
+      [appButton]="buttonVariant()"
       (click)="triggered.emit()"
-      [disabled]="disabled() || state().status === 'running'"
-      class="ml-auto flex min-h-10 w-36 items-center justify-center gap-2 px-4 py-2 text-sm font-medium [--notch:0.5rem]"
+      [disabled]="disabled() || running()"
+      class="admin-action-card__button"
       type="button"
     >
-      @if (state().status === 'running') {
-        <svg
-          aria-hidden="true"
-          class="h-4 w-4 shrink-0 motion-safe:animate-spin"
-          lucideLoaderCircle
-        ></svg>
+      @if (running()) {
+        <app-spinner />
       }
       {{ actionLabel() }}
     </button>

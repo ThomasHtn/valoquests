@@ -1,17 +1,22 @@
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { hashUnit } from '@core/random/hash-unit.utils';
-import { BuildingShape, Lot, LotRow } from './town-scene.model';
+import { BuildingShape, Lot, LotRow, LotSite } from './town-scene.model';
 import {
-  COMPLETE_AT,
+  BLOCK_TIER,
+  CABIN_TIER,
+  FARTHEST_LOT_ORDER,
+  FINISHED_CITY_GROWTH,
   FOUNDING_CAMP,
   GROWTH_CURVE,
-  PLOT,
+  HOUSE_TIER,
+  LAUNCH_PLOT,
+  ROCKET_X,
   ROW_LAYOUT,
-  RX,
-  SPREAD,
+  SMALL_BUILDING_TIER,
   TIER_HEIGHTS,
   TIER_PACE,
   TOP_TIER,
+  TOWER_TIER,
   TOWN_SEED,
   TOWN_WIDTH,
 } from './town-scene.constants';
@@ -34,7 +39,7 @@ export function growthOf(population: number, fullCampaignPopulation: number): nu
  */
 export function planCity(): readonly Lot[] {
   const sites = [...layoutRow('back'), ...layoutRow('front')];
-  const keys = sites.map((site, id) => orderKeys(id, site.row, site.x, site.w));
+  const keys = sites.map((site, id) => orderKeys(id, site));
 
   const events = keys
     .flatMap((lotKeys, id) => lotKeys.map((key, tier) => ({ id, tier, key })))
@@ -42,7 +47,7 @@ export function planCity(): readonly Lot[] {
   const thresholds = keys.map(() => [] as number[]);
   events.forEach((event, rank) => {
     thresholds[event.id][event.tier] =
-      rank < FOUNDING_CAMP ? 0 : (rank / events.length) * COMPLETE_AT;
+      rank < FOUNDING_CAMP ? 0 : (rank / events.length) * FINISHED_CITY_GROWTH;
   });
 
   return sites.map((site, id) => ({
@@ -52,6 +57,11 @@ export function planCity(): readonly Lot[] {
     scale: 0.86 + hashUnit(id, 4) * 0.28,
   }));
 }
+
+/**
+ * City lots, planned once since the plan depends on no input.
+ */
+export const CITY_LOTS = planCity();
 
 /**
  * Tier a lot has reached at a growth, -1 while it is still empty.
@@ -71,11 +81,11 @@ export function tierAt(lot: Lot, growth: number): number {
  */
 export function buildingAt(lot: Lot, tier: number): BuildingShape {
   const h = Math.round(TIER_HEIGHTS[tier] * lot.scale);
-  if (tier >= 2) {
+  if (tier >= SMALL_BUILDING_TIER) {
     return { tier, x: lot.x, w: lot.w, h };
   }
-  const base = tier === 0 ? 14 : 20;
-  const w = Math.min(lot.w, Math.round(base + hashUnit(lot.id, 11) * 8));
+  const baseWidth = tier === CABIN_TIER ? 14 : 20;
+  const w = Math.min(lot.w, Math.round(baseWidth + hashUnit(lot.id, 11) * 8));
   const x = lot.x + Math.round((lot.w - w) * hashUnit(lot.id, 12));
   return { tier, x, w, h };
 }
@@ -83,19 +93,19 @@ export function buildingAt(lot: Lot, tier: number): BuildingShape {
 /**
  * Cuts one row into plots, jumping over the launch plot.
  */
-function layoutRow(row: LotRow): { row: LotRow; x: number; w: number }[] {
-  const rnd = createSeededRandom(TOWN_SEED + (row === 'back' ? 1 : 2));
+function layoutRow(row: LotRow): LotSite[] {
+  const random = createSeededRandom(TOWN_SEED + (row === 'back' ? 1 : 2));
   const layout = ROW_LAYOUT[row];
-  const sites: { row: LotRow; x: number; w: number }[] = [];
+  const sites: LotSite[] = [];
   let x = layout.start;
   while (x < TOWN_WIDTH) {
-    const w = Math.round(layout.minW + rnd() * (layout.maxW - layout.minW));
-    if (x + w > PLOT[0] && x < PLOT[1]) {
-      x = PLOT[1];
+    const w = Math.round(layout.minWidth + random() * (layout.maxWidth - layout.minWidth));
+    if (x + w > LAUNCH_PLOT[0] && x < LAUNCH_PLOT[1]) {
+      x = LAUNCH_PLOT[1];
       continue;
     }
     sites.push({ row, x, w });
-    x += w + Math.round(layout.minGap + rnd() * (layout.maxGap - layout.minGap));
+    x += w + Math.round(layout.minGap + random() * (layout.maxGap - layout.minGap));
   }
   return sites;
 }
@@ -103,13 +113,13 @@ function layoutRow(row: LotRow): { row: LotRow; x: number; w: number }[] {
 /**
  * Order keys of a lot's constructions, one per tier, increasing so it is built before rebuilt.
  */
-function orderKeys(id: number, row: LotRow, x: number, w: number): number[] {
-  const distance = Math.abs(x + w / 2 - RX) / RX;
+function orderKeys(id: number, { row, x, w }: LotSite): number[] {
+  const distance = Math.abs(x + w / 2 - ROCKET_X) / ROCKET_X;
   const roll = hashUnit(id, 1);
   const finalTier = row === 'front' ? frontTier(distance, roll) : backTier(distance, roll);
 
   const reach = Math.max(0, (distance - 0.2) / 0.8) ** 1.15;
-  const born = SPREAD * reach + (row === 'back' ? 0.06 : 0) + hashUnit(id, 2) * 0.05;
+  const born = FARTHEST_LOT_ORDER * reach + (row === 'back' ? 0.06 : 0) + hashUnit(id, 2) * 0.05;
   const pace = TIER_PACE * (0.8 + hashUnit(id, 3) * 0.4);
   return Array.from({ length: finalTier + 1 }, (_, tier) => born + tier * pace);
 }
@@ -119,9 +129,9 @@ function orderKeys(id: number, row: LotRow, x: number, w: number): number[] {
  */
 function frontTier(distance: number, roll: number): number {
   if (distance < 0.32) {
-    return roll < 0.5 ? 1 : 2;
+    return roll < 0.5 ? HOUSE_TIER : SMALL_BUILDING_TIER;
   }
-  return roll < 0.4 ? 3 : 2;
+  return roll < 0.4 ? BLOCK_TIER : SMALL_BUILDING_TIER;
 }
 
 /**
@@ -129,7 +139,7 @@ function frontTier(distance: number, roll: number): number {
  */
 function backTier(distance: number, roll: number): number {
   if (distance < 0.28) {
-    return roll < 0.45 ? 4 : 3;
+    return roll < 0.45 ? TOWER_TIER : BLOCK_TIER;
   }
-  return roll < (distance < 0.5 ? 0.4 : 0.6) ? TOP_TIER : 4;
+  return roll < (distance < 0.5 ? 0.4 : 0.6) ? TOP_TIER : TOWER_TIER;
 }

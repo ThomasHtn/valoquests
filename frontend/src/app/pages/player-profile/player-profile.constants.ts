@@ -1,3 +1,5 @@
+import { ProfileViewOption } from './player-profile.model';
+
 /**
  * Game mode buttons after "all modes", by minimum filter bar width; the rest go to the overflow.
  * Sized so the other controls fit unscrolled; below the full list so the overflow is never empty.
@@ -16,21 +18,23 @@ export const GAME_MODE_BUTTON_COUNTS: readonly { minRowWidthPx: number; count: n
 export const MAX_PROGRESSION_SEASONS = 5;
 
 /**
- * Stat strip grid, shared with its skeleton; the win rate leads with the wide column.
+ * Span modifier of each skeleton tile, mirroring the loaded stat tiles.
  */
-export const STAT_STRIP_GRID_CLASS =
-  'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))]';
+export const STAT_SKELETON_TILE_MODIFIERS: readonly string[] = [
+  'player-profile__stat--lead',
+  '',
+  '',
+  '',
+  '',
+  'player-profile__stat--trail',
+];
 
 /**
- * Skeleton tile spans, mirroring the loaded stat tiles.
+ * Buttons of the display switch, in display order.
  */
-export const STAT_SKELETON_TILE_SPANS: readonly string[] = [
-  'col-span-2 sm:col-span-3 lg:col-span-1',
-  '',
-  '',
-  '',
-  '',
-  'col-span-2 lg:col-span-1',
+export const PROFILE_VIEWS: readonly ProfileViewOption[] = [
+  { mode: 'MATCHES', labelKey: 'playerProfile.display.matches' },
+  { mode: 'PROGRESS', labelKey: 'playerProfile.display.progress' },
 ];
 
 /**

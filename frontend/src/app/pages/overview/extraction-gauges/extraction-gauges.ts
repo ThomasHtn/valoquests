@@ -1,22 +1,16 @@
-import { LowerCasePipe } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideBuilding2, LucideInfo, LucideDynamicIcon } from '@lucide/angular';
-import { formatDamage } from '@core/challenges/challenge-format.utils';
+import { LucideDynamicIcon, LucideInfo } from '@lucide/angular';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { Capacity } from './extraction-gauges.model';
-import {
-  CARRY_MODES,
-  HULL_MASK,
-  HULL_PATH,
-  HULL_VIEWBOX,
-  SHELTER_MODES,
-} from './extraction-gauges.constants';
-import { hullFigureSize } from './extraction-gauges.utils';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { HULL_MASK, HULL_PATH, HULL_VIEWBOX } from './extraction-gauges.constants';
+import { Capacity, LimitDial } from './extraction-gauges.model';
+import { buildLimitDials, hullFigureSize } from './extraction-gauges.utils';
 
 /**
  * Sunday's extraction: three limiting dials, then what gets through, over the wounded spotted.
@@ -26,9 +20,8 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
   selector: 'app-extraction-gauges',
   imports: [
     LucideDynamicIcon,
-    LowerCasePipe,
+    NgTemplateOutlet,
     TranslatePipe,
-    LucideBuilding2,
     LucideInfo,
     Tooltip,
     CountUp,
@@ -53,16 +46,6 @@ export class ExtractionGauges {
    * Week number, shown on the breakthrough dial as `Boss 04`.
    */
   public readonly weekIndex = input.required<number>();
-
-  /**
-   * Game modes listed under the carry dial as its main sources.
-   */
-  protected readonly carryModes = CARRY_MODES;
-
-  /**
-   * Game modes listed under the shelter dial as its main sources.
-   */
-  protected readonly shelterModes = SHELTER_MODES;
 
   /**
    * Frame of the aboard dial's rocket outline.
@@ -99,29 +82,37 @@ export class ExtractionGauges {
   );
 
   /**
-   * Info button text explaining how the carry dial is worked out.
+   * Carry, shelter and breakthrough dials, empty outside a week in progress.
    */
-  protected readonly carryTooltip = computed(() =>
-    this.translation.translate('overview.capacity.carryTooltip', {
-      rate: this.capacity()?.componentsPerRescue ?? 0,
-    }),
-  );
+  protected readonly dials = computed<readonly LimitDial[]>(() => {
+    const capacity = this.capacity();
+    if (!capacity) {
+      return [];
+    }
+    return buildLimitDials(
+      capacity,
+      this.bossLabel(),
+      (key, params) => this.translation.translate(key, params),
+      (amount) => this.format(amount),
+    );
+  });
 
   /**
-   * Info button text explaining how the shelter dial is worked out.
+   * Accessible reading of the aboard dial, empty outside a week in progress.
    */
-  protected readonly shelterTooltip = computed(() =>
-    this.translation.translate('overview.capacity.shelterTooltip', {
-      rate: this.capacity()?.foodPerRescue ?? 0,
-    }),
-  );
-
-  /**
-   * Info button text explaining the breakthrough dial.
-   */
-  protected readonly breachTooltip = computed(() =>
-    this.translation.translate('overview.capacity.breachTooltip'),
-  );
+  protected readonly aboardLabel = computed(() => {
+    const capacity = this.capacity();
+    if (!capacity) {
+      return '';
+    }
+    return this.translation.translate('overview.capacity.aboardAria', {
+      count: this.format(capacity.aboard),
+      wounded: this.format(capacity.wounded),
+      percent: Math.round(capacity.aboardFraction * 100),
+      extraction: this.format(capacity.fromGuardian),
+      challenges: this.format(capacity.fromChallenges),
+    });
+  });
 
   /**
    * Info button text explaining who gets aboard on Sunday.
@@ -134,13 +125,6 @@ export class ExtractionGauges {
    * Formats an amount in the active language for the dial figures.
    */
   protected format(amount: number): string {
-    return formatDamage(amount, this.translation.language());
-  }
-
-  /**
-   * Turns a dial fraction into a whole percentage for its label.
-   */
-  protected percent(fraction: number): number {
-    return Math.round(fraction * 100);
+    return formatFigure(amount, this.translation.language());
   }
 }

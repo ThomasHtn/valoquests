@@ -18,14 +18,14 @@ export const RULE_ICONS = [
 ] as const;
 
 /**
- * Colour of the icons that carry one: food green, components cyan.
+ * Colour modifier of the icons that carry one: food green, components cyan; the others stay brand.
  */
-export const ICON_TONES: Partial<Record<RuleIcon, string>> = {
-  food: 'text-accent-green',
-  components: 'text-accent-cyan',
+export const RULE_ICON_MODIFIERS: Partial<Record<RuleIcon, string>> = {
+  food: 'rule-text__icon--food',
+  components: 'rule-text__icon--components',
 };
 
 /**
  * Splits a rule on its inline tokens: `{icon}` and `*relief*`.
  */
-export const TOKEN = /(\{[a-z]+\}|\*[^*]+\*)/;
+export const RULE_TOKEN_PATTERN = /(\{[a-z]+\}|\*[^*]+\*)/;

@@ -10,10 +10,12 @@ import {
 } from '@core/challenges/card/challenge-card.utils';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
 import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
-import { TranslateFn } from '@core/i18n/translation.model';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
-import { DayTally } from './day-orders.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { formatSigned } from '../overview.utils';
+import { DayTally, TallyTile } from './day-orders.model';
 
 /**
  * Day's challenge card, closing at midnight; `null` when there is no daily to show.
@@ -24,7 +26,7 @@ export function buildDailyRow(
   rescueActive: boolean,
   kind: string,
   format: (amount: number) => string,
-  locale: string,
+  language: Language,
   translate: TranslateFn,
 ): BoardRow | null {
   if (!challenges) {
@@ -42,7 +44,7 @@ export function buildDailyRow(
     format,
   );
   const closesAt = campaignMidnight(challenges.today, 1).getTime();
-  return toBoardRow(daily, card, card.rungs, closesAt, locale, translate);
+  return toBoardRow(daily, card, card.rungs, closesAt, language, translate);
 }
 
 /**
@@ -80,4 +82,54 @@ export function buildTally(
       };
     }),
   };
+}
+
+/**
+ * Day's base flows: components and food with the capacity they bought, population, then upkeep.
+ */
+export function buildTallyTiles(
+  tally: DayTally,
+  translate: TranslateFn,
+  format: (amount: number) => string,
+): readonly TallyTile[] {
+  const signed = (amount: number): string => formatSigned(amount, format);
+  return [
+    {
+      tone: 'components',
+      icon: CONCEPT_ICONS.components,
+      label: translate('common.resource.components'),
+      tooltip: translate('overview.orders.componentsTooltip'),
+      figure: signed(tally.components),
+      gain: translate('overview.orders.carryGain', { count: tally.carryGained }),
+      note: null,
+    },
+    {
+      tone: 'food',
+      icon: CONCEPT_ICONS.food,
+      label: translate('common.resource.food'),
+      tooltip: translate('overview.orders.foodTooltip'),
+      figure: signed(tally.food),
+      gain: translate('overview.orders.shelterGain', { count: tally.shelterGained }),
+      note: null,
+    },
+    {
+      // Amber while the base grows, red when it shrinks, like the scene's delta.
+      tone: tally.populationChange < 0 ? 'decline' : 'growth',
+      icon: CONCEPT_ICONS.base,
+      label: translate('overview.orders.population'),
+      tooltip: translate('overview.orders.populationTooltip'),
+      figure: signed(tally.populationChange),
+      gain: null,
+      note: translate('overview.orders.tonight', { count: format(tally.population) }),
+    },
+    {
+      tone: 'cost',
+      icon: CONCEPT_ICONS.food,
+      label: translate('overview.orders.ate'),
+      tooltip: translate('overview.orders.ateTooltip'),
+      figure: signed(-tally.upkeep),
+      gain: null,
+      note: translate('overview.orders.food'),
+    },
+  ];
 }

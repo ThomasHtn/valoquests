@@ -8,7 +8,13 @@ import { PlayerSummary } from '@core/players/player-summary.model';
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
 import { fatalBlow } from '../mission-readings/mission-readings.utils';
 import { SEEN_REPORT_KEY } from './mission-report.constants';
-import { MissionReport, MissionReportBlow, MissionReportChampion } from './mission-report.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import {
+  MissionReport,
+  MissionReportBlow,
+  MissionReportChampion,
+  MissionReportGain,
+} from './mission-report.model';
 
 /**
  * Fatal blow in three parts: when, who, and where (map, mode, score) when known.
@@ -180,4 +186,40 @@ export function writeSeenReport(weekStart: string): void {
   } catch {
     // The report opens again next time.
   }
+}
+
+/**
+ * Loot lines of the week (food, components, population), none without a base reading.
+ */
+export function buildReportGains(
+  base: MissionReport['base'],
+  translate: TranslateFn,
+  format: (amount: number) => string,
+): readonly MissionReportGain[] {
+  if (!base) {
+    return [];
+  }
+  return [
+    {
+      tone: 'food',
+      icon: CONCEPT_ICONS.food,
+      value: base.foodGained,
+      sign: '+',
+      label: translate('overview.missionReport.food'),
+    },
+    {
+      tone: 'components',
+      icon: CONCEPT_ICONS.components,
+      value: base.componentsGained,
+      sign: '+',
+      label: translate('overview.missionReport.components'),
+    },
+    {
+      tone: base.populationChange < 0 ? 'decline' : 'growth',
+      icon: CONCEPT_ICONS.base,
+      value: base.populationChange,
+      sign: base.populationChange > 0 ? '+' : '',
+      label: translate('overview.missionReport.population', { total: format(base.population) }),
+    },
+  ];
 }

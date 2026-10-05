@@ -3,9 +3,7 @@ import {
   PLANET_ART_EXTENT_RATIO,
 } from '@core/campaign/planets/campaign-planet-art.constants';
 
-/**
- * Lengths in SVG viewBox units.
- */
+// Lengths in SVG viewBox units.
 
 /**
  * Side of the square viewBox.
@@ -65,11 +63,12 @@ export const WOUNDED_MARKS = 26;
 export const RING_SEGMENTS = 26;
 
 /**
- * Colours aligned on the site palette.
+ * Colours aligned on the site palette, as literals because SVG attributes cannot read tokens.
  */
 export const PLANET_COLORS = {
   warm: '#ffc477',
   warmCore: '#fff0cf',
+  // `--color-boss-hp-edge`.
   segmentAlive: '#e0404e',
   segmentDead: '#4a5560',
 } as const;

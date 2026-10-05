@@ -36,20 +36,20 @@ export function drawBuilding(
   const wall = tone(facade(lot, shape.tier, sky));
   const roof = tone(sky.roof);
   const volumes = stackVolumes(shape);
-  const g = svgElement('g');
+  const building = svgElement('g');
 
   for (const volume of volumes) {
-    appendVolume(g, volume, shape.tier, wall, roof);
+    appendVolume(building, volume, shape.tier, wall, roof);
   }
-  appendRoof(g, lot, shape, roof, sky, reducedMotion);
+  appendRoof(building, lot, shape, roof, sky, reducedMotion);
   volumes.forEach((volume, index) =>
-    appendWindows(g, lot, shape.tier, volume, index, sky, tone, reducedMotion),
+    appendWindows(building, lot, shape.tier, volume, index, sky, tone, reducedMotion),
   );
   // Lit sign on some blocks, the city's only colour besides windows.
   if (shape.tier === BLOCK_TIER && hashUnit(lot.id, 6) < 0.3) {
-    appendSign(g, shape);
+    appendSign(building, shape);
   }
-  return g;
+  return building;
 }
 
 /**
@@ -82,13 +82,13 @@ function stackVolumes({ tier, x, w, h }: BuildingShape): BuildingVolume[] {
  * One volume: wall, shaded right strip, and a cornice from the small building up.
  */
 function appendVolume(
-  g: SVGGElement,
+  building: SVGGElement,
   volume: BuildingVolume,
   tier: number,
   wall: string,
   roof: string,
 ): void {
-  g.append(
+  building.append(
     svgElement('rect', {
       x: volume.x,
       y: volume.top,
@@ -106,7 +106,7 @@ function appendVolume(
     }),
   );
   if (tier >= SMALL_BUILDING_TIER) {
-    g.append(
+    building.append(
       svgElement('rect', {
         x: volume.x - 1,
         y: volume.top,
@@ -121,9 +121,9 @@ function appendVolume(
 /**
  * Cyan sign across a block's facade.
  */
-function appendSign(g: SVGGElement, { x, w, h }: BuildingShape): void {
+function appendSign(building: SVGGElement, { x, w, h }: BuildingShape): void {
   const top = HORIZON - h;
-  g.append(
+  building.append(
     svgElement('rect', {
       x: x + 5,
       y: top + h * 0.42,
@@ -148,7 +148,7 @@ function facade(lot: Lot, tier: number, sky: SkyState): string {
     FACADE_TINTS[
       Math.floor(((pick - CONCRETE_SHARE) / (1 - CONCRETE_SHARE)) * FACADE_TINTS.length)
     ];
-  const strength = tier <= 1 ? 1 : tier >= TOWER_TIER ? 0.5 : 0.8;
+  const strength = tier <= HOUSE_TIER ? 1 : tier >= TOWER_TIER ? 0.5 : 0.8;
   return mixColor(base, tint, (0.22 + 0.26 * (1 - sky.lamps)) * strength);
 }
 
@@ -156,7 +156,7 @@ function facade(lot: Lot, tier: number, sky: SkyState): string {
  * Adds the roof feature matching the tier.
  */
 function appendRoof(
-  g: SVGGElement,
+  building: SVGGElement,
   lot: Lot,
   shape: BuildingShape,
   roof: string,
@@ -164,13 +164,13 @@ function appendRoof(
   reducedMotion: boolean,
 ): void {
   if (shape.tier <= HOUSE_TIER) {
-    appendPitchedRoof(g, lot, shape, roof, sky);
+    appendPitchedRoof(building, lot, shape, roof, sky);
   } else if (shape.tier === SMALL_BUILDING_TIER) {
-    appendWaterTank(g, lot, shape, roof);
+    appendWaterTank(building, lot, shape, roof);
   } else if (shape.tier === BLOCK_TIER) {
-    appendRooftopPlant(g, lot, shape, roof);
+    appendRooftopPlant(building, lot, shape, roof);
   } else {
-    appendTowerCrown(g, lot, shape, reducedMotion);
+    appendTowerCrown(building, lot, shape, reducedMotion);
   }
 }
 
@@ -178,7 +178,7 @@ function appendRoof(
  * Pitched roof of a cabin or house, tiled on some lots, chimney on some houses.
  */
 function appendPitchedRoof(
-  g: SVGGElement,
+  building: SVGGElement,
   lot: Lot,
   { tier, x, w, h }: BuildingShape,
   roof: string,
@@ -187,7 +187,7 @@ function appendPitchedRoof(
   const top = HORIZON - h;
   const pitch = tier === CABIN_TIER ? 6 : 9;
   const tiled = hashUnit(lot.id, 10) < 0.55;
-  g.append(
+  building.append(
     svgElement('path', {
       d: `M${x - 2} ${top + 1} L${x + w / 2} ${top - pitch} L${x + w + 2} ${top + 1} Z`,
       fill: tiled ? mixColor(roof, ROOF_TILE, 0.3 + 0.3 * (1 - sky.lamps)) : roof,
@@ -195,7 +195,7 @@ function appendPitchedRoof(
   );
   const hasChimney = tier === HOUSE_TIER && hashUnit(lot.id, 7) < 0.55;
   if (hasChimney) {
-    g.append(
+    building.append(
       svgElement('rect', {
         x: x + w * 0.7,
         y: top - pitch + 1,
@@ -210,13 +210,18 @@ function appendPitchedRoof(
 /**
  * Water tank on two legs along a small building's roof.
  */
-function appendWaterTank(g: SVGGElement, lot: Lot, { x, w, h }: BuildingShape, roof: string): void {
+function appendWaterTank(
+  building: SVGGElement,
+  lot: Lot,
+  { x, w, h }: BuildingShape,
+  roof: string,
+): void {
   const top = HORIZON - h;
-  const tx = x + 4 + hashUnit(lot.id, 7) * (w - 14);
-  g.append(
-    svgElement('rect', { x: tx + 1, y: top - 4, width: 1, height: 4, fill: roof }),
-    svgElement('rect', { x: tx + 5, y: top - 4, width: 1, height: 4, fill: roof }),
-    svgElement('rect', { x: tx, y: top - 10, width: 7, height: 6, fill: roof }),
+  const tankX = x + 4 + hashUnit(lot.id, 7) * (w - 14);
+  building.append(
+    svgElement('rect', { x: tankX + 1, y: top - 4, width: 1, height: 4, fill: roof }),
+    svgElement('rect', { x: tankX + 5, y: top - 4, width: 1, height: 4, fill: roof }),
+    svgElement('rect', { x: tankX, y: top - 10, width: 7, height: 6, fill: roof }),
   );
 }
 
@@ -224,18 +229,18 @@ function appendWaterTank(g: SVGGElement, lot: Lot, { x, w, h }: BuildingShape, r
  * Rooftop plant of a block: a low box a third of the roof wide.
  */
 function appendRooftopPlant(
-  g: SVGGElement,
+  building: SVGGElement,
   lot: Lot,
   { x, w, h }: BuildingShape,
   roof: string,
 ): void {
   const top = HORIZON - h;
-  const bw = Math.round(w * 0.32);
-  g.append(
+  const plantWidth = Math.round(w * 0.32);
+  building.append(
     svgElement('rect', {
-      x: x + 4 + hashUnit(lot.id, 7) * (w - bw - 8),
+      x: x + 4 + hashUnit(lot.id, 7) * (w - plantWidth - 8),
       y: top - 6,
-      width: bw,
+      width: plantWidth,
       height: 6,
       fill: roof,
     }),
@@ -246,7 +251,7 @@ function appendRooftopPlant(
  * Tower crown: light facade edge and mast, plus a red beacon on a skyscraper.
  */
 function appendTowerCrown(
-  g: SVGGElement,
+  building: SVGGElement,
   lot: Lot,
   { tier, x, w, h }: BuildingShape,
   reducedMotion: boolean,
@@ -254,7 +259,7 @@ function appendTowerCrown(
   const top = HORIZON - h;
   const isSkyscraper = tier === TOP_TIER;
   const mast = isSkyscraper ? 24 : 12;
-  g.append(
+  building.append(
     svgElement('rect', {
       x: x + 3,
       y: top + h * 0.25,
@@ -284,7 +289,7 @@ function appendTowerCrown(
   if (!reducedMotion) {
     beacon.append(animate('0.9;0.1;0.9', `${(2 + hashUnit(lot.id, 8) * 2).toFixed(1)}s`));
   }
-  g.append(beacon);
+  building.append(beacon);
 }
 
 /**
@@ -292,7 +297,7 @@ function appendTowerCrown(
  * as faces). Stable per-window draws make the same windows light up every evening.
  */
 function appendWindows(
-  g: SVGGElement,
+  building: SVGGElement,
   lot: Lot,
   tier: number,
   volume: BuildingVolume,
@@ -305,23 +310,23 @@ function appendWindows(
   const glass = tone(sky.glass);
 
   for (let floor = 0; floor < grid.floors; floor++) {
-    const y = volume.top + 5 + floor * grid.floorH;
+    const y = volume.top + 5 + floor * grid.floorHeight;
     // No window on the ground strip.
-    if (y + grid.winH > HORIZON - 3) {
+    if (y + grid.windowHeight > HORIZON - 3) {
       break;
     }
     const floorRoll = hashUnit(lot.id, tier, volumeIndex, floor);
-    for (let col = 0; col < grid.cols; col++) {
+    for (let col = 0; col < grid.columns; col++) {
       const key = hashUnit(lot.id, tier, volumeIndex, floor, col);
       // Mostly the floor's draw, so lights come on floor by floor.
       const roll = floorRoll * 0.55 + key * 0.45;
       const on = roll < sky.lit;
       const warm = key < 0.2 ? TOWN_PALETTE.warmCore : TOWN_PALETTE.warm;
       const rect = svgElement('rect', {
-        x: (grid.left + col * (grid.winW + grid.gap)).toFixed(1),
+        x: (grid.left + col * (grid.windowWidth + grid.gap)).toFixed(1),
         y: y.toFixed(1),
-        width: grid.winW.toFixed(1),
-        height: grid.winH,
+        width: grid.windowWidth.toFixed(1),
+        height: grid.windowHeight,
         fill: on ? warm : glass,
         opacity: on ? 0.92 : 0.85,
       });
@@ -331,7 +336,7 @@ function appendWindows(
       if (flickers) {
         makeBlink(rect, on, warm, key);
       }
-      g.append(rect);
+      building.append(rect);
     }
   }
 }
@@ -340,24 +345,25 @@ function appendWindows(
  * Window layout: one window on a cabin, ribbons on towers, strips otherwise.
  */
 function windowGrid(tier: number, volume: BuildingVolume): WindowGrid {
-  const usable = volume.w - 3;
-  const floorH = floorHeight(tier);
-  const { cols, winW, gap } = windowColumns(tier, volume.w, usable);
+  const usableWidth = volume.w - 3;
+  const floorHeight = floorHeightOf(tier);
+  const { columns, windowWidth, gap } = windowColumns(tier, volume.w, usableWidth);
+  const rowWidth = columns * windowWidth + (columns - 1) * gap;
   return {
-    floors: Math.max(1, Math.floor((volume.bottom - volume.top - 6) / floorH)),
-    floorH,
-    winH: tier >= TOWER_TIER ? 3.2 : 3.5,
-    cols,
-    winW,
+    floors: Math.max(1, Math.floor((volume.bottom - volume.top - 6) / floorHeight)),
+    floorHeight,
+    windowHeight: tier >= TOWER_TIER ? 3.2 : 3.5,
+    columns,
+    windowWidth,
     gap,
-    left: volume.x + (usable - (cols * winW + (cols - 1) * gap)) / 2,
+    left: volume.x + (usableWidth - rowWidth) / 2,
   };
 }
 
 /**
  * Floor height: tallest on a cabin, tightest on towers.
  */
-function floorHeight(tier: number): number {
+function floorHeightOf(tier: number): number {
   if (tier === CABIN_TIER) {
     return 12;
   }
@@ -368,25 +374,26 @@ function floorHeight(tier: number): number {
 }
 
 /**
- * Columns of windows across a floor of `usable` width.
+ * Columns of windows across a floor of `usableWidth`.
  */
 function windowColumns(
   tier: number,
-  volumeW: number,
-  usable: number,
-): Pick<WindowGrid, 'cols' | 'winW' | 'gap'> {
+  volumeWidth: number,
+  usableWidth: number,
+): Pick<WindowGrid, 'columns' | 'windowWidth' | 'gap'> {
   if (tier === CABIN_TIER) {
-    return { cols: 1, winW: Math.max(5, Math.round(volumeW * 0.45)), gap: 0 };
+    return { columns: 1, windowWidth: Math.max(5, Math.round(volumeWidth * 0.45)), gap: 0 };
   }
   // Ribbons about 22 units wide, stretched to fill the floor exactly.
   if (tier >= TOWER_TIER) {
-    const cols = Math.max(1, Math.round((usable - 6) / 22));
+    const columns = Math.max(1, Math.round((usableWidth - 6) / 22));
     const gap = 3;
-    return { cols, winW: (usable - 6 - gap * (cols - 1)) / cols, gap };
+    return { columns, windowWidth: (usableWidth - 6 - gap * (columns - 1)) / columns, gap };
   }
-  const winW = 7 + Math.min(tier, BLOCK_TIER);
+  const windowWidth = 7 + Math.min(tier, BLOCK_TIER);
   const gap = 5;
-  return { cols: Math.max(1, Math.floor((usable - 6 + gap) / (winW + gap))), winW, gap };
+  const columns = Math.max(1, Math.floor((usableWidth - 6 + gap) / (windowWidth + gap)));
+  return { columns, windowWidth, gap };
 }
 
 /**

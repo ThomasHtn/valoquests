@@ -9,6 +9,7 @@ import { resolveChartTooltipPlacement } from './chart-tooltip.utils';
 @Component({
   selector: 'app-chart-tooltip',
   templateUrl: './chart-tooltip.html',
+  styleUrl: './chart-tooltip.scss',
   host: { class: 'contents' },
 })
 export class ChartTooltip {

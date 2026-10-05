@@ -1,88 +1,95 @@
-<div class="history">
-  <figure class="chart">
-    <div class="chart-box">
-      @if (curves().length > 0) {
-        <p class="legend">
-          @for (curve of curves(); track curve.series.label) {
-            <span class="legend-item">
-              <i [style.--k]="curve.series.color" aria-hidden="true"></i>
-              {{ curve.series.label }} ·
-              <b class="tabular-nums">{{ format(curve.figure) }}</b>
-              @if (!curve.current) {
-                {{ 'campaign.history.atEnd' | translate }}
-              }
-            </span>
-          }
-        </p>
-        <app-line-chart
-          [ariaLabel]="'campaign.history.chartAria' | translate"
-          [pointLabel]="'campaign.history.pointLabel' | translate"
-          [series]="series()"
-          [xLabels]="xLabels"
-          heightClass="h-full w-full"
-        />
-      } @else {
-        <p class="chart-empty">{{ 'campaign.history.empty' | translate }}</p>
-      }
-    </div>
+<div class="campaign-history">
+  <figure class="campaign-history__chart">
+    @if (curves().length > 0) {
+      <p class="campaign-history__legend">
+        @for (curve of curves(); track curve.series.label) {
+          <span class="campaign-history__legend-item">
+            <i
+              [style.--curve-color]="curve.series.color"
+              aria-hidden="true"
+              class="campaign-history__legend-line"
+            ></i>
+            {{ curve.series.label }} ·
+            <b class="campaign-history__legend-figure tabular-nums">{{ format(curve.figure) }}</b>
+            @if (!curve.current) {
+              {{ 'campaign.history.atEnd' | translate }}
+            }
+          </span>
+        }
+      </p>
+      <app-line-chart
+        [ariaLabel]="'campaign.history.chartAria' | translate"
+        [pointLabel]="'campaign.history.pointLabel' | translate"
+        [series]="series()"
+        [xLabels]="xLabels"
+        class="campaign-history__line-chart"
+        [fill]="true"
+      />
+    } @else {
+      <p class="campaign-history__empty">{{ 'campaign.history.empty' | translate }}</p>
+    }
   </figure>
 
   @if (rows().length > 0) {
     <div class="scroll-subtle overflow-x-auto">
-      <table [attr.aria-label]="'campaign.history.tableAria' | translate" class="past-table">
+      <table
+        [attr.aria-label]="'campaign.history.tableAria' | translate"
+        class="campaign-history__table"
+      >
         <thead>
           <tr>
-            <th scope="col">#</th>
-            <th scope="col">{{ 'campaign.history.colCampaign' | translate }}</th>
-            <th scope="col">{{ 'campaign.history.colTier' | translate }}</th>
-            <th scope="col">
-              <svg
-                aria-hidden="true"
-                class="ico text-accent-gold"
-                [lucideIcon]="concepts.base"
-              ></svg>
-              {{ 'common.resource.base' | translate }}
+            <th class="campaign-history__head campaign-history__head--left" scope="col">#</th>
+            <th class="campaign-history__head campaign-history__head--left" scope="col">
+              {{ 'campaign.history.colCampaign' | translate }}
             </th>
-            <th scope="col">
-              <svg
-                aria-hidden="true"
-                class="ico text-boss-hp-edge"
-                [lucideIcon]="concepts.guardian"
-              ></svg>
-              {{ 'campaign.history.colGuardians' | translate }}
+            <th class="campaign-history__head campaign-history__head--left" scope="col">
+              {{ 'campaign.history.colTier' | translate }}
             </th>
-            <th scope="col">
-              <svg
-                aria-hidden="true"
-                class="ico text-brand-400"
-                [lucideIcon]="concepts.wounded"
-              ></svg>
-              {{ 'common.resource.wounded' | translate }}
-            </th>
+            @for (column of iconColumns; track column.concept) {
+              <th class="campaign-history__head" scope="col">
+                <svg
+                  [class]="
+                    'campaign-history__column-icon campaign-history__column-icon--' + column.concept
+                  "
+                  [lucideIcon]="concepts[column.concept]"
+                  aria-hidden="true"
+                ></svg>
+                {{ column.labelKey | translate }}
+              </th>
+            }
           </tr>
         </thead>
         <tbody>
           @for (row of rows(); track row.number) {
-            <tr [class.past-row--now]="row.current">
-              <td class="past-rank">{{ row.rank }}</td>
-              <th scope="row">
-                <b>{{ 'campaign.history.past' | translate: { number: row.number } }}</b>
-                <span>{{ row.subtitle }}</span>
+            <tr [class.campaign-history__row--current]="row.current" class="campaign-history__row">
+              <td class="campaign-history__cell campaign-history__rank">{{ row.rank }}</td>
+              <th class="campaign-history__campaign" scope="row">
+                <b class="campaign-history__campaign-name">{{
+                  'campaign.history.past' | translate: { number: row.number }
+                }}</b>
+                <span class="campaign-history__campaign-season">{{ row.subtitle }}</span>
               </th>
-              <td>
-                <span [class]="'tier tier--' + row.difficulty">{{
-                  'common.difficulty.' + row.difficulty | translate
-                }}</span>
+              <td class="campaign-history__cell campaign-history__cell--left">
+                <span
+                  [class]="
+                    'campaign-history__tier campaign-history__tier--' + (row.difficulty | lowercase)
+                  "
+                  >{{ 'common.difficulty.' + row.difficulty | translate }}</span
+                >
               </td>
-              <td class="tabular-nums">{{ format(row.population) }}</td>
-              <td class="tabular-nums">
+              <td class="campaign-history__cell campaign-history__cell--figure tabular-nums">
+                {{ format(row.population) }}
+              </td>
+              <td class="campaign-history__cell campaign-history__cell--figure tabular-nums">
                 {{ row.guardiansDefeated }}
-                <small>{{
+                <small class="campaign-history__cell-unit">{{
                   'campaign.history.of'
                     | translate: { count: row.current ? row.weeksPlayed : weekCount }
                 }}</small>
               </td>
-              <td class="tabular-nums">{{ format(row.rescued) }}</td>
+              <td class="campaign-history__cell campaign-history__cell--figure tabular-nums">
+                {{ format(row.rescued) }}
+              </td>
             </tr>
           }
         </tbody>

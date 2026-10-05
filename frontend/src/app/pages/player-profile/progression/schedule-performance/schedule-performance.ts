@@ -10,6 +10,7 @@ import { BarChart } from '@shared/chart/bar-chart/bar-chart';
 import { ChartBar } from '@shared/chart/chart.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
 import { MINIMUM_SAMPLE } from './schedule-performance.constants';
+import { ScheduleChart } from './schedule-performance.model';
 
 /**
  * Win rate by weekday and time of day ("when am I good", not "when do I play").
@@ -19,6 +20,7 @@ import { MINIMUM_SAMPLE } from './schedule-performance.constants';
   selector: 'app-schedule-performance',
   imports: [TranslatePipe, BarChart, Tooltip],
   templateUrl: './schedule-performance.html',
+  styleUrl: './schedule-performance.scss',
   // Fills its card so the reading note can sink to the card's bottom.
   host: { class: 'block h-full' },
 })
@@ -44,19 +46,9 @@ export class SchedulePerformance {
   protected readonly minimumSample = MINIMUM_SAMPLE;
 
   /**
-   * Weekday chart as text for screen readers.
-   */
-  protected readonly weekdaySummary = computed(() => this.describe(this.weekdayBars()));
-
-  /**
-   * Time-slot chart as text for screen readers.
-   */
-  protected readonly hourSlotSummary = computed(() => this.describe(this.hourSlotBars()));
-
-  /**
    * Weekday bars, in display order.
    */
-  protected readonly weekdayBars = computed<readonly ChartBar[]>(() =>
+  private readonly weekdayBars = computed<readonly ChartBar[]>(() =>
     this.weekdays().map((day) => ({
       label: this.translation.translate(`playerProfile.progression.schedule.day.${day.day}`),
       value: Math.round(day.winRate),
@@ -69,7 +61,7 @@ export class SchedulePerformance {
   /**
    * Time-slot bars, in display order.
    */
-  protected readonly hourSlotBars = computed<readonly ChartBar[]>(() =>
+  private readonly hourSlotBars = computed<readonly ChartBar[]>(() =>
     this.hourSlots().map((slot) => ({
       label: `${String(slot.startHour).padStart(2, '0')}h`,
       value: Math.round(slot.winRate),
@@ -80,22 +72,50 @@ export class SchedulePerformance {
   );
 
   /**
-   * Strongest weekday name, empty when none qualifies.
+   * Sentence naming the strongest weekday, empty when none qualifies.
    */
-  protected readonly bestWeekday = computed(() => {
+  private readonly bestWeekday = computed(() => {
     const best = this.weekdays().find((day) => day.best);
+    if (!best) {
+      return '';
+    }
+    const day = this.translation.translate(
+      `playerProfile.progression.schedule.dayLong.${best.day}`,
+    );
+    return this.translation.translate('playerProfile.progression.schedule.bestWeekday', { day });
+  });
+
+  /**
+   * Sentence naming the strongest time slot, empty when none qualifies.
+   */
+  private readonly bestHourSlot = computed(() => {
+    const best = this.hourSlots().find((slot) => slot.best);
     return best
-      ? this.translation.translate(`playerProfile.progression.schedule.dayLong.${best.day}`)
+      ? this.translation.translate('playerProfile.progression.schedule.bestHour', {
+          slot: this.slotRange(best.startHour),
+        })
       : '';
   });
 
   /**
-   * Strongest time slot label, empty when none qualifies.
+   * Both charts, weekday first.
    */
-  protected readonly bestHourSlot = computed(() => {
-    const slot = this.hourSlots().find((entry) => entry.best);
-    return slot ? this.slotRange(slot.startHour) : '';
-  });
+  protected readonly charts = computed<readonly ScheduleChart[]>(() => [
+    {
+      titleKey: 'playerProfile.progression.schedule.byWeekday',
+      xAxisKey: 'playerProfile.progression.schedule.axis.weekday',
+      bars: this.weekdayBars(),
+      summary: this.describe(this.weekdayBars()),
+      best: this.bestWeekday(),
+    },
+    {
+      titleKey: 'playerProfile.progression.schedule.byHour',
+      xAxisKey: 'playerProfile.progression.schedule.axis.hour',
+      bars: this.hourSlotBars(),
+      summary: this.describe(this.hourSlotBars()),
+      best: this.bestHourSlot(),
+    },
+  ]);
 
   /**
    * Formats a tooltip win rate in the reader's notation.
@@ -115,7 +135,7 @@ export class SchedulePerformance {
   /**
    * Hours a slot covers, e.g. `18h – 21h`, the last one ending at midnight.
    */
-  protected slotRange(startHour: number): string {
+  private slotRange(startHour: number): string {
     const end = startHour + 3;
     const endLabel =
       end === 24

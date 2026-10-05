@@ -78,7 +78,7 @@ export interface CampaignBase {
 /**
  * Sunday outcome if the week ended now; mirrors the backend `CampaignForecastResponse`.
  */
-export interface CampaignForecast {
+interface CampaignForecast {
   /**
    * One-based index of the week in the campaign.
    */
@@ -118,7 +118,7 @@ export interface CampaignForecast {
 /**
  * Totals over the settled weeks; mirrors the backend `CampaignTotalsResponse`.
  */
-export interface CampaignTotals {
+interface CampaignTotals {
   /**
    * Guardians defeated so far.
    */

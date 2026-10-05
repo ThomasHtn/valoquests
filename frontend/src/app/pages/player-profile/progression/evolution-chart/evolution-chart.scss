@@ -1,0 +1,40 @@
+@use 'tools' as *;
+
+.evolution-chart__title {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-primary);
+}
+
+/* Segmented like the profile's filters so it reads as a control, not tabs. */
+.evolution-chart__metrics {
+  background-color: tint(text-primary, 4%);
+}
+
+.evolution-chart__legend-label {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}
+
+.evolution-chart__legend-average {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.evolution-chart__single-average {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.evolution-chart__note {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-muted);
+}

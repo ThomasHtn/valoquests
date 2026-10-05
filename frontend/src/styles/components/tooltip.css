@@ -1,0 +1,70 @@
+/*
+ * Tooltip bubble, built by the `appTooltip` directive outside any component. In `components`,
+ * under Tailwind's utilities like the chains it replaced. No shadow: `clip-path` would cut it.
+ */
+
+@layer components {
+  .tooltip {
+    --notch: 0.375rem;
+
+    margin: 0;
+    border-left: 2px solid;
+    border-color: --alpha(var(--color-brand-500) / 50%);
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text-primary);
+    pointer-events: none;
+  }
+
+  .tooltip--sm,
+  .tooltip--template {
+    max-width: 18rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: calc(1.25 / 0.875);
+  }
+
+  .tooltip--template {
+    padding-block: 0.625rem;
+  }
+
+  .tooltip--md {
+    max-width: 20rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  /* A portrait beside a player's name. */
+  .tooltip--portrait {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem 0.5rem 0.625rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* The same disc as `app-avatar`. */
+  .tooltip__portrait {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: calc(infinity * 1px);
+    object-fit: cover;
+  }
+
+  .tooltip__portrait--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-700);
+    color: var(--color-text-secondary);
+  }
+
+  .tooltip__portrait-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

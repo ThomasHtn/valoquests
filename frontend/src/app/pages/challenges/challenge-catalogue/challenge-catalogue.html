@@ -1,9 +1,13 @@
-<div class="catalogue">
+<div class="challenge-catalogue">
   @for (group of groups(); track group.key) {
-    <section [attr.aria-label]="group.label" [style.--tone]="group.tone" class="cgroup">
-      <header class="cgroup-head">
+    <section
+      [attr.aria-label]="group.label"
+      [style.--tone]="group.tone"
+      class="challenge-catalogue__group"
+    >
+      <header class="challenge-catalogue__group-head">
         <span aria-hidden="true" class="hex-mark clip-hex">
-          <span class="clip-hex">
+          <span class="challenge-catalogue__hex-core clip-hex">
             @if (group.mark === 'D') {
               <svg class="size-5" lucideZap></svg>
             } @else {
@@ -11,14 +15,14 @@
             }
           </span>
         </span>
-        <p class="cgroup-name">{{ group.label }}</p>
-        <p class="cgroup-count label-caption text-2xs">
+        <p class="challenge-catalogue__group-name">{{ group.label }}</p>
+        <p class="challenge-catalogue__group-count label-caption text-2xs">
           {{ 'challenges.catalogue.count' | translate: { count: group.entries.length } }}
         </p>
       </header>
-      <ul class="cgrid">
+      <ul class="challenge-catalogue__entries">
         @for (entry of group.entries; track entry.id) {
-          <li class="crow">{{ entry.description }}</li>
+          <li class="challenge-catalogue__entry">{{ entry.description }}</li>
         }
       </ul>
     </section>

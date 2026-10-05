@@ -1,28 +1,17 @@
+import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 import { SEEN_POPULATION_KEY } from './base-scene.constants';
 
 /**
- * Convenience only: losing storage skips the building rise, never the drawing.
- */
-
-/**
- * Population last shown in this browser, `null` if unknown.
+ * Population last shown in this browser, `null` if unknown or storage is unavailable.
  */
 export function readSeenPopulation(): number | null {
-  try {
-    const stored = Number(localStorage.getItem(SEEN_POPULATION_KEY));
-    return Number.isFinite(stored) && stored > 0 ? stored : null;
-  } catch {
-    return null;
-  }
+  const stored = Number(readStorage(SEEN_POPULATION_KEY));
+  return Number.isFinite(stored) && stored > 0 ? stored : null;
 }
 
 /**
- * Records the population just shown.
+ * Records the population just shown; losing it only skips the next building rise.
  */
 export function writeSeenPopulation(population: number): void {
-  try {
-    localStorage.setItem(SEEN_POPULATION_KEY, String(population));
-  } catch {
-    // Storage unavailable: the next visit draws without the rise.
-  }
+  writeStorage(SEEN_POPULATION_KEY, String(population));
 }

@@ -1,6 +1,6 @@
 import { Service } from '@angular/core';
 
-import { STORAGE_KEY } from './landing-visit.constants';
+import { LANDING_ENTERED_STORAGE_KEY } from './landing-visit.constants';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
@@ -12,13 +12,13 @@ export class LandingVisit {
    * Whether the entry through the landing page is recorded.
    */
   public hasEntered(): boolean {
-    return readStorage(STORAGE_KEY) !== null;
+    return readStorage(LANDING_ENTERED_STORAGE_KEY) !== null;
   }
 
   /**
    * Records the entry, so later visits skip the landing.
    */
   public markEntered(): void {
-    writeStorage(STORAGE_KEY, 'true');
+    writeStorage(LANDING_ENTERED_STORAGE_KEY, 'true');
   }
 }

@@ -1,6 +1,6 @@
 import { inject, Service } from '@angular/core';
 import { Translation } from '@core/i18n/translation';
-import { SnackbarService } from '@core/snackbar/snackbar';
+import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { resolveAdminErrorMessage } from '../admin-error.utils';
 import { AdminCommandOptions } from './admin-command-runner.model';
 
@@ -17,7 +17,7 @@ export class AdminCommandRunner {
   /**
    * Shows the outcome once the command settles.
    */
-  private readonly snackbar = inject(SnackbarService);
+  private readonly snackbar = inject(SnackbarQueue);
 
   /**
    * Runs a command and reports its outcome through `options`.

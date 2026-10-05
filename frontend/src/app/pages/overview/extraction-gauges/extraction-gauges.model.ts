@@ -1,3 +1,4 @@
+import type { LucideIcon } from '@lucide/angular';
 import { ExtractionLimiter } from '@core/campaign/campaign-week.model';
 
 /**
@@ -88,4 +89,89 @@ export interface Capacity {
    * Hit points one percent of breakthrough costs.
    */
   readonly hitPointsPerPercent: number;
+}
+
+/**
+ * Which limit a dial measures, also its tone.
+ */
+export type LimitDialKey = 'carry' | 'shelter' | 'breach';
+
+/**
+ * One of the three limiting dials, every text already translated.
+ */
+export interface LimitDial {
+  /**
+   * Which limit, also the dial's tone.
+   */
+  readonly key: LimitDialKey;
+
+  /**
+   * Dial heading.
+   */
+  readonly name: string;
+
+  /**
+   * Accessible name of the info button.
+   */
+  readonly infoLabel: string;
+
+  /**
+   * Info button text explaining how the dial is worked out.
+   */
+  readonly tooltip: string;
+
+  /**
+   * Accessible reading of the dial.
+   */
+  readonly ariaLabel: string;
+
+  /**
+   * Fill of the ring, in [0, 1].
+   */
+  readonly fraction: number;
+
+  /**
+   * Figure counted up in the ring's centre.
+   */
+  readonly value: number;
+
+  /**
+   * Text after the figure (` %` for the breakthrough), empty otherwise.
+   */
+  readonly unit: string;
+
+  /**
+   * Icon above the figure.
+   */
+  readonly icon: LucideIcon;
+
+  /**
+   * Icon of the resource behind the dial, on its stock and rate lines.
+   */
+  readonly resourceIcon: LucideIcon;
+
+  /**
+   * Raw stock, formatted.
+   */
+  readonly stock: string;
+
+  /**
+   * Caption after the stock.
+   */
+  readonly stockLabel: string;
+
+  /**
+   * Game modes feeding the dial, as tags.
+   */
+  readonly modes: readonly string[];
+
+  /**
+   * Cost of one unit of the dial, formatted.
+   */
+  readonly rate: string;
+
+  /**
+   * Caption after the rate.
+   */
+  readonly rateLabel: string;
 }

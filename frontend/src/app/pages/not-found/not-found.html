@@ -2,15 +2,9 @@
 <app-page-header [heading]="'notFound.title' | translate" />
 
 <div class="page-body">
-  <section
-    class="resource-settle flex min-h-[60vh] flex-col items-center justify-center gap-6 py-6"
-  >
+  <section class="not-found__content resource-settle">
     <app-empty-plate [plate]="plate()" />
-    <a
-      appButton="primary"
-      class="inline-flex min-h-12 items-center gap-2 px-5 font-display text-sm font-semibold tracking-wide uppercase [--notch:0.625rem]"
-      routerLink="/overview"
-    >
+    <a appButton="primary" class="not-found__home-link" routerLink="/overview">
       <svg aria-hidden="true" class="size-4 shrink-0" lucideLayoutDashboard></svg>
       {{ 'notFound.backToOverview' | translate }}
     </a>

@@ -113,7 +113,7 @@ export interface PlayerDetails {
 /**
  * Today's diminishing-returns ladder before the next match; mirrors the backend `DailyYield`.
  */
-export interface DailyYield {
+interface DailyYield {
   /**
    * Valued matches already played today, in any mode.
    */

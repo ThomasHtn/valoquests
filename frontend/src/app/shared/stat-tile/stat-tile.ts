@@ -9,7 +9,7 @@ import { Tooltip } from '@shared/tooltip/tooltip';
   selector: 'app-stat-tile',
   imports: [Tooltip],
   templateUrl: './stat-tile.html',
-  host: { class: 'block border-t-2 border-brand-500 bg-text-primary/4 px-4 py-3.5' },
+  styleUrl: './stat-tile.scss',
 })
 export class StatTile {
   /**
@@ -23,9 +23,9 @@ export class StatTile {
   public readonly value = input.required<string | number>();
 
   /**
-   * Text color of the value, for judged figures such as a K/D.
+   * CSS colour of the value, for judged figures such as a K/D.
    */
-  public readonly valueClass = input('text-text-primary');
+  public readonly tone = input('var(--color-text-primary)');
 
   /**
    * Translated explanation shown on hover and focus, empty for none.

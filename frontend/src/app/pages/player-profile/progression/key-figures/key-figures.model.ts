@@ -37,9 +37,9 @@ export interface KeyFigure {
   readonly detail: string;
 
   /**
-   * Tailwind text colour of the value, when it carries one (a rank's colour).
+   * CSS colour of the value when it carries one (a rank's), bound as `--tone`.
    */
-  readonly valueClass?: string;
+  readonly valueTone?: string;
 
   /**
    * Rank badge drawn in place of a pictogram, when the figure is a rank.

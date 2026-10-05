@@ -16,7 +16,7 @@ import {
   resolvePlanetArtUrl,
 } from '@core/campaign/planets/campaign-planet-art.utils';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
-import { svgElement as el } from '@core/svg/svg-element.utils';
+import { svgElement } from '@core/svg/svg-element.utils';
 import {
   PLANET_ART_SIDE,
   PLANET_COLORS,
@@ -75,13 +75,13 @@ export class PlanetFigure {
    * Rebuilds the planet, the wounded marks, then the ring.
    */
   private draw(svg: SVGSVGElement, weekIndex: number, guardianLeft: number): void {
-    const rn = createSeededRandom(PLANET_SEED);
-    const frag = document.createDocumentFragment();
+    const random = createSeededRandom(PLANET_SEED);
+    const fragment = document.createDocumentFragment();
     // A ringed planet keeps room for its rings; a bare globe grows close to the guardian's ring.
     const side = isRingedPlanet(weekIndex) ? RINGED_PLANET_ART_SIDE : PLANET_ART_SIDE;
 
-    frag.append(
-      el('image', {
+    fragment.append(
+      svgElement('image', {
         href: resolvePlanetArtUrl(weekIndex),
         x: PLANET_CX - side / 2,
         y: PLANET_CY - side / 2,
@@ -89,37 +89,39 @@ export class PlanetFigure {
         height: side,
       }),
     );
-    frag.append(this.buildWoundedMarks(rn, side * PLANET_ART_DISC_RATIO));
-    frag.append(this.buildRing(guardianLeft));
+    fragment.append(this.buildWoundedMarks(random, side * PLANET_ART_DISC_RATIO));
+    fragment.append(this.buildRing(guardianLeft));
 
-    svg.replaceChildren(frag);
+    svg.replaceChildren(fragment);
   }
 
   /**
    * Breathing marks on the lit face, a texture rather than a count.
    */
-  private buildWoundedMarks(rn: () => number, discRadius: number): SVGGElement {
-    const marks = el('g');
+  private buildWoundedMarks(random: () => number, discRadius: number): SVGGElement {
+    const marks = svgElement('g');
     const litX = PLANET_CX + PLANET_ART_LIT_FACE.offset * discRadius;
     const litY = PLANET_CY + PLANET_ART_LIT_FACE.offset * discRadius;
     const litRadius = PLANET_ART_LIT_FACE.radius * discRadius - 8;
     for (let i = 0; i < WOUNDED_MARKS; i++) {
-      const a = rn() * Math.PI * 2;
-      const d = Math.sqrt(rn()) * discRadius * 0.82;
-      const px = PLANET_CX + Math.cos(a) * d;
-      const py = PLANET_CY + Math.sin(a) * d * 0.9;
-      const period = (2.4 + rn() * 2.6).toFixed(1);
+      const angle = random() * Math.PI * 2;
+      const distance = Math.sqrt(random()) * discRadius * 0.82;
+      const px = PLANET_CX + Math.cos(angle) * distance;
+      const py = PLANET_CY + Math.sin(angle) * distance * 0.9;
+      // Drawn before the shadow check, so a skipped mark still consumes the seeded sequence.
+      const period = (2.4 + random() * 2.6).toFixed(1);
       if (Math.hypot(px - litX, py - litY) > litRadius) {
-        continue; // nothing in the shadow
+        // Nothing in the shadow.
+        continue;
       }
-      const mark = el('circle', {
+      const mark = svgElement('circle', {
         cx: px.toFixed(1),
         cy: py.toFixed(1),
         r: 2.6,
         fill: PLANET_COLORS.warmCore,
       });
       mark.append(
-        el('animate', {
+        svgElement('animate', {
           attributeName: 'opacity',
           values: '0.95;0.35;0.95',
           dur: `${period}s`,
@@ -128,7 +130,7 @@ export class PlanetFigure {
       );
       marks.append(mark);
       marks.append(
-        el('circle', {
+        svgElement('circle', {
           cx: px.toFixed(1),
           cy: py.toFixed(1),
           r: 7,
@@ -144,7 +146,7 @@ export class PlanetFigure {
    * Breakthrough ring: standing segments in red, the others extinguished in place.
    */
   private buildRing(guardianLeft: number): SVGGElement {
-    const ring = el('g');
+    const ring = svgElement('g');
     const held = Math.round(RING_SEGMENTS * Math.max(0, Math.min(1, guardianLeft)));
     for (let i = 0; i < RING_SEGMENTS; i++) {
       const angle = (-90 + (i * 360) / RING_SEGMENTS) * (Math.PI / 180);
@@ -152,7 +154,7 @@ export class PlanetFigure {
       // Extinguished segments stay centred in the standing ones' band.
       const r0 = RING_INNER_RADIUS + (alive ? 0 : 3.5);
       const r1 = r0 + (alive ? 13 : 6);
-      const segment = el('line', {
+      const segment = svgElement('line', {
         x1: (PLANET_CX + Math.cos(angle) * r0).toFixed(1),
         y1: (PLANET_CY + Math.sin(angle) * r0).toFixed(1),
         x2: (PLANET_CX + Math.cos(angle) * r1).toFixed(1),
@@ -164,7 +166,7 @@ export class PlanetFigure {
       });
       if (alive) {
         segment.append(
-          el('animate', {
+          svgElement('animate', {
             attributeName: 'opacity',
             values: '0.92;0.6;0.92',
             dur: '3.4s',

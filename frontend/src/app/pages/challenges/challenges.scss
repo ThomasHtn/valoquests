@@ -1,52 +1,96 @@
+@use 'tools' as *;
+
+.challenges__content {
+  gap: clamp(2.5rem, 4vw, 3.25rem);
+}
+
 /* Container query: the sidebar takes its share of the viewport on a desktop. */
-.board {
+.challenges__board {
   container-type: inline-size;
 }
 
-.board-deck {
+.challenges__deck {
   display: none;
 }
 
 @container (width < 60rem) {
-  .board-table {
+  .challenges__table {
     display: none;
   }
 
-  .board-deck {
+  .challenges__deck {
     display: flex;
   }
 }
 
 /* The fold's bar is the section title itself. */
-.fold-bar {
+.challenges__fold-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem 1rem;
   list-style: none;
   cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  /* Mirrors the section rule link's hover. */
+  @include hover {
+    .challenges__fold-cue {
+      color: var(--color-brand-300);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
 }
 
-.fold-bar::-webkit-details-marker {
-  display: none;
-}
-
-.fold[open] .fold-bar {
+.challenges__fold[open] .challenges__fold-bar {
   margin-bottom: 1.5rem;
 }
 
-/* Phones: a line of its own, right-aligned on the diamond. */
-@media (width < 40rem) {
-  .fold-cue {
+.challenges__fold-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.1rem + 1.1vw, 2rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: var(--color-brand-400);
+  text-transform: uppercase;
+}
+
+.challenges__fold-rule {
+  flex: 1 1 3rem;
+  height: 1px;
+  background-image: linear-gradient(to right in oklab, tint(brand-500, 50%), transparent);
+
+  @include below(sm) {
+    flex-basis: 1rem;
+  }
+}
+
+.challenges__fold-cue {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: calc(1 / 0.75);
+  letter-spacing: var(--tracking-label);
+  color: var(--color-brand-400);
+  text-transform: uppercase;
+  transition: color var(--duration-fast) var(--ease-out-quart);
+
+  /* Phones: a line of its own, right-aligned on the diamond. */
+  @include below(sm) {
     order: 1;
     flex-basis: 100%;
     text-align: right;
   }
 }
 
-/* Mirrors the section rule link's hover. */
-.fold-bar:hover .fold-cue {
-  color: var(--color-brand-300);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.challenges__fold-diamond {
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid tint(brand-500, 70%);
+  rotate: 45deg;
 }

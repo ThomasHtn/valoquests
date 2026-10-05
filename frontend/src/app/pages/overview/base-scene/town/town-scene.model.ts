@@ -39,14 +39,9 @@ export interface TownSceneInputs {
 export type LotRow = 'back' | 'front';
 
 /**
- * One plot of the city: its place and when each building replaces the previous one.
+ * Place of a plot along its row, before any building is scheduled on it.
  */
-export interface Lot {
-  /**
-   * Stable identifier, seed of every random draw styling the lot.
-   */
-  readonly id: number;
-
+export interface LotSite {
   /**
    * Row the lot stands in.
    */
@@ -61,6 +56,16 @@ export interface Lot {
    * Width, in viewBox units.
    */
   readonly w: number;
+}
+
+/**
+ * One plot of the city: its place and when each building replaces the previous one.
+ */
+export interface Lot extends LotSite {
+  /**
+   * Stable identifier, seed of every random draw styling the lot.
+   */
+  readonly id: number;
 
   /**
    * Growth reaching each tier, indexed by tier (first: lot built, last: final building).
@@ -71,6 +76,36 @@ export interface Lot {
    * Tier height factor, so two lots of the same tier do not line up.
    */
   readonly scale: number;
+}
+
+/**
+ * How a row is cut into plots, in viewBox units.
+ */
+export interface RowLayout {
+  /**
+   * Left edge of the first plot.
+   */
+  readonly start: number;
+
+  /**
+   * Narrowest plot.
+   */
+  readonly minWidth: number;
+
+  /**
+   * Widest plot.
+   */
+  readonly maxWidth: number;
+
+  /**
+   * Narrowest gap between two plots.
+   */
+  readonly minGap: number;
+
+  /**
+   * Widest gap between two plots.
+   */
+  readonly maxGap: number;
 }
 
 /**
@@ -135,22 +170,22 @@ export interface WindowGrid {
   /**
    * Height of one floor, in viewBox units.
    */
-  readonly floorH: number;
+  readonly floorHeight: number;
 
   /**
    * Height of one window, in viewBox units.
    */
-  readonly winH: number;
+  readonly windowHeight: number;
 
   /**
    * Number of windows per floor.
    */
-  readonly cols: number;
+  readonly columns: number;
 
   /**
    * Width of one window, in viewBox units.
    */
-  readonly winW: number;
+  readonly windowWidth: number;
 
   /**
    * Gap between two windows of a floor, in viewBox units.
@@ -277,3 +312,8 @@ export interface SkyBody {
    */
   readonly elevation: number;
 }
+
+/**
+ * Turns a gradient or mask name into an id unique to one drawing.
+ */
+export type SceneIdMaker = (name: string) => string;

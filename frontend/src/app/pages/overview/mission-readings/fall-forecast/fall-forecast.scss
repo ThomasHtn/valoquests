@@ -1,25 +1,27 @@
-/* Patch-notes chart style: flat tints, curves in their column's colour, one pin, three ticks. */
-.fall {
-  --squad: var(--color-accent-violet);
-  --squad-light: color-mix(in srgb, var(--color-accent-violet) 45%, white);
-  --foe: var(--color-accent-red);
-  --foe-light: color-mix(in srgb, var(--color-accent-red) 40%, white);
+@use 'tools' as *;
+
+/*
+ * Patch-notes chart style: flat tints, curves in their column's colour, one pin, three ticks.
+ * `--squad`, `--foe` and their light steps come from the mission readings around it.
+ */
+.fall-forecast {
   --past: var(--color-accent-blue);
   --past-light: color-mix(in srgb, var(--color-accent-blue) 70%, white);
   --tone: var(--squad-light);
 
   display: block;
   border-top: 1px solid var(--color-edge);
-  background: rgb(4 10 15 / 52%);
+  /* Same sunken ground as the mission's clock and stakes. */
+  background: tint(night-well, 52%);
 }
 
-.fall[data-outcome='short'] {
+.fall-forecast--short {
   --tone: var(--foe-light);
 }
 
 /* ---------- The fold row ---------- */
 
-.fall-head {
+.fall-forecast__toggle {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -32,52 +34,68 @@
   text-align: left;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    background: tint(text-primary, 3%);
+
+    .fall-forecast__chevron {
+      border-color: var(--color-brand-500);
+      color: var(--color-brand-400);
+    }
+  }
+
+  @include below(sm) {
+    padding: 1rem 1.1rem;
+  }
 }
 
-.fall-head:hover {
-  background: rgb(236 232 225 / 3%);
-}
-
-.fall-text {
+.fall-forecast__text {
   display: grid;
   gap: 0.4rem;
   min-width: 0;
 }
 
-.fall-key {
+/* `text-3xs` on a phone so the heading holds on one line. */
+.fall-forecast__key {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   color: var(--color-text-secondary);
+
+  @include below(sm) {
+    font-size: var(--text-3xs);
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
 }
 
-.fall-key-icon {
+.fall-forecast__key-icon {
   width: 0.9rem;
   height: 0.9rem;
   color: var(--color-brand-400);
 }
 
-.fall-verdict {
+.fall-forecast__verdict {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.15rem 0.6rem;
 }
 
-.fall-verdict b {
+.fall-forecast__verdict-time {
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.15;
   color: var(--tone);
 }
 
-.fall-verdict span {
+.fall-forecast__verdict-margin {
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
-.fall-chevron {
+.fall-forecast__chevron {
   display: grid;
   place-items: center;
   width: 2rem;
@@ -89,133 +107,121 @@
     color var(--duration-fast) var(--ease-out-quart);
 }
 
-.fall-head:hover .fall-chevron {
-  border-color: var(--color-brand-500);
-  color: var(--color-brand-400);
-}
-
-.fall-chevron-icon {
+.fall-forecast__chevron-icon {
   width: 1rem;
   height: 1rem;
   transition: rotate 0.3s var(--ease-out-quart);
 }
 
-.fall-head[aria-expanded='true'] .fall-chevron-icon {
+.fall-forecast__toggle[aria-expanded='true'] .fall-forecast__chevron-icon {
   rotate: 180deg;
 }
 
 /* ---------- The unfolded chart ---------- */
 
-.fall-body {
+.fall-forecast__body {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.35s var(--ease-out-quart);
 }
 
-.fall-body.is-open {
+.fall-forecast__body--open {
   grid-template-rows: 1fr;
 }
 
-.fall-inner {
+.fall-forecast__clip {
   min-height: 0;
   overflow: hidden;
 }
 
-.fall-panel {
+.fall-forecast__panel {
   position: relative;
   padding-bottom: 0.8rem;
 }
 
-.fall-svg {
+.fall-forecast__chart {
   display: block;
   width: 100%;
   overflow: visible;
 }
 
-.fall-svg text {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 500;
-  fill: var(--color-text-muted);
-}
-
-.fall-zone--past {
+.fall-forecast__zone--past {
   fill: color-mix(in srgb, var(--past) 8%, var(--color-surface-950));
 }
 
-.fall-zone--ahead {
+.fall-forecast__zone--ahead {
   fill: color-mix(in srgb, var(--squad) 12%, var(--color-surface-950));
 }
 
-.fall-zone--short {
+.fall-forecast__zone--short {
   fill: color-mix(in srgb, var(--foe) 9%, var(--color-surface-950));
 }
 
-.fall-zone--spare {
+.fall-forecast__zone--spare {
   fill: color-mix(in srgb, var(--color-accent-gold) 10%, var(--color-surface-950));
 }
 
-.fall-area--past {
+.fall-forecast__area--past {
   fill: color-mix(in srgb, var(--past) 24%, var(--color-surface-950));
 }
 
-.fall-area--ahead {
+.fall-forecast__area--ahead {
   fill: color-mix(in srgb, var(--squad) 26%, var(--color-surface-950));
 }
 
-.fall-area--short {
+.fall-forecast__area--short {
   fill: color-mix(in srgb, var(--foe) 20%, var(--color-surface-950));
 }
 
-.fall-line {
+.fall-forecast__line {
   fill: none;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.fall-line--past {
+.fall-forecast__line--past {
   stroke: var(--past-light);
 }
 
-.fall-line--dashed {
+.fall-forecast__line--dashed {
   stroke-dasharray: 6 5;
 }
 
-.fall-line--ahead {
+.fall-forecast__line--ahead {
   stroke: var(--squad-light);
 }
 
-.fall-line--short {
+.fall-forecast__line--short {
   stroke: var(--foe-light);
 }
 
-.fall-post {
+.fall-forecast__fall-post {
   stroke: var(--color-text-secondary);
   stroke-width: 1;
   stroke-dasharray: 5 5;
 }
 
-.fall-stem {
+.fall-forecast__stem {
   stroke: var(--color-text-primary);
   stroke-width: 1.5;
   opacity: 0.45;
 }
 
-.fall-pin {
+.fall-forecast__pin {
   fill: var(--color-text-primary);
   stroke: var(--color-surface-950);
   stroke-width: 2;
 }
 
-.fall-diamond,
-.fall-kill {
+.fall-forecast__diamond,
+.fall-forecast__kill {
   fill: var(--color-brand-400);
   stroke: var(--color-surface-950);
   stroke-width: 2;
 }
 
-.fall-kill-check {
+.fall-forecast__kill-check {
   fill: none;
   stroke: var(--color-surface-950);
   stroke-width: 2.5;
@@ -223,42 +229,46 @@
   stroke-linejoin: round;
 }
 
-.fall-svg .fall-value {
+.fall-forecast__value,
+.fall-forecast__fall-label {
   font-family: var(--font-display);
-  font-size: 15px;
   font-weight: 600;
+}
+
+.fall-forecast__value {
+  font-size: 15px;
   fill: var(--color-text-primary);
 }
 
-.fall-svg .fall-value--short {
+.fall-forecast__value--short {
   fill: var(--foe-light);
 }
 
-.fall-svg .fall-mark {
-  font-family: var(--font-display);
+.fall-forecast__fall-label {
   font-size: 14px;
-  font-weight: 600;
   fill: var(--color-brand-400);
 }
 
-.fall-svg .fall-tick {
+.fall-forecast__tick {
+  font-family: var(--font-sans);
   font-size: 13px;
+  font-weight: 500;
   fill: var(--color-text-secondary);
 }
 
-.fall-cross {
+.fall-forecast__cross {
   stroke: var(--color-text-secondary);
   stroke-width: 1;
 }
 
-.fall-hit {
+.fall-forecast__hit {
   fill: transparent;
   cursor: crosshair;
   touch-action: pan-y;
 }
 
 /* Flipped left past the middle so it never leaves the panel. */
-.fall-tip {
+.fall-forecast__tip {
   position: absolute;
   z-index: 3;
   display: grid;
@@ -273,16 +283,16 @@
   transform: translate(var(--tip-x, 12px), var(--tip-y, calc(-100% - 8px)));
 }
 
-.fall-tip--left {
+.fall-forecast__tip--left {
   --tip-x: calc(-100% - 12px);
 }
 
 /* Drops under the pointer near the top, or the fold clips it. */
-.fall-tip--below {
+.fall-forecast__tip--below {
   --tip-y: 12px;
 }
 
-.fall-tip b {
+.fall-forecast__tip-value {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
@@ -291,35 +301,22 @@
 
 /* Unfolding draws the played curve, then the projection. */
 @media (prefers-reduced-motion: no-preference) {
-  .fall-body.is-open .fall-line--past {
+  .fall-forecast__body--open .fall-forecast__line--past {
     stroke-dasharray: 1;
     animation: fall-draw 0.7s var(--ease-out-quart) 0.1s both;
   }
 
-  .fall-body.is-open .fall-projection {
+  .fall-forecast__body--open .fall-forecast__projection {
     animation: fall-fade 0.45s ease-out 0.6s both;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fall-head,
-  .fall-chevron,
-  .fall-chevron-icon,
-  .fall-body {
+  .fall-forecast__toggle,
+  .fall-forecast__chevron,
+  .fall-forecast__chevron-icon,
+  .fall-forecast__body {
     transition: none;
-  }
-}
-
-@media (width < 40rem) {
-  .fall-head {
-    padding: 1rem 1.1rem;
-  }
-
-  /* Literal size: Tailwind drops theme variables no utility uses. */
-  .fall-key {
-    font-size: 0.5625rem;
-    letter-spacing: 0.12em;
-    white-space: nowrap;
   }
 }
 

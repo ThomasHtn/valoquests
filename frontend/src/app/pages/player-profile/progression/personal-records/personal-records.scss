@@ -1,0 +1,41 @@
+@use 'tools' as *;
+
+.personal-records__title {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-primary);
+}
+
+.personal-records__tile {
+  padding: 0.875rem 1rem;
+  border-top: 2px solid tint(brand-500, 40%);
+  background-color: tint(text-primary, 4%);
+}
+
+.personal-records__icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-brand-500);
+}
+
+.personal-records__label {
+  color: var(--color-text-muted);
+}
+
+.personal-records__value {
+  @include truncate;
+
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.personal-records__empty {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: var(--color-text-secondary);
+}

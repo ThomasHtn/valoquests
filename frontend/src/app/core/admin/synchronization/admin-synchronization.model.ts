@@ -1,13 +1,18 @@
 /**
  * Mirrors the backend `SynchronizationStatus`; all but `PENDING` and `RUNNING` are terminal.
  */
-export type SynchronizationStatus =
+export type SynchronizationRunStatus =
   'PENDING' | 'RUNNING' | 'PARTIAL' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 /**
- * One synchronization run; mirrors the backend `SynchronizationResponse`.
+ * What started a run: the scheduler or an operator.
  */
-export interface SynchronizationExecution {
+type SynchronizationTrigger = 'SCHEDULED' | 'MANUAL';
+
+/**
+ * Fields every view of a synchronization run shares.
+ */
+interface SynchronizationRun {
   /**
    * Internal identifier.
    */
@@ -19,14 +24,14 @@ export interface SynchronizationExecution {
   readonly type: string;
 
   /**
-   * Whether the run was started by hand or by the scheduler.
+   * What started the run.
    */
-  readonly trigger: 'SCHEDULED' | 'MANUAL';
+  readonly trigger: SynchronizationTrigger;
 
   /**
    * Outcome of the run.
    */
-  readonly status: SynchronizationStatus;
+  readonly status: SynchronizationRunStatus;
 
   /**
    * ISO-8601 instant the run started at, or `null` when it never did.
@@ -39,16 +44,6 @@ export interface SynchronizationExecution {
   readonly finishedAt: string | null;
 
   /**
-   * Instant of the last run, ISO-8601, or `null` when none ran.
-   */
-  readonly lastAttemptAt: string | null;
-
-  /**
-   * Instant of the last successful run, ISO-8601, or `null` when none succeeded.
-   */
-  readonly lastSuccessfulSynchronizationAt: string | null;
-
-  /**
    * Players the run covered.
    */
   readonly playersProcessed: number;
@@ -59,7 +54,7 @@ export interface SynchronizationExecution {
   readonly failureCount: number;
 
   /**
-   * Matches imported by the run.
+   * Matches imported by the run, every player included.
    */
   readonly matchesImported: number;
 
@@ -70,59 +65,24 @@ export interface SynchronizationExecution {
 }
 
 /**
+ * One synchronization run; mirrors the backend `SynchronizationResponse`.
+ */
+export interface SynchronizationExecution extends SynchronizationRun {
+  /**
+   * Instant of the last run, ISO-8601, or `null` when none ran.
+   */
+  readonly lastAttemptAt: string | null;
+
+  /**
+   * Instant of the last successful run, ISO-8601, or `null` when none succeeded.
+   */
+  readonly lastSuccessfulSynchronizationAt: string | null;
+}
+
+/**
  * One synchronization with per-player outcomes; mirrors `SynchronizationDetailsResponse`.
  */
-export interface SynchronizationDetails {
-  /**
-   * Internal identifier.
-   */
-  readonly id: number;
-
-  /**
-   * Kind of run, as named by the backend.
-   */
-  readonly type: string;
-
-  /**
-   * What started the run: the scheduler or an operator.
-   */
-  readonly trigger: 'SCHEDULED' | 'MANUAL';
-
-  /**
-   * Outcome of the run.
-   */
-  readonly status: SynchronizationStatus;
-
-  /**
-   * Start instant, ISO-8601, or `null` before the run started.
-   */
-  readonly startedAt: string | null;
-
-  /**
-   * End instant, ISO-8601, or `null` while running.
-   */
-  readonly finishedAt: string | null;
-
-  /**
-   * Players the run covered.
-   */
-  readonly playersProcessed: number;
-
-  /**
-   * Players whose synchronization failed.
-   */
-  readonly failureCount: number;
-
-  /**
-   * Matches imported by the run.
-   */
-  readonly matchesImported: number;
-
-  /**
-   * Stored failure message, or `null` when none.
-   */
-  readonly errorMessage: string | null;
-
+export interface SynchronizationDetails extends SynchronizationRun {
   /**
    * One result per player the run covered.
    */
@@ -132,7 +92,7 @@ export interface SynchronizationDetails {
 /**
  * One player's outcome in a synchronization; mirrors `PlayerResultResponse`.
  */
-export interface SynchronizationPlayerResult {
+interface SynchronizationPlayerResult {
   /**
    * Internal identifier of the player.
    */
@@ -146,7 +106,7 @@ export interface SynchronizationPlayerResult {
   /**
    * Outcome for this player.
    */
-  readonly status: SynchronizationStatus;
+  readonly status: SynchronizationRunStatus;
 
   /**
    * Henrik pages fetched for the player.
@@ -154,7 +114,7 @@ export interface SynchronizationPlayerResult {
   readonly pagesFetched: number;
 
   /**
-   * Matches imported by the run.
+   * Matches imported for this player.
    */
   readonly matchesImported: number;
 

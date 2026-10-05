@@ -8,6 +8,11 @@ import { ChallengeDifficulty } from '@core/challenges/challenge.model';
 export type RuleConstantIcon = 'sync' | 'base' | 'food' | 'components' | 'bed';
 
 /**
+ * Colour of a closing-sheet icon: brand, or the resource it concerns.
+ */
+export type RuleConstantTone = 'brand' | 'food' | 'components';
+
+/**
  * One value of the closing sheet: its dictionary key and how its label is marked.
  */
 export interface RuleConstant {
@@ -22,9 +27,9 @@ export interface RuleConstant {
   readonly icon: RuleConstantIcon;
 
   /**
-   * Text colour class of the icon.
+   * Colour of the icon.
    */
-  readonly tone: string;
+  readonly tone: RuleConstantTone;
 }
 
 /**

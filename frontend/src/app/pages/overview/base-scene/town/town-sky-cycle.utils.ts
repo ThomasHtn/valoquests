@@ -1,8 +1,8 @@
 import { SkyBody, SkyState } from './town-scene.model';
 import {
-  ARC_TOP,
   HORIZON,
   MOON_HOURS,
+  SKY_ARC_TOP,
   SKY_KEYS,
   SUN_HOURS,
   TOWN_WIDTH,
@@ -74,7 +74,7 @@ function bodyOnArc(hour: number, [rise, set]: readonly [number, number]): SkyBod
   const elevation = Math.sin(Math.PI * progress);
   return {
     x: 70 + progress * (TOWN_WIDTH - 140),
-    y: HORIZON - 4 - elevation * (HORIZON - 4 - ARC_TOP),
+    y: HORIZON - 4 - elevation * (HORIZON - 4 - SKY_ARC_TOP),
     elevation,
   };
 }

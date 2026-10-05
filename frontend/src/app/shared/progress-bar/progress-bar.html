@@ -1,29 +1,11 @@
 <!-- Fill; every moving part shares one transition so a refresh glides instead of snapping. -->
 <div
-  [class]="colorClass() + ' ' + (live() ? 'gauge-sheen relative overflow-hidden' : '')"
+  [style.--tone]="tone()"
   [style.width.%]="percentage()"
-  class="fx-grow h-full transition-[width] duration-600 ease-(--ease-gauge) motion-reduce:transition-none"
+  class="progress-bar__fill fx-grow"
 ></div>
 
-<!-- Second band, starting where the fill ends. -->
-@if (secondaryWidth(); as width) {
-  <span
-    [class]="secondaryColorClass()"
-    [style.left.%]="percentage()"
-    [style.width.%]="width"
-    class="fx-grow-in-place absolute inset-y-0 transition-[left,width] duration-600 ease-(--ease-gauge) motion-reduce:transition-none"
-  ></span>
-}
-
-<!-- Target tick, under the leading edge so the two never fight when they coincide. -->
-@if (visibleTargetMarker(); as target) {
-  <span [style.left.%]="target" class="absolute inset-y-0 -ml-px w-px bg-text-primary/70"></span>
-}
-
-<!-- Leading-edge marker inside the fill; skipped at 0 % and 100 % where it marks nothing. -->
-@if (edgeMarker() && percentage() > 0 && percentage() < 100) {
-  <span
-    [style.left.%]="percentage()"
-    class="fx-edge absolute inset-y-0 -ml-0.5 w-0.5 bg-text-primary transition-[left] duration-600 ease-(--ease-gauge) motion-reduce:transition-none"
-  ></span>
+<!-- Leading-edge marker inside the fill. -->
+@if (showsEdgeMarker()) {
+  <span [style.left.%]="percentage()" class="progress-bar__edge fx-edge"></span>
 }

@@ -7,7 +7,7 @@
   [attr.aria-label]="ariaLabel()"
   [disabled]="disabled()"
   aria-haspopup="listbox"
-  class="notch-tr focus-ring-inset flex min-h-10 cursor-pointer items-center gap-1.5 px-3 py-2 text-sm font-semibold text-text-primary transition-colors [--notch:0.5rem] hover:bg-brand-500/8 motion-safe:active:scale-[0.96] disabled:pointer-events-none disabled:opacity-40 sm:gap-2 sm:px-4"
+  class="select__trigger notch-tr focus-ring-inset press"
   role="combobox"
   type="button"
 >
@@ -16,13 +16,13 @@
   @if (selectedLabel(); as label) {
     <span>{{ label }}</span>
     <svg
-      [class.rotate-180]="isOpen()"
-      class="h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none"
+      [class.select__chevron--open]="isOpen()"
+      class="select__icon select__chevron"
       lucideChevronDown
     ></svg>
   } @else {
     <!-- Nothing selected: dots read as "more options", a chevron would promise a value. -->
-    <svg class="h-4 w-4 shrink-0 text-text-secondary" lucideEllipsisVertical></svg>
+    <svg class="select__icon" lucideEllipsisVertical></svg>
   }
 </button>
 
@@ -43,7 +43,7 @@
   <!-- Capped in height so a long list stays inside the viewport. -->
   <div class="menu-scroll">
     @if (emptyText() && options().length <= 1) {
-      <p class="px-4 py-2.5 text-base whitespace-nowrap text-text-secondary">{{ emptyText() }}</p>
+      <p class="select__empty">{{ emptyText() }}</p>
     } @else {
       @for (option of options(); track $index) {
         <!-- The current value keeps its own tint, distinct from the moving highlight. -->

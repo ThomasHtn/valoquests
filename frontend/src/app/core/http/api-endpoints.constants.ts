@@ -1,6 +1,11 @@
 import { environment } from '@env/environment';
 
 /**
+ * Root of the administration API, every route under it requiring the `X-Admin-Key` header.
+ */
+export const ADMIN_API_BASE_URL = `${environment.apiBaseUrl}/admin`;
+
+/**
  * Backend endpoints, resolved against the build's `apiBaseUrl`.
  */
 export const API_ENDPOINTS = {
@@ -94,90 +99,83 @@ export const API_ENDPOINTS = {
     /**
      * `GET` a check that the admin key is accepted.
      */
-    session: `${environment.apiBaseUrl}/admin/session`,
+    session: `${ADMIN_API_BASE_URL}/session`,
 
     /**
      * `POST` a background synchronization of every player.
      */
-    synchronizations: `${environment.apiBaseUrl}/admin/synchronizations`,
+    synchronizations: `${ADMIN_API_BASE_URL}/synchronizations`,
 
     /**
      * `GET` the latest synchronization execution.
      */
-    latestSynchronization: `${environment.apiBaseUrl}/admin/synchronizations/latest`,
+    latestSynchronization: `${ADMIN_API_BASE_URL}/synchronizations/latest`,
 
     /**
      * `GET` a page of past synchronizations, newest first.
      */
-    synchronizationHistory: `${environment.apiBaseUrl}/admin/synchronizations`,
+    synchronizationHistory: `${ADMIN_API_BASE_URL}/synchronizations`,
 
     /**
      * `GET` one synchronization with its per-player results.
      */
     synchronization: (synchronizationId: number): string =>
-      `${environment.apiBaseUrl}/admin/synchronizations/${synchronizationId}`,
+      `${ADMIN_API_BASE_URL}/synchronizations/${synchronizationId}`,
 
     /**
      * `POST` a background synchronization of one player.
      */
     playerSynchronization: (playerId: number): string =>
-      `${environment.apiBaseUrl}/admin/players/${playerId}/synchronizations`,
+      `${ADMIN_API_BASE_URL}/players/${playerId}/synchronizations`,
 
     /**
      * `POST` a fresh draw of the current week's challenges.
      */
-    challengeRedraw: `${environment.apiBaseUrl}/admin/challenges/current/redraw`,
-
-    /**
-     * `POST` a rebuild of the current weekly ranking.
-     */
-    rankingRecalculation: `${environment.apiBaseUrl}/admin/rankings/recalculation`,
+    challengeRedraw: `${ADMIN_API_BASE_URL}/challenges/current/redraw`,
 
     /**
      * `POST` the weekly rollover, run now.
      */
-    weeklyRollover: `${environment.apiBaseUrl}/admin/weeks/rollover`,
+    weeklyRollover: `${ADMIN_API_BASE_URL}/weeks/rollover`,
 
     /**
      * `GET` every player including archived ones, `POST` to add one.
      */
-    players: `${environment.apiBaseUrl}/admin/players`,
+    players: `${ADMIN_API_BASE_URL}/players`,
 
     /**
      * `PUT` a player's identity, `DELETE` to remove it.
      */
-    player: (playerId: number): string => `${environment.apiBaseUrl}/admin/players/${playerId}`,
+    player: (playerId: number): string => `${ADMIN_API_BASE_URL}/players/${playerId}`,
 
     /**
      * `PATCH` a player's lifecycle status.
      */
-    playerStatus: (playerId: number): string =>
-      `${environment.apiBaseUrl}/admin/players/${playerId}/status`,
+    playerStatus: (playerId: number): string => `${ADMIN_API_BASE_URL}/players/${playerId}/status`,
 
     /**
      * `POST` an irreversible wipe of everything derived from match history.
      */
-    campaignReset: `${environment.apiBaseUrl}/admin/maintenance/campaign-reset`,
+    campaignReset: `${ADMIN_API_BASE_URL}/maintenance/campaign-reset`,
 
     /**
      * `POST` a campaign opening at a difficulty and starting Monday.
      */
-    campaigns: `${environment.apiBaseUrl}/admin/campaigns`,
+    campaigns: `${ADMIN_API_BASE_URL}/campaigns`,
 
     /**
      * `POST` a stop of the live campaign, frozen at yesterday's base.
      */
-    campaignStop: `${environment.apiBaseUrl}/admin/campaigns/stop`,
+    campaignStop: `${ADMIN_API_BASE_URL}/campaigns/stop`,
 
     /**
      * `POST` the nightly tick, run now (idempotent).
      */
-    campaignTick: `${environment.apiBaseUrl}/admin/campaigns/tick`,
+    campaignTick: `${ADMIN_API_BASE_URL}/campaigns/tick`,
 
     /**
      * `DELETE` one campaign with its weeks, roster and snapshots.
      */
-    campaign: (campaignId: number): string =>
-      `${environment.apiBaseUrl}/admin/campaigns/${campaignId}`,
+    campaign: (campaignId: number): string => `${ADMIN_API_BASE_URL}/campaigns/${campaignId}`,
   },
 } as const;

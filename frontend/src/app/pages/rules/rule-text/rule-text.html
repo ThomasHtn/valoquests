@@ -1,17 +1,11 @@
 @for (run of runs(); track $index) {
   @if (run.icon) {
     <!-- Icon at text size on the baseline; the dictionary writes its word next to it. -->
-    <span
-      [class]="run.tone"
-      aria-hidden="true"
-      class="inline-block size-[1em] translate-y-[0.15em]"
-    >
+    <span [class]="run.modifier" aria-hidden="true" class="rule-text__icon">
       <svg [lucideIcon]="concepts[run.icon]" class="size-full"></svg>
     </span>
   } @else {
     <!-- One line per run: spacing comes from the sentence, never the template indentation. -->
-    <span [class.font-semibold]="run.strong" [class.text-text-primary]="run.strong">{{
-      run.text
-    }}</span>
+    <span [class.rule-text__run--strong]="run.strong">{{ run.text }}</span>
   }
 }

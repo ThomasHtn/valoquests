@@ -1,24 +1,35 @@
-.reserve {
+@use 'tools' as *;
+
+/* Bar wells, darker than any surface so the fills stand out. */
+$well: tint(night-well, 70%);
+
+.base-reserves {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
-}
 
-@media (width >= 64rem) {
-  .reserve {
+  @include from(lg) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.card {
+.base-reserves__card {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: rgb(236 232 225 / 4%);
+  background: tint(text-primary, 4%);
 }
 
-.tank {
+/* Figures in the running text. */
+.base-reserves__strong {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ---------- Tanks ---------- */
+
+.base-reserves__tank {
   --tone: var(--color-accent-green);
 
   display: grid;
@@ -27,18 +38,18 @@
   align-items: start;
 }
 
-.tank--comp {
+.base-reserves__tank--components {
   --tone: var(--color-accent-cyan);
 }
 
-.tank-body {
+.base-reserves__tank-body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
   min-width: 0;
 }
 
-.tank-top {
+.base-reserves__tank-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -46,7 +57,7 @@
   gap: 0.25rem 1rem;
 }
 
-.tank-v {
+.base-reserves__tank-stock {
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 600;
@@ -54,38 +65,35 @@
   color: var(--tone);
 }
 
-.tank-bar {
+.base-reserves__tank-gauge {
   position: relative;
   display: block;
   height: 8px;
-  background: rgb(4 10 15 / 70%);
+  background: $well;
 }
 
-.tank-bar > i {
+.base-reserves__tank-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--lvl);
+  width: var(--level);
   background: var(--tone);
 }
 
-.tank-sub {
+.base-reserves__tank-capacity {
   font-size: 1rem;
   color: var(--color-text-secondary);
 }
 
-.tank-sub b {
-  color: var(--color-text-primary);
-  font-weight: 600;
-}
+/* ---------- Rescue tally ---------- */
 
-.rescue-fig {
+.base-reserves__rescued {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.4rem 0.75rem;
 }
 
-.rescue-n {
+.base-reserves__rescued-count {
   font-family: var(--font-display);
   font-size: 3rem;
   font-weight: 600;
@@ -93,24 +101,24 @@
   color: var(--color-brand-400);
 }
 
-.rescue-of {
+.base-reserves__rescued-spotted {
   font-size: 1.0625rem;
   color: var(--color-text-secondary);
 }
 
-.stackbar {
+.base-reserves__rescue-bar {
   display: flex;
   gap: 2px;
   height: 12px;
-  background: rgb(4 10 15 / 70%);
+  background: $well;
 }
 
-.stackbar > span {
+.base-reserves__rescue-share {
   display: block;
   height: 100%;
 }
 
-.stack-legend {
+.base-reserves__rescue-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1.25rem;
@@ -118,23 +126,33 @@
   color: var(--color-text-secondary);
 }
 
-.stack-legend li {
+.base-reserves__rescue-legend-item {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.stack-legend i {
+.base-reserves__rescue-swatch {
   width: 0.7rem;
   height: 0.7rem;
 }
 
-.stack-legend b {
-  color: var(--color-text-primary);
-  font-weight: 600;
+.base-reserves__rescue-share--extraction,
+.base-reserves__rescue-swatch--extraction {
+  background: var(--color-brand-400);
 }
 
-.rescue-note {
+.base-reserves__rescue-share--challenges,
+.base-reserves__rescue-swatch--challenges {
+  background: var(--color-accent-blue);
+}
+
+.base-reserves__rescue-share--left-behind,
+.base-reserves__rescue-swatch--left-behind {
+  background: tint(text-primary, 20%);
+}
+
+.base-reserves__guardians {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -145,81 +163,78 @@
   color: var(--color-text-secondary);
 }
 
-.rescue-note b {
-  color: var(--color-text-primary);
-  font-weight: 600;
+.base-reserves__guardians-icon {
+  color: var(--color-boss-hp-edge);
 }
 
-.limit-band {
+/* ---------- Sunday limits ---------- */
+
+.base-reserves__limits {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   margin-top: 1.25rem;
-  background: rgb(236 232 225 / 4%);
-}
+  background: tint(text-primary, 4%);
 
-@media (width >= 64rem) {
-  .limit-band {
+  @include from(lg) {
     grid-template-columns: 13rem repeat(3, minmax(0, 1fr));
   }
-
-  .limit-band > * + * {
-    border-left: 1px solid var(--color-edge);
-  }
 }
 
-@media (width < 64rem) {
-  .limit-band > * + * {
-    border-top: 1px solid var(--color-edge);
-  }
-}
-
-.limit-lead {
+.base-reserves__limits-lead {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   padding: 1.1rem 1.25rem;
 }
 
-.limit-lead span:last-child {
+.base-reserves__limits-weeks {
   font-size: 0.9375rem;
   color: var(--color-text-muted);
 }
 
-.limit-item {
+.base-reserves__limit {
   --tone: var(--color-text-secondary);
 
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.9rem 1.25rem;
+
+  @include below(lg) {
+    border-top: 1px solid var(--color-edge);
+  }
+
+  @include from(lg) {
+    border-left: 1px solid var(--color-edge);
+  }
 }
 
-.limit-item--food {
+.base-reserves__limit--food {
   --tone: var(--color-accent-green);
 }
 
-.limit-item--comp {
+.base-reserves__limit--components {
   --tone: var(--color-accent-cyan);
 }
 
 /* Same amber as the mission's aboard row. */
-.limit-item--group {
+.base-reserves__limit--group {
   --tone: var(--color-brand-400);
 }
 
-.limit-item .hex-mark {
+.base-reserves__limit-mark {
   width: 2.5rem;
   height: 2.85rem;
 }
 
-.limit-n {
+.base-reserves__limit-count {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.limit-t {
+.base-reserves__limit-caption {
   margin-top: 0.3rem;
   font-size: 0.9375rem;
   color: var(--color-text-secondary);
@@ -227,20 +242,20 @@
 
 /* Tanks and rescue bar fill once on screen. */
 @media (prefers-reduced-motion: no-preference) {
-  .tank-bar > i,
-  .stackbar > span {
+  .base-reserves__tank-fill,
+  .base-reserves__rescue-share {
     animation: fx-grow-w var(--duration-gauge) var(--ease-gauge) both;
   }
 
-  .tank--comp .tank-bar > i {
+  .base-reserves__tank--components .base-reserves__tank-fill {
     animation-delay: 120ms;
   }
 
-  .stackbar > span:nth-child(2) {
+  .base-reserves__rescue-share--challenges {
     animation-delay: 160ms;
   }
 
-  .stackbar > span:nth-child(3) {
+  .base-reserves__rescue-share--left-behind {
     animation-delay: 320ms;
   }
 }

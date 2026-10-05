@@ -1,0 +1,9 @@
+/* Pressed feedback of a tappable control, skipped when the user asks for reduced motion. */
+
+@utility press {
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      scale: 0.96;
+    }
+  }
+}

@@ -1,73 +1,105 @@
-.board,
-.rows {
+@use 'tools' as *;
+
+.leaderboard__podium-rule {
+  display: block;
+  width: 100%;
+  height: 0.125rem;
+  background-color: var(--color-edge-strong);
+}
+
+/* The page column, not the viewport, decides. */
+.leaderboard__board {
+  container-type: inline-size;
+}
+
+.leaderboard__board,
+.leaderboard__rows {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-/* The page column, not the viewport, decides. */
-.board {
-  container-type: inline-size;
-}
-
 /* Column names only once a row holds columns. */
-.head {
+.leaderboard__head {
   display: none;
 }
 
+.leaderboard__label,
+.leaderboard__column {
+  color: var(--color-text-muted);
+}
+
+.leaderboard__column {
+  cursor: help;
+}
+
 /* Same row height as the squad page. */
-.row-link {
+.leaderboard__row-link {
   display: grid;
   grid-template-columns: 3.5rem minmax(0, 1fr);
   gap: 1rem;
   align-items: center;
   min-height: 5.0625rem;
   padding: 1.125rem 1rem;
-  background: rgb(236 232 225 / 4%);
+  border-left: 2px solid var(--color-edge);
+  background: tint(text-primary, 4%);
   transition:
     background-color var(--duration-fast) var(--ease-out-quart),
     border-color var(--duration-fast) var(--ease-out-quart);
+
+  @include hover {
+    border-left-color: tint(brand-500, 60%);
+    background: tint(brand-500, 12%);
+  }
+
+  &:active {
+    background: tint(brand-500, 18%);
+  }
 }
 
-/* Stated here: this fill outranks the template's `hover:` utility. */
-.row-link:hover {
-  background: rgb(217 149 74 / 12%);
-  border-left-color: rgb(217 149 74 / 60%);
-}
-
-.row-link:active {
-  background: rgb(217 149 74 / 18%);
-}
-
-.cell-pos {
+.leaderboard__position {
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
   white-space: nowrap;
 }
 
+.leaderboard__place-dash {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
 /* Inline, not flex: a flex box would take its baseline from the chevron. */
-.variation {
+.leaderboard__variation {
   display: inline;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  line-height: 1;
   font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent-green);
 }
 
-.variation svg {
+.leaderboard__variation--down {
+  color: var(--color-accent-red);
+}
+
+.leaderboard__variation-icon {
   display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
   vertical-align: -0.05em;
 }
 
-.cell-who {
+.leaderboard__operator {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   min-width: 0;
 }
 
-.who {
+.leaderboard__identity {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -75,45 +107,33 @@
   min-width: 0;
 }
 
-.who-name {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.who-titles {
+.leaderboard__titles {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
 }
 
-.name {
+.leaderboard__name {
+  @include truncate;
+
   min-width: 0;
+  font-family: var(--font-display);
   font-size: 1.125rem;
-  line-height: 1;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1;
+  color: var(--color-text-primary);
 }
 
-.row-link--idle .name {
+.leaderboard__name--champion {
+  color: var(--color-accent-gold);
+}
+
+.leaderboard__row-link--idle .leaderboard__name {
   color: var(--color-text-secondary);
 }
 
-.title {
-  flex: 0 0 auto;
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  line-height: 1;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
 /* Two figures per line, like the squad's rows. */
-.cell-figs {
+.leaderboard__figures {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -122,7 +142,7 @@
   border-top: 1px solid var(--color-edge);
 }
 
-.cell-fig {
+.leaderboard__figure {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -130,39 +150,69 @@
 }
 
 /* The gauge at its widest (+10 %) needs its own line on a phone. */
-.cell-fig--start {
+.leaderboard__figure--streak {
   grid-column: 1 / -1;
 }
 
-.cap {
+.leaderboard__caption {
   color: var(--color-text-muted);
 }
 
-.fig {
-  font-family: var(--font-display);
-  font-size: 1.125rem;
-  line-height: 1;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.leaderboard__caption-icon {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-right: 0.25rem;
+  translate: 0 -1px;
 }
 
-.fig-max {
+.leaderboard__value {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.leaderboard__value--score {
+  color: var(--color-accent-gold);
+}
+
+.leaderboard__value--damage {
+  color: var(--color-boss-hp-edge);
+}
+
+.leaderboard__value--points {
+  color: var(--color-brand-400);
+}
+
+.leaderboard__value--matches,
+.leaderboard__count {
+  color: var(--color-text-primary);
+}
+
+.leaderboard__count--complete {
+  color: var(--color-accent-green);
+}
+
+.leaderboard__count-max {
   font-size: 0.8125rem;
   font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 /* Operator leads, the place closes the row on the right. */
 @container (width < 59rem) {
-  .row-link {
+  .leaderboard__row-link {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .cell-who {
+  .leaderboard__operator {
     grid-row: 1;
     grid-column: 1;
   }
 
-  .cell-pos {
+  .leaderboard__position {
     grid-row: 1;
     grid-column: 2;
     justify-self: end;
@@ -171,19 +221,19 @@
 
 /* Six figures on one line. */
 @container (width >= 36rem) {
-  .cell-figs {
+  .leaderboard__figures {
     grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
   }
 
-  .cell-fig--start {
+  .leaderboard__figure--streak {
     grid-column: auto;
   }
 }
 
 /* About 58rem of board keeps the name room beside the six figures. */
 @container (width >= 59rem) {
-  .head,
-  .row-link {
+  .leaderboard__head,
+  .leaderboard__row-link {
     display: grid;
     /* Fixed tracks: header and rows are separate grids that must align. */
     grid-template-columns: 3rem minmax(8rem, 1fr) 5rem 4.5rem 5rem 4rem 4.5rem 10rem;
@@ -191,58 +241,58 @@
     align-items: center;
   }
 
-  .row-link {
+  .leaderboard__row-link {
     padding-inline: 1.25rem;
   }
 
-  .head {
+  .leaderboard__head {
     padding: 0.6rem 1.25rem;
   }
 
-  .bar-count {
+  .leaderboard__head .bar-count {
     justify-self: center;
   }
 
   /* The move hangs in its own track so the place stays centred. */
-  .cell-pos {
+  .leaderboard__position {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: baseline;
   }
 
-  .cell-pos > :first-child {
+  .leaderboard__place {
     grid-column: 2;
   }
 
-  .variation {
+  .leaderboard__variation {
     grid-column: 3;
     justify-self: start;
     margin-left: 0.25rem;
   }
 
-  .head-fig {
+  .leaderboard__column {
     justify-self: end;
     white-space: nowrap;
   }
 
-  .cell-figs {
+  .leaderboard__figures {
     display: contents;
   }
 
-  .cell-fig {
+  .leaderboard__figure {
     align-items: flex-end;
   }
 
   /* Left-aligned so the pips hold still whatever the bonus width. */
-  .head-fig--start {
+  .leaderboard__column--streak {
     justify-self: start;
   }
 
-  .cell-fig--start {
+  .leaderboard__figure--streak {
     align-items: flex-start;
   }
 
-  .cap {
+  .leaderboard__caption {
     display: none;
   }
 }

@@ -1,8 +1,8 @@
 <!-- Range and arrows, only when the squad outgrows the board. -->
 @if (slidable()) {
   @let shown = range();
-  <div class="nav">
-    <span class="nav-range tabular-nums">
+  <div class="challenge-board__nav">
+    <span class="challenge-board__range tabular-nums">
       {{ 'challenges.board.range' | translate: shown }}
     </span>
     <button
@@ -10,7 +10,7 @@
       [attr.aria-label]="'challenges.board.previous' | translate"
       [attr.title]="'challenges.board.previous' | translate"
       [disabled]="shown.from === 1"
-      class="nav-btn focus-ring"
+      class="challenge-board__nav-button focus-ring"
       type="button"
     >
       <svg aria-hidden="true" class="size-4" lucideChevronLeft></svg>
@@ -20,7 +20,7 @@
       [attr.aria-label]="'challenges.board.next' | translate"
       [attr.title]="'challenges.board.next' | translate"
       [disabled]="shown.to === shown.total"
-      class="nav-btn focus-ring"
+      class="challenge-board__nav-button focus-ring"
       type="button"
     >
       <svg aria-hidden="true" class="size-4" lucideChevronRight></svg>
@@ -32,38 +32,43 @@
   [attr.aria-label]="'challenges.board.region' | translate"
   [style.--shift.px]="offset()"
   [style.width.px]="tableWidth()"
-  class="board"
+  class="challenge-board__table"
 >
   <colgroup>
     <col [style.width.px]="leadWidth()" />
     @for (operator of operators(); track operator.playerId) {
-      <col class="col-op" />
+      <col class="challenge-board__operator-column" />
     }
   </colgroup>
 
   <thead>
     <tr>
-      <th class="lead" scope="col">
+      <th class="challenge-board__lead" scope="col">
         <!-- Named for assistive tech; the eye gets the week it covers. -->
         <span class="sr-only">{{ 'challenges.board.challenge' | translate }}</span>
-        <span aria-hidden="true" class="period">{{ period() }}</span>
+        <span aria-hidden="true" class="challenge-board__period">{{ period() }}</span>
       </th>
       @for (operator of operators(); track operator.playerId; let i = $index) {
         @let label =
           (operator.pinned ? 'challenges.board.unpin' : 'challenges.board.pin')
             | translate: { name: operator.name };
         <!-- The whole tile pins; the name is the accessible name, the title the action. -->
-        <th [attr.data-column]="i" [style.--i]="i" class="op slide" scope="col">
+        <th
+          [attr.data-column]="i"
+          [style.--column-index]="i"
+          class="challenge-board__operator-cell challenge-board__operator-head"
+          scope="col"
+        >
           <button
             (click)="pinOperator(operator.playerId)"
             [attr.aria-pressed]="operator.pinned"
             [attr.title]="label"
-            class="op-btn"
+            class="challenge-board__operator-button"
             type="button"
           >
             <app-avatar [src]="operator.portrait" size="sm" />
-            <span class="op-name">{{ operator.name }}</span>
-            <svg aria-hidden="true" class="op-star" lucideStar></svg>
+            <span class="challenge-board__operator-name">{{ operator.name }}</span>
+            <svg aria-hidden="true" class="challenge-board__operator-star" lucideStar></svg>
           </button>
         </th>
       }
@@ -73,18 +78,23 @@
   <tbody>
     @for (row of rows(); track row.key; let r = $index) {
       <tr
-        [class.row--weekly]="!row.daily"
+        [class.challenge-board__row--weekly]="!row.daily"
         [style.--fx-delay.ms]="r * rowStagger"
         [style.--tone]="row.tone"
       >
-        <th class="lead" scope="row">
-          <app-board-head [class.head--even]="!row.daily" [row]="row" />
+        <th class="challenge-board__lead" scope="row">
+          <app-board-head [row]="row" />
           @if (row.daily) {
-            <app-daily-week [(selected)]="pickedDay" [days]="days()" [slim]="true" class="tally" />
+            <app-daily-week
+              [(selected)]="pickedDay"
+              [days]="days()"
+              [slim]="true"
+              class="challenge-board__tally"
+            />
           }
         </th>
         @for (mark of row.marks; track mark.playerId; let i = $index) {
-          <td [style.--i]="i" class="slide">
+          <td [style.--column-index]="i" class="challenge-board__operator-cell">
             <app-progress-mark [mark]="mark" />
           </td>
         }
@@ -94,7 +104,7 @@
 
   <tfoot>
     <tr [style.--fx-delay.ms]="rows().length * rowStagger">
-      <th class="lead" scope="row">
+      <th class="challenge-board__lead" scope="row">
         <span
           [appTooltip]="
             (rescueActive()
@@ -102,14 +112,14 @@
               : 'challenges.board.totalsPointsTooltip'
             ) | translate
           "
-          class="totals focus-ring"
+          class="challenge-board__totals focus-ring"
           tabindex="0"
         >
-          @if (rescueActive()) {
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.wounded"></svg>
-          } @else {
-            <svg aria-hidden="true" class="size-4" [lucideIcon]="concepts.points"></svg>
-          }
+          <svg
+            aria-hidden="true"
+            class="challenge-board__totals-icon size-4"
+            [lucideIcon]="rewardIcon()"
+          ></svg>
           {{
             (rescueActive() ? 'challenges.board.totals' : 'challenges.board.totalsPoints')
               | translate
@@ -117,17 +127,15 @@
         </span>
       </th>
       @for (operator of operators(); track operator.playerId; let i = $index) {
-        <td [style.--i]="i" class="slide">
-          <span [appTooltip]="operator.summary" aria-hidden="true" class="sum">
+        <td [style.--column-index]="i" class="challenge-board__operator-cell">
+          <span [appTooltip]="operator.summary" aria-hidden="true" class="challenge-board__reward">
             @if (operator.reward === 0) {
-              <span class="sum-dash">—</span>
+              <span class="challenge-board__reward-dash">—</span>
             } @else {
-              @if (rescueActive()) {
-                <svg class="size-3.5" [lucideIcon]="concepts.wounded"></svg>
-              } @else {
-                <svg class="size-3.5" [lucideIcon]="concepts.points"></svg>
-              }
-              <b class="tabular-nums">+{{ operator.reward | figure }}</b>
+              <svg class="size-3.5" [lucideIcon]="rewardIcon()"></svg>
+              <b class="challenge-board__reward-value tabular-nums"
+                >+{{ operator.reward | figure }}</b
+              >
             }
           </span>
           <span class="sr-only">{{ operator.summary }}</span>

@@ -1,0 +1,100 @@
+/*
+ * `appButton` chrome. In `components`, under Tailwind's utilities like the chain it replaced,
+ * so a call site's utilities and stylesheet still win.
+ */
+
+@layer components {
+  .button {
+    cursor: pointer;
+    transition-property: color, background-color, border-color;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out-quart);
+  }
+
+  .button--secondary,
+  .button--accent,
+  .button--danger-outline {
+    @apply notch-tr-edge;
+
+    border: 1px solid;
+  }
+
+  .button--primary {
+    background-color: var(--color-brand-500);
+    color: var(--color-surface-950);
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: var(--color-brand-400);
+      }
+    }
+  }
+
+  .button--secondary {
+    border-color: --alpha(var(--color-text-secondary) / 40%);
+    color: var(--color-text-secondary);
+
+    @media (hover: hover) {
+      &:hover {
+        border-color: --alpha(var(--color-brand-400) / 70%);
+        color: var(--color-brand-400);
+      }
+    }
+  }
+
+  .button--ghost {
+    color: var(--color-text-secondary);
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: --alpha(var(--color-brand-500) / 8%);
+        color: var(--color-text-primary);
+      }
+    }
+  }
+
+  .button--accent {
+    border-color: --alpha(var(--color-brand-500) / 45%);
+    background-color: --alpha(var(--color-brand-500) / 12%);
+    color: var(--color-brand-400);
+
+    @media (hover: hover) {
+      &:hover {
+        border-color: --alpha(var(--color-brand-500) / 70%);
+        background-color: --alpha(var(--color-brand-500) / 20%);
+      }
+    }
+  }
+
+  .button--danger {
+    background-color: var(--color-danger);
+    color: var(--color-surface-950);
+
+    @media (hover: hover) {
+      &:hover {
+        background-color: --alpha(var(--color-danger) / 90%);
+      }
+    }
+  }
+
+  .button--danger-outline {
+    border-color: --alpha(var(--color-danger) / 40%);
+    color: var(--color-danger);
+
+    @media (hover: hover) {
+      &:hover {
+        border-color: --alpha(var(--color-danger) / 70%);
+        background-color: --alpha(var(--color-danger) / 12%);
+      }
+    }
+  }
+
+  /* Last, so it beats every variant's hover. Neutral, not faded: faded amber read as another button. */
+  .button:disabled {
+    border-color: var(--color-edge);
+    background-color: var(--color-surface-700);
+    color: var(--color-text-muted);
+    opacity: 1;
+    cursor: not-allowed;
+  }
+}

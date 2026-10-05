@@ -9,8 +9,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
   selector: 'app-compass',
   imports: [TranslatePipe],
   templateUrl: './compass.html',
-  // Every ring is a fraction of `--compass-size`, so the bezel ratios cannot drift.
-  host: { class: 'block [--compass-size:210px] sm:[--compass-size:300px]' },
+  styleUrl: './compass.scss',
 })
 export class Compass {
   /**

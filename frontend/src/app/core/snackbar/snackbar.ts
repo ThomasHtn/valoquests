@@ -6,7 +6,7 @@ import { SNACKBAR_DURATION_MS, SNACKBAR_ERROR_DURATION_MS } from './snackbar.con
  * Global snackbar queue: one slot on screen, so back-to-back messages each get their turn.
  */
 @Service()
-export class SnackbarService {
+export class SnackbarQueue {
   /**
    * Waiting messages in arrival order, excluding {@link current}.
    */

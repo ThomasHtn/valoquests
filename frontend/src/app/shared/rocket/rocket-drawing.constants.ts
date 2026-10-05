@@ -1,7 +1,7 @@
 import { ShipStage } from './rocket-drawing.model';
 
 /**
- * Ship palette, in the site's colours.
+ * Ship palette, in the site's colours; SVG attributes cannot read CSS variables (`ghost` is `--color-ghost-line`).
  */
 export const ROCKET_PALETTE = {
   mast: '#2b3a45',

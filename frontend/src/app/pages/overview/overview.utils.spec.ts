@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { campaign, translate, week } from './overview.fixtures';
-import { buildFrieze } from './overview.utils';
+import { buildFrieze, formatSigned } from './overview.utils';
 
 describe('buildFrieze', () => {
   it('returns nothing outside a campaign', () => {
@@ -104,5 +104,14 @@ describe('buildFrieze', () => {
     expect(entry.title).toBe(
       'overview.frieze.title(common.guardianCategory.STANDARD,overview.frieze.unplayed)',
     );
+  });
+});
+
+describe('formatSigned', () => {
+  it('signs gains with a plus, losses with a true minus, and leaves zero bare', () => {
+    const format = (amount: number) => String(amount);
+    expect(formatSigned(1200, format)).toBe('+1200');
+    expect(formatSigned(-40, format)).toBe('−40');
+    expect(formatSigned(0, format)).toBe('0');
   });
 });

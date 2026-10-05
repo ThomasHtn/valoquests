@@ -1,3 +1,14 @@
+@use 'tools' as *;
+
 :host {
   display: block;
+}
+
+/* Keeps the frame's proportions, within bounds so phones and wide screens both crop instead. */
+.base-scene__drawing {
+  display: block;
+  width: 100%;
+  min-height: 15rem;
+  max-height: 30rem;
+  aspect-ratio: 1200 / 322;
 }

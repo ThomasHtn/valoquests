@@ -5,13 +5,13 @@ import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
 import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
 import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/synchronization/admin-synchronization.constants';
-import { SynchronizationExecution } from '@core/admin/synchronization/admin-synchronization.model';
+import { SynchronizationRunStatus } from '@core/admin/synchronization/admin-synchronization.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { resourceValue } from '@core/http/resource-state.utils';
-import { SnackbarService } from '@core/snackbar/snackbar';
+import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
-import { formatSynchronizationTimestamp } from '@layout/sidebar/sidebar.utils';
+import { formatCampaignDateTime } from '@core/date/date-format.utils';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -23,6 +23,7 @@ import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
 import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
+import { SynchronizationFigure } from './admin-operations.model';
 
 /**
  * Backoffice operations: each card triggers a whole scheduled job.
@@ -45,6 +46,7 @@ import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
     StatusBadge,
   ],
   templateUrl: './admin-operations.html',
+  styleUrl: './admin-operations.scss',
   host: { class: PAGE_LAYOUT_CLASS },
 })
 export class AdminOperations {
@@ -66,17 +68,17 @@ export class AdminOperations {
   /**
    * Reports "no player selected", which never reaches the runner.
    */
-  private readonly snackbar = inject(SnackbarService);
+  private readonly snackbar = inject(SnackbarQueue);
 
   /**
    * Tracked players, for the per-player picker.
    */
-  protected readonly playersResource = this.adminApi.players;
+  private readonly playersResource = this.adminApi.players;
 
   /**
    * Latest synchronization execution.
    */
-  protected readonly synchronizationResource = this.adminApi.latestSynchronization;
+  private readonly synchronizationResource = this.adminApi.latestSynchronization;
 
   /**
    * Latest execution, `undefined` when none ever ran.
@@ -159,12 +161,48 @@ export class AdminOperations {
   });
 
   /**
+   * Badge tone of the latest execution, brand while it runs.
+   */
+  protected readonly statusTone = computed<StatusBadgeTone>(() =>
+    this.synchronizing() ? 'brand' : 'neutral',
+  );
+
+  /**
+   * Counters of the latest execution, failures in danger tones once any occurred.
+   */
+  protected readonly statusFigures = computed<readonly SynchronizationFigure[]>(() => {
+    const execution = this.synchronization();
+
+    if (execution === undefined) {
+      return [];
+    }
+
+    return [
+      {
+        labelKey: 'admin.operations.playersProcessed',
+        value: execution.playersProcessed,
+        alert: false,
+      },
+      {
+        labelKey: 'admin.operations.matchesImported',
+        value: execution.matchesImported,
+        alert: false,
+      },
+      {
+        labelKey: 'admin.operations.failures',
+        value: execution.failureCount,
+        alert: execution.failureCount > 0,
+      },
+    ];
+  });
+
+  /**
    * Start time of the latest execution, `''` when absent (the backend omits null fields).
    */
   protected readonly startedLabel = computed(() => {
     const startedAt = this.synchronization()?.startedAt;
 
-    return startedAt ? formatSynchronizationTimestamp(startedAt, this.translation.language()) : '';
+    return startedAt ? formatCampaignDateTime(startedAt, this.translation.language()) : '';
   });
 
   /**
@@ -231,15 +269,16 @@ export class AdminOperations {
   }
 
   /**
-   * Formats a start timestamp for the template.
+   * Start time of a history run, a dash when the backend omitted it.
    */
-  protected readonly formatTimestamp = (instant: string): string =>
-    formatSynchronizationTimestamp(instant, this.translation.language());
+  protected formatRunStart(startedAt: string | null): string {
+    return startedAt ? formatCampaignDateTime(startedAt, this.translation.language()) : '—';
+  }
 
   /**
    * Badge tone of a history status.
    */
-  protected historyStatusTone(status: SynchronizationExecution['status']): StatusBadgeTone {
+  protected historyStatusTone(status: SynchronizationRunStatus): StatusBadgeTone {
     if (IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(status)) {
       return 'brand';
     }

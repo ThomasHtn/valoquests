@@ -1,37 +1,42 @@
 <!-- The whole line toggles the chart. -->
-<div [attr.data-outcome]="fall().outcome" class="fall">
+<div [class]="'fall-forecast fall-forecast--' + fall().outcome">
   <button
     (click)="toggle()"
     [attr.aria-expanded]="open()"
     aria-controls="fall-forecast-body"
-    class="fall-head focus-ring"
+    class="fall-forecast__toggle focus-ring"
     type="button"
   >
-    <span class="fall-text">
-      <span class="fall-key label-caption">
-        <svg aria-hidden="true" class="fall-key-icon" lucideHourglass></svg>
+    <span class="fall-forecast__text">
+      <span class="fall-forecast__key label-caption">
+        <svg aria-hidden="true" class="fall-forecast__key-icon" lucideHourglass></svg>
         {{ heading() }}
       </span>
-      <span class="fall-verdict">
-        <b>{{ verdict() }}</b>
-        <span>{{ margin() }}</span>
+      <span class="fall-forecast__verdict">
+        <b class="fall-forecast__verdict-time">{{ verdict() }}</b>
+        <span class="fall-forecast__verdict-margin">{{ margin() }}</span>
       </span>
     </span>
-    <span aria-hidden="true" class="fall-chevron">
-      <svg class="fall-chevron-icon" lucideChevronDown></svg>
+    <span aria-hidden="true" class="fall-forecast__chevron">
+      <svg class="fall-forecast__chevron-icon" lucideChevronDown></svg>
     </span>
   </button>
 
-  <div [class.is-open]="open()" [inert]="!open()" class="fall-body" id="fall-forecast-body">
-    <div class="fall-inner">
+  <div
+    [class.fall-forecast__body--open]="open()"
+    [inert]="!open()"
+    class="fall-forecast__body"
+    id="fall-forecast-body"
+  >
+    <div class="fall-forecast__clip">
       <!-- Edge to edge; only the edge ticks keep a gutter. -->
-      <div #panel class="fall-panel">
+      <div #panel class="fall-forecast__panel">
         @if (chart(); as chart) {
           <svg
             [attr.aria-label]="summary()"
             [attr.height]="chart.height"
             [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
-            class="fall-svg"
+            class="fall-forecast__chart"
             role="img"
           >
             @for (zone of chart.zones; track zone.kind) {
@@ -39,23 +44,33 @@
                 [attr.height]="chart.plotHeight"
                 [attr.width]="zone.width"
                 [attr.x]="zone.x"
-                [class]="'fall-zone fall-zone--' + zone.kind"
+                [class]="'fall-forecast__zone fall-forecast__zone--' + zone.kind"
                 y="0"
               />
             }
 
-            <path [attr.d]="chart.pastArea" class="fall-area fall-area--past" />
+            <path [attr.d]="chart.pastArea" class="fall-forecast__area fall-forecast__area--past" />
             @if (chart.projectionArea && chart.projectionLine) {
               <path
                 [attr.d]="chart.projectionArea"
-                [class]="'fall-area fall-projection fall-area--' + fall().outcome"
+                [class]="
+                  'fall-forecast__area fall-forecast__projection fall-forecast__area--' +
+                  fall().outcome
+                "
               />
               <path
                 [attr.d]="chart.projectionLine"
-                [class]="'fall-line fall-line--dashed fall-projection fall-line--' + fall().outcome"
+                [class]="
+                  'fall-forecast__line fall-forecast__line--dashed fall-forecast__projection fall-forecast__line--' +
+                  fall().outcome
+                "
               />
             }
-            <path [attr.d]="chart.pastLine" class="fall-line fall-line--past" pathLength="1" />
+            <path
+              [attr.d]="chart.pastLine"
+              class="fall-forecast__line fall-forecast__line--past"
+              pathLength="1"
+            />
 
             <!-- The fall: a dashed post, its moment at the top. -->
             @if (chart.fall; as mark) {
@@ -63,29 +78,29 @@
                 [attr.x1]="mark.x"
                 [attr.x2]="mark.x"
                 [attr.y2]="chart.plotHeight"
-                class="fall-post"
+                class="fall-forecast__fall-post"
                 y1="22"
               />
               <text
                 [attr.text-anchor]="chart.fallAnchor"
                 [attr.x]="mark.x"
-                class="fall-mark"
+                class="fall-forecast__fall-label"
                 y="16"
               >
                 {{ fallLabel() }}
               </text>
               @if (fall().outcome === 'down') {
-                <circle [attr.cx]="mark.x" [attr.cy]="mark.y" class="fall-kill" r="9" />
+                <circle [attr.cx]="mark.x" [attr.cy]="mark.y" class="fall-forecast__kill" r="9" />
                 <path
                   [attr.d]="'M' + (mark.x - 4) + ',' + mark.y + ' l3,3 l5,-6'"
-                  class="fall-kill-check"
+                  class="fall-forecast__kill-check"
                 />
               } @else {
                 <rect
                   [attr.transform]="'rotate(45 ' + mark.x + ' ' + mark.y + ')'"
                   [attr.x]="mark.x - 6"
                   [attr.y]="mark.y - 6"
-                  class="fall-diamond"
+                  class="fall-forecast__diamond"
                   height="12"
                   width="12"
                 />
@@ -99,13 +114,13 @@
                 [attr.x2]="end.x"
                 [attr.y1]="end.y"
                 [attr.y2]="chart.plotHeight"
-                class="fall-stem"
+                class="fall-forecast__stem"
               />
-              <circle [attr.cx]="end.x" [attr.cy]="end.y" class="fall-pin" r="5" />
+              <circle [attr.cx]="end.x" [attr.cy]="end.y" class="fall-forecast__pin" r="5" />
               <text
                 [attr.x]="end.x - 10"
                 [attr.y]="end.y + 24"
-                class="fall-value fall-value--short"
+                class="fall-forecast__value fall-forecast__value--short"
                 text-anchor="end"
               >
                 {{ endValue() }}
@@ -119,22 +134,27 @@
                 [attr.x2]="now.x"
                 [attr.y1]="now.y"
                 [attr.y2]="chart.plotHeight"
-                class="fall-stem"
+                class="fall-forecast__stem"
               />
-              <circle [attr.cx]="now.x" [attr.cy]="now.y" class="fall-pin" r="5.5" />
-              <text [attr.x]="now.x" [attr.y]="now.y - 12" class="fall-value" text-anchor="middle">
+              <circle [attr.cx]="now.x" [attr.cy]="now.y" class="fall-forecast__pin" r="5.5" />
+              <text
+                [attr.x]="now.x"
+                [attr.y]="now.y - 12"
+                class="fall-forecast__value"
+                text-anchor="middle"
+              >
                 {{ nowValue() }}
               </text>
             }
 
-            <text [attr.x]="chart.gutter" [attr.y]="chart.height - 6" class="fall-tick">
+            <text [attr.x]="chart.gutter" [attr.y]="chart.height - 6" class="fall-forecast__tick">
               {{ ticks().start }}
             </text>
             @if (chart.now; as now) {
               <text
                 [attr.x]="now.x"
                 [attr.y]="chart.height - 6"
-                class="fall-tick"
+                class="fall-forecast__tick"
                 text-anchor="middle"
               >
                 {{ ticks().now }}
@@ -143,7 +163,7 @@
             <text
               [attr.x]="chart.width - chart.gutter"
               [attr.y]="chart.height - 6"
-              class="fall-tick"
+              class="fall-forecast__tick"
               text-anchor="end"
             >
               {{ ticks().end }}
@@ -154,10 +174,10 @@
                 [attr.x1]="hover.x"
                 [attr.x2]="hover.x"
                 [attr.y2]="chart.plotHeight"
-                class="fall-cross"
+                class="fall-forecast__cross"
                 y1="0"
               />
-              <circle [attr.cx]="hover.x" [attr.cy]="hover.y" class="fall-pin" r="4" />
+              <circle [attr.cx]="hover.x" [attr.cy]="hover.y" class="fall-forecast__pin" r="4" />
             }
 
             <rect
@@ -166,7 +186,7 @@
               (pointermove)="point($event)"
               [attr.height]="chart.plotHeight"
               [attr.width]="chart.width"
-              class="fall-hit"
+              class="fall-forecast__hit"
               x="0"
               y="0"
             />
@@ -174,15 +194,15 @@
 
           @if (hover(); as hover) {
             <div
-              [class.fall-tip--left]="hover.x > chart.width / 2"
-              [class.fall-tip--below]="hover.y < 64"
+              [class.fall-forecast__tip--left]="hover.x > chart.width / 2"
+              [class.fall-forecast__tip--below]="hover.y < 64"
               [style.left.px]="hover.x"
               [style.top.px]="hover.y"
               aria-hidden="true"
-              class="fall-tip"
+              class="fall-forecast__tip"
             >
               <span>{{ hover.when }}</span>
-              <b class="tabular-nums">{{ hover.value }}</b>
+              <b class="fall-forecast__tip-value tabular-nums">{{ hover.value }}</b>
             </div>
           }
         }

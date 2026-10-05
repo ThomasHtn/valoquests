@@ -1,9 +1,11 @@
 import { Service, signal } from '@angular/core';
 
+import { readStorage, removeStorage, writeStorage } from '@core/storage/safe-storage.utils';
 import { ADMIN_KEY_STORAGE_KEY } from './admin-session.constants';
 
 /**
  * Holds the admin key, the whole credential, in `sessionStorage` so it dies with the tab.
+ * Blocked storage only means the key is asked again after a reload.
  */
 @Service()
 export class AdminSession {
@@ -11,7 +13,7 @@ export class AdminSession {
    * Admin key of the open session, `null` when none.
    */
   private readonly currentKey = signal<string | null>(
-    sessionStorage.getItem(ADMIN_KEY_STORAGE_KEY),
+    readStorage(ADMIN_KEY_STORAGE_KEY, 'session'),
   );
 
   /**
@@ -30,7 +32,7 @@ export class AdminSession {
    * Opens a session with a key the backend already accepted.
    */
   public signIn(key: string): void {
-    sessionStorage.setItem(ADMIN_KEY_STORAGE_KEY, key);
+    writeStorage(ADMIN_KEY_STORAGE_KEY, key, 'session');
     this.currentKey.set(key);
   }
 
@@ -38,7 +40,7 @@ export class AdminSession {
    * Closes the session and forgets the key.
    */
   public signOut(): void {
-    sessionStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
+    removeStorage(ADMIN_KEY_STORAGE_KEY, 'session');
     this.currentKey.set(null);
   }
 }

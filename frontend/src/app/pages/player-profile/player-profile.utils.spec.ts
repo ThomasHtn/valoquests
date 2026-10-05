@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveCurrentSeasonId, resolveYieldToneClass } from './player-profile.utils';
+import { PlayerStatistics } from '@core/players/player-details.model';
+import { buildStatStrip, resolveCurrentSeasonId } from './player-profile.utils';
 
 describe('resolveCurrentSeasonId', () => {
   it('prefers the active season', () => {
@@ -18,9 +19,28 @@ describe('resolveCurrentSeasonId', () => {
   });
 });
 
-describe('resolveYieldToneClass', () => {
-  it('is amber at full value and muted once the ladder takes a cut', () => {
-    expect(resolveYieldToneClass(100)).toBe('text-brand-500');
-    expect(resolveYieldToneClass(50)).toBe('text-text-secondary');
+describe('buildStatStrip', () => {
+  const statistics = {
+    kda: 1.5,
+    winRate: 50,
+    adr: 140.4,
+    acs: 220.6,
+    headshotPercentage: 25,
+    matchesPlayed: 4,
+    wins: 2,
+    losses: 2,
+  } as PlayerStatistics;
+
+  it('formats every figure of a played selection', () => {
+    const strip = buildStatStrip(statistics, 'en');
+    expect(strip.adrLabel).toBe('140');
+    expect(strip.acsLabel).toBe('221');
+    expect(strip.matchesPlayed).toBe(4);
+  });
+
+  it('dashes every figure without a match', () => {
+    const strip = buildStatStrip({ ...statistics, matchesPlayed: 0 }, 'en');
+    expect(strip.adrLabel).toBe('—');
+    expect(strip.acsLabel).toBe('—');
   });
 });

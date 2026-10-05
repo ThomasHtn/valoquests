@@ -24,10 +24,15 @@
 @import './styles/ambient-field.css';
 @import './styles/labels.css';
 @import './styles/focus.css';
+@import './styles/press.css';
 @import './styles/menus.css';
 @import './styles/page-layout.css';
 @import './styles/loading.css';
-@import './styles/gauges.css';
 
 /* Plain classes shared by several components. */
 @import './styles/components/report-bar.css';
+@import './styles/components/button.css';
+@import './styles/components/nav-chip.css';
+@import './styles/components/text-field-input.css';
+@import './styles/components/tooltip.css';
+@import './styles/components/segment.css';

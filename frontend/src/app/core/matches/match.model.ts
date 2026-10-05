@@ -67,14 +67,14 @@ export interface Match {
   readonly kd: number;
 
   /**
-   * Average combat score.
+   * Average combat score, `null` when the mode reports none.
    */
-  readonly acs: number;
+  readonly acs: number | null;
 
   /**
-   * Average damage per round.
+   * Average damage per round, `null` when the mode reports none.
    */
-  readonly adr: number;
+  readonly adr: number | null;
 
   /**
    * Headshot share in percent, `null` when Henrik reported no shot data.
@@ -105,7 +105,7 @@ export interface Match {
 /**
  * Another tracked player in the same match. Mirrors the backend `MatchTeammateResponse`.
  */
-export interface MatchTeammate {
+interface MatchTeammate {
   /**
    * Player identifier.
    */
@@ -152,9 +152,9 @@ export interface MatchTeammate {
   readonly assists: number;
 
   /**
-   * Average combat score.
+   * Average combat score, `null` when the mode reports none.
    */
-  readonly acs: number;
+  readonly acs: number | null;
 }
 
 /**
@@ -227,14 +227,14 @@ export interface MatchDetail {
   readonly kd: number;
 
   /**
-   * Average combat score.
+   * Average combat score, `null` when the mode reports none.
    */
-  readonly acs: number;
+  readonly acs: number | null;
 
   /**
-   * Average damage per round.
+   * Average damage per round, `null` when the mode reports none.
    */
-  readonly adr: number;
+  readonly adr: number | null;
 
   /**
    * Hits on the head.

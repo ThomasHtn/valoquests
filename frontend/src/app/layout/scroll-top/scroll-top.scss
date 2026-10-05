@@ -1,7 +1,18 @@
-/* Outside Tailwind's layers, so this transition overrides the template's `transition-*` utility. */
+@use 'tools' as *;
 
 .scroll-top {
+  position: absolute;
+  right: 1rem;
   bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.625rem;
+  height: 3rem;
+  background-color: var(--color-brand-500);
+  color: var(--color-surface-950);
+  cursor: pointer;
   opacity: 0;
   translate: 0 0.75rem;
   transition:
@@ -9,15 +20,28 @@
     translate var(--duration-base) var(--ease-out-quart),
     background-color var(--duration-fast),
     scale var(--duration-fast);
+
+  @include hover {
+    background-color: var(--color-brand-400);
+  }
+
+  @include from(sm) {
+    right: 1.5rem;
+  }
+
+  /* Pressed deeper than `press`: the hexagon is small. */
+  @media (prefers-reduced-motion: no-preference) {
+    &:active {
+      scale: 0.92;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    translate: none;
+  }
 }
 
 .scroll-top--shown {
   opacity: 1;
   translate: 0 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scroll-top {
-    translate: none;
-  }
 }

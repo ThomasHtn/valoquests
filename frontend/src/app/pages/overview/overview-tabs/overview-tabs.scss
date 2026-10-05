@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 /* Tabs replace a section rule; only the selected one is amber, so amber means selection. */
 
 :host {
@@ -5,37 +7,35 @@
   container-type: inline-size;
 }
 
-.bar {
+/* The rule's hairline sits under the tabs, so the selected underline covers it. */
+.overview-tabs__bar {
   display: flex;
-  /* Rule hairline, under the tabs so the selected underline covers it. */
   box-shadow: inset 0 -1px var(--color-edge);
 }
 
 /* Equal shares, never narrower than content; the slot holds the tab and its star. */
-.slot {
+.overview-tabs__slot {
   position: relative;
+  display: flex;
   flex: 1 0 0;
   min-width: max-content;
-  display: flex;
 }
 
 /* Above its neighbours while the bar reorders. */
-.slot--on {
+.overview-tabs__slot--selected {
   z-index: 1;
 }
 
 /* Both paddings leave room for the star, so the label stays centred. */
-.tab {
+.overview-tabs__tab {
   position: relative;
-  flex: 1;
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 3rem;
   padding: 0.5rem 2.5rem;
-  border: 0;
-  background: none;
   color: var(--color-text-secondary);
   white-space: nowrap;
   cursor: pointer;
@@ -56,27 +56,43 @@
 }
 
 /* Hover previews the selection, fainter. */
-.slot:hover .tab {
+.overview-tabs__slot:hover .overview-tabs__tab {
   color: var(--color-text-primary);
-  background: color-mix(in srgb, var(--color-brand-500) 4%, transparent);
+  background: tint(brand-500, 4%);
 
   &::after {
     opacity: 0.5;
   }
 }
 
-.slot .tab--on,
-.slot:hover .tab--on {
+.overview-tabs__tab--selected,
+.overview-tabs__slot:hover .overview-tabs__tab--selected {
   color: var(--color-brand-400);
-  background: color-mix(in srgb, var(--color-brand-500) 8%, transparent);
+  background: tint(brand-500, 8%);
 
   &::after {
     opacity: 1;
   }
 }
 
+.overview-tabs__tab-icon {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Line height of 1 or more so French accents on Oswald capitals are not clipped. */
+.overview-tabs__tab-label {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 /* Over the tab's reserved trailing padding; outlined until pinned, then filled. */
-.star {
+.overview-tabs__star {
   position: absolute;
   z-index: 2;
   top: 50%;
@@ -86,8 +102,6 @@
   width: 2rem;
   height: 2rem;
   translate: 0 -50%;
-  border: 0;
-  background: none;
   color: var(--color-brand-400);
   opacity: 0.55;
   cursor: pointer;
@@ -105,78 +119,62 @@
   }
 }
 
-.star--pinned {
+.overview-tabs__star--pinned {
   opacity: 1;
 }
 
 /* Pinned but not selected: a quiet mark, never amber. */
-.star--mark {
+.overview-tabs__star--mark {
   color: var(--color-text-secondary);
   opacity: 0.7;
   cursor: default;
   pointer-events: none;
 }
 
-.star-icon {
+.overview-tabs__star-icon {
   width: 1rem;
   height: 1rem;
   fill: transparent;
   transition: fill 0.2s;
-
-  .star--pinned & {
-    fill: currentColor;
-  }
 }
 
-.tab-icon {
-  flex: none;
-  width: 1.125rem;
-  height: 1.125rem;
-}
-
-/* Line height of 1 or more so French accents on Oswald capitals are not clipped. */
-.tab-label {
-  font-family: var(--font-display);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.overview-tabs__star--pinned .overview-tabs__star-icon {
+  fill: currentcolor;
 }
 
 /* Narrow column: a two-by-two grid, each cell with its own hairline. */
 @container (width < 40rem) {
-  .bar {
+  .overview-tabs__bar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     box-shadow: none;
   }
 
-  .slot {
+  .overview-tabs__slot {
     min-width: 0;
     box-shadow: inset 0 -1px var(--color-edge);
   }
 
-  .tab {
-    min-width: 0;
+  .overview-tabs__tab {
     gap: 0.375rem;
+    min-width: 0;
     padding-inline: 0.375rem 1.625rem;
   }
 
   /* Small so labels stay whole on a phone, with a 44px tap zone. */
-  .star {
+  .overview-tabs__star {
     right: 0.125rem;
     width: 1.5rem;
     height: 1.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -0.625rem;
+    }
   }
 
-  .star::before {
-    content: '';
-    position: absolute;
-    inset: -0.625rem;
-  }
-
-  .tab-label {
+  .overview-tabs__tab-label {
     overflow: hidden;
     font-size: 0.9375rem;
     text-overflow: ellipsis;
@@ -184,10 +182,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tab,
-  .tab::after,
-  .star,
-  .star-icon {
+  .overview-tabs__tab,
+  .overview-tabs__tab::after,
+  .overview-tabs__star,
+  .overview-tabs__star-icon {
     transition: none;
   }
 }

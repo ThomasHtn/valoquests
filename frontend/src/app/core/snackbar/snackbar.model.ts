@@ -1,7 +1,7 @@
 /**
  * Snackbar outcome, driving both colour and icon so colour never stands alone.
  */
-export type SnackbarType = 'success' | 'error';
+type SnackbarType = 'success' | 'error';
 
 /**
  * Queued snackbar.

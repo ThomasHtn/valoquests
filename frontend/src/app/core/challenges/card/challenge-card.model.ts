@@ -108,22 +108,7 @@ export interface ChallengeLook {
 /**
  * A fully worded challenge card, daily or weekly alike.
  */
-export interface ChallengeCard {
-  /**
-   * CSS accent: the tier's, or cyan for the day's challenge.
-   */
-  readonly tone: string;
-
-  /**
-   * Hexagon content: the tier numeral, or `D` for the daily bolt.
-   */
-  readonly mark: ChallengeTier;
-
-  /**
-   * Key line above the name: the difficulty, or "daily challenge".
-   */
-  readonly kind: string;
-
+export interface ChallengeCard extends ChallengeLook {
   /**
    * Translated name.
    */
@@ -198,12 +183,12 @@ export interface BoardMark extends ChallengeRung {
 /**
  * Operator state as a progress bubble reads it.
  */
-export type MarkState = 'idle' | 'open' | 'done';
+type MarkState = 'idle' | 'open' | 'done';
 
 /**
  * What separates the value from the target.
  */
-export type MarkGap = 'remaining' | 'surplus' | 'none';
+type MarkGap = 'remaining' | 'surplus' | 'none';
 
 /**
  * One operator's progress on one challenge, for its hover bubble.

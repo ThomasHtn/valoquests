@@ -1,0 +1,46 @@
+@use 'tools' as *;
+
+.admin-action-card {
+  --notch: 0.875rem;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.25rem;
+}
+
+.admin-action-card__heading {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: var(--tracking-label);
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+
+/* Grows so every card of a row puts its button on the same line. */
+.admin-action-card__description {
+  flex: 1;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.admin-action-card__button {
+  --notch: 0.5rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 9rem;
+  min-height: 2.5rem;
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: calc(1.25 / 0.875);
+}

@@ -8,7 +8,7 @@
   padding: 0.6rem 1rem 0.6rem 0.5rem;
   /* Transparent, not removed: the rows below keep a 2px edge the columns align on. */
   border-left: 2px solid transparent;
-  background: rgb(236 232 225 / 8%);
+  background: --alpha(var(--color-text-primary) / 8%);
 }
 
 .bar-count {
@@ -17,7 +17,7 @@
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  background: rgb(217 149 74 / 50%);
+  background: --alpha(var(--color-brand-500) / 50%);
   font-family: var(--font-display);
   font-size: 0.9375rem;
   font-weight: 600;

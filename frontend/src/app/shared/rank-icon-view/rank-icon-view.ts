@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 
-import { RANK_ICON_SIZES } from './rank-icon-view.constants';
+import { RANK_ICON_PIXELS } from './rank-icon-view.constants';
 import { RankIconSize } from './rank-icon-view.model';
 
 /**
@@ -30,7 +30,7 @@ export class RankIconView {
   public readonly size = input<RankIconSize>('md');
 
   /**
-   * Metrics of the current size.
+   * Side of the current size in pixels.
    */
-  protected readonly metrics = computed(() => RANK_ICON_SIZES[this.size()]);
+  protected readonly pixels = computed(() => RANK_ICON_PIXELS[this.size()]);
 }

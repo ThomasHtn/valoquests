@@ -19,23 +19,23 @@ import { mixColor } from './town-sky-cycle.utils';
  * Stars: a fixed sequence faded (not removed) as the sky brightens, so dawn thins them.
  */
 export function drawStars(sky: SkyState): SVGGElement {
-  const g = svgElement('g', { opacity: sky.stars.toFixed(2) });
+  const stars = svgElement('g', { opacity: sky.stars.toFixed(2) });
   if (sky.stars <= 0.01) {
-    return g;
+    return stars;
   }
-  const rnd = createSeededRandom(TOWN_SEED);
+  const random = createSeededRandom(TOWN_SEED);
   for (let i = 0; i < 60; i++) {
-    g.append(
+    stars.append(
       svgElement('circle', {
-        cx: (rnd() * TOWN_WIDTH).toFixed(1),
-        cy: (-12 + rnd() * (HORIZON - 70)).toFixed(1),
-        r: rnd() < 0.12 ? 1.5 : 0.9,
-        fill: '#cfe4ee',
-        opacity: (0.35 + rnd() * 0.5).toFixed(2),
+        cx: (random() * TOWN_WIDTH).toFixed(1),
+        cy: (-12 + random() * (HORIZON - 70)).toFixed(1),
+        r: random() < 0.12 ? 1.5 : 0.9,
+        fill: TOWN_PALETTE.star,
+        opacity: (0.35 + random() * 0.5).toFixed(2),
       }),
     );
   }
-  return g;
+  return stars;
 }
 
 /**
@@ -54,13 +54,13 @@ export function drawSun(sun: SkyBody): SVGCircleElement {
  * Moon: a crescent cut by a mask, so the sky shows through whatever its colour.
  */
 export function drawMoon(moon: SkyBody, maskId: string): SVGGElement {
-  const g = svgElement('g');
+  const moonGroup = svgElement('g');
   const mask = svgElement('mask', { id: maskId });
   mask.append(
     svgElement('rect', { x: moon.x - 12, y: moon.y - 12, width: 24, height: 24, fill: '#fff' }),
     svgElement('circle', { cx: moon.x + 4.5, cy: moon.y - 2.5, r: 8, fill: '#000' }),
   );
-  g.append(
+  moonGroup.append(
     mask,
     svgElement('circle', {
       cx: moon.x.toFixed(1),
@@ -70,7 +70,7 @@ export function drawMoon(moon: SkyBody, maskId: string): SVGGElement {
       mask: `url(#${maskId})`,
     }),
   );
-  return g;
+  return moonGroup;
 }
 
 /**
@@ -78,13 +78,13 @@ export function drawMoon(moon: SkyBody, maskId: string): SVGGElement {
  */
 export function drawClouds(sky: SkyState, now: number, reducedMotion: boolean): SVGGElement {
   // One random sequence feeds every draw below: keep the call order.
-  const rnd = weatherOfTheDay(now);
-  const count = CLOUD_RANGE[0] + Math.floor(rnd() * (CLOUD_RANGE[1] - CLOUD_RANGE[0] + 1));
-  const g = svgElement('g', { opacity: 0.94 });
+  const random = weatherOfTheDay(now);
+  const count = CLOUD_RANGE[0] + Math.floor(random() * (CLOUD_RANGE[1] - CLOUD_RANGE[0] + 1));
+  const clouds = svgElement('g', { opacity: 0.94 });
   for (let i = 0; i < count; i++) {
-    g.append(drawCloud(rnd, sky, now, reducedMotion));
+    clouds.append(drawCloud(random, sky, now, reducedMotion));
   }
-  return g;
+  return clouds;
 }
 
 /**
@@ -101,17 +101,17 @@ function weatherOfTheDay(now: number): () => number {
  * One cloud: a shaded base with one to three shorter bars piled on it.
  */
 function drawCloud(
-  rnd: () => number,
+  random: () => number,
   sky: SkyState,
   now: number,
   reducedMotion: boolean,
 ): SVGGElement {
-  const y = 6 + rnd() * (HORIZON - 120);
-  const width = 60 + rnd() * 120;
-  const barH = 7 + rnd() * 3;
+  const y = 6 + random() * (HORIZON - 120);
+  const width = 60 + random() * 120;
+  const barH = 7 + random() * 3;
   const cloud = svgElement('g');
-  cloud.append(...cloudBase(sky, width, barH), ...cloudTops(rnd, sky, width, barH));
-  setCloudDrift(cloud, rnd, now, width, y, reducedMotion);
+  cloud.append(...cloudBase(sky, width, barH), ...cloudTops(random, sky, width, barH));
+  setCloudDrift(cloud, random, now, width, y, reducedMotion);
   return cloud;
 }
 
@@ -143,18 +143,18 @@ function cloudBase(sky: SkyState, width: number, barH: number): SVGRectElement[]
  * Bars piled on the base, each shorter than the one below, shifted at random.
  */
 function cloudTops(
-  rnd: () => number,
+  random: () => number,
   sky: SkyState,
   width: number,
   barH: number,
 ): SVGRectElement[] {
   const tops: SVGRectElement[] = [];
-  const bars = 1 + Math.floor(rnd() * 3);
+  const bars = 1 + Math.floor(random() * 3);
   for (let bar = 1; bar <= bars; bar++) {
-    const w = width * (0.82 - bar * 0.2 - rnd() * 0.12);
+    const w = width * (0.82 - bar * 0.2 - random() * 0.12);
     tops.push(
       svgElement('rect', {
-        x: (rnd() * (width - w)).toFixed(1),
+        x: (random() * (width - w)).toFixed(1),
         y: (-bar * (barH - 2)).toFixed(1),
         width: w.toFixed(1),
         height: barH,
@@ -171,14 +171,14 @@ function cloudTops(
  */
 function setCloudDrift(
   cloud: SVGGElement,
-  rnd: () => number,
+  random: () => number,
   now: number,
   width: number,
   y: number,
   reducedMotion: boolean,
 ): void {
-  const crossing = CLOUD_CROSSING_S[0] + rnd() * (CLOUD_CROSSING_S[1] - CLOUD_CROSSING_S[0]);
-  const phase = (now / 1000 / crossing + rnd()) % 1;
+  const crossing = CLOUD_CROSSING_S[0] + random() * (CLOUD_CROSSING_S[1] - CLOUD_CROSSING_S[0]);
+  const phase = (now / 1000 / crossing + random()) % 1;
   const from = -width - 20;
   const to = TOWN_WIDTH + 20;
   if (reducedMotion) {
@@ -204,29 +204,29 @@ function setCloudDrift(
  * Hills behind the base: two soft ridges in close tones.
  */
 export function drawRidge(sky: SkyState): SVGGElement {
-  const rnd = createSeededRandom(TOWN_SEED + 3);
-  const g = svgElement('g');
-  g.append(
+  const random = createSeededRandom(TOWN_SEED + 3);
+  const ridges = svgElement('g');
+  ridges.append(
     svgElement('path', {
-      d: rolling(rnd, [110, 190], [40, 72]),
+      d: rollingHillsPath(random, [110, 190], [40, 72]),
       fill: mixColor(sky.ridge, sky.skyLow, 0.16),
     }),
-    svgElement('path', { d: rolling(rnd, [90, 150], [16, 38]), fill: sky.ridge }),
+    svgElement('path', { d: rollingHillsPath(random, [90, 150], [16, 38]), fill: sky.ridge }),
   );
-  return g;
+  return ridges;
 }
 
 /**
  * Closed path of rounded hills: random summits joined through midpoints so no crest is pointed.
  */
-function rolling(
-  rnd: () => number,
+function rollingHillsPath(
+  random: () => number,
   [minStep, maxStep]: readonly [number, number],
   [minH, maxH]: readonly [number, number],
 ): string {
   const peaks: [number, number][] = [];
-  for (let x = -80; x <= TOWN_WIDTH + 160; x += minStep + rnd() * (maxStep - minStep)) {
-    peaks.push([x, HORIZON - minH - rnd() * (maxH - minH)]);
+  for (let x = -80; x <= TOWN_WIDTH + 160; x += minStep + random() * (maxStep - minStep)) {
+    peaks.push([x, HORIZON - minH - random() * (maxH - minH)]);
   }
   let d = `M${peaks[0][0].toFixed(0)} ${HORIZON} L${peaks[0][0].toFixed(0)} ${peaks[0][1].toFixed(0)}`;
   for (let i = 1; i < peaks.length; i++) {
@@ -234,6 +234,6 @@ function rolling(
     const [x, y] = peaks[i];
     d += ` Q${px.toFixed(0)} ${py.toFixed(0)} ${((px + x) / 2).toFixed(0)} ${((py + y) / 2).toFixed(0)}`;
   }
-  const [lx, ly] = peaks[peaks.length - 1];
-  return `${d} L${lx.toFixed(0)} ${ly.toFixed(0)} L${lx.toFixed(0)} ${HORIZON} Z`;
+  const [lastX, lastY] = peaks[peaks.length - 1];
+  return `${d} L${lastX.toFixed(0)} ${lastY.toFixed(0)} L${lastX.toFixed(0)} ${HORIZON} Z`;
 }

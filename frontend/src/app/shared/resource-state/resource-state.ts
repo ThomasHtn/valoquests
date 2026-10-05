@@ -12,6 +12,7 @@ import { Connectivity } from '@core/http/connectivity';
 import { Button } from '@shared/button/button';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate';
 import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate.model';
+import { ResourceStatePadding } from './resource-state.model';
 
 /**
  * Loading, error, empty or content switch for a resource view; project a `[skeleton]`.
@@ -28,8 +29,8 @@ import { EmptyPlate as EmptyPlateContent } from '@shared/empty-plate/empty-plate
     LucideTriangleAlert,
   ],
   templateUrl: './resource-state.html',
-  // A column, not `contents`, to keep the page gutter; `gap: inherit` spaces blocks like the stack.
-  host: { class: 'flex flex-col [gap:inherit]', '[class.grow]': 'grow()' },
+  styleUrl: './resource-state.scss',
+  host: { '[class.resource-state--grow]': 'grow()' },
 })
 export class ResourceState {
   /**
@@ -78,9 +79,9 @@ export class ResourceState {
   public readonly emptyPlate = input<EmptyPlateContent | null>(null);
 
   /**
-   * Tailwind padding of the error and empty states.
+   * Padding of the fallback, error and empty states, after where the state sits.
    */
-  public readonly padding = input('px-5 py-6');
+  public readonly padding = input<ResourceStatePadding>('card');
 
   /**
    * Kind of emptiness, deciding glyph and tone: `waiting` (data will come), `filter` (clear it),
@@ -113,16 +114,21 @@ export class ResourceState {
   );
 
   /**
-   * Hexagon tint by {@link emptyKind}: danger for `anomaly`, amber for `waiting`.
+   * Padding modifier of the fallback, error and empty states.
+   */
+  protected readonly frameClass = computed(() => `resource-state__frame--${this.padding()}`);
+
+  /**
+   * Hexagon tint modifier by {@link emptyKind}: danger for `anomaly`, amber for `waiting`, neutral otherwise.
    */
   protected readonly emptyGlyphClass = computed(() => {
     switch (this.emptyKind()) {
       case 'anomaly':
-        return 'bg-danger/15 text-danger';
+        return 'resource-state__glyph--danger';
       case 'waiting':
-        return 'bg-brand-500/15 text-brand-500';
+        return 'resource-state__glyph--brand';
       default:
-        return 'bg-surface-800 text-text-secondary';
+        return '';
     }
   });
 }

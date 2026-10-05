@@ -3,25 +3,30 @@ import { svgElement } from '@core/svg/svg-element.utils';
 import { SHIP } from '@shared/rocket/rocket-drawing.constants';
 import { animate, drawShip } from '@shared/rocket/rocket-drawing.utils';
 import { drawBuilding } from './town-building.utils';
-import { buildingAt, growthOf, tierAt } from './town-plan.utils';
+import { buildingAt, CITY_LOTS, growthOf, tierAt } from './town-plan.utils';
 import {
-  CITY,
   HORIZON,
-  PAD_HALF,
-  PLOT,
+  LAMPS_ON_THRESHOLD,
+  LAUNCH_PLOT,
+  PAD_HALF_WIDTH,
   QUAY_LAMP_CLEARANCE,
   QUAY_LAMP_SPACING,
-  RX,
+  RISE_DELAY_MS,
+  RISE_DURATION_MS,
+  RISE_MAX_STAGGER_MS,
+  RISE_SPREAD_MS,
+  ROCKET_X,
   SHIP_SCALE,
   SIDE_FADE_OPACITY,
   SIDE_FADE_STEPS,
   SIDE_FADE_WIDTH,
+  SKY_OVERDRAW,
   TOWN_HEIGHT,
   TOWN_PALETTE,
   TOWN_SEED,
   TOWN_WIDTH,
 } from './town-scene.constants';
-import { SkyBody, SkyState, TownSceneInputs } from './town-scene.model';
+import { SceneIdMaker, SkyBody, SkyState, TownSceneInputs } from './town-scene.model';
 import { hourOf, mixColor, moonAt, skyAt, sunAt } from './town-sky-cycle.utils';
 import { drawClouds, drawMoon, drawRidge, drawStars, drawSun } from './town-sky.utils';
 
@@ -45,9 +50,9 @@ export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): voi
   const id = nextSceneIds();
 
   // Back to front.
-  const frag = document.createDocumentFragment();
-  frag.append(
-    defs(sky, id),
+  const fragment = document.createDocumentFragment();
+  fragment.append(
+    drawDefs(sky, id),
     ...drawSky(sky, sun, moon, inputs, id),
     drawCity(inputs, sky),
     drawPad(sky),
@@ -55,13 +60,13 @@ export function buildTownScene(svg: SVGSVGElement, inputs: TownSceneInputs): voi
     drawWater(sky, sun, moon, id('sea')),
     drawSideFade(id),
   );
-  svg.replaceChildren(frag);
+  svg.replaceChildren(fragment);
 }
 
 /**
  * Id maker suffixing each gradient id with a new drawing serial.
  */
-function nextSceneIds(): (name: string) => string {
+function nextSceneIds(): SceneIdMaker {
   const serial = sceneSerial++;
   return (name) => `town-${name}-${serial}`;
 }
@@ -74,15 +79,14 @@ function drawSky(
   sun: SkyBody | null,
   moon: SkyBody | null,
   inputs: TownSceneInputs,
-  id: (name: string) => string,
+  id: SceneIdMaker,
 ): SVGElement[] {
-  // Extends above the frame: phones show the headroom.
   const layers: SVGElement[] = [
     svgElement('rect', {
       x: 0,
-      y: -60,
+      y: -SKY_OVERDRAW,
       width: TOWN_WIDTH,
-      height: HORIZON + 60,
+      height: HORIZON + SKY_OVERDRAW,
       fill: `url(#${id('sky')})`,
     }),
     drawStars(sky),
@@ -115,7 +119,7 @@ function drawRocket(inputs: TownSceneInputs): SVGElement[] {
 
   // Y axis flipped so the rocket builds upward.
   const built = svgElement('g', {
-    transform: `translate(${RX} ${HORIZON - 4}) scale(${SHIP_SCALE} ${-SHIP_SCALE})`,
+    transform: `translate(${ROCKET_X} ${HORIZON - 4}) scale(${SHIP_SCALE} ${-SHIP_SCALE})`,
   });
   built.append(drawShip(stagesDone));
   if (stagesDone === 0) {
@@ -127,12 +131,12 @@ function drawRocket(inputs: TownSceneInputs): SVGElement[] {
 /**
  * Light fade on both sides, easing the frame into the page.
  */
-function drawSideFade(id: (name: string) => string): SVGRectElement {
+function drawSideFade(id: SceneIdMaker): SVGRectElement {
   return svgElement('rect', {
     x: 0,
-    y: -60,
+    y: -SKY_OVERDRAW,
     width: TOWN_WIDTH,
-    height: TOWN_HEIGHT + 60,
+    height: TOWN_HEIGHT + SKY_OVERDRAW,
     fill: `url(#${id('vignette')})`,
   });
 }
@@ -140,7 +144,7 @@ function drawSideFade(id: (name: string) => string): SVGRectElement {
 /**
  * Gradients of the sky, the sea and the side fade.
  */
-function defs(sky: SkyState, id: (name: string) => string): SVGDefsElement {
+function drawDefs(sky: SkyState, id: SceneIdMaker): SVGDefsElement {
   const defs = svgElement('defs');
   defs.append(skyGradient(sky, id), seaGradient(sky, id), sideFadeGradient(id));
   return defs;
@@ -149,7 +153,7 @@ function defs(sky: SkyState, id: (name: string) => string): SVGDefsElement {
 /**
  * Vertical sky gradient down to the horizon.
  */
-function skyGradient(sky: SkyState, id: (name: string) => string): SVGLinearGradientElement {
+function skyGradient(sky: SkyState, id: SceneIdMaker): SVGLinearGradientElement {
   const gradient = svgElement('linearGradient', { id: id('sky'), x1: 0, y1: 0, x2: 0, y2: 1 });
   gradient.append(
     svgElement('stop', { offset: 0, 'stop-color': sky.skyTop }),
@@ -162,11 +166,11 @@ function skyGradient(sky: SkyState, id: (name: string) => string): SVGLinearGrad
 /**
  * Sea mirroring the sky under the quay, always ending dark since figures stand on it.
  */
-function seaGradient(sky: SkyState, id: (name: string) => string): SVGLinearGradientElement {
+function seaGradient(sky: SkyState, id: SceneIdMaker): SVGLinearGradientElement {
   const gradient = svgElement('linearGradient', { id: id('sea'), x1: 0, y1: 0, x2: 0, y2: 1 });
   gradient.append(
     svgElement('stop', { offset: 0, 'stop-color': sky.sea }),
-    svgElement('stop', { offset: 0.4, 'stop-color': '#081820' }),
+    svgElement('stop', { offset: 0.4, 'stop-color': TOWN_PALETTE.seaMid }),
     svgElement('stop', { offset: 1, 'stop-color': TOWN_PALETTE.seaDeep }),
   );
   return gradient;
@@ -175,7 +179,7 @@ function seaGradient(sky: SkyState, id: (name: string) => string): SVGLinearGrad
 /**
  * Horizontal gradient darkening both edges of the frame, transparent in between.
  */
-function sideFadeGradient(id: (name: string) => string): SVGLinearGradientElement {
+function sideFadeGradient(id: SceneIdMaker): SVGLinearGradientElement {
   const gradient = svgElement('linearGradient', {
     id: id('vignette'),
     x1: 0,
@@ -215,11 +219,11 @@ function drawCity(inputs: TownSceneInputs, sky: SkyState): SVGGElement {
   const before = growthOf(inputs.previousPopulation, inputs.fullCampaignPopulation);
   const city = svgElement('g');
 
-  const rising = CITY.filter((lot) => tierAt(lot, growth) > tierAt(lot, before)).length;
-  const stagger = Math.min(160, 2400 / Math.max(1, rising));
+  const rising = CITY_LOTS.filter((lot) => tierAt(lot, growth) > tierAt(lot, before)).length;
+  const stagger = Math.min(RISE_MAX_STAGGER_MS, RISE_SPREAD_MS / Math.max(1, rising));
   let rank = 0;
 
-  for (const lot of CITY) {
+  for (const lot of CITY_LOTS) {
     const tier = tierAt(lot, growth);
     if (tier < 0) {
       continue;
@@ -233,7 +237,8 @@ function drawCity(inputs: TownSceneInputs, sky: SkyState): SVGGElement {
       building.style.setProperty('--rise-from', from.toFixed(3));
       building.style.transformBox = 'fill-box';
       building.style.transformOrigin = '50% 100%';
-      building.style.animation = `town-rise 1100ms cubic-bezier(0.22, 1, 0.36, 1) ${(400 + rank * stagger).toFixed(0)}ms both`;
+      const delay = (RISE_DELAY_MS + rank * stagger).toFixed(0);
+      building.style.animation = `town-rise ${RISE_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both`;
       rank++;
     }
     city.append(building);
@@ -248,22 +253,22 @@ function drawPad(sky: SkyState): SVGGElement {
   const pad = svgElement('g');
   pad.append(
     svgElement('rect', {
-      x: RX - PAD_HALF,
+      x: ROCKET_X - PAD_HALF_WIDTH,
       y: HORIZON - 5,
-      width: PAD_HALF * 2,
+      width: PAD_HALF_WIDTH * 2,
       height: 12,
       fill: mixColor(TOWN_PALETTE.padDeck, sky.wall, 0.4),
     }),
     svgElement('rect', {
-      x: RX - PAD_HALF,
+      x: ROCKET_X - PAD_HALF_WIDTH,
       y: HORIZON - 6,
-      width: PAD_HALF * 2,
+      width: PAD_HALF_WIDTH * 2,
       height: 1.5,
       fill: TOWN_PALETTE.padEdge,
     }),
   );
-  for (const lx of [RX - PAD_HALF + 10, RX + PAD_HALF - 12]) {
-    pad.append(...lamp(lx, HORIZON - 5, 30, 3, sky));
+  for (const lampX of [ROCKET_X - PAD_HALF_WIDTH + 10, ROCKET_X + PAD_HALF_WIDTH - 12]) {
+    pad.append(...drawLamp(lampX, HORIZON - 5, 30, 3, sky));
   }
   return pad;
 }
@@ -272,7 +277,7 @@ function drawPad(sky: SkyState): SVGGElement {
  * Vapour puffs drifting from the rocket's foot; `half` is the hull half-width in viewBox units.
  */
 function drawVapor(half: number, reducedMotion: boolean): SVGGElement {
-  const g = svgElement('g');
+  const vapor = svgElement('g');
   const puffs = [
     { x: 4, y: -9, w: 18, drift: 10, dur: 5.2 },
     { x: 14, y: -5, w: 26, drift: 16, dur: 6.8 },
@@ -280,7 +285,7 @@ function drawVapor(half: number, reducedMotion: boolean): SVGGElement {
   ];
   for (const dir of [-1, 1]) {
     puffs.forEach((puff, i) => {
-      const x = dir < 0 ? RX - half - puff.x - puff.w : RX + half + puff.x;
+      const x = dir < 0 ? ROCKET_X - half - puff.x - puff.w : ROCKET_X + half + puff.x;
       const bar = svgElement('rect', {
         x: x.toFixed(1),
         y: HORIZON + puff.y,
@@ -304,23 +309,23 @@ function drawVapor(half: number, reducedMotion: boolean): SVGGElement {
           animate('0;0.6;0', `${puff.dur}s`, begin),
         );
       }
-      g.append(bar);
+      vapor.append(bar);
     });
   }
-  return g;
+  return vapor;
 }
 
 /**
  * Lamp standing on `ground`, its bulb and flat halo lit in the evening.
  */
-function lamp(
+function drawLamp(
   x: number,
   ground: number,
   height: number,
   bulb: number,
   sky: SkyState,
 ): SVGElement[] {
-  const on = sky.lamps > 0.35;
+  const on = sky.lamps > LAMPS_ON_THRESHOLD;
   const nodes: SVGElement[] = [
     svgElement('rect', { x: x - 1.5, y: ground - 2, width: 5, height: 2, fill: TOWN_PALETTE.mast }),
     svgElement('rect', { x, y: ground - height, width: 2, height, fill: TOWN_PALETTE.mast }),
@@ -354,17 +359,17 @@ function drawWater(
   moon: SkyBody | null,
   seaId: string,
 ): SVGGElement {
-  const g = svgElement('g');
-  g.append(...drawQuay(sky, seaId), ...drawQuayLamps(sky), drawLightReflections(sky));
+  const water = svgElement('g');
+  water.append(...drawQuay(sky, seaId), ...drawQuayLamps(sky), drawLightReflections(sky));
   const body = sun ?? moon;
   if (body) {
     const fill = sun
       ? mixColor(TOWN_PALETTE.sunLow, TOWN_PALETTE.sunHigh, sun.elevation)
       : TOWN_PALETTE.moon;
-    g.append(...drawBodyReflection(body, fill));
+    water.append(...drawBodyReflection(body, fill));
   }
-  g.append(...drawRocketReflection());
-  return g;
+  water.append(...drawRocketReflection());
+  return water;
 }
 
 /**
@@ -401,12 +406,13 @@ function drawQuay(sky: SkyState, seaId: string): SVGRectElement[] {
  */
 function drawQuayLamps(sky: SkyState): SVGElement[] {
   const nodes: SVGElement[] = [];
-  for (let lx = 44; lx < TOWN_WIDTH; lx += QUAY_LAMP_SPACING) {
-    const facesPlot = lx > PLOT[0] - QUAY_LAMP_CLEARANCE && lx < PLOT[1] + QUAY_LAMP_CLEARANCE;
+  for (let lampX = 44; lampX < TOWN_WIDTH; lampX += QUAY_LAMP_SPACING) {
+    const facesPlot =
+      lampX > LAUNCH_PLOT[0] - QUAY_LAMP_CLEARANCE && lampX < LAUNCH_PLOT[1] + QUAY_LAMP_CLEARANCE;
     if (facesPlot) {
       continue;
     }
-    nodes.push(...lamp(lx, HORIZON + 8, 26, 2.6, sky));
+    nodes.push(...drawLamp(lampX, HORIZON + 8, 26, 2.6, sky));
   }
   return nodes;
 }
@@ -416,21 +422,21 @@ function drawQuayLamps(sky: SkyState): SVGElement[] {
  */
 function drawLightReflections(sky: SkyState): SVGGElement {
   // Seeded so reflections stay still across drawings: keep the draw order.
-  const rnd = createSeededRandom(TOWN_SEED + 4);
-  const night = sky.lamps > 0.35;
-  const reflect = svgElement('g', { opacity: night ? 0.5 : 0.32 });
+  const random = createSeededRandom(TOWN_SEED + 4);
+  const night = sky.lamps > LAMPS_ON_THRESHOLD;
+  const reflections = svgElement('g', { opacity: night ? 0.5 : 0.32 });
   for (let i = 0; i < 40; i++) {
-    const rx = rnd() * TOWN_WIDTH;
-    const top = HORIZON + 28 + rnd() * 14;
-    const warmOne = rnd() < 0.72;
-    const segments = 2 + Math.floor(rnd() * 3);
+    const columnX = random() * TOWN_WIDTH;
+    const top = HORIZON + 28 + random() * 14;
+    const warmOne = random() < 0.72;
+    const segments = 2 + Math.floor(random() * 3);
     const fill = reflectionColor(night, warmOne);
     for (let seg = 0; seg < segments; seg++) {
-      reflect.append(
+      reflections.append(
         svgElement('rect', {
-          x: (rx - 2 - rnd() * 3).toFixed(1),
+          x: (columnX - 2 - random() * 3).toFixed(1),
           y: (top + seg * 10).toFixed(1),
-          width: (4 + rnd() * 6).toFixed(1),
+          width: (4 + random() * 6).toFixed(1),
           height: 2,
           fill,
           opacity: (0.5 - seg * 0.1).toFixed(2),
@@ -438,7 +444,7 @@ function drawLightReflections(sky: SkyState): SVGGElement {
       );
     }
   }
-  return reflect;
+  return reflections;
 }
 
 /**
@@ -480,7 +486,7 @@ function drawRocketReflection(): SVGRectElement[] {
   for (let seg = 0; seg < 5; seg++) {
     segments.push(
       svgElement('rect', {
-        x: RX - 12 + reflectionJog(seg),
+        x: ROCKET_X - 12 + reflectionJog(seg),
         y: HORIZON + 30 + seg * 12,
         width: 24,
         height: 3,

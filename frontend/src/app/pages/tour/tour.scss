@@ -1,22 +1,116 @@
-/* Copy, screen and specs stack on a phone; on desktop the copy and specs flank the screen. */
-.tour-step {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.25rem;
+@use 'tools' as *;
+
+/* `100dvh`: the tour renders outside the shell, with no sized ancestor. */
+.tour {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-surface-950);
+  color: var(--color-text-primary);
 }
 
-.tour-figure {
-  margin-top: 0.25rem;
-}
+.tour__header,
+.tour__footer {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: tint(surface-sunken, 80%);
 
-@media (width >= 40rem) {
-  .tour-step {
-    gap: 2rem;
+  @include from(sm) {
+    padding: 0.875rem 2rem;
   }
 }
 
-@media (width >= 64rem) {
-  .tour-step {
+.tour__header {
+  border-bottom: 1px solid tint(brand-500, 20%);
+
+  @include from(sm) {
+    gap: 1.5rem;
+  }
+}
+
+/* The bottom padding grows past a phone's home indicator. */
+.tour__footer {
+  justify-content: space-between;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  border-top: 1px solid tint(brand-500, 20%);
+
+  @include from(sm) {
+    padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
+  }
+}
+
+.tour__progress-label {
+  color: var(--color-text-muted);
+}
+
+.tour__counter {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-brand-500);
+
+  @include from(sm) {
+    font-size: 1.5rem;
+  }
+}
+
+/* A gold-edged slot around each progress segment. */
+.tour__segment {
+  position: relative;
+  flex: 1;
+  height: 0.625rem;
+  background-color: tint(accent-gold, 60%);
+
+  @include from(sm) {
+    max-width: 7rem;
+    height: 0.75rem;
+  }
+}
+
+.tour__segment-fill {
+  position: absolute;
+  inset: 1px;
+  background-color: var(--color-surface-700);
+  transition: background-color 500ms var(--ease-out-quart);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.tour__segment-fill--filled {
+  background-color: var(--color-brand-500);
+}
+
+.tour__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem;
+  overflow-y: auto;
+
+  @include from(sm) {
+    padding: 2.5rem 2rem;
+  }
+}
+
+/* Copy, screen and specs stack on a phone; on desktop the copy and specs flank the screen. */
+.tour__step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+
+  @include from(sm) {
+    gap: 2rem;
+  }
+
+  @include from(lg) {
     grid-template-areas:
       '. figure'
       'copy figure'
@@ -26,76 +120,152 @@
     grid-template-columns: minmax(0, 25rem) minmax(0, 1fr);
     gap: 0 4rem;
   }
+}
 
-  .tour-copy {
+.tour__copy {
+  display: flex;
+  flex-direction: column;
+
+  @include from(lg) {
     grid-area: copy;
   }
+}
 
-  .tour-figure {
-    grid-area: figure;
-    align-self: center;
-    margin-top: 0;
-  }
+.tour__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: var(--tracking-label-wide);
+  text-transform: uppercase;
+  color: var(--color-brand-500);
 
-  .tour-specs {
-    grid-area: specs;
-    margin-top: 30px;
+  @include from(sm) {
+    font-size: 0.75rem;
+    line-height: calc(1 / 0.75);
   }
 }
 
-/* The daily card at a phone's width, flush left with its caption. */
-.tour-phone-card {
-  max-width: 24rem;
+.tour__title {
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.06;
+  text-transform: uppercase;
+  text-wrap: balance;
+
+  @include from(sm) {
+    margin-top: 0.75rem;
+    font-size: 3rem;
+  }
 }
 
-/* Week strip flush with the card's edges, cancelling its padding. */
-.tour-tally {
-  margin: 1rem -1rem -1.1rem -1.15rem;
+.tour__claim {
+  max-width: 30rem;
+  margin-top: 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+
+  @include from(sm) {
+    margin-top: 1.25rem;
+    font-size: 1.25rem;
+    line-height: 1.625;
+  }
 }
 
 /* Claim emphasis without the accent, which the eyebrow and figures already use. */
-.tour-em {
+.tour__claim-emphasis {
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
+.tour__figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  margin-top: 0.25rem;
+
+  @include from(lg) {
+    grid-area: figure;
+    align-self: center;
+    margin-top: 0;
+  }
+}
+
+/* The daily card at a phone's width, flush left with its caption. */
+.tour__phone-card {
+  max-width: 24rem;
+}
+
+/* Week strip flush with the card's edges, cancelling its padding. */
+.tour__tally {
+  margin: 1rem -1rem -1.1rem -1.15rem;
+}
+
+.tour__caption {
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+  color: var(--color-text-muted);
+
+  @include from(sm) {
+    font-size: 0.875rem;
+    line-height: calc(1.25 / 0.875);
+  }
+}
+
 /* Spec strip: three columns at every width, the figures are short. */
-.tour-specs {
+.tour__specs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: 30rem;
-  padding-top: 20px;
+  padding-top: 0.875rem;
   border-top: 1px solid var(--color-edge);
+
+  @include from(sm) {
+    padding-top: 1.25rem;
+  }
+
+  @include from(lg) {
+    grid-area: specs;
+    margin-top: 1.875rem;
+  }
 }
 
-.tour-spec {
-  padding-inline: 12px;
+.tour__spec {
+  padding-inline: 0.625rem;
   border-left: 1px solid var(--color-edge);
+
+  @include from(sm) {
+    padding-inline: 0.75rem;
+  }
+
+  &:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
-.tour-spec:first-child {
-  padding-left: 0;
-  border-left: 0;
+.tour__spec-value {
+  font-family: var(--font-display);
+  font-size: var(--text-figure-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: var(--text-figure-sm--line-height);
+  letter-spacing: var(--text-figure-sm--letter-spacing);
+  color: var(--color-brand-500);
 }
 
 /* Not `label-caption`: its tracking suits one line, these run to two. */
-.tour-spec-label {
-  margin-top: 6px;
-  font-weight: 500;
-  font-size: 0.625rem;
+.tour__spec-label {
+  margin-top: 0.375rem;
   font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
   line-height: 1.45;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-}
-
-@media (width < 40rem) {
-  .tour-specs {
-    padding-top: 14px;
-  }
-
-  .tour-spec {
-    padding-inline: 10px;
-  }
 }

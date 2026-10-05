@@ -3,7 +3,7 @@
  */
 export interface ShipStage {
   /**
-   * Half-width of the hull.
+   * Half-width of the hull, the unit most other parts scale from.
    */
   readonly w: number;
 
@@ -13,12 +13,12 @@ export interface ShipStage {
   readonly h: number;
 
   /**
-   * Fin width.
+   * Fins drawn when non-zero; their span follows the hull width.
    */
   readonly fins: number;
 
   /**
-   * Booster height.
+   * Booster height, `0` for none.
    */
   readonly boost: number;
 
@@ -28,22 +28,22 @@ export interface ShipStage {
   readonly nose: 'none' | 'dome' | 'cone' | 'capsule';
 
   /**
-   * Engine count.
+   * Engine bells: `1` large one, `3` smaller ones.
    */
   readonly eng: number;
 
   /**
-   * Gantry height.
+   * Service gantry: `0` none, `1` partial, `2` complete with its jib.
    */
   readonly gantry: number;
 
   /**
-   * Porthole count.
+   * Porthole pairs, `0` for none.
    */
   readonly ports: number;
 
   /**
-   * Marking band count.
+   * Livery bands drawn when non-zero.
    */
   readonly bands: number;
 }

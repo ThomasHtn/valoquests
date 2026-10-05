@@ -1,3 +1,5 @@
+@use 'tools' as *;
+
 /* Hexagon, title, gain; the rule below aligns on the name. */
 :host {
   display: grid;
@@ -6,49 +8,52 @@
   align-items: center;
 }
 
-.hex-mark {
+/* Sizes the global `hex-mark` rim. */
+.challenge-head__hex {
   width: 2.6rem;
   height: 2.95rem;
 }
 
-.hex-mark > span {
+.challenge-head__mark {
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1;
 }
 
-.glyph {
+.challenge-head__glyph {
   width: 1.1rem;
   height: 1.1rem;
 }
 
-.title {
+.challenge-head__title {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   min-width: 0;
 }
 
-.key-line {
+.challenge-head__key-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem 0.75rem;
 }
 
-.key {
+.challenge-head__kind {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
   color: var(--tone);
 }
 
-.closed {
+.challenge-head__closed {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1;
   color: var(--color-text-muted);
 }
 
-.name {
+.challenge-head__name {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 600;
@@ -57,7 +62,7 @@
   text-transform: uppercase;
 }
 
-.pay {
+.challenge-head__gain {
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
@@ -67,28 +72,30 @@
   white-space: nowrap;
 }
 
-.pay svg {
-  align-self: center;
-  color: var(--color-brand-400);
-}
-
-.pay b {
-  font-family: var(--font-display);
-  font-size: 1.125rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--color-brand-400);
-}
-
-/* Icon and figure share one tooltip, on the line's baseline. */
-.pay-figure {
+.challenge-head__gain-figure {
   display: inline-flex;
   align-items: baseline;
   gap: 0.4rem;
   cursor: help;
 }
 
-.desc {
+.challenge-head__gain-icon {
+  align-self: center;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-brand-400);
+}
+
+.challenge-head__gain-value {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-brand-400);
+}
+
+.challenge-head__description {
   grid-column: 2 / -1;
   max-width: 23.5rem;
   margin-top: 0.6rem;
@@ -97,48 +104,43 @@
   color: var(--color-text-secondary);
 }
 
-/* Weekly board rows reserve two lines of rule so rows align. */
-:host(.head--even) .desc {
-  min-height: 3em;
-}
-
 /* Phone card: smaller hexagon, gain top-right, full-width rule. */
-:host(.head--compact) {
+:host(.challenge-head--compact) {
   grid-template-columns: auto minmax(0, 1fr) auto;
   column-gap: 0.65rem;
 
-  .hex-mark {
+  .challenge-head__hex {
     width: 1.9rem;
     height: 2.15rem;
   }
 
-  .hex-mark > span {
+  .challenge-head__mark {
     font-size: 0.75rem;
   }
 
-  .glyph {
+  .challenge-head__glyph {
     width: 0.85rem;
     height: 0.85rem;
   }
 
-  .title {
+  .challenge-head__title {
     gap: 0.35rem;
   }
 
-  .name {
+  .challenge-head__name {
     font-size: 1rem;
   }
 
-  .pay {
+  .challenge-head__gain {
     align-self: start;
     font-size: 0.875rem;
   }
 
-  .pay b {
+  .challenge-head__gain-value {
     font-size: 1rem;
   }
 
-  .desc {
+  .challenge-head__description {
     grid-column: 1 / -1;
     margin-top: 0.5rem;
     font-size: 0.875rem;
@@ -147,6 +149,6 @@
 }
 
 /* A standalone card keeps the rule under the name. */
-:host(.head--compact.head--aligned) .desc {
+:host(.challenge-head--compact.challenge-head--aligned) .challenge-head__description {
   grid-column: 2 / -1;
 }
