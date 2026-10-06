@@ -31,10 +31,10 @@ public interface RankingQueryService {
      * Returns one day's ranking, read back off the stored matches.
      *
      * <p>Nothing is persisted at this scale: unlike the weekly board, a day is priced on demand from
-     * the matches it holds, through the same barème the week and the colony read.
+     * the matches it holds, through the same scoring table the weekly ranking and the campaign read.
      *
      * @param day day to rank, or {@code null} for today
-     * @return that day's ranking, and how it compares to the day before
+     * @return that day's ranking
      */
     DailyRankingResponse findDaily(LocalDate day);
 }

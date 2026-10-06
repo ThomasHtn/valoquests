@@ -1,13 +1,12 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DistinctCountChallengeProgressCalculator
-    implements ChallengeProgressCalculator {
+    extends SingleConditionChallengeProgressCalculator {
 
     /**
      * Evaluates whether a match contributes to the configured metric.
@@ -25,14 +24,9 @@ public class DistinctCountChallengeProgressCalculator
     private final ChallengeMetricEvaluator metricEvaluator;
 
     /**
-     * Applies filters declared by challenge conditions.
+     * Reads the key each match is grouped under.
      */
-    private final ChallengeMatchFilter matchFilter;
-
-    /**
-     * Calendar placing a match on the calendar day it counts towards.
-     */
-    private final WeekCalendar weekCalendar;
+    private final MatchGroupKeyExtractor keyExtractor;
 
     /**
      * Creates the distinct-value calculator.
@@ -46,9 +40,9 @@ public class DistinctCountChallengeProgressCalculator
         ChallengeMatchFilter matchFilter,
         WeekCalendar weekCalendar
     ) {
+        super(matchFilter);
         this.metricEvaluator = metricEvaluator;
-        this.matchFilter = matchFilter;
-        this.weekCalendar = weekCalendar;
+        this.keyExtractor = new MatchGroupKeyExtractor(weekCalendar);
     }
 
     /**
@@ -65,39 +59,20 @@ public class DistinctCountChallengeProgressCalculator
      * Counts distinct grouping values among matches contributing to the
      * configured metric.
      *
-     * @param definition parsed challenge definition
-     * @param context    weekly player context
-     * @return normalized progress result
+     * @param condition       the challenge's single condition
+     * @param eligibleMatches matches the condition's filters accept
+     * @return number of distinct grouping values
      */
     @Override
-    public ChallengeProgressResult calculate(
-        ChallengeDefinition definition,
-        PlayerChallengeContext context
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-        ChallengeGroupBy groupBy = condition.groupBy();
-
-        if (groupBy == null) {
-            throw new IllegalArgumentException(
-                "DISTINCT_COUNT challenges require a grouping dimension."
-            );
-        }
-
-        long distinctValues = context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
+    protected BigDecimal measure(ChallengeCondition condition, List<PlayerMatch> eligibleMatches) {
+        long distinctValues = eligibleMatches.stream()
             .filter(playerMatch -> contributes(playerMatch, condition))
-            .map(playerMatch -> extractGroupValue(playerMatch, groupBy))
+            .map(playerMatch -> keyExtractor.keyOf(playerMatch, condition.groupBy()))
             .filter(Objects::nonNull)
             .distinct()
             .count();
 
-        return ChallengeProgressResult.from(
-            BigDecimal.valueOf(distinctValues),
-            condition.target()
-        );
+        return BigDecimal.valueOf(distinctValues);
     }
 
     /**
@@ -122,45 +97,5 @@ public class DistinctCountChallengeProgressCalculator
         return metricEvaluator
             .evaluate(playerMatch, condition.metric())
             .signum() > 0;
-    }
-
-    /**
-     * Extracts the stable value used to group one player match.
-     *
-     * @param playerMatch persisted player-match data
-     * @param groupBy     requested grouping dimension
-     * @return grouping value, or {@code null} when unavailable
-     */
-    private Object extractGroupValue(
-        PlayerMatch playerMatch,
-        ChallengeGroupBy groupBy
-    ) {
-        return switch (groupBy) {
-            case AGENT -> extractAgentValue(playerMatch);
-            case GAME_MODE -> playerMatch.getMatch().getGameMode();
-            case PLAY_DAY -> weekCalendar.dayOf(
-                playerMatch.getMatch().getStartedAt()
-            );
-        };
-    }
-
-    /**
-     * Returns the most stable available agent identifier.
-     *
-     * @param playerMatch persisted player-match data
-     * @return agent identifier or fallback name
-     */
-    private String extractAgentValue(PlayerMatch playerMatch) {
-        if (playerMatch.getAgentId() != null
-            && !playerMatch.getAgentId().isBlank()) {
-            return playerMatch.getAgentId();
-        }
-
-        if (playerMatch.getAgentName() != null
-            && !playerMatch.getAgentName().isBlank()) {
-            return playerMatch.getAgentName();
-        }
-
-        return null;
     }
 }

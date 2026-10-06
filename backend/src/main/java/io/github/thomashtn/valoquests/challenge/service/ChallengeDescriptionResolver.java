@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * Rewrites a catalogue description so its numbers are the resolved targets, not the base ones.
  *
- * <p>The catalogue's French copy embeds the Normal-tier numbers in the order the conditions declare
+ * <p>The catalogue's French copy embeds the amateur-grid numbers in the order the conditions declare
  * them (occurrences before the per-match target). Each numeric token that equals the next expected
  * base number is replaced by its resolved counterpart; anything else is left untouched, so a copy
  * that does not follow the convention keeps its original text rather than being mangled.

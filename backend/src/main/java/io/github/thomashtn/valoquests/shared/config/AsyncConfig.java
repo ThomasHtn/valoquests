@@ -22,15 +22,13 @@ public class AsyncConfig {
     /**
      * Creates the executor running administrative commands in the background.
      *
-     * <p>Deliberately single-threaded with a queue of one. A synchronization walks the Henrik match
-     * history under a shared rate-limit budget of a few dozen requests per minute, so running two
-     * at once would not make either finish sooner — it would only make both wait longer, and would
-     * let two walks import the same matches concurrently. Serializing them keeps the budget spent
-     * on one run at a time.
+     * <p>Single-threaded with a queue of one. This executor does not keep runs apart on its own:
+     * scheduled jobs run on the scheduler thread, not here. {@code MatchHistoryLock} does, and
+     * refuses a concurrent request with a 409 before it reaches this executor.
      *
-     * <p>The queue exists so a request accepted just as the previous run finishes is not rejected
-     * by the pool itself; concurrent <em>requests</em> are refused earlier and explicitly, with a
-     * 409, rather than being silently queued behind a run the caller cannot see.
+     * <p>The queue only absorbs a run accepted while the previous task, which has already released
+     * the lock, is still leaving its thread. Anything beyond is rejected with a
+     * {@code TaskRejectedException}, answered as a 409 as well.
      *
      * @return the administrative task executor
      */

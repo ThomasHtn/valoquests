@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -90,6 +91,43 @@ class AdminAuthRateLimiterTest {
         assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isTrue();
 
         clock.advance(Duration.ofMinutes(1).plusSeconds(1));
+
+        assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isFalse();
+    }
+
+    /**
+     * Verifies that the lockout lasts its full duration from the failure that crossed the budget,
+     * however long the failures took to accumulate.
+     */
+    @Test
+    @DisplayName("Keeps an address locked out for the full duration after the failure crossing the budget")
+    void shouldLockOutForTheFullDurationAfterTheLastFailure() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(3);
+
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        clock.advance(Duration.ofSeconds(59));
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+
+        clock.advance(Duration.ofSeconds(30));
+        assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isTrue();
+
+        clock.advance(Duration.ofSeconds(30));
+        assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isFalse();
+    }
+
+    /**
+     * Verifies that failures below the budget are forgotten once the window has elapsed.
+     */
+    @Test
+    @DisplayName("Forgets failures below the budget once the window has elapsed")
+    void shouldResetFailuresBelowTheBudgetAfterTheWindow() {
+        AdminAuthRateLimiter rateLimiter = createRateLimiter(3);
+
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
+        clock.advance(Duration.ofMinutes(1).plusSeconds(1));
+        rateLimiter.recordFailure(REMOTE_ADDRESS);
 
         assertThat(rateLimiter.isLockedOut(REMOTE_ADDRESS)).isFalse();
     }

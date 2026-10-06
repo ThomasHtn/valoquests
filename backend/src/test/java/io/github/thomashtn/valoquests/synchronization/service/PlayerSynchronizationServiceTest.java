@@ -2,16 +2,19 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valoquests.henrik.dto.mmr.HenrikMmrResponse;
-import io.github.thomashtn.valoquests.henrik.mapper.HenrikMmrMapper;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valoquests.player.mapper.HenrikMmrMapper;
+import io.github.thomashtn.valoquests.player.model.CompetitiveTier;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.player.service.PlayerAccountResolutionService;
 import io.github.thomashtn.valoquests.synchronization.model.MatchHistoryWalkResult;
@@ -90,7 +93,7 @@ class PlayerSynchronizationServiceTest {
     @Test
     void shouldResolveAccountRefreshRankThenWalkMatchHistory() {
         Player player = player();
-        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(200, null);
+        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(null);
 
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
         when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
@@ -98,14 +101,12 @@ class PlayerSynchronizationServiceTest {
         when(matchHistoryWalker.walk(player)).thenReturn(
             new MatchHistoryWalkResult(4, 12, SynchronizationStopReason.SEASON_BOUNDARY)
         );
-        when(playerRepository.save(player)).thenReturn(player);
 
         PlayerSynchronizationResult result = service.synchronize(1L);
 
         assertThat(result.player()).isSameAs(player);
         assertThat(result.pagesFetched()).isEqualTo(4);
         assertThat(result.matchesImported()).isEqualTo(12);
-        assertThat(result.completedAt()).isEqualTo(SYNCHRONIZED_AT);
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
 
@@ -124,17 +125,22 @@ class PlayerSynchronizationServiceTest {
 
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
         when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
-        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(200, null));
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(null));
         when(matchHistoryWalker.walk(player)).thenReturn(
             new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.KNOWN_HISTORY_REACHED)
         );
-        when(playerRepository.save(player)).thenReturn(player);
 
         service.synchronize(1L);
 
         assertThat(player.getLastSuccessfulSynchronizationAt())
             .isEqualTo(SYNCHRONIZED_AT);
-        verify(playerRepository).save(player);
+        verify(playerRepository).recordSuccessfulSynchronization(
+            1L,
+            CompetitiveTier.UNRANKED,
+            null,
+            SYNCHRONIZED_AT
+        );
+        verify(playerRepository, never()).save(any());
     }
 
     /**
@@ -146,13 +152,13 @@ class PlayerSynchronizationServiceTest {
 
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
         when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
-        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(200, null));
-        when(matchHistoryWalker.walk(player)).thenReturn(MatchHistoryWalkResult.empty());
-        when(playerRepository.save(player)).thenReturn(player);
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(new HenrikMmrResponse(null));
+        when(matchHistoryWalker.walk(player)).thenReturn(
+            new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.EMPTY_PAGE)
+        );
 
         PlayerSynchronizationResult result = service.synchronize(1L);
 
-        assertThat(result.pagesFetched()).isZero();
         assertThat(result.matchesImported()).isZero();
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.EMPTY_PAGE);

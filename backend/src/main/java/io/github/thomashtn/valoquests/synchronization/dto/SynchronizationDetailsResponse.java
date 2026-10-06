@@ -10,6 +10,18 @@ import java.util.List;
 
 /**
  * Exposes one synchronization execution and its player-level outcomes.
+ *
+ * @param id               internal execution identifier
+ * @param type             synchronization type
+ * @param trigger          scheduled or manual origin
+ * @param status           execution status
+ * @param startedAt        start of the execution
+ * @param finishedAt       end of the execution, {@code null} while it runs
+ * @param playersProcessed players the execution covered
+ * @param failureCount     players whose synchronization failed
+ * @param matchesImported  matches imported across every player
+ * @param errorMessage     execution-level error, {@code null} when none
+ * @param players          one result per processed player
  */
 @Schema(description = "Detailed synchronization execution.")
 public record SynchronizationDetailsResponse(
@@ -29,8 +41,14 @@ public record SynchronizationDetailsResponse(
     /**
      * Exposes one player's outcome within an execution.
      *
-     * @param stopReason condition that ended the match-history walk, {@code null} when the player
-     *     failed before completing one. Explains a short import without inspecting the logs.
+     * @param playerId        internal player identifier
+     * @param displayName     name shown in the application
+     * @param status          outcome of this player's synchronization
+     * @param pagesFetched    Henrik match-history pages read
+     * @param matchesImported matches imported for this player
+     * @param errorMessage    failure description, {@code null} when the player succeeded
+     * @param stopReason      condition that ended the match-history walk, {@code null} when the player
+     *                        failed before completing one; explains a short import without the logs
      */
     public record PlayerResultResponse(
 

@@ -10,8 +10,7 @@ import io.github.thomashtn.valoquests.ranking.service.ChallengePointsReader.Chal
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
-import io.github.thomashtn.valoquests.week.WeekConstants;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -33,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Two things are added: the guardian damage of the week, priced by {@link DailyOutputReader}
  * exactly as the campaign prices it, and the points of the challenges validated that week. Nothing
- * else: a challenge damages nothing, regularity is already paid inside every match by the streak,
+ * else: a challenge damages nothing, regularity is already paid inside every match by the bonus for days played,
  * and there is no team bonus.
  *
  * <p>Who counts is decided here and nowhere else. An inactive player is still given a row, so their
@@ -55,8 +54,8 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
     private static final Comparator<WeeklyPlayerScore> RANKING_ORDER = Comparator
         .comparingInt(WeeklyPlayerScore::getTotalPoints).reversed()
         .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::getGuardianDamage).reversed())
-        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::completedAllChallenges).reversed())
-        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::getActiveDays).reversed())
+        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::totalCompletedChallenges).reversed())
+        .thenComparing(Comparator.comparingInt(WeeklyPlayerScore::getPlayedDays).reversed())
         .thenComparing(score -> score.getPlayer().getId());
 
     /**
@@ -155,7 +154,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         DailyOutput output = dailyOutputReader.read(
             EnumSet.of(Player.COMPETITIVE_STATUS),
             weekStart,
-            weekStart.plusDays(WeekConstants.DAYS_PER_WEEK - 1L)
+            WeekCalendar.lastDayOf(weekStart)
         );
         Map<Long, ChallengeTally> tallies = challengePointsReader.read(weekStart);
 
@@ -183,21 +182,14 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
      * @param scores rows already in ranking order
      */
     private static void rank(List<WeeklyPlayerScore> scores) {
-        int rank = 0;
-        int position = 0;
-        Integer previousPoints = null;
+        List<Integer> positions = CompetitionRanking.positions(
+            scores,
+            score -> score.getPlayer().isCompetitive() && score.getTotalPoints() > 0,
+            WeeklyPlayerScore::getTotalPoints
+        );
 
-        for (WeeklyPlayerScore score : scores) {
-            if (!score.getPlayer().isCompetitive() || score.getTotalPoints() <= 0) {
-                score.setPosition(null);
-                continue;
-            }
-            rank++;
-            if (!Integer.valueOf(score.getTotalPoints()).equals(previousPoints)) {
-                position = rank;
-                previousPoints = score.getTotalPoints();
-            }
-            score.setPosition(position);
+        for (int index = 0; index < scores.size(); index++) {
+            scores.get(index).setPosition(positions.get(index));
         }
     }
 
@@ -229,8 +221,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         score.setFood(week.food());
         score.setComponents(week.components());
         score.setMatchCount(week.matchCount());
-        score.setActiveDays(week.activeDays());
-        score.setStreakDays(week.streakDays());
+        score.setPlayedDays(week.playedDays());
         score.setChallengePoints(competitive ? tally.points() : 0);
         score.setCompletedChallenges(tally.completedWeekly());
         score.setCompletedDailyChallenges(tally.completedDaily());
@@ -250,22 +241,20 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         int food = 0;
         int components = 0;
         int matchCount = 0;
-        int activeDays = 0;
-        int streakDays = 0;
+        int playedDays = 0;
 
-        for (int offset = 0; offset < WeekConstants.DAYS_PER_WEEK; offset++) {
-            LocalDate day = weekStart.plusDays(offset);
+        LocalDate lastDay = WeekCalendar.lastDayOf(weekStart);
+        for (LocalDate day = weekStart; !day.isAfter(lastDay); day = day.plusDays(1)) {
             PlayerDayOutput dayOutput = output.of(playerId, day);
 
             damage += dayOutput.damage();
             food += dayOutput.food();
             components += dayOutput.components();
             matchCount += dayOutput.matchCount();
-            activeDays += dayOutput.matchCount() > 0 ? 1 : 0;
-            streakDays = Math.max(streakDays, output.streakEndingOn(playerId, day));
+            playedDays = Math.max(playedDays, output.playedDaysUpTo(playerId, day));
         }
 
-        return new WeekOutput(damage, food, components, matchCount, activeDays, streakDays);
+        return new WeekOutput(damage, food, components, matchCount, playedDays);
     }
 
     /**
@@ -288,14 +277,13 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
      * @param food       food share
      * @param components components share
      * @param matchCount valued matches played
-     * @param activeDays days with at least one valued match
-     * @param streakDays longest streak reached during the week
+     * @param playedDays days played this week
      */
-    private record WeekOutput(int damage, int food, int components, int matchCount, int activeDays, int streakDays) {
+    private record WeekOutput(int damage, int food, int components, int matchCount, int playedDays) {
 
         /**
          * The week of a player whose matches do not count.
          */
-        private static final WeekOutput NONE = new WeekOutput(0, 0, 0, 0, 0, 0);
+        private static final WeekOutput NONE = new WeekOutput(0, 0, 0, 0, 0);
     }
 }

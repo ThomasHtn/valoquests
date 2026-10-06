@@ -3,7 +3,7 @@ package io.github.thomashtn.valoquests.challenge.calculator;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * application database.
  *
  * <p>Loads the week only. A day's context is carved out of the week's with
- * {@link PlayerChallengeContext#restrictedTo(Instant, Instant)}, and no baseline window is loaded
- * any more: the catalogue declares no baseline challenge, and four extra weeks of matches per
- * player per recalculation bought nothing.
+ * {@link PlayerChallengeContext#restrictedTo(Instant, Instant)}.
  */
 @Component
 public class PlayerChallengeContextFactory {
@@ -75,22 +73,13 @@ public class PlayerChallengeContextFactory {
             );
         }
 
-        Instant periodStart = weekCalendar.startOf(weekStart);
-        Instant periodEnd = weekCalendar.endOf(weekStart);
-
         List<PlayerMatch> playerMatches =
-            playerMatchRepository.findForChallengePeriod(
+            playerMatchRepository.findByPlayerInPeriod(
                 player.getId(),
-                periodStart,
-                periodEnd
+                weekCalendar.weekStartInstant(weekStart),
+                weekCalendar.weekEndInstant(weekStart)
             );
 
-        return new PlayerChallengeContext(
-            player.getId(),
-            weekStart,
-            periodStart,
-            periodEnd,
-            playerMatches
-        );
+        return new PlayerChallengeContext(playerMatches);
     }
 }

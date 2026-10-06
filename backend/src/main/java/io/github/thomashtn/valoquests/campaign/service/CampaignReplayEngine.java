@@ -44,9 +44,8 @@ public class CampaignReplayEngine {
         Base base = new Base();
 
         for (CampaignDayInput day : days) {
-            base.grow(day);
-            double eaten = base.eat();
-            double famineLoss = base.famineLoss;
+            double growth = base.grow(day);
+            Meal meal = base.eat();
 
             CampaignWeekInput week = bySettlementDay.get(day.day());
             CampaignWeekSettlement settlement = week == null ? null : settle(week, base);
@@ -59,11 +58,11 @@ public class CampaignReplayEngine {
                 day.damage(),
                 day.food(),
                 day.components(),
-                base.growth,
-                eaten,
-                famineLoss,
+                growth,
+                meal.eaten(),
+                meal.famineLoss(),
                 settlement == null ? 0 : settlement.baseLoss(),
-                settlement == null ? 0 : settlement.challengeRescued() + settlement.extractionRescued(),
+                settlement == null ? 0 : settlement.rescued(),
                 base.food,
                 base.components,
                 base.population,
@@ -97,7 +96,7 @@ public class CampaignReplayEngine {
         base.spend(foodSpent, componentsSpent);
 
         double baseLoss = base.strike(progress);
-        base.settle(estimate.rescued());
+        base.welcome(estimate.rescued());
 
         return new CampaignWeekSettlement(
             week.weekIndex(),
@@ -108,6 +107,15 @@ public class CampaignReplayEngine {
             estimate.limiter(),
             baseLoss
         );
+    }
+
+    /**
+     * What one evening's meal ate and, when the larder ran out, killed.
+     *
+     * @param eaten      food actually eaten
+     * @param famineLoss inhabitants the famine killed
+     */
+    private record Meal(double eaten, double famineLoss) {
     }
 
     /**
@@ -134,48 +142,40 @@ public class CampaignReplayEngine {
         private double population;
 
         /**
-         * Inhabitants the current day's damage added.
-         */
-        private double growth;
-
-        /**
-         * Inhabitants the current day's famine killed.
-         */
-        private double famineLoss;
-
-        /**
          * Adds one day's production to the base.
          *
          * @param day day being played
+         * @return the inhabitants the day's damage added
          */
-        private void grow(CampaignDayInput day) {
-            growth = day.damage() / CampaignRuleset.DAMAGE_PER_INHABITANT;
+        private double grow(CampaignDayInput day) {
+            double growth = day.damage() / CampaignRuleset.DAMAGE_PER_INHABITANT;
             population += growth;
             food += day.food();
             components += day.components();
-            famineLoss = 0;
+
+            return growth;
         }
 
         /**
          * Feeds the base for one evening, killing a share of the unfed when the larder runs out.
          *
-         * @return the food actually eaten
+         * @return the food eaten and the inhabitants the famine killed
          */
-        private double eat() {
-            double needed = population * CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY;
+        private Meal eat() {
+            double needed = CampaignRuleset.dailyUpkeep(population);
 
             if (food >= needed) {
                 food -= needed;
-                return needed;
+                return new Meal(needed, 0);
             }
 
             double eaten = food;
             double fed = food / CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY;
-            famineLoss = Math.max(0, population - fed) * CampaignRuleset.FAMINE_LOSS_RATE;
+            double famineLoss = Math.max(0, population - fed) * CampaignRuleset.FAMINE_LOSS_RATE;
             population -= famineLoss;
             food = 0;
 
-            return eaten;
+            return new Meal(eaten, famineLoss);
         }
 
         /**
@@ -204,11 +204,11 @@ public class CampaignReplayEngine {
         }
 
         /**
-         * Settles the rescued into the base, after the guardian has struck.
+         * Welcomes the rescued into the base, after the guardian has struck.
          *
          * @param rescued wounded brought home
          */
-        private void settle(int rescued) {
+        private void welcome(int rescued) {
             population += rescued;
         }
     }

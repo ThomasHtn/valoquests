@@ -1,6 +1,5 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
-import io.github.thomashtn.valoquests.challenge.exception.UnsupportedChallengeProgressModeException;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import java.util.EnumMap;
 import java.util.List;
@@ -35,37 +34,16 @@ public final class ChallengeProgressCalculatorRegistry {
      * Returns the calculator supporting the requested progress mode.
      *
      * @param progressMode requested progress mode
-     * @return matching calculator
-     * @throws UnsupportedChallengeProgressModeException when no calculator
-     *                                                   supports the mode
+     * @return matching calculator, always present since the registry covers every mode
      */
     public ChallengeProgressCalculator getCalculator(
         ProgressMode progressMode
     ) {
-        ChallengeProgressCalculator calculator = calculators.get(progressMode);
-
-        if (calculator == null) {
-            throw new UnsupportedChallengeProgressModeException(progressMode);
-        }
-
-        return calculator;
+        return calculators.get(progressMode);
     }
 
     /**
-     * Indicates whether a calculator is registered for the requested mode.
-     *
-     * @param progressMode progress mode to verify
-     * @return {@code true} when the mode can currently be calculated
-     */
-    public boolean supports(
-        ProgressMode progressMode
-    ) {
-        return progressMode != null
-            && calculators.containsKey(progressMode);
-    }
-
-    /**
-     * Builds and validates the calculator registry.
+     * Builds the calculator registry, one calculator per progress mode, no more and no less.
      *
      * @param availableCalculators available calculator beans
      * @return validated calculator registry
@@ -95,6 +73,13 @@ public final class ChallengeProgressCalculatorRegistry {
                         + calculator.getClass().getSimpleName()
                         + "."
                 );
+            }
+        }
+
+        // Failing at startup beats discovering a missing calculator on the first draw.
+        for (ProgressMode mode : ProgressMode.values()) {
+            if (!registry.containsKey(mode)) {
+                throw new IllegalStateException("No challenge calculator supports progress mode " + mode + ".");
             }
         }
 

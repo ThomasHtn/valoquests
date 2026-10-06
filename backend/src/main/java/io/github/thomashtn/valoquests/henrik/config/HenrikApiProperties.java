@@ -5,12 +5,15 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
+import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration used by every Henrik API client.
+ *
+ * <p>Validated when bound at startup: an invalid value fails the application before any request.
  *
  * @param baseUrl               Henrik API base URL
  * @param key                   Henrik API access token
@@ -32,12 +35,12 @@ public record HenrikApiProperties(
     @NotBlank String key,
     @NotBlank String region,
     @NotBlank String platform,
-    @NotNull Duration connectTimeout,
-    @NotNull Duration readTimeout,
+    @NotNull @DurationMin(nanos = 0, inclusive = false) Duration connectTimeout,
+    @NotNull @DurationMin(nanos = 0, inclusive = false) Duration readTimeout,
     @Min(1)
     @Max(10)
     int maxAttempts,
-    @NotNull Duration retryDelay,
+    @NotNull @DurationMin(nanos = 0, inclusive = false) Duration retryDelay,
     @Min(1)
     @Max(50)
     @DefaultValue("25")
@@ -46,71 +49,8 @@ public record HenrikApiProperties(
     @DefaultValue("30")
     int requestsPerMinute,
     @NotNull
+    @DurationMin(nanos = 0)
     @DefaultValue("PT0.1S")
     Duration rateLimitSafetyMargin
 ) {
-
-    /**
-     * Validates duration-based configuration values.
-     */
-    public HenrikApiProperties {
-        validatePositiveDuration(
-            connectTimeout,
-            "henrik.api.connect-timeout"
-        );
-        validatePositiveDuration(
-            readTimeout,
-            "henrik.api.read-timeout"
-        );
-        validatePositiveDuration(
-            retryDelay,
-            "henrik.api.retry-delay"
-        );
-        validateNonNegativeDuration(
-            rateLimitSafetyMargin,
-            "henrik.api.rate-limit-safety-margin"
-        );
-    }
-
-    /**
-     * Ensures that a duration is strictly positive.
-     *
-     * @param duration     duration to validate
-     * @param propertyName related configuration-property name
-     */
-    private static void validatePositiveDuration(
-        Duration duration,
-        String propertyName
-    ) {
-        if (duration == null
-            || duration.isZero()
-            || duration.isNegative()) {
-            throw new IllegalArgumentException(
-                propertyName + " must be greater than zero"
-            );
-        }
-    }
-
-    /**
-     * Ensures that a duration is present and positive or zero.
-     *
-     * @param duration     duration to validate
-     * @param propertyName related configuration-property name
-     */
-    private static void validateNonNegativeDuration(
-        Duration duration,
-        String propertyName
-    ) {
-        if (duration == null) {
-            throw new IllegalArgumentException(
-                propertyName + " must be configured"
-            );
-        }
-
-        if (duration.isNegative()) {
-            throw new IllegalArgumentException(
-                propertyName + " must not be negative"
-            );
-        }
-    }
 }

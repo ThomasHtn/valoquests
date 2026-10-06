@@ -1,23 +1,21 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.ranking.dto.CurrentRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.RankingHistoryWeekResponse;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.ranking.service.RankingProgressMapper.WeekBoard;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import io.github.thomashtn.valoquests.shared.util.PaginationGuard;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
-import io.github.thomashtn.valoquests.week.WeekConstants;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,9 +35,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
     private final WeeklyPlayerScoreRepository scoreRepository;
 
     /**
-     * Mapper laying out each player's progress on the board.
+     * Repository counting the week's weekly challenges.
      */
-    private final RankingProgressMapper progressMapper;
+    private final ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Reader pricing and ranking one day.
@@ -64,12 +62,12 @@ public class DefaultRankingQueryService implements RankingQueryService {
     /**
      * Creates the ranking query service.
      *
-     * @param scoreRepository    weekly score repository
-     * @param progressMapper     ranking progress mapper
-     * @param dailyRankingReader daily ranking reader
-     * @param titleResolver      weekly title resolver
-     * @param weekCalendar       week calendar
-     * @param championResolver   week champion resolver
+     * @param scoreRepository           weekly score repository
+     * @param challengeSelectionRepository challenge selection repository
+     * @param dailyRankingReader        daily ranking reader
+     * @param titleResolver             weekly title resolver
+     * @param weekCalendar              week calendar
+     * @param championResolver          week champion resolver
      */
     @SuppressFBWarnings(
         value = "EI_EXPOSE_REP2",
@@ -77,14 +75,14 @@ public class DefaultRankingQueryService implements RankingQueryService {
     )
     public DefaultRankingQueryService(
         WeeklyPlayerScoreRepository scoreRepository,
-        RankingProgressMapper progressMapper,
+        ChallengeSelectionRepository challengeSelectionRepository,
         DailyRankingReader dailyRankingReader,
         WeeklyTitleResolver titleResolver,
         WeekCalendar weekCalendar,
         WeekChampionResolver championResolver
     ) {
         this.scoreRepository = scoreRepository;
-        this.progressMapper = progressMapper;
+        this.challengeSelectionRepository = challengeSelectionRepository;
         this.dailyRankingReader = dailyRankingReader;
         this.titleResolver = titleResolver;
         this.weekCalendar = weekCalendar;
@@ -97,28 +95,20 @@ public class DefaultRankingQueryService implements RankingQueryService {
         LocalDate today = weekCalendar.today();
         List<WeeklyPlayerScore> scores = scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart);
 
-        WeekBoard board = progressMapper.forWeek(
+        int totalChallenges = (int) challengeSelectionRepository.countByWeekStartAndCadence(
             weekStart,
-            today,
-            scores.stream().map(score -> score.getPlayer().getId()).toList()
+            ChallengeCadence.WEEKLY
         );
-        Map<WeeklyTitle, Long> titles = titleResolver.resolve(scores, championResolver.reigningChampion());
-
-        Instant calculatedAt = scores.stream()
-            .map(WeeklyPlayerScore::getCalculatedAt)
-            .filter(Objects::nonNull)
-            .max(Instant::compareTo)
-            .orElse(null);
+        Map<WeeklyTitle, Long> titles = titleResolver.resolve(scores, null, championResolver.reigningChampion());
 
         List<CurrentRankingResponse.RankingEntryResponse> ranking = scores.stream()
-            .map(score -> toCurrentEntry(score, board, titlesOf(titles, score)))
+            .map(score -> toCurrentEntry(score, totalChallenges, titlesOf(titles, score)))
             .toList();
 
         return new CurrentRankingResponse(
             weekStart,
-            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
+            WeekCalendar.lastDayOf(weekStart),
             today,
-            calculatedAt,
             ranking
         );
     }
@@ -139,13 +129,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .map(weekStart -> toHistoryWeek(weekStart, scoresByWeek.getOrDefault(weekStart, List.of())))
             .toList();
 
-        return new PageResponse<>(
-            content,
-            weekPage.getNumber(),
-            weekPage.getSize(),
-            weekPage.getTotalElements(),
-            weekPage.getTotalPages()
-        );
+        return PageResponse.from(weekPage, content);
     }
 
     @Override
@@ -154,16 +138,16 @@ public class DefaultRankingQueryService implements RankingQueryService {
     }
 
     /**
-     * Maps one row and its board lines to the current API contract.
+     * Maps one row to the current API contract.
      *
-     * @param score  the player's row
-     * @param board  the week's board
-     * @param titles honours the player holds
+     * @param score           the player's row
+     * @param totalChallenges weekly challenges selected for the week
+     * @param titles          honours the player holds
      * @return the entry
      */
     private CurrentRankingResponse.RankingEntryResponse toCurrentEntry(
         WeeklyPlayerScore score,
-        WeekBoard board,
+        int totalChallenges,
         List<WeeklyTitle> titles
     ) {
         Integer previousPosition = score.getPreviousPosition();
@@ -175,7 +159,6 @@ public class DefaultRankingQueryService implements RankingQueryService {
         return new CurrentRankingResponse.RankingEntryResponse(
             currentPosition,
             score.getPlayer().isCompetitive(),
-            previousPosition,
             variation,
             new CurrentRankingResponse.PlayerRankingResponse(
                 score.getPlayer().getId(),
@@ -188,15 +171,13 @@ public class DefaultRankingQueryService implements RankingQueryService {
             score.getFood(),
             score.getComponents(),
             score.getMatchCount(),
-            score.getActiveDays(),
-            score.getStreakDays(),
+            score.getPlayedDays(),
             score.getChallengePoints(),
             score.getCompletedChallenges(),
-            board.weeklyChallengeCount(),
+            totalChallenges,
             score.getCompletedDailyChallenges(),
             score.getTotalPoints(),
-            titles,
-            board.of(score.getPlayer().getId())
+            titles
         );
     }
 
@@ -215,11 +196,6 @@ public class DefaultRankingQueryService implements RankingQueryService {
             .filter(score -> score.getPosition() != null)
             .sorted(Comparator.comparing(WeeklyPlayerScore::getPosition))
             .toList();
-        Instant finalizedAt = orderedScores.stream()
-            .map(WeeklyPlayerScore::getFinalizedAt)
-            .filter(Objects::nonNull)
-            .max(Instant::compareTo)
-            .orElse(null);
         Long winnerPlayerId = championResolver.championOf(weekStart, orderedScores);
         Map<WeeklyTitle, Long> titles = titleResolver.resolve(
             orderedScores,
@@ -238,16 +214,14 @@ public class DefaultRankingQueryService implements RankingQueryService {
                 score.getCompletedChallenges(),
                 score.getCompletedDailyChallenges(),
                 score.getMatchCount(),
-                score.getActiveDays(),
-                score.getStreakDays(),
+                score.getPlayedDays(),
                 titlesOf(titles, score)
             ))
             .toList();
 
         return new RankingHistoryWeekResponse(
             weekStart,
-            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
-            finalizedAt,
+            WeekCalendar.lastDayOf(weekStart),
             winnerPlayerId,
             ranking
         );

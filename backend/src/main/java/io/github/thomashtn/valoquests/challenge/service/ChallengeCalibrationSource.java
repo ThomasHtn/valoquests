@@ -1,13 +1,12 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
 import java.time.LocalDate;
 
 /**
- * Says what challenges are priced and scaled against for one week.
+ * Says which reference, grid and reward progression a week's challenges are priced against.
  *
- * <p>The campaign package implements it from the campaign covering the week. Outside any campaign
- * the reference is the floor, the week index one and the scaling neutral.
+ * <p>The campaign package implements it from the campaign covering the week.
  */
 public interface ChallengeCalibrationSource {
 

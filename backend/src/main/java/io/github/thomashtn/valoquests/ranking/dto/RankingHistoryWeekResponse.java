@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.ranking.dto;
 
 import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,7 +10,6 @@ import java.util.List;
  *
  * @param weekStart      Monday identifying the week
  * @param weekEnd        Sunday closing the week
- * @param finalizedAt    instant the week was frozen
  * @param winnerPlayerId player who finished first, {@code null} when nobody was ranked
  * @param ranking        every ranked player, first place first
  */
@@ -20,7 +18,6 @@ public record RankingHistoryWeekResponse(
 
     LocalDate weekStart,
     LocalDate weekEnd,
-    Instant finalizedAt,
     Long winnerPlayerId,
     List<FinalRankingEntryResponse> ranking
 ) {
@@ -39,8 +36,7 @@ public record RankingHistoryWeekResponse(
      * @param completedChallenges      weekly challenges validated that week
      * @param completedDailyChallenges daily challenges validated that week
      * @param matchCount               matches played that week
-     * @param activeDays               distinct days with at least one valued match
-     * @param streakDays               days played that week
+     * @param playedDays               days played that week
      * @param titles                   honours the player won that week
      */
     public record FinalRankingEntryResponse(
@@ -54,8 +50,7 @@ public record RankingHistoryWeekResponse(
         int completedChallenges,
         int completedDailyChallenges,
         int matchCount,
-        int activeDays,
-        int streakDays,
+        int playedDays,
         List<WeeklyTitle> titles
     ) {
         /**

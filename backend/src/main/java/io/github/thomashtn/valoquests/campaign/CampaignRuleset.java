@@ -1,21 +1,17 @@
 package io.github.thomashtn.valoquests.campaign;
 
-import org.springframework.stereotype.Component;
-
 /**
  * The constants the rescue campaign is played on, in one place.
  *
  * <p>Separate from {@code ScoringRuleset}, which prices what a player does: this prices what the
- * base does with it. Every figure here was verified by simulation on 04/09/2026 against the
- * invariants in {@code docs/GAMEPLAY.md} — a squad calibrated on itself beats eight guardians out of
- * ten, effort pays, and the result per player is the same at two players as at twenty. Moving one of
- * them means running that simulation again.
+ * base does with it. The figures were verified by simulation on 04/09/2026 against the invariants in
+ * {@code docs/GAMEPLAY.md}; the guardian factor has changed since (0.78 to 1.10 on 09/09/2026), so
+ * that simulation is due again. Moving any figure means running it again.
  *
  * <p>A single class rather than an interface and an implementation: nothing here varies, and a
  * second implementation would only ever be a way to write a different game.
  */
-@Component
-public class CampaignRuleset {
+public final class CampaignRuleset {
 
     /**
      * Damage one new inhabitant costs.
@@ -75,6 +71,33 @@ public class CampaignRuleset {
     public static final double GUARDIAN_LOSS_RATE = 0.35;
 
     /**
+     * Not instantiable: constants and static helpers only.
+     */
+    private CampaignRuleset() {
+    }
+
+    /**
+     * Returns the food a base of that size eats each evening.
+     *
+     * @param population inhabitants
+     * @return the evening's upkeep
+     */
+    public static double dailyUpkeep(double population) {
+        return population * FOOD_PER_INHABITANT_PER_DAY;
+    }
+
+    /**
+     * Returns the food an extraction never touches: the next seven evenings of upkeep.
+     *
+     * @param population inhabitants
+     * @return the protected food
+     */
+    public static double protectedFood(double population) {
+        // Kept in this multiplication order: the replay's stored figures depend on its rounding.
+        return PROTECTED_FOOD_DAYS * population * FOOD_PER_INHABITANT_PER_DAY;
+    }
+
+    /**
      * Returns the hit points of one week's guardian.
      *
      * @param reference     reference the campaign's difficulty carries
@@ -82,7 +105,7 @@ public class CampaignRuleset {
      * @param activePlayers players the campaign froze into its roster
      * @return hit points the guardian opens the week with
      */
-    public int guardianHitPoints(int reference, double guardianWeight, int activePlayers) {
+    public static int guardianHitPoints(int reference, double guardianWeight, int activePlayers) {
         return (int) Math.round(reference * guardianWeight * GUARDIAN_HIT_POINTS_FACTOR * activePlayers);
     }
 
@@ -95,7 +118,7 @@ public class CampaignRuleset {
      * @param progressionPercent reward progression of the week, as a percentage
      * @return wounded to evacuate that week
      */
-    public int groupSize(int reference, double groupWeight, int activePlayers, int progressionPercent) {
+    public static int woundedCount(int reference, double groupWeight, int activePlayers, int progressionPercent) {
         return (int) Math.round(
             reference * groupWeight * GROUP_SIZE_FACTOR * activePlayers * progressionPercent / 100.0
         );

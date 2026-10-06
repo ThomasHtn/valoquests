@@ -3,15 +3,13 @@ package io.github.thomashtn.valoquests.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -27,6 +25,8 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
@@ -114,7 +114,7 @@ class ChallengeProgressIntegrationTest
      * Weekly challenge repository used to prepare the active pack.
      */
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Progress repository used to inspect calculated results.
@@ -220,7 +220,7 @@ class ChallengeProgressIntegrationTest
         createWeeklyChallengePack();
 
         challengeRecalculationService
-            .recalculateCurrentWeekProgress();
+            .drawAndRecalculateCurrentWeek();
 
         Map<String, PlayerChallengeProgress> progressByCode =
             loadProgressByChallengeCode();
@@ -268,14 +268,14 @@ class ChallengeProgressIntegrationTest
      */
     private Map<String, PlayerChallengeProgress> loadProgressByChallengeCode() {
         return progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(
                 WEEK_START
             )
             .stream()
             .collect(
                 Collectors.toMap(
                     progress -> progress
-                        .getWeeklyChallenge()
+                        .getSelection()
                         .getChallenge()
                         .getCode(),
                     Function.identity()
@@ -287,7 +287,7 @@ class ChallengeProgressIntegrationTest
      * Verifies the ranking generated from the stored matches and the completed challenge progress.
      *
      * <p>Guardian damage sums the five valued matches this player played this week, priced by the v2
-     * barème with both multipliers. The competitive match of the day before the week counts for
+     * scoring table with both multipliers. The competitive match of the day before the week counts for
      * nothing on Monday, where every streak restarts, so the daily bonus climbs from 0 % on Monday
      * to 8 % on Friday: WIN 500 = 500, LOSS 350 × 1.02 = 357, WIN 500 × 1.04 = 520, LOSS
      * 350 × 1.06 = 371, then the 40-kill Deathmatch victory, WIN 150 × 1.08 = 162, for 1910. None of
@@ -324,10 +324,7 @@ class ChallengeProgressIntegrationTest
                 assertThat(score.getMatchCount())
                     .isEqualTo(5);
 
-                assertThat(score.getActiveDays())
-                    .isEqualTo(5);
-
-                assertThat(score.getStreakDays())
+                assertThat(score.getPlayedDays())
                     .isEqualTo(5);
 
                 assertThat(score.getChallengePoints())
@@ -369,10 +366,10 @@ class ChallengeProgressIntegrationTest
      */
     private int completedDailies(Player player) {
         return (int) progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START)
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(WEEK_START)
             .stream()
             .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
-            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(progress -> progress.getSelection().getCadence() == ChallengeCadence.DAILY)
             .filter(PlayerChallengeProgress::isCompleted)
             .count();
     }
@@ -430,17 +427,6 @@ class ChallengeProgressIntegrationTest
         season.setName(
             "Integration Season"
         );
-        season.setStartsAt(
-            Instant.parse(
-                "2026-07-01T00:00:00Z"
-            )
-        );
-        season.setEndsAt(
-            Instant.parse(
-                "2026-08-31T23:59:59Z"
-            )
-        );
-        season.setActive(true);
 
         return seasonRepository.save(season);
     }
@@ -626,7 +612,7 @@ class ChallengeProgressIntegrationTest
     }
 
     /**
-     * Creates one deterministic challenge for every supported difficulty.
+     * Creates one deterministic challenge for every supported tier.
      */
     private void createWeeklyChallengePack() {
         List<Challenge> challenges =
@@ -640,13 +626,13 @@ class ChallengeProgressIntegrationTest
                 )
             );
 
-        List<WeeklyChallenge> weeklyChallenges =
+        List<ChallengeSelection> selections =
             challenges.stream()
-                .map(this::createWeeklyChallenge)
+                .map(this::createSelection)
                 .toList();
 
-        weeklyChallengeRepository.saveAll(
-            weeklyChallenges
+        challengeSelectionRepository.saveAll(
+            selections
         );
     }
 
@@ -658,7 +644,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createKillsChallenge() {
         return createChallenge(
             "INTEGRATION_KILLS",
-            ChallengeDifficulty.EASY,
+            ChallengeTier.EASY,
             ProgressMode.SUM,
             """
                 [
@@ -681,7 +667,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createDamageChallenge() {
         return createChallenge(
             "INTEGRATION_DAMAGE",
-            ChallengeDifficulty.NORMAL,
+            ChallengeTier.NORMAL,
             ProgressMode.SUM,
             """
                 [
@@ -704,7 +690,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createWinsChallenge() {
         return createChallenge(
             "INTEGRATION_WINS",
-            ChallengeDifficulty.MEDIUM,
+            ChallengeTier.MEDIUM,
             ProgressMode.SUM,
             """
                 [
@@ -727,7 +713,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createKillDeathChallenge() {
         return createChallenge(
             "INTEGRATION_KD",
-            ChallengeDifficulty.HARD,
+            ChallengeTier.HARD,
             ProgressMode.RATIO,
             """
                 [
@@ -751,7 +737,7 @@ class ChallengeProgressIntegrationTest
     private Challenge createPlayDaysChallenge() {
         return createChallenge(
             "INTEGRATION_PLAY_DAYS",
-            ChallengeDifficulty.VERY_HARD,
+            ChallengeTier.VERY_HARD,
             ProgressMode.DISTINCT_COUNT,
             """
                 [
@@ -771,14 +757,14 @@ class ChallengeProgressIntegrationTest
      * Creates one complete challenge catalogue entry.
      *
      * @param code           stable challenge code
-     * @param difficulty     challenge difficulty
+     * @param tier     challenge tier
      * @param progressMode   calculation mode
      * @param conditionsJson serialized rule definition
      * @return configured unsaved challenge
      */
     private Challenge createChallenge(
         String code,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         ProgressMode progressMode,
         String conditionsJson
     ) {
@@ -789,15 +775,15 @@ class ChallengeProgressIntegrationTest
         challenge.setDescription(
             "Integration challenge " + code
         );
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setCategory(
             ChallengeCategory.OTHER
         );
         challenge.setProgressMode(progressMode);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             conditionsJson
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
 
@@ -810,20 +796,20 @@ class ChallengeProgressIntegrationTest
      * @param challenge persisted catalogue challenge
      * @return unsaved weekly selection
      */
-    private WeeklyChallenge createWeeklyChallenge(
+    private ChallengeSelection createSelection(
         Challenge challenge
     ) {
-        WeeklyChallenge weeklyChallenge =
-            new WeeklyChallenge();
+        ChallengeSelection selection =
+            new ChallengeSelection();
 
-        weeklyChallenge.setWeekStart(WEEK_START);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
-        weeklyChallenge.setSelectedAt(
+        selection.setWeekStart(WEEK_START);
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
+        selection.setSelectedAt(
             CALCULATION_TIME.minusSeconds(3_600)
         );
 
-        return weeklyChallenge;
+        return selection;
     }
 
     /**

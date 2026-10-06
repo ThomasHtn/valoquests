@@ -131,12 +131,10 @@
       "startedAt": "Démarrée le",
       "status": {
         "none": "Aucune synchronisation enregistrée.",
-        "PENDING": "En attente",
         "RUNNING": "En cours",
         "PARTIAL": "Partielle",
         "COMPLETED": "Terminée",
-        "FAILED": "Échouée",
-        "CANCELLED": "Annulée"
+        "FAILED": "Échouée"
       },
       "statusLabel": "État",
       "syncAll": {
@@ -1057,7 +1055,6 @@
       "result": {
         "DRAW": "Nul",
         "LOSS": "Défaite",
-        "REMAKE": "Annulé",
         "UNKNOWN": "Inconnu",
         "WIN": "Victoire"
       },

@@ -102,8 +102,7 @@ public enum GameMode {
      * released by Riot and not yet priced defaults to being ignored instead of silently entering the
      * competition at zero damage. {@link #OTHER} is the case that made this necessary: an unrecognized
      * queue is imported on purpose, so a later reclassification is a data migration rather than a full
-     * re-import — but while it sits there unrecognized it is worth no damage, and it used to count as a
-     * day played and to progress any challenge that filtered on no particular mode. A match nobody can
+     * re-import — but while it sits there unrecognized it is worth no damage, and a match nobody can
      * price must not be able to move the regularity bonus or a volume target.
      *
      * <p>Declared after the constants because an {@link EnumSet} of this enum cannot be built before
@@ -180,7 +179,7 @@ public enum GameMode {
      *
      * <p>A mode that is not scored carries no damage, no day played and no challenge progress — see
      * {@link #SCORED_MODES}. Its matches are still stored and still shown in a player's history: they
-     * were played, they are simply not part of the weekly fight.
+     * were played, they are simply not part of the campaign or the ranking.
      *
      * @return {@code true} when a match of this mode can count
      */

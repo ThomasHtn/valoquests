@@ -10,7 +10,7 @@ described in [`docs/GAMEPLAY.md`](../docs/GAMEPLAY.md), and exposes the result t
 | Framework | Spring Boot 4.0.6 (Web, Security, WebClient, Data JPA, Validation, Flyway, Actuator) |
 | Database | PostgreSQL 17, schema owned by Flyway |
 | API docs | springdoc OpenAPI, Swagger UI at `/swagger-ui.html` |
-| Tests | JUnit 5, AssertJ, Mockito, Testcontainers, MockWebServer |
+| Tests | JUnit 5, AssertJ, Mockito, Testcontainers, MockWebServer, ArchUnit |
 | Gates | Checkstyle, SpotBugs, JaCoCo (90% line / 70% branch) |
 
 ## Getting started
@@ -46,12 +46,57 @@ The floors are a ratchet: raise them when coverage improves, never lower them to
 Packaged by feature under `io.github.thomashtn.valoquests`:
 
 ```
-campaign  challenge  henrik  match  player  ranking  scoring  synchronization  week  maintenance  shared
+henrik  shared  player  match  scoring  challenge  ranking  campaign  synchronization  profile  week  maintenance  roster
 ```
 
 Each feature owns its `entity`/`model`, `repository`, `service`, `controller`, `dto` and `exception`
-subpackages. Cross-cutting configuration lives in `shared/config`, guards and error plumbing in
-`shared/util` and `shared/exception`.
+subpackages. Cross-cutting configuration lives in `shared/config`, the calendar in `shared/time`,
+`MatchHistoryLock` in `shared/concurrency`, guards and error plumbing in `shared/util` and
+`shared/exception`.
+
+### Package map
+
+The packages form a one-way graph. Each one sits on a tier and may only use packages of a lower
+tier: never one above it, never one beside it. Read the table bottom-up as the order the domain is
+built in: a Henrik payload becomes a player's match, the match is priced, prices feed challenges,
+challenges feed the ranking, all of it is replayed into the campaign, and the jobs on top drive it.
+
+| Tier | Package | Owns | Why it sits there |
+|---|---|---|---|
+| 0 | `henrik` | HenrikDev HTTP clients, rate limiter, retries, payload DTOs | A self-contained transport client, it knows nothing of the app |
+| 1 | `shared` | Config, security, error rendering, `WeekCalendar`, `MatchHistoryLock`, pagination and transaction guards | Infrastructure every feature uses; it only knows `henrik` to render provider failures as 429/502 |
+| 2 | `player` | The tracked player: entity, status, competitive tier, repository, Riot account resolution | Every match, score and roster row points at a player |
+| 3 | `match` | Stored matches and seasons, Henrik import, eligibility and outcome rules, game-mode correction, seasons route | Raw match facts, before anyone prices them |
+| 4 | `scoring` | What a match and a challenge are worth (`ScoringRuleset`, `DailyOutputReader`) and the vocabulary it prices: `ChallengeCadence`, `ChallengeTier`, `ChallengeCalibration`, `CampaignDifficulty` | Prices matches, and challenges need those prices |
+| 5 | `challenge` | Catalogue, daily and weekly draws, progress calculators, recalculation, challenge routes | Measures matches against the catalogue and shows the reward scoring sets |
+| 6 | `ranking` | Weekly and daily rankings, titles, champion | Ranks players on priced matches and validated challenges |
+| 7 | `campaign` | Campaign lifecycle, replay engine, base/week/day tables, daily tick | Replays everything below into the base, titles included |
+| 8 | `synchronization` | Henrik history walk, execution records, sync scheduler | Imports matches, then reruns challenges and the replay |
+| 8 | `profile` | Player and match screens: roster list, profile statistics, progression, valued match history, the squad's matches of the day | Read side joining matches, prices and the shown campaign's roster |
+| 9 | `week` | Weekly rollover (finalize, open), missed-schedule catch-up | Synchronizes, then closes and opens weeks across every feature |
+| 9 | `maintenance` | Campaign reset | Admin job wiping campaign state under the history lock |
+| 9 | `roster` | Roster administration: add, edit, retire, delete players | Deleting a player wipes what every feature derived from them |
+
+The root package only holds `ValoQuestsApplication`.
+
+**How it is enforced.** `ArchitectureTest` (ArchUnit, run by `./mvnw verify` with the unit tests)
+fails the build when a package uses one of a higher or equal tier, when two top-level packages form a
+cycle, when a controller uses a repository directly, or when a new top-level package has not been
+given a tier in its `TIERS` list. A new package is placed there first, with a line in the table above.
+
+**When a lower package needs something from a higher one**, move the class to the package that owns
+its data or its job first. A small interface in the lower package, implemented by the higher one, is
+kept for the few genuine cases where the lower package must ask or notify the one above:
+
+| Port (lower package) | Implemented in | Why |
+|---|---|---|
+| `challenge.service.ChallengeCalibrationSource` | `campaign` | Challenge targets and rewards depend on the campaign covering the week |
+| `challenge.service.CurrentWeekProgressListener` | `ranking` | Rebuilt challenge progress must rebuild the ranking in the same transaction |
+| `ranking.service.WeekCoverageSource` | `campaign` | A champion is only crowned on a week a campaign covered |
+
+One coupling stays invisible to the test: the JPQL of `PlayerMatchRepository.findSquadHistory`
+(`match`) names the `CampaignPlayer` entity to filter the squad on the shown campaign's roster. Only
+`profile` calls it.
 
 ### The four loops
 
@@ -59,9 +104,9 @@ Everything converges on a single replay.
 
 | Loop | Trigger | What it does |
 |---|---|---|
-| Synchronization | every 30 min (`STANDARD_SYNC_CRON`) | `SynchronizationLaunchService` → `PlayerSynchronizationService` → `SeasonMatchHistoryWalker` walks Henrik season by season, checkpointing per season so an interrupted walk resumes |
-| Daily tick | 00:10 (`CampaignDailyTickScheduler`) | Draws the day's challenge, starts a campaign whose first Monday has come, then replays it |
-| Weekly rollover | Monday 02:05 (`DefaultWeeklyRolloverService`) | Imports the last Sunday matches, finalizes the previous week, opens the new one and closes a finished campaign, in a single transaction |
+| Synchronization | every 30 min (`STANDARD_SYNC_CRON`) | `SynchronizationCommandService` → `PlayerSynchronizationService` → `SeasonMatchHistoryWalker` walks the current and previous seasons, checkpointing per season so an interrupted walk resumes |
+| Daily tick | 00:10 (`CampaignDailyTickScheduler`) | `DailyTickService` draws the day's challenge, rebuilds progress and ranking, starts a campaign whose first Monday has come, then replays it |
+| Weekly rollover | Monday 02:05 (`WeeklyRolloverScheduler`) | Imports the last Sunday matches, then `WeeklyRolloverService` finalizes the previous week (`WeekFinalizer`), opens the new one and closes a finished campaign (`WeekOpener`), in a single transaction |
 | Campaign replay | every one of the above | `CampaignReplayService` → `CampaignReplayEngine` rebuilds the campaign from day one |
 
 ### Invariants
@@ -72,20 +117,23 @@ Everything converges on a single replay.
 - **Replay steps are idempotent and order-sensitive** in the way the engine encodes them: the base
   grows, stocks fill, the base eats, Sunday the ship leaves, the rescued arrive after the guardian
   has struck.
-- **`WeekCalendar` resolves day and week boundaries in `WEEK_ROLLOVER_ZONE`** (Europe/Paris). The
-  schedulers must fire in that same zone, or a day gets closed on boundaries that did not produce
+- **`WeekCalendar` resolves day and week boundaries in `CALENDAR_ZONE`** (Europe/Paris). The
+  schedulers fire in that same zone, or a day would be closed on boundaries that did not produce
   its gains.
 - **A closed campaign is frozen** and never replayed again.
 - `PlayerSynchronizationService` is deliberately non-transactional, enforced by
   `NonTransactionalGuard`: Henrik calls must stay outside a transaction or the per-season completion
   flags stop being honest.
+- **One job at a time writes the match history.** `MatchHistoryLock` serializes synchronizations,
+  the weekly rollover, the daily tick, the challenge redraw, the ranking recalculation, the player
+  deletion and the campaign reset; the app runs as a single instance.
 
 ### Challenges as data
 
 Challenge progress is computed by a registry of calculators (`challenge/calculator`) selected by
-`ProgressMode` (sum, count matches, distinct count, ratio, max streak, max group, baseline, all).
-Definitions are parsed from the catalogue by `JacksonChallengeDefinitionParser`, and their targets are
-resolved per squad by `ChallengeTargetResolver` against the calibration from `SquadCalibrationService`.
+`ProgressMode` (sum, count matches, distinct count, ratio, max streak, max group, all).
+Definitions are parsed from the catalogue by `JacksonChallengeDefinitionParser`, which reads the
+amateur or pro grid the campaign's `CampaignDifficulty` selects; nothing is derived from match history.
 Adding a challenge shape usually means a new calculator plus catalogue rows, not new controller code.
 
 ## API surface
@@ -98,7 +146,8 @@ Adding a challenge shape usually means a new calculator plus catalogue rows, not
 | `/api/challenges` | `/api/admin/challenges` |
 | `/api/players`, `/api/players/{id}/matches` | `/api/admin/players`, `/api/admin/matches` |
 | `/api/rankings` | `/api/admin/rankings`, `/api/admin/weeks` |
-| `/api/seasons` | `/api/admin/session`, `/api/admin/maintenance` |
+| `/api/seasons`, `/api/matches` | `/api/admin/session`, `/api/admin/maintenance` |
+| `/api/synchronization` | `/api/admin/synchronizations`, `/api/admin/players/{id}/synchronizations` |
 
 `SecurityConfig` is stateless and denies by default; the admin rule must stay ahead of the public GET
 rule. `AdminApiKeyFilter` applies a per-remote-address lockout through `AdminAuthRateLimiter`. Behind a
@@ -129,24 +178,30 @@ behaviour sentence, not as a restatement of the method name.
 
 ## Configuration
 
-Everything is env-driven through `.env` (spring-dotenv) and typed properties (`ApplicationProperties`,
-`HenrikApiProperties`). [`.env.example`](.env.example) documents every knob and the reasoning behind
-the non-obvious ones. The ones worth knowing before a first run:
+Everything is env-driven through `.env` (loaded as a `.properties` file, so never quote a value) and
+typed properties (`ApplicationProperties`, `HenrikApiProperties`). [`.env.example`](.env.example)
+documents every knob and the reasoning behind the non-obvious ones. The ones worth knowing before a first run:
 
 | Variable | Why it matters |
 |---|---|
 | `HENRIK_API_KEY` | Required. Without it no match is ever imported |
 | `ADMIN_API_KEY` | Guards `/api/admin/**`. Use a long random secret |
 | `HENRIK_API_REQUESTS_PER_MINUTE` | Kept under the provider limit; a long history walk depends on it |
-| `SCHEDULING_ZONE`, `WEEK_ROLLOVER_ZONE` | Both must stay on the same zone as `WeekCalendar` |
+| `CALENDAR_ZONE` | The one zone `WeekCalendar` and every scheduled job share |
 | `API_DOCS_ENABLED` | Leave off anywhere reachable: the document maps every admin route |
 
 Add new settings to `.env.example` too.
 
+### Upgrade notes
+
+- `WEEK_ROLLOVER_ZONE` and `SCHEDULING_ZONE` are replaced by `CALENDAR_ZONE`; the old names are
+  ignored, so rename them in an existing `.env`.
+
 ## Conventions
 
 - DTOs are `record`s annotated `@Schema`; controllers carry springdoc `@Tag`/`@Operation`/`@ApiResponse`.
-- Services are an interface plus a `Default*` implementation, constructor injection only.
+- A service a controller calls is an interface plus a `Default*` implementation; internal
+  collaborators stay plain classes. Constructor injection only.
 - Checkstyle enforces 4-space indent, no star imports, Javadoc on types and methods, bounded parameter
   counts, no TODO comments. Comments explain intent and constraints, not mechanics.
 

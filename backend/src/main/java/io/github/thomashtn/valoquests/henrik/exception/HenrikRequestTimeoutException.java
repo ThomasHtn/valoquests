@@ -1,6 +1,5 @@
 package io.github.thomashtn.valoquests.henrik.exception;
 
-import org.springframework.http.HttpStatus;
 
 /**
  * Indicates that a Henrik or Riot request could not complete before its
@@ -14,7 +13,7 @@ public class HenrikRequestTimeoutException extends HenrikApiException {
      * @param message external error description
      */
     public HenrikRequestTimeoutException(String message) {
-        super(message, HttpStatus.REQUEST_TIMEOUT, true);
+        super(message, true);
     }
 
     /**

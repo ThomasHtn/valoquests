@@ -39,12 +39,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class CampaignReplayInputAssemblerTest {
 
     /**
-     * First operator of the frozen roster.
+     * First player of the frozen roster.
      */
     private static final Player ALPHA = CampaignFixtures.player(1, "Alpha");
 
     /**
-     * Second operator of the frozen roster.
+     * Second player of the frozen roster.
      */
     private static final Player BRAVO = CampaignFixtures.player(2, "Bravo");
 
@@ -88,7 +88,7 @@ class CampaignReplayInputAssemblerTest {
             CampaignFixtures.member(campaign, BRAVO)
         ));
         when(challengeReader.read(any(), anySet()))
-            .thenReturn(Map.of(1, new WeekChallengeYield(12, Map.of(), Map.of())));
+            .thenReturn(Map.of(1, new WeekChallengeYield(12)));
     }
 
     @Test

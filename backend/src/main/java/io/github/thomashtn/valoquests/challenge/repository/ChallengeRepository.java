@@ -1,7 +1,7 @@
 package io.github.thomashtn.valoquests.challenge.repository;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,7 +12,7 @@ public interface ChallengeRepository
     extends JpaRepository<Challenge, Long> {
 
     /**
-     * Retrieves every challenge eligible for weekly selection.
+     * Retrieves every enabled challenge, weekly and daily, eligible for a draw.
      *
      * @return enabled challenges ordered by identifier
      */

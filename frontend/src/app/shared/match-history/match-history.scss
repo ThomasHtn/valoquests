@@ -146,7 +146,7 @@
   color: var(--color-danger);
 }
 
-/* Inset shadow as the result accent, so it never shifts layout; draws and remakes stay grey. */
+/* Inset shadow as the result accent, so it never shifts layout; draws stay grey. */
 .match-history__match {
   background-color: tint(text-primary, 4%);
   box-shadow: inset 3px 0 0 var(--color-surface-600);

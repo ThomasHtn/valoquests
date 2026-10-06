@@ -1,13 +1,7 @@
 package io.github.thomashtn.valoquests.week.service;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
-import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.ranking.service.RankingRecalculationService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -18,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Atomically finalizes the previous week and prepares the current week.
+ * Atomically finalizes the past weeks still open and opens the current week.
  *
  * <p>The service uses the Monday stored in weekly tables as the week
  * identifier. No dedicated week table is required.</p>
@@ -40,41 +34,22 @@ public class DefaultWeeklyRolloverService
         );
 
     /**
-     * Repository used to load and finalize weekly challenges.
+     * Repository telling which past weeks still await finalization.
      */
-    private final WeeklyChallengeRepository
-
-        weeklyChallengeRepository;
+    private final ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
-     * Repository used to load and finalize weekly score snapshots.
+     * Freezes each past week still open.
      */
-    private final WeeklyPlayerScoreRepository
-
-        weeklyPlayerScoreRepository;
+    private final WeekFinalizer weekFinalizer;
 
     /**
-     * Service used to calculate the final previous-week ranking.
+     * Opens the current week.
      */
-    private final RankingRecalculationService
-
-        rankingRecalculationService;
+    private final WeekOpener weekOpener;
 
     /**
-     * Coordinates opening a new week's challenge pack and boss encounter, and closing the previous
-     * week's boss encounter.
-     */
-    private final WeeklyLifecycleCoordinator weeklyLifecycleCoordinator;
-
-    /**
-     * Service used to refresh the closing week's progress before it is frozen.
-     */
-    private final ChallengeRecalculationService
-
-        challengeRecalculationService;
-
-    /**
-     * Application clock used for deterministic week calculations.
+     * Application clock stamping the finalization.
      */
     private final Clock clock;
 
@@ -86,41 +61,22 @@ public class DefaultWeeklyRolloverService
     /**
      * Creates the weekly rollover service.
      *
-     * @param weeklyChallengeRepository     weekly challenge repository
-     * @param weeklyPlayerScoreRepository   weekly score repository
-     * @param rankingRecalculationService   ranking recalculation service
-     * @param weeklyLifecycleCoordinator    coordinator settling the past week and opening the new one
-     * @param challengeRecalculationService challenge progress recalculation service
-     * @param clock                         application clock
-     * @param weekCalendar                  calendar resolving the current week
+     * @param challengeSelectionRepository challenge selection repository
+     * @param weekFinalizer                finalizer of the past weeks
+     * @param weekOpener                   opener of the current week
+     * @param clock                        application clock
+     * @param weekCalendar                 calendar resolving the current week
      */
-    @SuppressFBWarnings(
-        value = "EI_EXPOSE_REP2",
-        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
-    )
     public DefaultWeeklyRolloverService(
-        WeeklyChallengeRepository weeklyChallengeRepository,
-        WeeklyPlayerScoreRepository weeklyPlayerScoreRepository,
-        RankingRecalculationService rankingRecalculationService,
-        WeeklyLifecycleCoordinator weeklyLifecycleCoordinator,
-        ChallengeRecalculationService challengeRecalculationService,
+        ChallengeSelectionRepository challengeSelectionRepository,
+        WeekFinalizer weekFinalizer,
+        WeekOpener weekOpener,
         Clock clock,
         WeekCalendar weekCalendar
     ) {
-        this.weeklyChallengeRepository =
-            weeklyChallengeRepository;
-
-        this.weeklyPlayerScoreRepository =
-            weeklyPlayerScoreRepository;
-
-        this.rankingRecalculationService =
-            rankingRecalculationService;
-
-        this.weeklyLifecycleCoordinator = weeklyLifecycleCoordinator;
-
-        this.challengeRecalculationService =
-            challengeRecalculationService;
-
+        this.challengeSelectionRepository = challengeSelectionRepository;
+        this.weekFinalizer = weekFinalizer;
+        this.weekOpener = weekOpener;
         this.clock = clock;
         this.weekCalendar = weekCalendar;
     }
@@ -128,10 +84,9 @@ public class DefaultWeeklyRolloverService
     /**
      * Finalizes every past week still open and prepares the current one.
      *
-     * <p>Catches up rather than only handling last week: a rollover that never ran — the
-     * application was down that Monday, or the job failed — used to leave its week open forever,
-     * since the next run only ever looked at the week that had just ended. Every past week holding
-     * an active pack is therefore finalized here, oldest first.</p>
+     * <p>Catches up rather than only handling last week: every past week still holding an active
+     * pack is finalized, oldest first, so a Monday the application was down or the job failed never
+     * leaves its week open.</p>
      *
      * <p>The method is idempotent. A week whose challenges are already finalized is no longer
      * pending, so it is neither recalculated nor modified again.</p>
@@ -145,7 +100,7 @@ public class DefaultWeeklyRolloverService
         Instant rolloverTime = clock.instant();
 
         List<LocalDate> pendingWeekStarts =
-            weeklyChallengeRepository
+            challengeSelectionRepository
                 .findPendingWeekStartsBefore(
                     currentWeekStart
                 );
@@ -161,129 +116,16 @@ public class DefaultWeeklyRolloverService
         // chronological order is what keeps the log readable when several are caught up at once.
         pendingWeekStarts.forEach(
             weekStart ->
-                finalizeWeek(weekStart, rolloverTime)
+                weekFinalizer.finalizeWeek(weekStart, rolloverTime)
         );
 
-        weeklyLifecycleCoordinator.openWeek(
+        weekOpener.openWeek(
             currentWeekStart
         );
-
-        openRanking(currentWeekStart);
 
         LOGGER.info(
             "Weekly rollover completed. Current week is {}.",
             currentWeekStart
         );
-    }
-
-    /**
-     * Builds the new week's progress and ranking rows, at zero.
-     *
-     * <p>Opening a week used to stop at its challenge pack and its boss, which left the ranking
-     * with no row at all until the next scheduled synchronization rebuilt it — several hours after
-     * the Monday rollover. Every screen reading the current ranking (the podium first) then showed
-     * its empty state instead of a squad sitting at zero, which reads as a broken page rather than
-     * as a week that has just started.
-     *
-     * <p>Both calls are the same ones the synchronization runs, and both are idempotent.
-     *
-     * @param weekStart Monday identifying the week being opened
-     */
-    private void openRanking(LocalDate weekStart) {
-        challengeRecalculationService.recalculateWeekProgress(weekStart);
-        rankingRecalculationService.recalculateWeek(weekStart);
-    }
-
-    /**
-     * Finalizes one past week whose challenge pack is still active.
-     *
-     * @param weekStart   Monday identifying the week to finalize
-     * @param finalizedAt shared finalization timestamp
-     */
-    private void finalizeWeek(
-        LocalDate weekStart,
-        Instant finalizedAt
-    ) {
-        List<WeeklyChallenge> weeklyChallenges =
-            weeklyChallengeRepository
-                .findAllByWeekStartOrderByIdAsc(
-                    weekStart
-                );
-
-        rejectPartiallyFinalizedPack(
-            weekStart,
-            weeklyChallenges
-        );
-
-        // Rebuilt before the ranking that freezes it: the last synchronization of the week runs
-        // hours before this rollover, so matches played in that gap are only imported now. Without
-        // this refresh they would land in a week that is already finalized and count for nothing.
-        challengeRecalculationService.recalculateWeekProgress(
-            weekStart
-        );
-
-        rankingRecalculationService.recalculateWeek(
-            weekStart
-        );
-
-        List<WeeklyPlayerScore> weeklyScores =
-            weeklyPlayerScoreRepository
-                .findAllByWeekStartOrderByPositionAscPlayerIdAsc(
-                    weekStart
-                );
-
-        weeklyChallenges.forEach(
-            challenge ->
-                challenge.setFinalizedAt(finalizedAt)
-        );
-
-        weeklyScores.forEach(
-            score ->
-                score.setFinalizedAt(finalizedAt)
-        );
-
-        weeklyChallengeRepository.saveAll(
-            weeklyChallenges
-        );
-
-        weeklyPlayerScoreRepository.saveAll(
-            weeklyScores
-        );
-
-        LOGGER.info(
-            "Week {} finalized with {} challenge(s) and {} score(s).",
-            weekStart,
-            weeklyChallenges.size(),
-            weeklyScores.size()
-        );
-    }
-
-    /**
-     * Refuses to finalize a pack that is only partly frozen.
-     *
-     * <p>A pending week owns at least one active challenge by construction, so a single finalized
-     * one is enough to prove the pack was left half-frozen. Repairing it silently would freeze the
-     * remainder against a ranking the finalized half never saw.</p>
-     *
-     * @param weekStart        Monday identifying the week being finalized
-     * @param weeklyChallenges challenges belonging to that week
-     */
-    private void rejectPartiallyFinalizedPack(
-        LocalDate weekStart,
-        List<WeeklyChallenge> weeklyChallenges
-    ) {
-        boolean partiallyFinalized = weeklyChallenges.stream()
-            .anyMatch(
-                challenge ->
-                    challenge.getFinalizedAt() != null
-            );
-
-        if (partiallyFinalized) {
-            throw new IllegalStateException(
-                "Weekly challenge pack for week "
-                    + weekStart
-                    + " is only partially finalized"
-            );
-        }
     }
 }

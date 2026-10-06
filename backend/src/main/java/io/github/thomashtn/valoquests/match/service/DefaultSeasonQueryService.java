@@ -26,10 +26,8 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
      * Year-era season short name, as {@code v<yy>a<act>}, for example {@code v26a4}.
      *
      * <p>Riot renamed its seasons once: episodes ran until 2025, years took over from 2026. Both
-     * spellings therefore coexist in a database built from imported matches, and both have to order
-     * against each other — while only the episode form was read here, every year-era season scored
-     * {@link #UNDATABLE_SEASON_KEY} and sorted <em>behind</em> the episodes it actually follows, so
-     * the "current" season resolved to a stale act as soon as the era changed.
+     * spellings coexist in a database built from imported matches and must order against each other,
+     * or the "current" season would resolve to a stale episode-era act.
      */
     private static final Pattern YEAR_ACT_NAME = Pattern.compile("^v(\\d{2})a(\\d+)$", Pattern.CASE_INSENSITIVE);
 
@@ -76,8 +74,15 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
      */
     @Override
     public List<SeasonResponse> findAll() {
-        return chronologicallyOrderedSeasons().stream()
-            .map(this::toResponse)
+        List<Season> seasons = chronologicallyOrderedSeasons();
+        Long currentSeasonId = seasons.isEmpty() ? null : seasons.getFirst().getId();
+
+        return seasons.stream()
+            .map(season -> new SeasonResponse(
+                season.getId(),
+                season.getName(),
+                season.getId().equals(currentSeasonId)
+            ))
             .toList();
     }
 
@@ -132,12 +137,5 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
      */
     private static long actKey(long eraNumber, String act) {
         return eraNumber * ERA_SCALE + Long.parseLong(act);
-    }
-
-    /**
-     * Maps one season.
-     */
-    private SeasonResponse toResponse(Season season) {
-        return new SeasonResponse(season.getId(), season.getName(), season.isActive());
     }
 }

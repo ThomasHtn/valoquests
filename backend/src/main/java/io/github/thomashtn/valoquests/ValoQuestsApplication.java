@@ -12,6 +12,7 @@ import org.springframework.context.annotation.PropertySource;
  */
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class, HenrikApiProperties.class})
+// Loads the local .env as a .properties file, so its values must not be quoted.
 @PropertySource(value = "file:.env", ignoreResourceNotFound = true)
 public class ValoQuestsApplication {
 

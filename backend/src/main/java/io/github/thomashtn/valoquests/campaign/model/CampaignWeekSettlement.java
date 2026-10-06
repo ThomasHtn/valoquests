@@ -20,4 +20,13 @@ public record CampaignWeekSettlement(
     ExtractionLimiter limiter,
     double baseLoss
 ) {
+
+    /**
+     * Returns the wounded brought home altogether, challenges and ship.
+     *
+     * @return the rescued
+     */
+    public int rescued() {
+        return challengeRescued + extractionRescued;
+    }
 }

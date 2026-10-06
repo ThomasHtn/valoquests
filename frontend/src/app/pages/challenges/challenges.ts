@@ -295,9 +295,9 @@ export class Challenges {
    */
   private readonly weeklyRows = computed<readonly BoardRow[]>(() =>
     (this.current()?.challenges ?? []).map((challenge) => {
-      const visual = resolveDifficultyVisual(challenge.difficulty);
+      const visual = resolveDifficultyVisual(challenge.tier);
       const kind = this.translation.translate(
-        `common.challengeDifficulty.${challenge.difficulty ?? 'EASY'}`,
+        `common.challengeDifficulty.${challenge.tier ?? 'EASY'}`,
       );
       return this.row(challenge, { tone: visual.tierColor, mark: visual.tier, kind }, null);
     }),
@@ -331,10 +331,7 @@ export class Challenges {
       const weeklyDone = current.challenges.filter(validated).length;
       const reward = drawn
         .filter(validated)
-        .reduce(
-          (sum, challenge) => sum + (rescue ? challenge.survivors : challenge.rankingPoints),
-          0,
-        );
+        .reduce((sum, challenge) => sum + challenge.survivors, 0);
       const t: TranslateFn = (key, params) =>
         this.translation.translate(`challenges.board.summary.${key}`, params);
       const summary = [
@@ -373,15 +370,15 @@ export class Challenges {
       label: this.translation.translate('challenges.catalogue.daily'),
       entries: catalogue.challenges.filter((entry) => entry.cadence === 'DAILY'),
     };
-    const tiers = CHALLENGE_DIFFICULTIES.map((difficulty): CatalogueGroup => {
-      const visual = resolveDifficultyVisual(difficulty);
+    const tiers = CHALLENGE_DIFFICULTIES.map((tier): CatalogueGroup => {
+      const visual = resolveDifficultyVisual(tier);
       return {
-        key: difficulty,
+        key: tier,
         tone: visual.tierColor,
         mark: visual.tier,
-        label: this.translation.translate(`common.challengeDifficulty.${difficulty}`),
+        label: this.translation.translate(`common.challengeDifficulty.${tier}`),
         entries: catalogue.challenges.filter(
-          (entry) => entry.cadence === 'WEEKLY' && entry.difficulty === difficulty,
+          (entry) => entry.cadence === 'WEEKLY' && entry.tier === tier,
         ),
       };
     });

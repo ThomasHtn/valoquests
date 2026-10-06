@@ -7,13 +7,11 @@ import java.util.Objects;
 /**
  * Represents a validated challenge definition ready to be evaluated.
  *
- * @param schemaVersion version of the JSON rule schema
- * @param progressMode  calculation strategy
- * @param conditions    immutable list of challenge conditions
+ * @param progressMode calculation strategy
+ * @param conditions   immutable list of challenge conditions
  */
 public record ChallengeDefinition(
 
-    int schemaVersion,
     ProgressMode progressMode,
     List<ChallengeCondition> conditions
 ) {
@@ -32,12 +30,6 @@ public record ChallengeDefinition(
         );
 
         conditions = List.copyOf(conditions);
-
-        if (schemaVersion <= 0) {
-            throw new IllegalArgumentException(
-                "Challenge schema version must be greater than zero."
-            );
-        }
 
         if (conditions.isEmpty()) {
             throw new IllegalArgumentException(
@@ -70,7 +62,7 @@ public record ChallengeDefinition(
      * <p>Not always the condition's target: a challenge counting matches that cleared a bar
      * progresses towards its number of occurrences, a streak towards its length, and a composite
      * one towards the sum of its targets. This is the figure the interface must draw a progress
-     * bar against, and it has to agree with every calculator.
+     * bar against, and every calculator scores against it.
      *
      * @return progress target
      */
@@ -81,7 +73,7 @@ public record ChallengeDefinition(
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             case COUNT_MATCHES -> BigDecimal.valueOf(singleCondition().occurrences());
             case MAX_STREAK -> BigDecimal.valueOf(singleCondition().streak());
-            case SUM, DISTINCT_COUNT, MAX_GROUP, RATIO, BASELINE -> singleCondition().target();
+            case SUM, DISTINCT_COUNT, MAX_GROUP, RATIO -> singleCondition().target();
         };
     }
 

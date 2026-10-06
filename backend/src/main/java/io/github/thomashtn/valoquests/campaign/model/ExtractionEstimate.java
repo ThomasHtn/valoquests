@@ -1,13 +1,11 @@
 package io.github.thomashtn.valoquests.campaign.model;
 
-import io.github.thomashtn.valoquests.campaign.CampaignRuleset;
-
 /**
  * What one Sunday's extraction would bring home from a given base, and what caps it.
  *
  * <p>Pure arithmetic shared by the replay, which settles a week for real, and the campaign reading,
- * which forecasts the week in progress from the base as it stands: both must agree on the rule or
- * the forecast would promise what the settlement never delivers.
+ * which forecasts the week in progress from the base as it stands, so the forecast never promises
+ * what the settlement does not deliver.
  *
  * @param challengeRescued  wounded the challenges already brought home, capped at the group
  * @param remainingGroup    wounded the ship has to reach itself
@@ -29,7 +27,7 @@ public record ExtractionEstimate(
      * Estimates one extraction.
      *
      * @param woundedCount        wounded stranded that week
-     * @param challengeSurvivors  wounded the challenges brought home so far
+     * @param challengeRescued    wounded the challenges brought home so far, before the group cap
      * @param food                food in reserve
      * @param components          components in reserve
      * @param population          inhabitants, whose next seven evenings are never spent
@@ -38,30 +36,28 @@ public record ExtractionEstimate(
      */
     public static ExtractionEstimate of(
         int woundedCount,
-        int challengeSurvivors,
+        int challengeRescued,
         double food,
         double components,
         double population,
         double progress
     ) {
-        int challengeRescued = Math.min(challengeSurvivors, woundedCount);
-        int remainingGroup = woundedCount - challengeRescued;
+        int cappedChallengeRescued = Math.min(challengeRescued, woundedCount);
+        int remainingGroup = woundedCount - cappedChallengeRescued;
 
-        // The seven evenings ahead are never on the table: without this a squad that plays at the
-        // weekend paid Sunday's rescue with the food it needed to survive to Friday.
-        double reserve = CampaignRuleset.PROTECTED_FOOD_DAYS * population * CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY;
-        int byComponents = (int) Math.floor(components / CampaignRuleset.COMPONENTS_PER_RESCUE);
-        int byFood = (int) Math.floor(Math.max(0, food - reserve) / CampaignRuleset.FOOD_PER_RESCUE);
+        RescueCapacity capacity = RescueCapacity.of(food, components, population);
+        int byComponents = capacity.byComponents();
+        int byFood = capacity.byFood();
         int reachable = Math.min(remainingGroup, Math.min(byComponents, byFood));
         int extracted = (int) Math.floor(reachable * progress);
 
         return new ExtractionEstimate(
-            challengeRescued,
+            cappedChallengeRescued,
             remainingGroup,
             byComponents,
             byFood,
             extracted,
-            limiterOf(woundedCount, challengeRescued + extracted, remainingGroup, byComponents, byFood)
+            limiterOf(woundedCount, cappedChallengeRescued + extracted, remainingGroup, byComponents, byFood)
         );
     }
 

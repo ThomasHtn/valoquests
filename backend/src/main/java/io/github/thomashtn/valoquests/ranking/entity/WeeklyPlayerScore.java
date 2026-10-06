@@ -82,16 +82,10 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private int matchCount;
 
     /**
-     * Number of distinct days with at least one valued match this week.
-     */
-    @Column(name = "active_days", nullable = false)
-    private int activeDays;
-
-    /**
-     * Days played during the week.
+     * Days played this week.
      */
     @Column(name = "streak_days", nullable = false)
-    private int streakDays;
+    private int playedDays;
 
     /**
      * Points the player's validated challenges added, priced at the reference in force.
@@ -147,7 +141,7 @@ public class WeeklyPlayerScore extends AuditableEntity {
      *
      * @return validated challenge count
      */
-    public int completedAllChallenges() {
+    public int totalCompletedChallenges() {
         return completedChallenges + completedDailyChallenges;
     }
 }

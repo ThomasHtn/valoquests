@@ -73,33 +73,32 @@ public class SynchronizationAdminController {
             immediately. A full run walks the Henrik match history for the whole squad under a rate
             limit of a few dozen requests per minute and routinely takes minutes, which no HTTP
             client should be asked to wait through. Poll
-            `GET /api/admin/synchronizations/latest` to follow the run: it reports PENDING or
-            RUNNING while it is in flight, then its final status and counters.
+            `GET /api/admin/synchronizations/latest` to follow the run: it reports RUNNING while it
+            is in flight, then its final status and counters.
 
-            Only one execution may be in flight at a time; a second request is refused with a 409
-            rather than queued, so two walks never spend the same rate-limit budget.
+            Refused with a 409, rather than queued, while a synchronization, a weekly rollover or a
+            campaign reset runs, so two walks never spend the same rate-limit budget.
 
-            Imports every match of the current and previous Valorant seasons for each active tracked
-            player. The operation resolves missing Riot account identifiers, refreshes competitive
+            Imports every match of the current and previous Valorant seasons for each tracked player
+            who is not archived. The operation resolves missing Riot account identifiers, refreshes competitive
             ranks and walks the Henrik match history backwards until it leaves them, importing matches
             idempotently. Modes the tracker does not follow, such as New Map and custom games, are
             skipped; a queue this application cannot classify is imported so it
             is never lost. Once a season has been walked in full, later runs stop at the first
-            already-stored match. A season left unfinished by an interruption, or a season the player
-            was still catching up when Riot rolled the act over, is walked again in full rather than
-            stopped early, so the history can never keep a hole. A failure for one player does not
-            prevent the remaining players from being processed.
+            already-stored match. A season left unfinished, by an interruption or by Riot rolling the
+            act over mid-walk, is resumed from its last checkpoint on the next run, so the history
+            never keeps a hole. A failure for one player does not prevent the remaining players from
+            being processed.
 
-            Matches played in an act older than the current one are never imported, and no command
-            backfills them: a player's stored history therefore starts at the current act, and its
-            match counts are expected to be lower than the lifetime totals shown by external trackers.
-            Every player result reports the condition that ended its walk, which tells a run that
-            exhausted the current act apart from one truncated by the safety page limit.
+            Matches older than the previous season are never imported, so a player's match counts
+            are expected to be lower than the lifetime totals shown by external trackers. Every
+            player result reports the condition that ended its walk, which tells a run that
+            exhausted its seasons apart from one truncated by the safety page limit.
 
-            When the run imported at least one match, the current week's challenge progress and the
-            weekly ranking are rebuilt from the stored matches once the walk completes. A failure of
-            that step is logged without failing the synchronization, since the matches are already
-            stored and the next run recalculates from scratch.
+            When the run imported at least one match, the current week's challenge progress, the
+            weekly ranking and the campaign are rebuilt from the stored matches once the walk
+            completes. A failure of that step is logged without failing the synchronization, since
+            the matches are already stored and the next run rebuilds from scratch.
             """
     )
     @ApiResponse(
@@ -116,7 +115,7 @@ public class SynchronizationAdminController {
     )
     @ApiResponse(
             responseCode = "409",
-        description = "A synchronization is already in progress."
+        description = "Another job writing the match history is already running."
     )
     public void synchronizeAllPlayers() {
         synchronizationLaunchService.launchAllPlayers();
@@ -132,12 +131,11 @@ public class SynchronizationAdminController {
     @Operation(
         summary = "Start a synchronization of one player",
         description = """
-            Imports every match of the current Valorant season for one tracked player, applying the
-            same season scope, mode filter and early-stop rules as the batch operation. Useful to
-            catch up a single player that failed during a scheduled run, without replaying the others.
-            Older acts are out of scope here too, so this command cannot deepen an existing history.
-            Challenge progress and the weekly ranking are rebuilt for every player when the run
-            imported at least one match.
+            Imports every match of the current and previous Valorant seasons for one tracked player,
+            applying the same season scope, checkpoints, mode filter and early-stop rules as the
+            batch operation. Useful to catch up a single player that failed during a scheduled run,
+            without replaying the others. Challenge progress, the weekly ranking and the campaign
+            are rebuilt when the run imported at least one match.
 
             Runs in the background like the batch operation, and is followed the same way through
             `GET /api/admin/synchronizations/latest`. The player is resolved before the request is
@@ -164,7 +162,7 @@ public class SynchronizationAdminController {
     )
     @ApiResponse(
             responseCode = "409",
-        description = "A synchronization is already in progress."
+        description = "Another job writing the match history is already running."
     )
     public void synchronizePlayer(
         @Parameter(

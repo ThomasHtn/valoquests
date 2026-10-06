@@ -4,15 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -54,10 +57,9 @@ class JacksonChallengeDefinitionParserTest {
                 """
         );
 
-        var definition = parser.parse(challenge);
+        var definition = parser.parse(challenge, CampaignDifficulty.AMATEUR);
         var condition = definition.singleCondition();
 
-        assertThat(definition.schemaVersion()).isEqualTo(3);
         assertThat(definition.progressMode()).isEqualTo(ProgressMode.SUM);
         assertThat(condition.metric()).isEqualTo(ChallengeMetric.KILLS);
         assertThat(condition.target())
@@ -86,7 +88,7 @@ class JacksonChallengeDefinitionParserTest {
                 """
         );
 
-        var definition = parser.parse(challenge);
+        var definition = parser.parse(challenge, CampaignDifficulty.AMATEUR);
         var condition = definition.singleCondition();
 
         assertThat(condition.target())
@@ -104,7 +106,7 @@ class JacksonChallengeDefinitionParserTest {
             "[invalid-json]"
         );
 
-        assertThatThrownBy(() -> parser.parse(challenge))
+        assertThatThrownBy(() -> parser.parse(challenge, CampaignDifficulty.AMATEUR))
             .isInstanceOf(InvalidChallengeDefinitionException.class)
             .hasMessageContaining("TEST_CHALLENGE")
             .hasMessageContaining("cannot be parsed");
@@ -129,7 +131,7 @@ class JacksonChallengeDefinitionParserTest {
                 """
         );
 
-        assertThatThrownBy(() -> parser.parse(challenge))
+        assertThatThrownBy(() -> parser.parse(challenge, CampaignDifficulty.AMATEUR))
             .isInstanceOf(InvalidChallengeDefinitionException.class)
             .hasMessageContaining("requires a groupBy value");
     }
@@ -154,9 +156,88 @@ class JacksonChallengeDefinitionParserTest {
                 """
         );
 
-        assertThatThrownBy(() -> parser.parse(challenge))
+        assertThatThrownBy(() -> parser.parse(challenge, CampaignDifficulty.AMATEUR))
             .isInstanceOf(InvalidChallengeDefinitionException.class)
             .hasMessageContaining("positive occurrences value");
+    }
+
+    @Test
+    @DisplayName("Rejects a RATIO challenge on a total rather than a rate")
+    void shouldRejectARatioChallengeOnATotal() {
+        Challenge challenge = createChallenge(
+            ProgressMode.RATIO,
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":100,\"gameMode\":\"COMPETITIVE\","
+                + "\"minimumMatches\":15}]"
+        );
+
+        assertThatThrownBy(() -> parser.parse(challenge, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("RATIO requires a rate metric");
+    }
+
+    @Test
+    @DisplayName("Rejects a RATIO challenge without a positive minimum sample")
+    void shouldRejectARatioChallengeWithoutMinimumMatches() {
+        Challenge withoutSample = createChallenge(
+            ProgressMode.RATIO,
+            "[{\"metric\":\"KD\",\"operator\":\"GTE\",\"target\":1.2,\"gameMode\":\"COMPETITIVE\"}]"
+        );
+        Challenge emptySample = createChallenge(
+            ProgressMode.RATIO,
+            "[{\"metric\":\"KD\",\"operator\":\"GTE\",\"target\":1.2,\"gameMode\":\"COMPETITIVE\","
+                + "\"minimumMatches\":0}]"
+        );
+
+        assertThatThrownBy(() -> parser.parse(withoutSample, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("positive minimumMatches");
+        assertThatThrownBy(() -> parser.parse(emptySample, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("positive minimumMatches");
+    }
+
+    @Test
+    @DisplayName("Accepts the PLAY_DAY metric only in a DISTINCT_COUNT challenge")
+    void shouldAcceptPlayDayOnlyInADistinctCount() {
+        String playDays = "[{\"metric\":\"PLAY_DAY\",\"operator\":\"GTE\",\"target\":3,"
+            + "\"gameMode\":\"ANY\",\"groupBy\":\"PLAY_DAY\"}]";
+        Challenge distinctDays = createChallenge(ProgressMode.DISTINCT_COUNT, playDays);
+        Challenge busiestDay = createChallenge(ProgressMode.MAX_GROUP, playDays);
+        Challenge streak = createChallenge(
+            ProgressMode.MAX_STREAK,
+            "[{\"metric\":\"PLAY_DAY\",\"operator\":\"GTE\",\"target\":1,\"gameMode\":\"ANY\","
+                + "\"scope\":\"PER_MATCH\",\"streak\":3}]"
+        );
+
+        assertThat(parser.parse(distinctDays, CampaignDifficulty.AMATEUR).singleCondition().metric())
+            .isEqualTo(ChallengeMetric.PLAY_DAY);
+        assertThatThrownBy(() -> parser.parse(busiestDay, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("PLAY_DAY metric is only valid with DISTINCT_COUNT");
+        assertThatThrownBy(() -> parser.parse(streak, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("PLAY_DAY metric is only valid with DISTINCT_COUNT");
+    }
+
+    @Test
+    @DisplayName("Rejects a MAX_STREAK challenge outside the PER_MATCH scope or without a positive streak")
+    void shouldRejectAnIllFormedStreak() {
+        Challenge noScope = createChallenge(
+            ProgressMode.MAX_STREAK,
+            "[{\"metric\":\"KD\",\"operator\":\"GTE\",\"target\":1,\"gameMode\":\"ANY\",\"streak\":3}]"
+        );
+        Challenge noStreak = createChallenge(
+            ProgressMode.MAX_STREAK,
+            "[{\"metric\":\"KD\",\"operator\":\"GTE\",\"target\":1,\"gameMode\":\"ANY\","
+                + "\"scope\":\"PER_MATCH\",\"streak\":0}]"
+        );
+
+        assertThatThrownBy(() -> parser.parse(noScope, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("PER_MATCH");
+        assertThatThrownBy(() -> parser.parse(noStreak, CampaignDifficulty.AMATEUR))
+            .isInstanceOf(InvalidChallengeDefinitionException.class)
+            .hasMessageContaining("positive streak");
     }
 
     /**
@@ -168,7 +249,7 @@ class JacksonChallengeDefinitionParserTest {
             ProgressMode.SUM,
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60,\"gameMode\":\"COMPETITIVE\"}]"
         );
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setChallenge(challenge);
         selection.setResolvedConditionsJson(
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":135,\"gameMode\":\"COMPETITIVE\"}]"
@@ -180,12 +261,32 @@ class JacksonChallengeDefinitionParserTest {
         assertThat(definition.singleCondition().target()).isEqualByComparingTo(BigDecimal.valueOf(135));
     }
 
+    @Test
+    @DisplayName("Reads a selection stored with the derived metric flags conditions no longer carry")
+    void shouldReadAResolvedConditionStoredWithLegacyFlags() {
+        JacksonChallengeDefinitionParser strictParser = new JacksonChallengeDefinitionParser(
+            JsonMapper.builder().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build()
+        );
+        ChallengeSelection selection = new ChallengeSelection();
+        selection.setChallenge(createChallenge(
+            ProgressMode.SUM,
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60}]"
+        ));
+        selection.setResolvedConditionsJson(
+            "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":135,"
+                + "\"rateMetric\":false,\"ratioMetric\":false,\"matchCountMetric\":false}]"
+        );
+
+        assertThat(strictParser.parse(selection).singleCondition().target())
+            .isEqualByComparingTo(BigDecimal.valueOf(135));
+    }
+
     /**
      * Verifies that a selection without resolved conditions is rejected like a blank rule.
      */
     @Test
     void shouldRejectASelectionWithoutResolvedConditions() {
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setChallenge(createChallenge(ProgressMode.SUM, "[]"));
 
         assertThatThrownBy(() -> parser.parse(selection))
@@ -213,17 +314,17 @@ class JacksonChallengeDefinitionParserTest {
                 ]
                 """
         );
-        List<?> conditions = parser.parse(challenge).conditions();
+        List<?> conditions = parser.parse(challenge, CampaignDifficulty.AMATEUR).conditions();
 
-        String json = parser.toJson(parser.parse(challenge).conditions());
+        String json = parser.toJson(parser.parse(challenge, CampaignDifficulty.AMATEUR).conditions());
 
         assertThat(json).doesNotContain("null");
         assertThat(json).contains("\"target\":1.2", "\"occurrences\":6", "\"scope\":\"PER_MATCH\"");
 
-        challenge.setConditionsJson(json);
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setAmateurConditionsJson(json);
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
 
-        assertThat(parser.parse(challenge).conditions()).isEqualTo(conditions);
+        assertThat(parser.parse(challenge, CampaignDifficulty.AMATEUR).conditions()).isEqualTo(conditions);
     }
 
     /**
@@ -241,8 +342,8 @@ class JacksonChallengeDefinitionParserTest {
 
         challenge.setCode("TEST_CHALLENGE");
         challenge.setProgressMode(progressMode);
-        challenge.setConditionsJson(conditionsJson);
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setAmateurConditionsJson(conditionsJson);
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
         challenge.setSchemaVersion(3);
 
         return challenge;

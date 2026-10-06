@@ -14,7 +14,7 @@ public enum SynchronizationType {
     STANDARD,
 
     /**
-     * The one-off walk of a whole calibration window, run before a campaign is opened.
+     * Legacy value, no longer written: kept because older execution rows still hold it.
      */
     HISTORY_BACKFILL
 }

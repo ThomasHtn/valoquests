@@ -1,16 +1,11 @@
 package io.github.thomashtn.valoquests.henrik.client;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.henrik.config.HenrikApiProperties;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse;
-import java.util.Objects;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 /**
- * WebClient-based implementation of the Henrik match-history client.
+ * Retrieves pages of a player's match history through Henrik's v4 endpoint.
  */
 @Component
 public class DefaultHenrikMatchClient implements HenrikMatchClient {
@@ -27,54 +22,26 @@ public class DefaultHenrikMatchClient implements HenrikMatchClient {
     private static final int MIN_PAGE_SIZE = 1;
 
     /**
-     * Maximum number of matches accepted for one request.
-     *
-     * <p>This application uses small pages to limit external request duration
-     * and simplify incremental synchronization.</p>
-     */
-    private static final int MAX_PAGE_SIZE = 10;
-
-    /**
-     * HTTP client configured for Henrik API calls.
-     */
-    private final WebClient henrikWebClient;
-
-    /**
      * Application-wide Henrik configuration.
      */
     private final HenrikApiProperties properties;
 
     /**
-     * Converts Henrik HTTP failures into typed application exceptions.
-     */
-    private final HenrikResponseHandler responseHandler;
-
-    /**
-     * Applies common Henrik transport handling and retry rules.
+     * Shared executor sending the request behind the rate limiter and retry policy.
      */
     private final HenrikRequestExecutor requestExecutor;
 
     /**
      * Creates the Henrik match client.
      *
-     * @param henrikWebClient configured Henrik HTTP client
-     * @param properties Henrik API configuration
-     * @param responseHandler external response error handler
+     * @param properties      Henrik API configuration
      * @param requestExecutor shared Henrik request executor
      */
-    @SuppressFBWarnings(
-        value = "EI_EXPOSE_REP2",
-        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
-    )
     public DefaultHenrikMatchClient(
-        WebClient henrikWebClient,
         HenrikApiProperties properties,
-        HenrikResponseHandler responseHandler,
         HenrikRequestExecutor requestExecutor
     ) {
-        this.henrikWebClient = henrikWebClient;
         this.properties = properties;
-        this.responseHandler = responseHandler;
         this.requestExecutor = requestExecutor;
     }
 
@@ -92,61 +59,18 @@ public class DefaultHenrikMatchClient implements HenrikMatchClient {
         int start,
         int size
     ) {
-        validatePuuid(puuid);
+        HenrikRequestExecutor.requireText(puuid, "puuid");
         validatePagination(start, size);
 
-        String operationName =
-            "retrieve matches for Riot PUUID " + puuid;
-
-        return requestExecutor.execute(
-            operationName,
-            () -> executeMatchRequest(puuid, start, size)
-        );
-    }
-
-    /**
-     * Builds and executes the Henrik match-history request.
-     *
-     * @param puuid Riot's unique player identifier
-     * @param start zero-based pagination start index
-     * @param size maximum number of matches to retrieve
-     * @return lazy Henrik response publisher
-     */
-    private Mono<HenrikMatchHistoryResponse> executeMatchRequest(
-        String puuid,
-        int start,
-        int size
-    ) {
-        return henrikWebClient.get()
-            .uri(uriBuilder -> uriBuilder
+        return requestExecutor.get(
+            "retrieve matches for Riot PUUID " + puuid,
+            uri -> uri
                 .path(MATCH_HISTORY_ENDPOINT)
                 .queryParam("start", start)
                 .queryParam("size", size)
-                .build(
-                    properties.region(),
-                    properties.platform(),
-                    puuid
-                )
-            )
-            .retrieve()
-            .onStatus(
-                HttpStatusCode::isError,
-                responseHandler::toException
-            )
-            .bodyToMono(HenrikMatchHistoryResponse.class);
-    }
-
-    /**
-     * Validates the Riot PUUID before an external request.
-     *
-     * @param puuid Riot's unique player identifier
-     */
-    private void validatePuuid(String puuid) {
-        if (Objects.requireNonNullElse(puuid, "").isBlank()) {
-            throw new IllegalArgumentException(
-                "puuid must not be blank"
-            );
-        }
+                .build(properties.region(), properties.platform(), puuid),
+            HenrikMatchHistoryResponse.class
+        );
     }
 
     /**

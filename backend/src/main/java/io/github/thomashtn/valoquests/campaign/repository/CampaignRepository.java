@@ -16,22 +16,66 @@ import org.springframework.data.repository.query.Param;
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     /**
-     * Returns the campaign that is not closed, if there is one.
+     * Returns the campaign whose status differs from the one given; callers use {@link #findLive()}.
      *
-     * <p>At most one can exist: a partial unique index enforces it, so this can never have to pick.
-     *
-     * @param status status to exclude, always {@link CampaignStatus#CLOSED}
-     * @return the live campaign, empty between two campaigns
+     * @param status status to exclude
+     * @return the campaign found
      */
     Optional<Campaign> findByStatusNot(CampaignStatus status);
 
     /**
-     * Returns the closed campaigns, most recent first.
+     * Returns the campaigns in one status, most recent first; callers use {@link #findAllClosed()}.
      *
-     * @param status status to match, always {@link CampaignStatus#CLOSED}
-     * @return closed campaigns
+     * @param status status to match
+     * @return the campaigns found
      */
     List<Campaign> findAllByStatusOrderByNumberDesc(CampaignStatus status);
+
+    /**
+     * Returns the most recent campaign in one status; callers use {@link #findLatestClosed()}.
+     *
+     * @param status status to match
+     * @return the campaign found
+     */
+    Optional<Campaign> findFirstByStatusOrderByNumberDesc(CampaignStatus status);
+
+    /**
+     * Returns the campaign that is opened or running, if there is one.
+     *
+     * <p>At most one can exist: a partial unique index enforces it, so this can never have to pick.
+     *
+     * @return the live campaign, empty between two campaigns
+     */
+    default Optional<Campaign> findLive() {
+        return findByStatusNot(CampaignStatus.CLOSED);
+    }
+
+    /**
+     * Returns the closed campaigns, most recent first.
+     *
+     * @return closed campaigns
+     */
+    default List<Campaign> findAllClosed() {
+        return findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED);
+    }
+
+    /**
+     * Returns the most recently closed campaign.
+     *
+     * @return the last closed campaign, empty when none has closed yet
+     */
+    default Optional<Campaign> findLatestClosed() {
+        return findFirstByStatusOrderByNumberDesc(CampaignStatus.CLOSED);
+    }
+
+    /**
+     * Returns the campaign the site shows: the live one, else the last closed one.
+     *
+     * @return the campaign shown, empty on a database that never had one
+     */
+    default Optional<Campaign> findShown() {
+        return findLive().or(this::findLatestClosed);
+    }
 
     /**
      * Returns the highest campaign number ever used.

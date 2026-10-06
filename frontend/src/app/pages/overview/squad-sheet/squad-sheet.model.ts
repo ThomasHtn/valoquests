@@ -49,7 +49,7 @@ export interface SquadRow {
   /**
    * Days of the week played so far, today included once played.
    */
-  readonly streakDays: number;
+  readonly playedDays: number;
 
   /**
    * Monday to Sunday, one pip per day.

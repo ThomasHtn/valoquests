@@ -1,9 +1,10 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,17 +12,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CountMatchesChallengeProgressCalculator
-    implements ChallengeProgressCalculator {
+    extends SingleConditionChallengeProgressCalculator {
 
     /**
      * Evaluates the configured metric for individual matches.
      */
     private final ChallengeMetricEvaluator metricEvaluator;
-
-    /**
-     * Applies the common game-mode filters.
-     */
-    private final ChallengeMatchFilter matchFilter;
 
     /**
      * Creates the matching-occurrence calculator.
@@ -33,8 +29,8 @@ public class CountMatchesChallengeProgressCalculator
         ChallengeMetricEvaluator metricEvaluator,
         ChallengeMatchFilter matchFilter
     ) {
+        super(matchFilter);
         this.metricEvaluator = metricEvaluator;
-        this.matchFilter = matchFilter;
     }
 
     /**
@@ -50,53 +46,18 @@ public class CountMatchesChallengeProgressCalculator
     /**
      * Counts matches whose metric reaches the configured per-match target.
      *
-     * @param definition parsed challenge definition
-     * @param context    weekly player context
-     * @return normalized progress result
+     * @param condition       the challenge's single condition
+     * @param eligibleMatches matches the condition's filters accept
+     * @return number of matches meeting the condition
      */
     @Override
-    public ChallengeProgressResult calculate(
-        ChallengeDefinition definition,
-        PlayerChallengeContext context
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        long matchingMatches = context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
-            .filter(playerMatch -> conditionMatches(
-                metricEvaluator.evaluate(
-                    playerMatch,
-                    condition.metric()
-                ),
-                condition
+    protected BigDecimal measure(ChallengeCondition condition, List<PlayerMatch> eligibleMatches) {
+        long matchingMatches = eligibleMatches.stream()
+            .filter(playerMatch -> condition.isMetBy(
+                metricEvaluator.evaluate(playerMatch, condition.metric())
             ))
             .count();
 
-        BigDecimal occurrenceTarget = BigDecimal.valueOf(
-            condition.occurrences()
-        );
-
-        return ChallengeProgressResult.from(
-            BigDecimal.valueOf(matchingMatches),
-            occurrenceTarget
-        );
-    }
-
-    /**
-     * Applies the configured operator to one evaluated match value.
-     *
-     * @param currentValue metric value produced by the match
-     * @param condition    challenge condition
-     * @return {@code true} when the match satisfies the condition
-     */
-    private boolean conditionMatches(
-        BigDecimal currentValue,
-        ChallengeCondition condition
-    ) {
-        // ChallengeOperator declares GTE alone, so there is no other comparison to dispatch on.
-        return currentValue.compareTo(condition.target()) >= 0;
+        return BigDecimal.valueOf(matchingMatches);
     }
 }

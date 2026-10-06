@@ -23,7 +23,7 @@ public class ChallengeController {
     /**
      * Application service resolving the current week's challenges.
      */
-    private final ChallengeQueryService service;
+    private final ChallengeQueryService challengeQueryService;
 
     /**
      * Application service resolving the challenge catalogue.
@@ -33,14 +33,14 @@ public class ChallengeController {
     /**
      * Creates the challenge controller.
      *
-     * @param service          challenge query service
-     * @param catalogueService challenge catalogue query service
+     * @param challengeQueryService challenge query service
+     * @param catalogueService      challenge catalogue query service
      */
     public ChallengeController(
-        ChallengeQueryService service,
+        ChallengeQueryService challengeQueryService,
         ChallengeCatalogueQueryService catalogueService
     ) {
-        this.service = service;
+        this.challengeQueryService = challengeQueryService;
         this.catalogueService = catalogueService;
     }
 
@@ -54,19 +54,19 @@ public class ChallengeController {
         summary = "Get current weekly challenges",
         description = """
             Returns the weekly pack of the active calendar week and the daily challenges drawn so
-            far this week, with collective completion values. Individual player progress is
-            deliberately excluded and is available from the current ranking endpoint.
+            far this week, with the active roster and each active player's progress on every
+            challenge.
             """
     )
     @ApiResponse(responseCode = "200", description = "Current challenges returned successfully.")
     public CurrentChallengesResponse getCurrentChallenges() {
-        return service.findCurrent();
+        return challengeQueryService.findCurrent();
     }
 
     /**
      * Returns the full challenge catalogue, independent of any one week's draw.
      *
-     * @return every challenge eligible for weekly selection
+     * @return every enabled challenge, weekly tiers and daily pool
      */
     @GetMapping("/catalogue")
     @Operation(

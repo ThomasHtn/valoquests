@@ -1,24 +1,16 @@
 package io.github.thomashtn.valoquests.challenge.parser;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.util.List;
 
 /**
  * Converts persisted challenge JSON rules into typed definitions, and back.
  */
 public interface ChallengeDefinitionParser {
-
-    /**
-     * Parses and validates one catalogue challenge at the amateur difficulty.
-     *
-     * @param challenge challenge to parse
-     * @return typed challenge definition
-     */
-    ChallengeDefinition parse(Challenge challenge);
 
     /**
      * Parses and validates one catalogue challenge at the difficulty a campaign plays.
@@ -38,10 +30,10 @@ public interface ChallengeDefinitionParser {
      * @param selection weekly or daily selection to parse
      * @return typed resolved definition
      */
-    ChallengeDefinition parse(WeeklyChallenge selection);
+    ChallengeDefinition parse(ChallengeSelection selection);
 
     /**
-     * Serializes resolved conditions in the shape {@link #parse(WeeklyChallenge)} reads back.
+     * Serializes resolved conditions in the shape {@link #parse(ChallengeSelection)} reads back.
      *
      * @param conditions resolved conditions
      * @return JSON array

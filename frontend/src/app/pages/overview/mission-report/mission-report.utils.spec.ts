@@ -51,7 +51,6 @@ describe('buildMissionReport', () => {
       {
         weekStart: '2026-01-05',
         weekEnd: '2026-01-11',
-        finalizedAt: '2026-01-12T00:05:00Z',
         winnerPlayerId: 7,
         ranking: [
           {
@@ -64,8 +63,7 @@ describe('buildMissionReport', () => {
             completedChallenges: 5,
             completedDailyChallenges: 3,
             matchCount: 12,
-            activeDays: 7,
-            streakDays: 7,
+            playedDays: 7,
             titles: ['SCOUT'],
           },
         ],

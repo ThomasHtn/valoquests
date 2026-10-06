@@ -1,7 +1,8 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
  * @param number           campaign number
  * @param difficulty       difficulty the campaign is played at
  * @param reference        squad's weekly reference per player
- * @param rosterSize       operators frozen into the campaign
+ * @param rosterSize       players frozen into the campaign
  * @param firstWeekStart   Monday the campaign starts on
  * @param lastWeekStart    Monday the campaign's tenth week starts on
  * @param today            calendar day the answer was computed on
@@ -28,6 +29,7 @@ import java.util.List;
  * @param weeks            the ten weeks, week one first
  * @param totals           what the campaign has amounted to so far
  */
+@Schema(description = "The campaign in force, whatever its state.")
 public record CampaignResponse(
     Long id,
     CampaignStatus status,

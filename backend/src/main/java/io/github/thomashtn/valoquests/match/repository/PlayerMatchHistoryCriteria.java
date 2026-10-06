@@ -11,15 +11,8 @@ import java.time.Instant;
  *
  * <p>{@code periodStart}/{@code periodEnd} form a half-open range, inclusive beginning and exclusive
  * end, but - unlike the other fields - must never be {@code null}: callers with no week filter pass
- * {@link #UNBOUNDED_PERIOD_START}/{@link #UNBOUNDED_PERIOD_END} instead. PostgreSQL determines a bind
- * parameter's data type from how it is used in the query text alone, at statement-prepare time,
- * before any value is bound; a placeholder that appears only inside a {@code :param IS NULL OR ...}
- * check - with no other, typed usage - leaves it unable to do so for a temporal parameter ("could not
- * determine data type of parameter"), regardless of whether the bound value later turns out to be
- * null or not. Always supplying a concrete bound removes the {@code IS NULL} branch from the query
- * entirely, which sidesteps the issue without needing an explicit cast - the fix used for
- * {@code map}/{@code agent} instead, which does not carry over here: casting a null value bound with
- * no type hint fails the same way ({@code cannot cast type bytea to timestamp with time zone}).
+ * {@link #UNBOUNDED_PERIOD_START}/{@link #UNBOUNDED_PERIOD_END} instead. PostgreSQL cannot type a
+ * null temporal parameter used only in {@code :param IS NULL}, and casting it fails too.
  *
  * @param seasonId    internal season identifier, or {@code null} for every season
  * @param map         map name, matched case-insensitively, or {@code null} for every map

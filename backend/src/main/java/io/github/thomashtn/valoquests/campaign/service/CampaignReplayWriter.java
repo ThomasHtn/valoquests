@@ -56,7 +56,7 @@ public class CampaignReplayWriter {
     private final CampaignDailySnapshotRepository snapshotRepository;
 
     /**
-     * Repository holding the campaign's per-operator days.
+     * Repository holding the campaign's per-player days.
      */
     private final CampaignPlayerDayRepository playerDayRepository;
 
@@ -109,8 +109,8 @@ public class CampaignReplayWriter {
     ) {
         snapshotRepository.deleteAllByCampaignId(campaign.getId());
         playerDayRepository.deleteAllByCampaignId(campaign.getId());
+        // Flush deletes before inserts or the unique (campaign, day) indexes reject the rewrite.
         snapshotRepository.flush();
-        playerDayRepository.flush();
 
         snapshotRepository.saveAll(result.days().stream().map(day -> toSnapshot(campaign, day)).toList());
         playerDayRepository.saveAll(inputs.playerDays().stream().map(day -> toPlayerDay(campaign, day)).toList());
@@ -172,7 +172,7 @@ public class CampaignReplayWriter {
      */
     private void applySettlement(CampaignWeek week, CampaignWeekSettlement settlement, WeekChallengeYield yield) {
         if (settlement == null) {
-            week.setChallengeRescued(Math.min(yield.survivors(), week.getWoundedCount()));
+            week.setChallengeRescued(Math.min(yield.rescued(), week.getWoundedCount()));
             week.setExtractionRescued(0);
             week.setFoodSpent(0);
             week.setComponentsSpent(0);
@@ -220,10 +220,10 @@ public class CampaignReplayWriter {
     }
 
     /**
-     * Maps one operator's day to the row that stores it.
+     * Maps one player's day to the row that stores it.
      *
      * @param campaign campaign the day belongs to
-     * @param input    the operator's day
+     * @param input    the player's day
      * @return the row, ready to persist
      */
     private CampaignPlayerDay toPlayerDay(Campaign campaign, CampaignPlayerDayInput input) {
@@ -236,7 +236,7 @@ public class CampaignReplayWriter {
         row.setComponents(input.output().components());
         row.setMatchCount(input.output().matchCount());
         row.setReducedMatchCount(input.output().reducedMatchCount());
-        row.setStreakDays(input.output().streakDays());
+        row.setPlayedDays(input.output().playedDays());
         row.setStreakBonusPercent(input.output().streakBonusPercent());
 
         return row;

@@ -1,38 +1,39 @@
 package io.github.thomashtn.valoquests.match.service;
 
-import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse.HenrikMatchData;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchPlayer;
-import io.github.thomashtn.valoquests.henrik.mapper.HenrikMatchMapper;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.match.mapper.HenrikMatchMapper;
+import io.github.thomashtn.valoquests.match.model.GameModeResolution;
 import io.github.thomashtn.valoquests.match.model.GameModeSource;
+import io.github.thomashtn.valoquests.match.model.MatchImportOutcome;
 import io.github.thomashtn.valoquests.match.model.MatchImportResult;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.match.repository.ValorantMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.shared.util.ConcurrentRowCreation;
+import io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Imports completed Henrik matches idempotently for one tracked player.
  *
- * <p><strong>Concurrency.</strong> Two synchronizations may race to import the same match: two
- * tracked players who shared it, synced concurrently, or the same player caught up manually while a
- * scheduled run is still in progress. {@code external_match_id} and {@code (player_id, match_id)} are
- * both database-enforced unique constraints, so the loser of such a race fails with a constraint
- * violation rather than creating a duplicate. Match and player-match creation each run in their own
- * transaction so that failure is caught and resolved by reusing the winner's row, instead of poisoning
- * the page-wide transaction every other match on the same page still needs to commit through.
+ * <p><strong>Not transactional.</strong> Each repository call commits on its own, so every match of
+ * a page is stored as soon as it is imported and a failure halfway keeps what came before it.
+ *
+ * <p><strong>Concurrency.</strong> {@code MatchHistoryLock} keeps synchronizations apart, but the
+ * import does not rely on it: {@code external_match_id} and {@code (player_id, match_id)} are unique
+ * constraints, and the loser of a race reuses the winner's row instead of failing. Catching that
+ * violation is only safe outside a transaction, which is why the entry point is guarded.
  */
 @Service
 public class MatchImportService {
@@ -64,75 +65,43 @@ public class MatchImportService {
     private final HenrikMatchMapper mapper;
 
     /**
-     * Runs one creation attempt in its own transaction, independent from the page-wide transaction.
-     */
-    private final TransactionTemplate newRowTransactionTemplate;
-
-    /**
      * Creates the idempotent match import service.
      *
      * @param matchRepository         repository holding Valorant matches
      * @param playerMatchRepository   repository holding player-to-match associations
      * @param seasonResolutionService service resolving the season a match belongs to
      * @param mapper                  mapper turning Henrik payloads into entities
-     * @param transactionManager      transaction manager used to isolate racy row creation
      */
     public MatchImportService(
         ValorantMatchRepository matchRepository,
         PlayerMatchRepository playerMatchRepository,
         SeasonResolutionService seasonResolutionService,
-        HenrikMatchMapper mapper,
-        PlatformTransactionManager transactionManager
+        HenrikMatchMapper mapper
     ) {
         this.matchRepository = matchRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.seasonResolutionService = seasonResolutionService;
         this.mapper = mapper;
-
-        this.newRowTransactionTemplate = new TransactionTemplate(transactionManager);
-        this.newRowTransactionTemplate.setPropagationBehavior(
-            TransactionDefinition.PROPAGATION_REQUIRES_NEW
-        );
     }
 
     /**
-     * Imports a Henrik page and exposes enough detail for safe pagination.
+     * Imports the matches of a Henrik page and exposes enough detail for safe pagination.
      *
-     * @param player tracked player
-     * @param response Henrik match-history response
+     * @param player  tracked player
+     * @param matches Henrik matches of the page, possibly holding {@code null} entries
      * @return detailed import counters
+     * @throws IllegalStateException when called inside a transaction
      */
-    @Transactional
-    public MatchImportResult importMatchesWithSummary(
-        Player player,
-        HenrikMatchHistoryResponse response
-    ) {
+    public MatchImportResult importPage(Player player, List<HenrikMatchData> matches) {
+        NonTransactionalGuard.assertNoActiveTransaction("Match import");
         Objects.requireNonNull(player, "player must not be null");
-        Objects.requireNonNull(response, "response must not be null");
+        Objects.requireNonNull(matches, "matches must not be null");
 
-        List<HenrikMatchData> matches = response.data();
-        int imported = 0;
-        int alreadyKnown = 0;
-        int rejected = 0;
-        int skipped = 0;
-
+        Map<MatchImportOutcome, Integer> counts = new EnumMap<>(MatchImportOutcome.class);
         for (HenrikMatchData source : matches) {
-            ImportOutcome outcome = importMatch(player, source);
-            switch (outcome) {
-                case IMPORTED -> imported++;
-                case ALREADY_KNOWN -> alreadyKnown++;
-                case REJECTED -> rejected++;
-                case SKIPPED -> skipped++;
-            }
+            counts.merge(importMatch(player, source), 1, Integer::sum);
         }
-
-        MatchImportResult result = new MatchImportResult(
-            matches.size(),
-            imported,
-            alreadyKnown,
-            rejected,
-            skipped
-        );
+        MatchImportResult result = MatchImportResult.of(matches.size(), counts);
 
         LOGGER.debug(
             "Processed Henrik response for player {}: received={} imported={} alreadyKnown={} "
@@ -150,7 +119,7 @@ public class MatchImportService {
     /**
      * Imports one match and classifies the processing outcome.
      */
-    private ImportOutcome importMatch(
+    private MatchImportOutcome importMatch(
         Player player,
         HenrikMatchData source
     ) {
@@ -161,7 +130,7 @@ public class MatchImportService {
                 player.getId(),
                 rejectionReason
             );
-            return ImportOutcome.REJECTED;
+            return MatchImportOutcome.REJECTED;
         }
 
         HenrikMatchPlayer sourcePlayer = findTrackedPlayer(player, source);
@@ -171,14 +140,14 @@ public class MatchImportService {
                 source.metadata().matchId(),
                 player.getId()
             );
-            return ImportOutcome.REJECTED;
+            return MatchImportOutcome.REJECTED;
         }
 
         HenrikMatchMetadata metadata = source.metadata();
 
         // Checked before any lookup so an ignored mode never creates a match row. An unresolved
         // queue is eligible on purpose: see GameMode.OTHER.
-        HenrikMatchMapper.GameModeResolution resolution = mapper.resolveGameModeWithSource(metadata);
+        GameModeResolution resolution = mapper.resolveGameModeWithSource(metadata);
         if (!resolution.gameMode().isImportEligible()) {
             LOGGER.debug(
                 "Skipping Henrik match {} for player {}: game mode {} is not imported",
@@ -186,7 +155,7 @@ public class MatchImportService {
                 player.getId(),
                 resolution.gameMode()
             );
-            return ImportOutcome.SKIPPED;
+            return MatchImportOutcome.SKIPPED;
         }
 
         ValorantMatch match = findOrCreateMatch(source, metadata.matchId());
@@ -201,12 +170,12 @@ public class MatchImportService {
                 player.getId(),
                 metadata.matchId()
             );
-            return ImportOutcome.ALREADY_KNOWN;
+            return MatchImportOutcome.ALREADY_KNOWN;
         }
 
         return saveNewPlayerMatch(source, sourcePlayer, player, match)
-            ? ImportOutcome.IMPORTED
-            : ImportOutcome.ALREADY_KNOWN;
+            ? MatchImportOutcome.IMPORTED
+            : MatchImportOutcome.ALREADY_KNOWN;
     }
 
     /**
@@ -234,9 +203,7 @@ public class MatchImportService {
         if (metadata.startedAt() == null) {
             return "the start instant is missing";
         }
-        if (metadata.season() == null
-            || metadata.season().id() == null
-            || metadata.season().id().isBlank()) {
+        if (source.seasonId() == null) {
             return "the season identifier is missing for match " + metadata.matchId();
         }
         return null;
@@ -264,28 +231,15 @@ public class MatchImportService {
     /**
      * Finds the shared match, creating it when this is the first tracked player to report it.
      *
-     * <p>Creation runs in its own transaction so the unique-constraint violation a losing concurrent
-     * creation hits can be resolved by reusing the winner's row, without poisoning the page-wide
-     * transaction the rest of this page's matches still need to commit through.
-     *
      * @param source         Henrik match payload
      * @param externalMatchId Henrik match identifier
      * @return the persisted match, created by this call or by a concurrent one
      */
     private ValorantMatch findOrCreateMatch(HenrikMatchData source, String externalMatchId) {
-        return matchRepository.findByExternalMatchId(externalMatchId)
-            .orElseGet(() -> {
-                try {
-                    return newRowTransactionTemplate.execute(status -> createMatch(source));
-                } catch (DataIntegrityViolationException raceLost) {
-                    LOGGER.debug(
-                        "Match {} was created concurrently by another synchronization: reusing it",
-                        externalMatchId
-                    );
-                    return matchRepository.findByExternalMatchId(externalMatchId)
-                        .orElseThrow(() -> raceLost);
-                }
-            });
+        return ConcurrentRowCreation.findOrCreate(
+            () -> matchRepository.findByExternalMatchId(externalMatchId),
+            () -> createMatch(source)
+        );
     }
 
     /**
@@ -313,7 +267,7 @@ public class MatchImportService {
      * @param match      persisted match, possibly stale
      * @param resolution mode this synchronization resolved for the match
      */
-    private void enrichGameMode(ValorantMatch match, HenrikMatchMapper.GameModeResolution resolution) {
+    private void enrichGameMode(ValorantMatch match, GameModeResolution resolution) {
         boolean unchanged = resolution.gameMode() == match.getGameMode()
             && resolution.source() == match.getGameModeSource();
         if (unchanged || !resolution.source().outranksOrEquals(match.getGameModeSource())) {
@@ -351,9 +305,7 @@ public class MatchImportService {
         ValorantMatch match
     ) {
         try {
-            newRowTransactionTemplate.executeWithoutResult(status ->
-                playerMatchRepository.save(mapper.toPlayerMatch(source, sourcePlayer, player, match))
-            );
+            playerMatchRepository.save(mapper.toPlayerMatch(source, sourcePlayer, player, match));
             return true;
         } catch (DataIntegrityViolationException raceLost) {
             LOGGER.debug(
@@ -364,15 +316,5 @@ public class MatchImportService {
             );
             return false;
         }
-    }
-
-    /**
-     * Internal outcome used to build import counters.
-     */
-    private enum ImportOutcome {
-        IMPORTED,
-        ALREADY_KNOWN,
-        REJECTED,
-        SKIPPED
     }
 }

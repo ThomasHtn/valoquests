@@ -1,5 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * The base as it stands right now: its size, its two stocks and what they can pay for.
  *
@@ -19,6 +21,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param foodPerRescue        food one rescue costs the base
  * @param guardianLossPercent  share of the base a guardian left standing at zero breakthrough would kill
  */
+@Schema(description = "Current base size, stocks and what they can pay for.")
 public record CampaignBaseResponse(
     int population,
     int foodStock,

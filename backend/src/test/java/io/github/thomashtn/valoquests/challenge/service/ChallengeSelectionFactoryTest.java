@@ -3,13 +3,13 @@ package io.github.thomashtn.valoquests.challenge.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,7 +45,7 @@ class ChallengeSelectionFactoryTest {
     void shouldStoreTheGridOfTheWeeksLevel() {
         ChallengeSelectionFactory factory = factory(CampaignDifficulty.PRO);
 
-        WeeklyChallenge selection = factory.weekly(WEEK_START, challenge(), DRAWN_AT);
+        ChallengeSelection selection = factory.weekly(WEEK_START, challenge(), DRAWN_AT);
 
         assertThat(selection.getWeekStart()).isEqualTo(WEEK_START);
         assertThat(selection.getCadence()).isEqualTo(ChallengeCadence.WEEKLY);
@@ -55,7 +55,7 @@ class ChallengeSelectionFactoryTest {
         assertThat(parser.parse(selection).singleCondition().target())
             .isEqualByComparingTo(BigDecimal.valueOf(120));
         // The reference grid is untouched by the draw.
-        assertThat(parser.parse(selection.getChallenge()).singleCondition().target())
+        assertThat(parser.parse(selection.getChallenge(), CampaignDifficulty.AMATEUR).singleCondition().target())
             .isEqualByComparingTo(BigDecimal.valueOf(60));
     }
 
@@ -67,9 +67,9 @@ class ChallengeSelectionFactoryTest {
         ChallengeSelectionFactory factory = factory(CampaignDifficulty.AMATEUR);
         Challenge challenge = challenge();
         challenge.setCadence(ChallengeCadence.DAILY);
-        challenge.setDifficulty(null);
+        challenge.setTier(null);
 
-        WeeklyChallenge selection = factory.daily(WEEK_START, WEEK_START.plusDays(2), challenge, DRAWN_AT);
+        ChallengeSelection selection = factory.daily(WEEK_START, WEEK_START.plusDays(2), challenge, DRAWN_AT);
 
         assertThat(selection.getCadence()).isEqualTo(ChallengeCadence.DAILY);
         assertThat(selection.getDay()).isEqualTo(WEEK_START.plusDays(2));
@@ -100,13 +100,13 @@ class ChallengeSelectionFactoryTest {
         Challenge challenge = new Challenge();
         challenge.setId(1L);
         challenge.setCode("NORMAL_LONG_KILLS");
-        challenge.setDifficulty(ChallengeDifficulty.NORMAL);
+        challenge.setTier(ChallengeTier.NORMAL);
         challenge.setProgressMode(ProgressMode.SUM);
         challenge.setSchemaVersion(3);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
         );
-        challenge.setExpertConditionsJson(
+        challenge.setProConditionsJson(
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":120,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
         );
         return challenge;

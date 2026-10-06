@@ -76,4 +76,12 @@ public interface WeeklyPlayerScoreRepository
      * @param weekStart current week identifier
      */
     void deleteAllByWeekStart(LocalDate weekStart);
+
+    /**
+     * Returns every weekly score of one player.
+     *
+     * @param playerId internal player identifier
+     * @return the player's scores
+     */
+    List<WeeklyPlayerScore> findAllByPlayerId(Long playerId);
 }

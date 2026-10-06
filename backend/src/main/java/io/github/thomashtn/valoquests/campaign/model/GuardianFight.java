@@ -11,7 +11,7 @@ import java.time.Instant;
  * @param damageDealt      damage the roster dealt over the week
  * @param defeated         whether the guardian fell
  * @param defeatedAt       start instant of the match that landed the finishing blow
- * @param playerId         operator who landed it
+ * @param playerId         player who landed it
  * @param playerMatchId    match that landed it
  */
 public record GuardianFight(

@@ -147,7 +147,6 @@ export function buildChallengeCard(
     name: challenge.name,
     description: challenge.description,
     survivors: challenge.survivors,
-    rankingPoints: challenge.rankingPoints,
     rescueActive,
     target: challenge.targetValue,
     rungs,

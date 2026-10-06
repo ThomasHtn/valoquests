@@ -1,7 +1,11 @@
 package io.github.thomashtn.valoquests.player.model;
 
+import java.util.Locale;
+
 /**
  * Defines the competitive ranks supported by the application.
+ *
+ * <p>Declared from the lowest to the highest rank: comparisons rely on that order.
  */
 public enum CompetitiveTier {
     UNRANKED,
@@ -29,5 +33,29 @@ public enum CompetitiveTier {
     IMMORTAL_1,
     IMMORTAL_2,
     IMMORTAL_3,
-    RADIANT
+    RADIANT;
+
+    /**
+     * Reads a Henrik tier name ("Gold 2"), unranked when absent or unknown.
+     *
+     * @param name Henrik tier name, may be {@code null}
+     * @return matching tier
+     */
+    public static CompetitiveTier fromHenrikName(String name) {
+        if (name == null || name.isBlank()) {
+            return UNRANKED;
+        }
+
+        String normalized = name
+            .trim()
+            .toUpperCase(Locale.ROOT)
+            .replace('-', '_')
+            .replace(' ', '_');
+
+        try {
+            return valueOf(normalized);
+        } catch (IllegalArgumentException _) {
+            return UNRANKED;
+        }
+    }
 }

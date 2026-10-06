@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.synchronization.repository;
 
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -34,9 +33,8 @@ public interface SynchronizationRepository
     /**
      * Determines whether an execution currently holds one of the supplied statuses.
      *
-     * <p>This is what makes a synchronization request exclusive: a run is dispatched to a
-     * background thread, so nothing else prevents a second request from starting a concurrent walk
-     * of the same history and burning the Henrik rate limit twice.
+     * <p>Backs the public "synchronization in progress" flag; exclusivity itself comes from
+     * {@code MatchHistoryLock}.
      *
      * @param statuses statuses to look for
      * @return {@code true} when at least one execution holds one of them
@@ -50,13 +48,4 @@ public interface SynchronizationRepository
      * @return matching executions
      */
     List<Synchronization> findAllByStatusIn(Collection<SynchronizationStatus> statuses);
-
-    /**
-     * Determines whether an execution of one type ended in one of the supplied statuses.
-     *
-     * @param type     execution type to look for
-     * @param statuses statuses to look for
-     * @return {@code true} when at least one such execution exists
-     */
-    boolean existsByTypeAndStatusIn(SynchronizationType type, Collection<SynchronizationStatus> statuses);
 }

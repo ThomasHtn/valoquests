@@ -8,7 +8,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignReplayResult;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +103,7 @@ public class CampaignReplayService {
      */
     @Transactional
     public Optional<CampaignReplayResult> replayRunningCampaign() {
-        Optional<Campaign> running = campaignRepository.findByStatusNot(CampaignStatus.CLOSED)
+        Optional<Campaign> running = campaignRepository.findLive()
             .filter(campaign -> campaign.getStatus() == CampaignStatus.RUNNING);
 
         if (running.isEmpty()) {
@@ -128,6 +128,7 @@ public class CampaignReplayService {
      */
     @Transactional
     public CampaignReplayResult replay(Campaign campaign) {
+        // Only the lock matters: the caller already holds the campaign.
         campaignRepository.lockById(campaign.getId());
         LocalDate today = weekCalendar.today();
         LocalDate lastDay = earlier(today, campaign.finalDay());

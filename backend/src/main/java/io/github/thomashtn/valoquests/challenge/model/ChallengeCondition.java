@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;
 
@@ -16,6 +17,8 @@ import java.math.BigDecimal;
  * @param streak         optional consecutive-match target
  * @param minimumMatches optional minimum number of eligible matches
  */
+// Rows stored before the derived is*Metric flags were removed still carry them.
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ChallengeCondition(
 
@@ -43,65 +46,13 @@ public record ChallengeCondition(
     }
 
     /**
-     * Tells whether the metric is a rate rather than a count.
+     * Tells whether a value clears this condition's target.
      *
-     * <p>A rate is what a player holds, not what they accumulate: it scales on a talent anchor and
-     * keeps its decimals, where a count scales on volume and rounds to a readable step.
-     *
-     * @return {@code true} for kill-to-death, per-round and headshot-rate metrics
+     * @param value value one match or one group produced
+     * @return {@code true} when the value satisfies the operator
      */
-    public boolean isRateMetric() {
-        return metric == ChallengeMetric.KD
-            || metric == ChallengeMetric.ADR
-            || metric == ChallengeMetric.ACS
-            || metric == ChallengeMetric.HEADSHOT_RATE;
-    }
-
-    /**
-     * Tells whether the metric is a ratio that keeps its decimals once resolved.
-     *
-     * <p>Per-round averages are rates too, but they read as whole numbers: an ADR of 155, never
-     * 155.76.
-     *
-     * @return {@code true} for kill-to-death and headshot-rate metrics
-     */
-    public boolean isRatioMetric() {
-        return metric == ChallengeMetric.KD || metric == ChallengeMetric.HEADSHOT_RATE;
-    }
-
-    /**
-     * Tells whether the metric counts matches rather than what happened in them.
-     *
-     * @return {@code true} for matches played and matches won
-     */
-    public boolean isMatchCountMetric() {
-        return metric == ChallengeMetric.MATCHES_PLAYED
-            || metric == ChallengeMetric.MATCHES_WON;
-    }
-
-    /**
-     * Returns a copy with new numeric fields, every filter untouched.
-     *
-     * @param newTarget         resolved target
-     * @param newOccurrences    resolved occurrences, or {@code null} when none were declared
-     * @param newMinimumMatches resolved minimum, or {@code null} when none was declared
-     * @return resolved condition
-     */
-    public ChallengeCondition withNumbers(
-        BigDecimal newTarget,
-        Integer newOccurrences,
-        Integer newMinimumMatches
-    ) {
-        return new ChallengeCondition(
-            metric,
-            operator,
-            newTarget,
-            gameMode,
-            groupBy,
-            scope,
-            newOccurrences,
-            streak,
-            newMinimumMatches
-        );
+    public boolean isMetBy(BigDecimal value) {
+        // ChallengeOperator declares GTE alone, so there is no other comparison to dispatch on.
+        return value.compareTo(target) >= 0;
     }
 }

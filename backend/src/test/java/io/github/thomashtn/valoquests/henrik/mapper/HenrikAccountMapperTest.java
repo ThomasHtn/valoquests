@@ -68,7 +68,6 @@ class HenrikAccountMapperTest {
     @Test
     void shouldRejectResponseWithoutData() {
         HenrikAccountResponse response = new HenrikAccountResponse(
-            200,
             null
         );
 
@@ -201,7 +200,6 @@ class HenrikAccountMapperTest {
         String tagLine
     ) {
         return new HenrikAccountResponse(
-            200,
             new HenrikAccountResponse.HenrikAccountData(
                 puuid,
                 gameName,

@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.week.controller;
 
 import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
 
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,12 +29,22 @@ public class WeekAdminController {
     private final WeeklyRolloverService weeklyRolloverService;
 
     /**
+     * Lock keeping the rollover from overlapping a synchronization, another rollover or a reset.
+     */
+    private final MatchHistoryLock matchHistoryLock;
+
+    /**
      * Creates the administrative week controller.
      *
      * @param weeklyRolloverService weekly rollover service
+     * @param matchHistoryLock      lock shared by every job writing the match history
      */
-    public WeekAdminController(WeeklyRolloverService weeklyRolloverService) {
+    public WeekAdminController(
+        WeeklyRolloverService weeklyRolloverService,
+        MatchHistoryLock matchHistoryLock
+    ) {
         this.weeklyRolloverService = weeklyRolloverService;
+        this.matchHistoryLock = matchHistoryLock;
     }
 
     /**
@@ -45,8 +56,9 @@ public class WeekAdminController {
         summary = "Run the weekly rollover now",
         description = """
             Runs the exact rollover the Monday schedule runs: it finalizes every past week still
-            open, resolves every past boss encounter whose fight was never settled, and opens the
-            week currently in progress with its challenge pack, its boss and its ranking at zero.
+            open, replays the running campaign (starting or closing it when due), and opens the
+            week currently in progress with its challenge pack, its daily challenge and its ranking
+            at zero.
 
             This is a repair tool for a rollover that did not run or failed halfway. It is
             idempotent and safe to call mid-week: only weeks strictly before the one in progress
@@ -55,16 +67,23 @@ public class WeekAdminController {
             Unlike the scheduled job it does not synchronize first. Trigger a synchronization
             before this one if the closing week's very last matches have not been imported yet,
             or they will count for nothing.
+
+            Refused with a 409 while a synchronization, another rollover or a campaign reset runs.
             """
     )
     @ApiResponse(responseCode = "204", description = "The rollover completed.")
     @ApiResponse(responseCode = "401", description = "X-Admin-Key header is missing.")
     @ApiResponse(responseCode = "403", description = "X-Admin-Key value is invalid.")
     @ApiResponse(
+        responseCode = "409",
+        description = "Another job writing the match history is already running."
+    )
+    @ApiResponse(
         responseCode = "500",
         description = "A week's challenge pack is only partially finalized. Nothing was changed."
     )
     public void rolloverNow() {
-        weeklyRolloverService.rolloverIfNeeded();
+        // Taken outside the rollover transaction so it is only released once the rollover committed.
+        matchHistoryLock.runOrReject(weeklyRolloverService::rolloverIfNeeded);
     }
 }

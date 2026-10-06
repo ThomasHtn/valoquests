@@ -5,6 +5,7 @@ import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -55,7 +56,7 @@ public class ChallengeMetricEvaluator {
             case SCORE -> BigDecimal.valueOf(playerMatch.getScore());
             case ROUNDS_PLAYED ->
                 BigDecimal.valueOf(playerMatch.getRoundsPlayed());
-            case KD -> evaluateKillDeathRatio(playerMatch);
+            case KD -> playerMatch.killDeathRatio(RATIO_SCALE);
             case ACS -> perRound(playerMatch.getScore(), playerMatch);
             case ADR -> perRound(playerMatch.getDamageDealt(), playerMatch);
             case HEADSHOT_RATE -> evaluateHeadshotRate(playerMatch);
@@ -63,6 +64,19 @@ public class ChallengeMetricEvaluator {
                 "PLAY_DAY must be evaluated through a grouped calculator."
             );
         };
+    }
+
+    /**
+     * Sums one metric over a set of matches.
+     *
+     * @param metric  metric to evaluate
+     * @param matches matches already filtered by the condition
+     * @return the total, zero without a match
+     */
+    public BigDecimal sumOf(ChallengeMetric metric, List<PlayerMatch> matches) {
+        return matches.stream()
+            .map(playerMatch -> evaluate(playerMatch, metric))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     /**
@@ -111,9 +125,8 @@ public class ChallengeMetricEvaluator {
     /**
      * Returns one when the match was won and zero otherwise.
      *
-     * <p>Delegated rather than read from {@code result}, so a Deathmatch victory counts as one here and
-     * in the damage barème alike: Deathmatch has no team result, and reading the raw field made the same
-     * match a win for damage and a defeat for any challenge counting victories.
+     * <p>Delegated rather than read from {@code result}: Deathmatch has no team result, and a
+     * Deathmatch victory must count here as it does in the damage scoring table.
      *
      * @param playerMatch player-match statistics
      * @return numeric win contribution
@@ -122,32 +135,5 @@ public class ChallengeMetricEvaluator {
         return outcomeResolver.isVictory(playerMatch)
             ? BigDecimal.ONE
             : BigDecimal.ZERO;
-    }
-
-    /**
-     * Calculates the kill-to-death ratio for one match.
-     *
-     * <p>A deathless match uses the number of kills as its ratio value. This
-     * avoids division by zero while preserving the fact that such a match
-     * satisfies every positive K/D threshold supported by the current
-     * challenge catalogue.</p>
-     *
-     * @param playerMatch player-match statistics
-     * @return per-match K/D ratio
-     */
-    private BigDecimal evaluateKillDeathRatio(
-        PlayerMatch playerMatch
-    ) {
-        BigDecimal kills = BigDecimal.valueOf(playerMatch.getKills());
-
-        if (playerMatch.getDeaths() == 0) {
-            return kills;
-        }
-
-        return kills.divide(
-            BigDecimal.valueOf(playerMatch.getDeaths()),
-            RATIO_SCALE,
-            RoundingMode.HALF_UP
-        );
     }
 }

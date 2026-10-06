@@ -18,7 +18,7 @@ import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreReposi
 import io.github.thomashtn.valoquests.ranking.service.ChallengePointsReader.ChallengeTally;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -114,16 +114,14 @@ class DefaultRankingRecalculationServiceTest {
         assertThat(bravo.getFood()).isEqualTo(450);
         assertThat(bravo.getComponents()).isEqualTo(1_050);
         assertThat(bravo.getMatchCount()).isEqualTo(3);
-        assertThat(bravo.getActiveDays()).isEqualTo(1);
-        assertThat(bravo.getStreakDays()).isEqualTo(4);
+        assertThat(bravo.getPlayedDays()).isEqualTo(4);
         assertThat(bravo.getChallengePoints()).isZero();
         assertThat(bravo.getTotalPoints()).isEqualTo(1_500);
 
         WeeklyPlayerScore alpha = scores.get(1);
         assertThat(alpha.getPosition()).isEqualTo(2);
         assertThat(alpha.getGuardianDamage()).isEqualTo(1_200);
-        assertThat(alpha.getActiveDays()).isEqualTo(2);
-        assertThat(alpha.getStreakDays()).isEqualTo(2);
+        assertThat(alpha.getPlayedDays()).isEqualTo(2);
         assertThat(alpha.getChallengePoints()).isEqualTo(200);
         assertThat(alpha.getCompletedChallenges()).isEqualTo(2);
         assertThat(alpha.getCompletedDailyChallenges()).isEqualTo(1);

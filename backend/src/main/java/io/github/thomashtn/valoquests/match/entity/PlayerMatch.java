@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -39,6 +40,16 @@ import lombok.Setter;
     )
 )
 public class PlayerMatch extends AuditableEntity {
+
+    /**
+     * Henrik's identifier of the red team.
+     */
+    private static final String RED_TEAM = "Red";
+
+    /**
+     * Scale of a percentage.
+     */
+    private static final int PERCENT = 100;
 
     /**
      * Internal database identifier.
@@ -164,4 +175,71 @@ public class PlayerMatch extends AuditableEntity {
      */
     @Column(name = "was_mvp", nullable = false)
     private boolean mvp;
+
+    /**
+     * Returns the rounds won by the player's team.
+     *
+     * @return the team's score, {@code null} when the match reports none
+     */
+    public Integer allyScore() {
+        return isRedTeam() ? match.getRedScore() : match.getBlueScore();
+    }
+
+    /**
+     * Returns the rounds won by the opposing team.
+     *
+     * @return the opponents' score, {@code null} when the match reports none
+     */
+    public Integer enemyScore() {
+        return isRedTeam() ? match.getBlueScore() : match.getRedScore();
+    }
+
+    /**
+     * Returns every registered hit, wherever it landed.
+     *
+     * @return headshots, bodyshots and legshots together
+     */
+    public int totalShots() {
+        return headshots + bodyshots + legshots;
+    }
+
+    /**
+     * Returns the share of hits that landed on the head, as a percentage with two decimals.
+     *
+     * @return the percentage, {@code null} when Henrik reported no shot
+     */
+    public BigDecimal headshotPercentage() {
+        int shots = totalShots();
+
+        return shots == 0 ? null : BigDecimal.valueOf(headshots)
+            .multiply(BigDecimal.valueOf(PERCENT))
+            .divide(BigDecimal.valueOf(shots), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Returns kills per death, a deathless match counting as one death.
+     *
+     * @param scale decimals kept, rounded half up
+     * @return the K/D ratio
+     */
+    public BigDecimal killDeathRatio(int scale) {
+        return BigDecimal.valueOf(kills).divide(BigDecimal.valueOf(Math.max(1, deaths)), scale, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Returns kills and assists per death with two decimals, a deathless match counting as one death.
+     *
+     * @return the KDA ratio
+     */
+    public BigDecimal kda() {
+        return BigDecimal.valueOf((long) kills + assists)
+            .divide(BigDecimal.valueOf(Math.max(1, deaths)), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Tells whether the player played on the red side, whose score Henrik reports apart.
+     */
+    private boolean isRedTeam() {
+        return RED_TEAM.equalsIgnoreCase(teamId);
+    }
 }

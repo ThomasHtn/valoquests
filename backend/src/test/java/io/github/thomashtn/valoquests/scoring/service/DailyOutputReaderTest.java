@@ -16,12 +16,11 @@ import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.DailyYield;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -74,17 +73,14 @@ class DailyOutputReaderTest {
 
         Clock clock = Clock.fixed(Instant.parse("2026-06-08T00:15:00Z"), ZoneOffset.UTC);
         WeekCalendar weekCalendar = new WeekCalendar(clock, ZoneOffset.UTC);
-        MatchDamageCalculator damageCalculator =
-            new MatchDamageCalculator(new MatchEligibility(), new MatchOutcomeResolver());
-
-        lenient().when(playerMatchRepository.findAllForPeriod(any(), any(), any()))
+        lenient().when(playerMatchRepository.findByPlayerStatusesInPeriod(any(), any(), any()))
             .thenAnswer(invocation -> {
                 Collection<PlayerStatus> statuses = invocation.getArgument(0);
                 return stored(invocation.getArgument(1), invocation.getArgument(2)).stream()
                     .filter(match -> statuses.contains(match.getPlayer().getStatus()))
                     .toList();
             });
-        lenient().when(playerMatchRepository.findForChallengePeriod(anyLong(), any(), any()))
+        lenient().when(playerMatchRepository.findByPlayerInPeriod(anyLong(), any(), any()))
             .thenAnswer(invocation -> {
                 Long playerId = invocation.getArgument(0);
                 return stored(invocation.getArgument(1), invocation.getArgument(2)).stream()
@@ -93,7 +89,11 @@ class DailyOutputReaderTest {
             });
 
         reader = new DailyOutputReader(
-            playerMatchRepository, damageCalculator, new DefaultScoringRuleset(), weekCalendar
+            playerMatchRepository,
+            new MatchEligibility(),
+            new MatchOutcomeResolver(),
+            new DefaultScoringRuleset(),
+            weekCalendar
         );
     }
 
@@ -146,8 +146,8 @@ class DailyOutputReaderTest {
     }
 
     @Test
-    @DisplayName("grows the streak with every played day of the week, a skipped day only pausing it")
-    void shouldGrowTheStreakWithEveryPlayedDayOfTheWeek() {
+    @DisplayName("counts every played day of the week, a skipped day only pausing the count")
+    void shouldCountEveryPlayedDayOfTheWeek() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         for (int offset = 0; offset < 3; offset++) {
             givenMatches(player, competitiveWins(MONDAY.plusDays(offset), 1));
@@ -156,21 +156,21 @@ class DailyOutputReaderTest {
 
         DailyOutput output = reader.read(everyone(), MONDAY, MONDAY.plusDays(6));
 
-        assertThat(output.of(1L, MONDAY).streakDays()).isEqualTo(1);
+        assertThat(output.of(1L, MONDAY).playedDays()).isEqualTo(1);
         assertThat(output.of(1L, MONDAY).streakBonusPercent()).isZero();
-        assertThat(output.of(1L, MONDAY.plusDays(1)).streakDays()).isEqualTo(2);
+        assertThat(output.of(1L, MONDAY.plusDays(1)).playedDays()).isEqualTo(2);
         assertThat(output.of(1L, MONDAY.plusDays(1)).damage()).isEqualTo(510);
-        assertThat(output.of(1L, MONDAY.plusDays(2)).streakDays()).isEqualTo(3);
+        assertThat(output.of(1L, MONDAY.plusDays(2)).playedDays()).isEqualTo(3);
         assertThat(output.of(1L, MONDAY.plusDays(2)).damage()).isEqualTo(520);
-        assertThat(output.of(1L, MONDAY.plusDays(4)).streakDays()).isEqualTo(4);
+        assertThat(output.of(1L, MONDAY.plusDays(4)).playedDays()).isEqualTo(4);
         assertThat(output.of(1L, MONDAY.plusDays(4)).damage()).isEqualTo(530);
-        assertThat(output.streakEndingOn(1L, MONDAY.plusDays(2))).isEqualTo(3);
-        assertThat(output.streakEndingOn(1L, MONDAY.plusDays(3))).isZero();
+        assertThat(output.playedDaysUpTo(1L, MONDAY.plusDays(2))).isEqualTo(3);
+        assertThat(output.playedDaysUpTo(1L, MONDAY.plusDays(3))).isZero();
     }
 
     @Test
-    @DisplayName("counts the streak from before the range, so the first day is not always day one")
-    void shouldCountTheStreakFromBeforeTheRange() {
+    @DisplayName("counts the played days from before the range, so the first day is not always day one")
+    void shouldCountThePlayedDaysFromBeforeTheRange() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         LocalDate sunday = MONDAY.plusDays(6);
         for (int offset = 1; offset <= 6; offset++) {
@@ -180,21 +180,21 @@ class DailyOutputReaderTest {
 
         DailyOutput output = reader.read(everyone(), sunday, sunday);
 
-        assertThat(output.of(1L, sunday).streakDays()).isEqualTo(7);
+        assertThat(output.of(1L, sunday).playedDays()).isEqualTo(7);
         assertThat(output.of(1L, sunday).streakBonusPercent()).isEqualTo(10);
         assertThat(output.of(1L, sunday).damage()).isEqualTo(550);
-        assertThat(output.streakEndingOn(1L, sunday.minusDays(1))).isEqualTo(6);
+        assertThat(output.playedDaysUpTo(1L, sunday.minusDays(1))).isEqualTo(6);
         assertThat(output.on(sunday.minusDays(1))).as("days before the range are not reported").isEmpty();
-        verify(playerMatchRepository).findAllForPeriod(
+        verify(playerMatchRepository).findByPlayerStatusesInPeriod(
             everyone(),
-            sunday.minusDays(DailyOutputReader.STREAK_LOOKBACK_DAYS).atStartOfDay(ZoneOffset.UTC).toInstant(),
+            sunday.minusDays(DailyOutputReader.PLAYED_DAYS_LOOKBACK).atStartOfDay(ZoneOffset.UTC).toInstant(),
             sunday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant()
         );
     }
 
     @Test
-    @DisplayName("restarts the streak every Monday, whatever was played the week before")
-    void shouldRestartTheStreakOnMonday() {
+    @DisplayName("restarts the played-day count every Monday, whatever was played the week before")
+    void shouldRestartThePlayedDayCountOnMonday() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         givenMatches(player, competitiveWins(MONDAY.minusDays(2), 1));
         givenMatches(player, competitiveWins(MONDAY.minusDays(1), 1));
@@ -203,10 +203,10 @@ class DailyOutputReaderTest {
 
         DailyOutput output = reader.read(everyone(), MONDAY, MONDAY.plusDays(1));
 
-        assertThat(output.streakEndingOn(1L, MONDAY.minusDays(1))).isEqualTo(2);
-        assertThat(output.of(1L, MONDAY).streakDays()).isEqualTo(1);
+        assertThat(output.playedDaysUpTo(1L, MONDAY.minusDays(1))).isEqualTo(2);
+        assertThat(output.of(1L, MONDAY).playedDays()).isEqualTo(1);
         assertThat(output.of(1L, MONDAY).streakBonusPercent()).isZero();
-        assertThat(output.of(1L, MONDAY.plusDays(1)).streakDays()).isEqualTo(2);
+        assertThat(output.of(1L, MONDAY.plusDays(1)).playedDays()).isEqualTo(2);
     }
 
     @Test
@@ -232,7 +232,7 @@ class DailyOutputReaderTest {
     }
 
     @Test
-    @DisplayName("ignores a match that is not valued: no rank, no day, no streak")
+    @DisplayName("ignores a match that is not valued: no rank, no played day")
     void shouldIgnoreAMatchThatIsNotValued() {
         Player player = player(1L, PlayerStatus.ACTIVE);
         givenMatches(player, competitiveWins(MONDAY, 1));
@@ -244,7 +244,7 @@ class DailyOutputReaderTest {
         DailyOutput output = reader.read(everyone(), MONDAY, MONDAY.plusDays(2));
 
         assertThat(output.on(MONDAY.plusDays(1))).isEmpty();
-        assertThat(output.of(1L, MONDAY.plusDays(2)).streakDays()).as("the new-map day does not count").isEqualTo(2);
+        assertThat(output.of(1L, MONDAY.plusDays(2)).playedDays()).as("the new-map day does not count").isEqualTo(2);
         assertThat(output.valuedMatches()).hasSize(2);
     }
 

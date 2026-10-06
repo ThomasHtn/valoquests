@@ -92,21 +92,16 @@ public class Player extends AuditableEntity {
     /**
      * Status a player must hold to count as competitive.
      *
-     * <p>The single definition of what "competitive" means. Ranking, boss chronology, boss sizing and
-     * the challenge board each need that population, and each used to name it its own way — one
-     * filtering on {@link #isCompetitive()}, another querying {@link PlayerStatus#ACTIVE} directly.
-     * Both were right, but nothing tied them together, so a change to one would silently have left the
-     * others behind. Query by this constant rather than by the enum value.
+     * <p>The single definition of what "competitive" means, shared by the ranking and the challenge
+     * board. Query by this constant rather than by the enum value, so they cannot drift apart.
      */
     public static final PlayerStatus COMPETITIVE_STATUS = PlayerStatus.ACTIVE;
 
     /**
-     * Whether this player takes part in weekly challenge resolution, boss combat and ranking
-     * positions.
+     * Whether this player holds a ranking position and counts on the challenge board.
      *
-     * <p>Derived from {@link #status}: an inactive player is still synchronized normally and
-     * still gets a weekly score for display, it just never contributes to boss damage and never
-     * consumes a ranking slot. It can still complete challenges individually, though.
+     * <p>Derived from {@link #status}: an inactive player is still synchronized, still completes
+     * challenges and still gets a weekly score for display, but never consumes a ranking slot.
      *
      * @return {@code true} when this player's status is {@link #COMPETITIVE_STATUS}
      */

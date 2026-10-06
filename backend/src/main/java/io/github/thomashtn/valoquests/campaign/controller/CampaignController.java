@@ -65,7 +65,7 @@ public class CampaignController {
     @Operation(
         summary = "Read the day in progress",
         description = """
-            Returns what the roster has brought in today, operator by operator, with both
+            Returns what the roster has brought in today, player by player, with both
             multipliers reported and the week's honours as they stand.
 
             Provisional until midnight: a match imported later can push a cheaper one into a reduced

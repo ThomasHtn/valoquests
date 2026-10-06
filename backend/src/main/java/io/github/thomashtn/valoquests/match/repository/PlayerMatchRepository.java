@@ -1,11 +1,13 @@
 package io.github.thomashtn.valoquests.match.repository;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
+import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -29,20 +31,46 @@ public interface PlayerMatchRepository
     boolean existsByPlayerIdAndMatchId(Long playerId, Long matchId);
 
     /**
-     * Determines whether a player has a stored match started at or after an instant.
+     * Returns the players with a stored match started at or after an instant.
+     *
+     * @param startedAt inclusive lower bound
+     * @return identifiers of the players who played since the bound
+     */
+    @Query(
+        """
+            SELECT DISTINCT playerMatch.player.id
+            FROM PlayerMatch playerMatch
+            WHERE playerMatch.match.startedAt >= :startedAt
+            """
+    )
+    Set<Long> findPlayerIdsWithMatchStartedSince(@Param("startedAt") Instant startedAt);
+
+    /**
+     * Returns when the newest match a player has stored in one season started.
      *
      * @param playerId internal player identifier
-     * @param startedAt inclusive lower bound
-     * @return {@code true} when at least one stored match starts at or after the bound
+     * @param seasonId internal season identifier
+     * @return start instant of that match, empty when the player has none stored in the season
      */
-    boolean existsByPlayerIdAndMatchStartedAtGreaterThanEqual(Long playerId, Instant startedAt);
+    @Query(
+        """
+            SELECT MAX(valorantMatch.startedAt)
+            FROM PlayerMatch playerMatch
+            JOIN playerMatch.match valorantMatch
+            WHERE playerMatch.player.id = :playerId
+              AND valorantMatch.season.id = :seasonId
+            """
+    )
+    Optional<Instant> findNewestMatchStartInSeason(
+        @Param("playerId") Long playerId,
+        @Param("seasonId") Long seasonId
+    );
 
     /**
      * Retrieves the matches played by a player during a half-open period.
      *
-     * <p>The beginning is inclusive and the end is exclusive. The associated
-     * Valorant match is loaded in the same query to prevent additional lazy
-     * loading queries during challenge calculations.</p>
+     * <p>The beginning is inclusive and the end is exclusive. The associated Valorant match is
+     * loaded in the same query, since every caller reads it on each row.</p>
      *
      * @param playerId    internal player identifier
      * @param periodStart inclusive beginning of the period
@@ -61,7 +89,7 @@ public interface PlayerMatchRepository
                      playerMatch.id ASC
             """
     )
-    List<PlayerMatch> findForChallengePeriod(
+    List<PlayerMatch> findByPlayerInPeriod(
         @Param("playerId") Long playerId,
         @Param("periodStart") Instant periodStart,
         @Param("periodEnd") Instant periodEnd
@@ -70,19 +98,12 @@ public interface PlayerMatchRepository
     /**
      * Retrieves the matches of every player holding one of several statuses over a half-open period.
      *
-     * <p>The beginning is inclusive and the end is exclusive, as in {@link #findForChallengePeriod}.
-     * Exists for the colony replay, which prices a whole run — eleven weeks — for the entire roster:
-     * asking per player and per week made that one call cost {@code players x weeks} round trips, and
-     * the replay runs after every synchronization. Both the player and the Valorant match are fetched
-     * in the same query, since the caller reads both on every row.
+     * <p>The beginning is inclusive and the end is exclusive, as in {@link #findByPlayerInPeriod}.
+     * One query for the whole roster and the whole period, player and match fetched with it, because
+     * the campaign replay prices up to eleven weeks after every synchronization.
      *
-     * <p>Filtered on the statuses rather than left open, and each caller states its own. The colony
-     * names its roster through
-     * {@link io.github.thomashtn.valoquests.player.entity.Player#COMPETITIVE_STATUS} — the size a run
-     * freezes, the turnout readout — and this query being the one place that did not meant a
-     * deactivated player kept feeding the town while appearing on none of its gauges. The day's board,
-     * on the other hand, lists deactivated players in a group of their own, exactly as the weekly one
-     * does, so it asks for a wider set.
+     * <p>Each caller states the statuses it needs: the campaign replay reads every status and keeps
+     * its frozen roster, the rankings read the players they list.
      *
      * @param statuses    statuses a player may hold for their matches to be returned
      * @param periodStart inclusive beginning of the period
@@ -102,7 +123,7 @@ public interface PlayerMatchRepository
                      playerMatch.id ASC
             """
     )
-    List<PlayerMatch> findAllForPeriod(
+    List<PlayerMatch> findByPlayerStatusesInPeriod(
         @Param("statuses") Collection<PlayerStatus> statuses,
         @Param("periodStart") Instant periodStart,
         @Param("periodEnd") Instant periodEnd
@@ -183,7 +204,7 @@ public interface PlayerMatchRepository
     );
 
     /**
-     * Returns all matches required to calculate one player's profile statistics.
+     * Returns every stored match of one player.
      *
      * @param playerId internal player identifier
      * @return every stored match of the player, most recent first
@@ -212,17 +233,14 @@ public interface PlayerMatchRepository
     );
 
     /**
-     * Returns the matches used to calculate one player's profile statistics, filtered by season,
-     * game mode and a week range.
+     * Returns the matches of one game mode, optionally inside one season, of every player not
+     * holding a given status.
      *
-     * <p>Filters are bundled into {@link PlayerMatchHistoryCriteria} - {@code map}, {@code agent}
-     * and {@code result} are simply left {@code null} by callers, since statistics have no use for
-     * them - rather than bound individually, mirroring {@link #findHistory}. See that criteria
-     * type's Javadoc for why {@code periodStart}/{@code periodEnd} must never be {@code null}.
+     * <p>Loads the whole squad in one query, for lists that would otherwise query once per player.
      *
-     * @param playerId internal player identifier
-     * @param criteria season, game mode and week-range filters; {@code map}, {@code agent} and
-     *     {@code result} are ignored
+     * @param seasonId       season to keep, or {@code null} for every season
+     * @param gameMode       game mode to keep
+     * @param excludedStatus status whose players' matches are left out
      * @return matching matches, most recent first
      */
     @EntityGraph(attributePaths = {"match", "match.season"})
@@ -231,17 +249,16 @@ public interface PlayerMatchRepository
             SELECT playerMatch
             FROM PlayerMatch playerMatch
             JOIN playerMatch.match valorantMatch
-            WHERE playerMatch.player.id = :playerId
-              AND (:#{#criteria.seasonId} IS NULL OR valorantMatch.season.id = :#{#criteria.seasonId})
-              AND (:#{#criteria.gameMode} IS NULL OR valorantMatch.gameMode = :#{#criteria.gameMode})
-              AND valorantMatch.startedAt >= :#{#criteria.periodStart}
-              AND valorantMatch.startedAt < :#{#criteria.periodEnd}
+            WHERE (:seasonId IS NULL OR valorantMatch.season.id = :seasonId)
+              AND valorantMatch.gameMode = :gameMode
+              AND playerMatch.player.status <> :excludedStatus
             ORDER BY valorantMatch.startedAt DESC
             """
     )
-    List<PlayerMatch> findAllByPlayerIdAndSeasonAndGameMode(
-        @Param("playerId") Long playerId,
-        @Param("criteria") PlayerMatchHistoryCriteria criteria
+    List<PlayerMatch> findAllBySeasonAndGameModeAndPlayerStatusNot(
+        @Param("seasonId") Long seasonId,
+        @Param("gameMode") GameMode gameMode,
+        @Param("excludedStatus") PlayerStatus excludedStatus
     );
 
     /**

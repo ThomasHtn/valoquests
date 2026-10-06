@@ -20,7 +20,6 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
@@ -33,10 +32,12 @@ import io.github.thomashtn.valoquests.match.repository.ValorantMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -111,16 +112,13 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
-    @Autowired
-    private CampaignRuleset ruleset;
-
     private Campaign campaign;
 
-    private Player operator;
+    private Player rosterPlayer;
 
     @BeforeEach
     void setUp() {
-        operator = playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE).getFirst();
+        rosterPlayer = playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE).getFirst();
         campaign = openCampaign();
     }
 
@@ -167,20 +165,17 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
-    @DisplayName("Stores what each operator produced on each day they played")
-    void shouldStoreTheOperatorDays() {
+    @DisplayName("Stores what each player produced on each day they played")
+    void shouldStoreThePlayerDays() {
         playMatches(FIRST_WEEK_START.plusDays(1), 3);
 
         replayService.replay(campaign);
 
-        List<CampaignPlayerDay> operatorDays =
-            playerDayRepository.findAllByCampaignIdAndPlayerIdOrderByDayAsc(campaign.getId(), operator.getId());
-
-        assertThat(operatorDays).singleElement().satisfies(day -> {
+        assertThat(storedDaysOf(rosterPlayer)).singleElement().satisfies(day -> {
             assertThat(day.getDay()).isEqualTo(FIRST_WEEK_START.plusDays(1));
             assertThat(day.getMatchCount()).isEqualTo(3);
             assertThat(day.getDamage()).isEqualTo(day.getFood() + day.getComponents());
-            assertThat(day.getStreakDays()).isEqualTo(1);
+            assertThat(day.getPlayedDays()).isEqualTo(1);
         });
     }
 
@@ -198,10 +193,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(second).isEqualTo(first);
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId()))
             .hasSize(CampaignSchedule.WEEK_COUNT * 7);
-        assertThat(playerDayRepository.findAllByCampaignIdAndPlayerIdOrderByDayAsc(
-            campaign.getId(),
-            operator.getId()
-        )).hasSize(1);
+        assertThat(storedDaysOf(rosterPlayer)).hasSize(1);
     }
 
     @Test
@@ -238,7 +230,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
 
         CampaignPlayer member = new CampaignPlayer();
         member.setCampaign(opened);
-        member.setPlayer(operator);
+        member.setPlayer(rosterPlayer);
         campaignPlayerRepository.save(member);
 
         List<Guardian> guardians = guardianRepository.findAll();
@@ -253,8 +245,8 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
             week.setGuardianWeight(BigDecimal.valueOf(shape.guardianWeight()));
             week.setGroupWeight(BigDecimal.valueOf(shape.groupWeight()));
             week.setGuardian(guardians.get(shape.weekIndex() - 1));
-            week.setGuardianHitPoints(ruleset.guardianHitPoints(REFERENCE, shape.guardianWeight(), 1));
-            week.setWoundedCount(ruleset.groupSize(REFERENCE, shape.groupWeight(), 1, 100));
+            week.setGuardianHitPoints(CampaignRuleset.guardianHitPoints(REFERENCE, shape.guardianWeight(), 1));
+            week.setWoundedCount(CampaignRuleset.woundedCount(REFERENCE, shape.groupWeight(), 1, 100));
             campaignWeekRepository.save(week);
         }
 
@@ -271,7 +263,6 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
         Season season = new Season();
         season.setExternalId("campaign-replay-season");
         season.setName("Campaign Replay Season");
-        season.setActive(true);
         season = seasonRepository.save(season);
 
         for (int index = 0; index < played; index++) {
@@ -292,7 +283,7 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
             match = valorantMatchRepository.save(match);
 
             PlayerMatch playerMatch = new PlayerMatch();
-            playerMatch.setPlayer(operator);
+            playerMatch.setPlayer(rosterPlayer);
             playerMatch.setMatch(match);
             playerMatch.setTeamId("Blue");
             playerMatch.setAgentName("Omen");
@@ -309,6 +300,20 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
             playerMatch.setMvp(false);
             playerMatchRepository.save(playerMatch);
         }
+    }
+
+    /**
+     * Returns one player's stored days of the campaign, oldest first.
+     *
+     * @param player player whose days are kept
+     * @return the player's days in order
+     */
+    private List<CampaignPlayerDay> storedDaysOf(Player player) {
+        return playerDayRepository.findAll().stream()
+            .filter(day -> day.getCampaign().getId().equals(campaign.getId()))
+            .filter(day -> day.getPlayer().getId().equals(player.getId()))
+            .sorted(Comparator.comparing(CampaignPlayerDay::getDay))
+            .toList();
     }
 
     /**

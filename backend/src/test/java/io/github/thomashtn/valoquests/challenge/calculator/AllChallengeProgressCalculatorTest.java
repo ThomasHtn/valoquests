@@ -16,7 +16,6 @@ import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -81,8 +80,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("4");
         assertThat(result.targetValue())
             .isEqualByComparingTo("4");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("100.00");
         assertThat(result.completed()).isTrue();
     }
 
@@ -117,8 +114,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("3");
         assertThat(result.targetValue())
             .isEqualByComparingTo("4");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("75.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -153,8 +148,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("3");
         assertThat(result.targetValue())
             .isEqualByComparingTo("4");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("75.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -189,8 +182,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("250");
         assertThat(result.targetValue())
             .isEqualByComparingTo("300");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("83.33");
         assertThat(result.completed()).isFalse();
     }
 
@@ -225,8 +216,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("2");
         assertThat(result.targetValue())
             .isEqualByComparingTo("4");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("50.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -257,8 +246,6 @@ class AllChallengeProgressCalculatorTest {
             .isEqualByComparingTo("0");
         assertThat(result.targetValue())
             .isEqualByComparingTo("20");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("0.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -272,7 +259,6 @@ class AllChallengeProgressCalculatorTest {
         ChallengeCondition... conditions
     ) {
         return new ChallengeDefinition(
-            3,
             ProgressMode.ALL,
             List.of(conditions)
         );
@@ -320,13 +306,7 @@ class AllChallengeProgressCalculatorTest {
             playerMatches.addAll(matchGroup);
         }
 
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            playerMatches
-        );
+        return new PlayerChallengeContext(playerMatches);
     }
 
     /**

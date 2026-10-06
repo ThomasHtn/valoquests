@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * What Sunday would bring home if the week ended on the base as it stands.
@@ -17,6 +18,7 @@ import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
  * @param leftBehind        wounded who would stay on the ground
  * @param limiter           what caps the extraction right now
  */
+@Schema(description = "What Sunday would bring home if the week ended now.")
 public record CampaignForecastResponse(
     int weekIndex,
     int woundedCount,

@@ -61,7 +61,6 @@ class HenrikMatchHistoryResponseTest {
                 HenrikMatchHistoryResponse.class
             );
 
-        assertThat(response.status()).isEqualTo(200);
         assertThat(response.data()).hasSize(1);
 
         HenrikMatchMetadata metadata =
@@ -230,10 +229,6 @@ class HenrikMatchHistoryResponseTest {
 
         assertThat(player.puuid())
             .isEqualTo("player-puuid");
-        assertThat(player.name())
-            .isEqualTo("Psilonnix");
-        assertThat(player.tag())
-            .isEqualTo("EUW");
         assertThat(player.teamId())
             .isEqualTo("Red");
 
@@ -263,12 +258,8 @@ class HenrikMatchHistoryResponseTest {
             .isNotNull();
         assertThat(player.stats().damage().dealt())
             .isEqualTo(4350);
-        assertThat(player.stats().damage().received())
-            .isEqualTo(3025);
 
         assertThat(player.tier()).isNotNull();
-        assertThat(player.tier().id())
-            .isEqualTo(27);
         assertThat(player.tier().name())
             .isEqualTo("Ascendant 3");
     }
@@ -435,7 +426,6 @@ class HenrikMatchHistoryResponseTest {
     void shouldPreserveNullMatchEntriesInImmutableList() {
         HenrikMatchHistoryResponse response =
             new HenrikMatchHistoryResponse(
-                200,
                 java.util.Collections.singletonList(null)
             );
 

@@ -122,7 +122,7 @@ export function resolveKdTone(kd: number | null): MatchStatTone {
 }
 
 /**
- * Win or loss; draws, remakes and unknown results stay neutral.
+ * Win or loss; draws and unknown results stay neutral.
  */
 export function resolveResultTone(result: MatchResult): MatchResultTone {
   if (result === 'WIN') {

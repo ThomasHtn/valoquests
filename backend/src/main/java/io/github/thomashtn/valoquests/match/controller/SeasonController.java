@@ -22,16 +22,20 @@ public class SeasonController {
     /**
      * Service used to read persisted seasons.
      */
-    private final SeasonQueryService service;
+    private final SeasonQueryService seasonQueryService;
 
     /**
-     * @param service service used to read persisted seasons
+     * Creates the season controller.
+     *
+     * @param seasonQueryService service used to read persisted seasons
      */
-    public SeasonController(SeasonQueryService service) {
-        this.service = service;
+    public SeasonController(SeasonQueryService seasonQueryService) {
+        this.seasonQueryService = seasonQueryService;
     }
 
     /**
+     * Lists every known season.
+     *
      * @return every known season, most recent first
      */
     @GetMapping
@@ -43,7 +47,7 @@ public class SeasonController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Seasons returned successfully.")
-        public List<SeasonResponse> getSeasons() {
-        return service.findAll();
+    public List<SeasonResponse> getSeasons() {
+        return seasonQueryService.findAll();
     }
 }

@@ -4,6 +4,7 @@ import io.github.thomashtn.valoquests.challenge.entity.Challenge;
 import io.github.thomashtn.valoquests.challenge.exception.InvalidChallengeDefinitionException;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
+import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 
@@ -30,6 +31,7 @@ final class ChallengeDefinitionValidator {
     static void validate(Challenge challenge, ChallengeDefinition definition) {
         for (ChallengeCondition condition : definition.conditions()) {
             validateCondition(challenge, condition);
+            validatePlayDay(challenge, definition, condition);
         }
 
         validateConditionCount(challenge, definition);
@@ -85,6 +87,20 @@ final class ChallengeDefinitionValidator {
     }
 
     /**
+     * PLAY_DAY is no per-match value: only DISTINCT_COUNT can count the days themselves.
+     */
+    private static void validatePlayDay(
+        Challenge challenge,
+        ChallengeDefinition definition,
+        ChallengeCondition condition
+    ) {
+        if (condition.metric() == ChallengeMetric.PLAY_DAY
+            && definition.progressMode() != ProgressMode.DISTINCT_COUNT) {
+            throw invalidDefinition(challenge, "The PLAY_DAY metric is only valid with DISTINCT_COUNT.");
+        }
+    }
+
+    /**
      * ALL combines at least two conditions; every other mode takes exactly one.
      */
     private static void validateConditionCount(Challenge challenge, ChallengeDefinition definition) {
@@ -113,9 +129,7 @@ final class ChallengeDefinitionValidator {
             case COUNT_MATCHES -> validateOccurrences(challenge, definition);
             case MAX_STREAK -> validateStreak(challenge, definition);
             case RATIO -> validateRatio(challenge, definition);
-            case BASELINE -> validateBaseline(challenge, definition);
-            // ALL delegates every condition to the mode each one declares, so it constrains nothing of
-            // its own beyond the condition count already checked by validateConditionCount.
+            // ALL sums each condition, capped at its own target, so only the condition count applies.
             case ALL -> { }
         }
     }
@@ -169,28 +183,17 @@ final class ChallengeDefinitionValidator {
     }
 
     /**
-     * RATIO may ask for a minimum sample, which must then be positive.
+     * RATIO checks a rate metric over a positive minimum sample.
      */
     private static void validateRatio(Challenge challenge, ChallengeDefinition definition) {
         ChallengeCondition condition = definition.singleCondition();
 
-        if (condition.minimumMatches() != null && condition.minimumMatches() <= 0) {
-            throw invalidDefinition(challenge, "minimumMatches must be positive when provided.");
-        }
-    }
-
-    /**
-     * BASELINE compares against the player's own history: a positive improvement over a positive sample.
-     */
-    private static void validateBaseline(Challenge challenge, ChallengeDefinition definition) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        if (condition.target() == null || condition.target().signum() <= 0) {
-            throw invalidDefinition(challenge, "BASELINE requires a positive improvement target, in percent.");
+        if (!condition.metric().isRate()) {
+            throw invalidDefinition(challenge, "RATIO requires a rate metric, got " + condition.metric() + ".");
         }
 
         if (condition.minimumMatches() == null || condition.minimumMatches() <= 0) {
-            throw invalidDefinition(challenge, "BASELINE requires a positive minimumMatches value.");
+            throw invalidDefinition(challenge, "RATIO requires a positive minimumMatches value.");
         }
     }
 

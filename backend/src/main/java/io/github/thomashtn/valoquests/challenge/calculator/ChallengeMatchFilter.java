@@ -29,9 +29,8 @@ public class ChallengeMatchFilter {
      * Determines whether a player match belongs to the condition scope.
      *
      * <p>Eligibility is checked before the game mode, and deliberately not left to the individual
-     * calculators: a remake or an abandoned match used to progress every "matches played" target while
-     * being worth no damage and no active day. That made volume challenges farmable by requeuing, and
-     * made "play on four different days" disagree with the regularity bonus on what a day is.
+     * calculators, so a remake worth no damage never progresses a volume target and "play on four
+     * different days" agrees with the regularity bonus on what a day is.
      *
      * @param playerMatch persisted player-match data
      * @param condition   parsed challenge condition

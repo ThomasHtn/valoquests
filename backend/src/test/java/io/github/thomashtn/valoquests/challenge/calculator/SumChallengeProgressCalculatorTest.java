@@ -14,8 +14,6 @@ import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +64,6 @@ class SumChallengeProgressCalculatorTest {
         );
 
         ChallengeDefinition definition = new ChallengeDefinition(
-            3,
             ProgressMode.SUM,
             List.of(condition)
         );
@@ -84,8 +81,6 @@ class SumChallengeProgressCalculatorTest {
             .isEqualByComparingTo("38");
         assertThat(result.targetValue())
             .isEqualByComparingTo("50");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("76.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -98,13 +93,7 @@ class SumChallengeProgressCalculatorTest {
     private PlayerChallengeContext createContext(
         PlayerMatch... playerMatches
     ) {
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            List.of(playerMatches)
-        );
+        return new PlayerChallengeContext(List.of(playerMatches));
     }
 
     /**

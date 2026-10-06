@@ -57,8 +57,8 @@ jamais au classé peut valider quatre des cinq défis hebdomadaires et tous les 
 
 Les enchaînements et les taux tenus sur la semaine sont bannis : ils se perdent sans se rattraper.
 La même question se pose en **N parties au-dessus d'une barre**, où rater une partie ne coûte que
-cette partie. `ProgressMode.RATIO`, `MAX_STREAK` et `BASELINE` restent dans le code sans qu'aucune
-entrée les déclare.
+cette partie. `ProgressMode.RATIO` et `MAX_STREAK` restent dans le code sans qu'aucune entrée les
+déclare.
 
 ### Règle 3 — Trois agents au maximum
 
@@ -110,6 +110,7 @@ proportion, et affronte un gardien deux fois plus gros.
 - `Challenge` : les deux grilles, et `conditionsFor(campaignDifficulty)` qui choisit.
 - `ChallengeCalibration` : ce contre quoi une semaine se joue — référence, index de semaine, difficulté.
 - `ChallengeSelectionFactory` : le seul endroit où une grille devient l'objectif d'une sélection.
-- `DefaultWeeklyChallengeSelectionService` : les deux tirages et leurs fenêtres de non-répétition.
+- `DefaultWeeklyChallengeDrawService` et `WeeklyPackDraw` : le tirage hebdomadaire et son cycle de non-répétition.
+- `DefaultDailyChallengeDrawService` : le tirage quotidien et sa fenêtre de non-répétition.
 - `ChallengeGameMode` : les filtres de mode, Skirmish compris.
 - `ChallengeCatalogueCompatibilityTest` : les règles ci-dessus, vérifiées sur la migration elle-même.

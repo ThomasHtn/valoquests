@@ -30,7 +30,7 @@ export class ChallengeHead {
   protected readonly concepts = CONCEPT_ICONS;
 
   /**
-   * Survivors while a rescue runs, ranking points otherwise.
+   * Gain labelled as wounded while a rescue runs, as ranking points otherwise; the count is the same.
    */
   protected readonly gain = computed<ChallengeHeadGain>(() => {
     const row = this.row();
@@ -44,7 +44,7 @@ export class ChallengeHead {
       : {
           icon: CONCEPT_ICONS.points,
           tooltipKey: 'challenges.card.pointsTooltip',
-          count: row.rankingPoints,
+          count: row.survivors,
         };
   });
 }

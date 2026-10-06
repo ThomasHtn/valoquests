@@ -1,12 +1,14 @@
 package io.github.thomashtn.valoquests.synchronization.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,6 +27,11 @@ class AsyncSynchronizationRunnerTest {
     private SynchronizationCommandService commandService;
 
     /**
+     * Lock the caller took before dispatching, released by the runner.
+     */
+    private MatchHistoryLock lock;
+
+    /**
      * Runner under test.
      */
     private AsyncSynchronizationRunner runner;
@@ -34,7 +41,9 @@ class AsyncSynchronizationRunnerTest {
      */
     @BeforeEach
     void setUp() {
-        runner = new AsyncSynchronizationRunner(commandService);
+        lock = new MatchHistoryLock();
+        lock.acquireOrReject();
+        runner = new AsyncSynchronizationRunner(commandService, lock);
     }
 
     /**
@@ -42,9 +51,6 @@ class AsyncSynchronizationRunnerTest {
      */
     @Test
     void shouldRunABatchSynchronizationWithTheManualTrigger() {
-        when(commandService.synchronizeAllPlayers(SynchronizationTrigger.MANUAL))
-            .thenReturn(null);
-
         runner.runAllPlayers();
 
         verify(commandService).synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
@@ -58,8 +64,8 @@ class AsyncSynchronizationRunnerTest {
      */
     @Test
     void shouldSwallowABatchFailure() {
-        when(commandService.synchronizeAllPlayers(SynchronizationTrigger.MANUAL))
-            .thenThrow(new IllegalStateException("Henrik unreachable"));
+        doThrow(new IllegalStateException("Henrik unreachable"))
+            .when(commandService).synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
 
         assertThatCode(() -> runner.runAllPlayers()).doesNotThrowAnyException();
     }
@@ -69,8 +75,6 @@ class AsyncSynchronizationRunnerTest {
      */
     @Test
     void shouldRunASinglePlayerSynchronization() {
-        when(commandService.synchronizePlayer(3L)).thenReturn(null);
-
         runner.runPlayer(3L);
 
         verify(commandService).synchronizePlayer(3L);
@@ -85,5 +89,30 @@ class AsyncSynchronizationRunnerTest {
             .when(commandService).synchronizePlayer(3L);
 
         assertThatCode(() -> runner.runPlayer(3L)).doesNotThrowAnyException();
+    }
+
+    /**
+     * Verifies that the lock taken by the caller is given back even when the run fails.
+     */
+    @Test
+    @DisplayName("Releases the match history lock once a failed background run ends")
+    void shouldReleaseTheLockAfterAFailedRun() {
+        doThrow(new IllegalStateException("Henrik unreachable"))
+            .when(commandService).synchronizePlayer(3L);
+
+        runner.runPlayer(3L);
+
+        assertThat(lock.runIfFree(() -> { })).isTrue();
+    }
+
+    /**
+     * Verifies that a successful batch run gives the lock back too.
+     */
+    @Test
+    @DisplayName("Releases the match history lock once a background batch run ends")
+    void shouldReleaseTheLockAfterABatchRun() {
+        runner.runAllPlayers();
+
+        assertThat(lock.runIfFree(() -> { })).isTrue();
     }
 }

@@ -50,9 +50,9 @@ export interface AdminPlayer {
   readonly lastSuccessfulSynchronizationAt: string | null;
 
   /**
-   * Whether finalized campaign data depends on this player (a deletion then archives).
+   * Whether a campaign ever froze this player into its roster (a deletion then archives).
    */
-  readonly hasCampaignContribution: boolean;
+  readonly wasOnAnyRoster: boolean;
 
   /**
    * Whether the player played in the last two weeks; idle players still size the guardian.

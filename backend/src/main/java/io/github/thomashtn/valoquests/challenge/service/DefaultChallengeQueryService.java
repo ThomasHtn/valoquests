@@ -2,21 +2,20 @@ package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
-import io.github.thomashtn.valoquests.week.WeekConstants;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.service.ScoringRuleset;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -38,15 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultChallengeQueryService implements ChallengeQueryService {
 
     /**
-     * Orders a weekly pack from the easiest to the hardest tier.
-     */
-    private static final Comparator<WeeklyChallenge> EASIEST_FIRST =
-        Comparator.comparingInt(selection -> selection.getChallenge().getDifficulty().ordinal());
-
-    /**
      * Repository used to retrieve the challenges selected for a week.
      */
-    private final WeeklyChallengeRepository weeklyChallengeRepository;
+    private final ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Repository used to retrieve persisted player progress.
@@ -64,7 +57,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Barème saying what a challenge of each weight is worth.
+     * Scoring table saying what a challenge of each weight is worth.
      */
     private final ScoringRuleset ruleset;
 
@@ -81,7 +74,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     /**
      * Creates the current-challenge query service.
      *
-     * @param weeklyChallengeRepository weekly challenge repository
+     * @param challengeSelectionRepository challenge selection repository
      * @param progressRepository        player progress repository
      * @param playerRepository          tracked-player repository
      * @param definitionParser          challenge-definition parser
@@ -90,7 +83,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @param weekCalendar              calendar resolving the current week
      */
     public DefaultChallengeQueryService(
-        WeeklyChallengeRepository weeklyChallengeRepository,
+        ChallengeSelectionRepository challengeSelectionRepository,
         PlayerChallengeProgressRepository progressRepository,
         PlayerRepository playerRepository,
         ChallengeDefinitionParser definitionParser,
@@ -98,7 +91,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         ChallengeCalibrationSource calibrationSource,
         WeekCalendar weekCalendar
     ) {
-        this.weeklyChallengeRepository = weeklyChallengeRepository;
+        this.challengeSelectionRepository = challengeSelectionRepository;
         this.progressRepository = progressRepository;
         this.playerRepository = playerRepository;
         this.definitionParser = definitionParser;
@@ -131,24 +124,24 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             .map(CurrentChallengesResponse.RosterPlayerResponse::id)
             .toList();
 
-        List<WeeklyChallenge> selections =
-            weeklyChallengeRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
+        List<ChallengeSelection> selections =
+            challengeSelectionRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(weekStart);
 
         List<CurrentChallengesResponse.ChallengeProgressResponse> weekly = selections.stream()
             .filter(selection -> selection.getCadence() == ChallengeCadence.WEEKLY)
-            .sorted(EASIEST_FIRST)
+            .sorted(ChallengeSelection.EASIEST_FIRST)
             .map(selection -> toResponse(selection, calibration, progressByChallenge, rosterIds))
             .toList();
 
         List<CurrentChallengesResponse.ChallengeProgressResponse> dailies = selections.stream()
             .filter(selection -> selection.getCadence() == ChallengeCadence.DAILY)
-            .sorted(Comparator.comparing(WeeklyChallenge::getDay))
+            .sorted(Comparator.comparing(ChallengeSelection::getDay))
             .map(selection -> toResponse(selection, calibration, progressByChallenge, rosterIds))
             .toList();
 
         return new CurrentChallengesResponse(
             weekStart,
-            weekStart.plusDays(WeekConstants.LAST_DAY_OFFSET),
+            WeekCalendar.lastDayOf(weekStart),
             weekCalendar.today(),
             findLastSuccessfulSynchronizationAt(),
             roster,
@@ -167,12 +160,12 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         LocalDate weekStart
     ) {
         return progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(
                 weekStart
             )
             .stream()
             .collect(Collectors.groupingBy(
-                progress -> progress.getWeeklyChallenge().getId()
+                progress -> progress.getSelection().getId()
             ));
     }
 
@@ -186,7 +179,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * @return challenge response
      */
     private CurrentChallengesResponse.ChallengeProgressResponse toResponse(
-        WeeklyChallenge selection,
+        ChallengeSelection selection,
         ChallengeCalibration calibration,
         Map<Long, List<PlayerChallengeProgress>> progressByChallenge,
         List<Long> rosterIds
@@ -195,14 +188,12 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
         ChallengeDefinition definition = definitionParser.parse(selection);
         String description = ChallengeDescriptionResolver.resolve(
             challenge.getDescription(),
-            definitionParser.parse(challenge),
+            definitionParser.parse(challenge, CampaignDifficulty.AMATEUR),
             definition
         );
         List<PlayerChallengeProgress> rows = progressByChallenge.getOrDefault(selection.getId(), List.of());
         List<Long> completedPlayerIds = completedPlayerIds(rows);
-        int completedPlayers = completedPlayerIds.size();
-        int totalPlayers = rosterIds.size();
-        double weight = ruleset.challengeWeight(selection.getCadence(), challenge.getDifficulty());
+        int reward = ruleset.challengeReward(selection.getCadence(), challenge.getTier(), calibration);
 
         return new CurrentChallengesResponse.ChallengeProgressResponse(
             selection.getId(),
@@ -210,17 +201,12 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             challenge.getName(),
             description,
             selection.getCadence(),
-            challenge.getDifficulty(),
+            challenge.getTier(),
             selection.getDay(),
-            definition.isCompetitiveOnly(),
             ChallengeMetricLabels.of(definition),
             definition.progressTarget(),
-            ruleset.challengeSurvivors(calibration.reference(), weight, calibration.weekIndex()),
-            ruleset.challengeRankingPoints(calibration.reference(), weight, calibration.weekIndex()),
-            completedPlayers,
-            totalPlayers,
+            reward,
             completedPlayerIds,
-            calculateCompletionPercentage(completedPlayers, totalPlayers),
             playerProgress(rows, rosterIds)
         );
     }
@@ -261,8 +247,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
      * Lists the active players whose progress row is completed.
      *
      * <p>An inactive player can still complete a challenge, but it must never inflate the
-     * collective completion reported here: {@code totalPlayers} only counts active players, so
-     * the numerator must stay consistent with it.
+     * collective completion reported here, which is read against the active roster.
      *
      * @param progressRows progress rows to inspect
      * @return identifiers of the active players who completed the challenge, ascending
@@ -274,26 +259,6 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
             .map(progress -> progress.getPlayer().getId())
             .sorted()
             .toList();
-    }
-
-    /**
-     * Calculates collective challenge completion as a percentage.
-     *
-     * @param completedPlayers number of players who completed the challenge
-     * @param totalPlayers     number of active players
-     * @return completion percentage rounded to two decimal places
-     */
-    private BigDecimal calculateCompletionPercentage(
-        int completedPlayers,
-        int totalPlayers
-    ) {
-        if (totalPlayers == 0) {
-            return BigDecimal.ZERO;
-        }
-
-        return BigDecimal.valueOf(completedPlayers)
-            .multiply(BigDecimal.valueOf(100))
-            .divide(BigDecimal.valueOf(totalPlayers), 2, RoundingMode.HALF_UP);
     }
 
     /**

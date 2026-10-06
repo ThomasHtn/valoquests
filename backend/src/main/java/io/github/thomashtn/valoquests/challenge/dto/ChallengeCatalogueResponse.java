@@ -1,7 +1,7 @@
 package io.github.thomashtn.valoquests.challenge.dto;
 
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,13 +26,12 @@ public record ChallengeCatalogueResponse(
      * @param name            challenge name shown to players
      * @param description     challenge description shown to players
      * @param cadence         whether the challenge covers a week or a day
-     * @param difficulty      difficulty tier, {@code null} for a daily challenge
+     * @param tier      tier, {@code null} for a daily challenge
      * @param competitiveOnly whether only ranked matches count
      * @param metric          metric the challenge measures
-     * @param targetValue     progress target resolved against the calibration in force, the base
-     *                        target outside any campaign
-     * @param survivors       survivors one player brings back by completing it this week
-     * @param rankingPoints   points one player earns in the weekly ranking by completing it
+     * @param targetValue     progress target of the grid the calibration in force selects
+     * @param survivors       survivors one player brings back by completing it this week, also
+     *                        the points it earns in the weekly ranking
      */
     public record ChallengeCatalogueEntry(
 
@@ -41,12 +40,11 @@ public record ChallengeCatalogueResponse(
         String name,
         String description,
         ChallengeCadence cadence,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         boolean competitiveOnly,
         String metric,
         BigDecimal targetValue,
-        int survivors,
-        int rankingPoints
+        int survivors
     ) {
     }
 

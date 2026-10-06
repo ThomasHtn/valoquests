@@ -2,10 +2,10 @@ package io.github.thomashtn.valoquests.challenge.parser;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -51,22 +51,6 @@ public class JacksonChallengeDefinitionParser
     }
 
     /**
-     * Parses and validates one persisted challenge definition.
-     *
-     * @param challenge challenge to parse
-     * @return typed challenge definition
-     */
-    @Override
-    public ChallengeDefinition parse(Challenge challenge) {
-        Objects.requireNonNull(
-            challenge,
-            "Challenge must not be null."
-        );
-
-        return parse(challenge, CampaignDifficulty.AMATEUR);
-    }
-
-    /**
      * Parses and validates one persisted challenge definition at one difficulty.
      *
      * @param challenge  challenge to parse
@@ -88,7 +72,7 @@ public class JacksonChallengeDefinitionParser
      * @return typed resolved definition
      */
     @Override
-    public ChallengeDefinition parse(WeeklyChallenge selection) {
+    public ChallengeDefinition parse(ChallengeSelection selection) {
         Objects.requireNonNull(selection, "Selection must not be null.");
 
         return parseJson(selection.getChallenge(), selection.getResolvedConditionsJson());
@@ -120,7 +104,6 @@ public class JacksonChallengeDefinitionParser
         List<ChallengeCondition> conditions = parseConditions(challenge, conditionsJson);
 
         ChallengeDefinition definition = new ChallengeDefinition(
-            challenge.getSchemaVersion(),
             challenge.getProgressMode(),
             conditions
         );

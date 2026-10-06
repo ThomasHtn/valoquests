@@ -8,8 +8,8 @@ package io.github.thomashtn.valoquests.scoring.model;
  * @param components         components produced
  * @param matchCount         valued matches played that day
  * @param reducedMatchCount  valued matches priced below full value by the daily diminishing returns
- * @param streakDays         days of the week played up to this day, this day included
- * @param streakBonusPercent bonus every match of the day earned from that streak
+ * @param playedDays         days of the week played up to this day, this day included
+ * @param streakBonusPercent bonus every match of the day earned from those played days
  */
 public record PlayerDayOutput(
     int damage,
@@ -17,7 +17,7 @@ public record PlayerDayOutput(
     int components,
     int matchCount,
     int reducedMatchCount,
-    int streakDays,
+    int playedDays,
     int streakBonusPercent
 ) {
 
@@ -30,7 +30,7 @@ public record PlayerDayOutput(
      * Folds one valued match into this day's totals.
      *
      * @param match valued match played on this day
-     * @return a new total, streak figures taken from the match
+     * @return a new total, played days and bonus taken from the match
      */
     public PlayerDayOutput plus(ValuedMatch match) {
         boolean reduced = match.coefficientPercent() < ValuedMatch.FULL_COEFFICIENT_PERCENT;
@@ -41,7 +41,7 @@ public record PlayerDayOutput(
             components + match.components(),
             matchCount + 1,
             reducedMatchCount + (reduced ? 1 : 0),
-            match.streakDays(),
+            match.playedDays(),
             match.streakBonusPercent()
         );
     }

@@ -117,7 +117,7 @@ public class CampaignDailySnapshot extends AuditableEntity {
     private BigDecimal population;
 
     /**
-     * Roster operators who played at least one valued match that day.
+     * Roster players who played at least one valued match that day.
      */
     @Column(name = "presence_count", nullable = false)
     private int presenceCount;

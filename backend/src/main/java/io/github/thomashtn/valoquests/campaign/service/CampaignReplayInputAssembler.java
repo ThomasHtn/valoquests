@@ -101,17 +101,13 @@ public class CampaignReplayInputAssembler {
 
         DailyOutput output = dailyOutputReader.read(EVERY_STATUS, campaign.getFirstWeekStart(), lastDay);
         Map<Integer, WeekChallengeYield> yields = challengeReader.read(campaign, roster);
-        Map<Integer, GuardianFight> fights = fights(weeks, roster, output, lastDay);
+        Map<Integer, GuardianFight> fights = fights(campaign, weeks, roster, output, lastDay);
 
-        List<CampaignDayInput> days = new ArrayList<>();
-        List<CampaignPlayerDayInput> playerDays = new ArrayList<>();
-
-        for (LocalDate day = campaign.getFirstWeekStart(); !day.isAfter(lastDay); day = day.plusDays(1)) {
-            days.add(dayOf(day, roster, output, playerDays));
-        }
+        List<CampaignPlayerDayInput> playerDays =
+            playerDays(campaign.getFirstWeekStart(), lastDay, roster, output);
 
         return new CampaignReplayInputs(
-            days,
+            days(campaign.getFirstWeekStart(), lastDay, playerDays),
             weekInputs(weeks, fights, yields, settledThrough),
             fights,
             yields,
@@ -120,51 +116,86 @@ public class CampaignReplayInputAssembler {
     }
 
     /**
-     * Folds one day's roster output into the base's day, collecting the operator rows on the way.
+     * Collects each roster member's output, day by day.
      *
-     * @param day        calendar day
-     * @param roster     campaign roster
-     * @param output     the campaign's priced output
-     * @param playerDays operator rows gathered so far, appended to
-     * @return the day as the engine consumes it
+     * @param firstDay campaign's first day
+     * @param lastDay  last day read
+     * @param roster   campaign roster
+     * @param output   the campaign's priced output
+     * @return one row per player and day played, oldest day first
      */
-    private CampaignDayInput dayOf(
-        LocalDate day,
+    private List<CampaignPlayerDayInput> playerDays(
+        LocalDate firstDay,
+        LocalDate lastDay,
         Set<Long> roster,
-        DailyOutput output,
-        List<CampaignPlayerDayInput> playerDays
+        DailyOutput output
     ) {
-        int damage = 0;
-        int food = 0;
-        int components = 0;
-        int presence = 0;
+        List<CampaignPlayerDayInput> playerDays = new ArrayList<>();
 
-        for (Map.Entry<Long, PlayerDayOutput> entry : output.on(day).entrySet()) {
-            if (!roster.contains(entry.getKey())) {
-                continue;
+        for (LocalDate day = firstDay; !day.isAfter(lastDay); day = day.plusDays(1)) {
+            for (Map.Entry<Long, PlayerDayOutput> entry : output.on(day).entrySet()) {
+                if (roster.contains(entry.getKey())) {
+                    playerDays.add(new CampaignPlayerDayInput(entry.getKey(), day, entry.getValue()));
+                }
             }
-
-            PlayerDayOutput dayOutput = entry.getValue();
-            damage += dayOutput.damage();
-            food += dayOutput.food();
-            components += dayOutput.components();
-            presence++;
-            playerDays.add(new CampaignPlayerDayInput(entry.getKey(), day, dayOutput));
         }
 
-        return new CampaignDayInput(day, damage, food, components, presence);
+        return playerDays;
+    }
+
+    /**
+     * Folds the player rows into the base's days, days nobody played included.
+     *
+     * @param firstDay   campaign's first day
+     * @param lastDay    last day read
+     * @param playerDays the roster's rows
+     * @return every day as the engine consumes it, oldest first
+     */
+    private List<CampaignDayInput> days(
+        LocalDate firstDay,
+        LocalDate lastDay,
+        List<CampaignPlayerDayInput> playerDays
+    ) {
+        Map<LocalDate, List<CampaignPlayerDayInput>> byDay = playerDays.stream()
+            .collect(Collectors.groupingBy(CampaignPlayerDayInput::day));
+        List<CampaignDayInput> days = new ArrayList<>();
+
+        for (LocalDate day = firstDay; !day.isAfter(lastDay); day = day.plusDays(1)) {
+            days.add(dayOf(day, byDay.getOrDefault(day, List.of())));
+        }
+
+        return days;
+    }
+
+    /**
+     * Sums one day's player rows into the base's day.
+     *
+     * @param day        calendar day
+     * @param playerDays the rows of that day
+     * @return the day as the engine consumes it
+     */
+    private CampaignDayInput dayOf(LocalDate day, List<CampaignPlayerDayInput> playerDays) {
+        return new CampaignDayInput(
+            day,
+            playerDays.stream().mapToInt(playerDay -> playerDay.output().damage()).sum(),
+            playerDays.stream().mapToInt(playerDay -> playerDay.output().food()).sum(),
+            playerDays.stream().mapToInt(playerDay -> playerDay.output().components()).sum(),
+            playerDays.size()
+        );
     }
 
     /**
      * Replays each started week's guardian fight from the matches of that week.
      *
-     * @param weeks   the campaign's weeks
-     * @param roster  campaign roster
-     * @param output  the campaign's priced output
-     * @param lastDay last day read
+     * @param campaign campaign the weeks belong to
+     * @param weeks    the campaign's weeks
+     * @param roster   campaign roster
+     * @param output   the campaign's priced output
+     * @param lastDay  last day read
      * @return the fight of each week that has started, by one-based week index
      */
     private Map<Integer, GuardianFight> fights(
+        Campaign campaign,
         List<CampaignWeek> weeks,
         Set<Long> roster,
         DailyOutput output,
@@ -177,12 +208,7 @@ public class CampaignReplayInputAssembler {
                 continue;
             }
 
-            weeks.stream()
-                .filter(week -> covers(week, match.day()))
-                .findFirst()
-                .ifPresent(week -> byWeek
-                    .computeIfAbsent(week.getWeekIndex(), ignored -> new ArrayList<>())
-                    .add(match));
+            byWeek.computeIfAbsent(campaign.weekIndexOf(match.day()), ignored -> new ArrayList<>()).add(match);
         }
 
         Map<Integer, GuardianFight> fights = new HashMap<>();
@@ -255,20 +281,9 @@ public class CampaignReplayInputAssembler {
                     week.getWoundedCount(),
                     fight.damageDealt(),
                     fight.defeated(),
-                    yields.getOrDefault(week.getWeekIndex(), WeekChallengeYield.NONE).survivors()
+                    yields.getOrDefault(week.getWeekIndex(), WeekChallengeYield.NONE).rescued()
                 );
             })
             .toList();
-    }
-
-    /**
-     * Determines whether a day falls inside one week.
-     *
-     * @param week week to place the day in
-     * @param day  calendar day
-     * @return {@code true} when the day belongs to the week
-     */
-    private boolean covers(CampaignWeek week, LocalDate day) {
-        return !day.isBefore(week.getWeekStart()) && !day.isAfter(week.settlementDay());
     }
 }

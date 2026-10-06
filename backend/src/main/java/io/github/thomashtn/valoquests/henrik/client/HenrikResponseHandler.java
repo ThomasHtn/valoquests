@@ -113,12 +113,11 @@ public class HenrikResponseHandler {
         String message
     ) {
         if (statusCode.is4xxClientError()) {
-            return new HenrikClientRequestException(message, statusCode);
+            return new HenrikClientRequestException(message);
         }
 
         return new HenrikApiException(
             message,
-            statusCode,
             statusCode.is5xxServerError()
         );
     }

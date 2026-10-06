@@ -1,11 +1,12 @@
 package io.github.thomashtn.valoquests.ranking.service;
 
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.service.ScoringRuleset;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class ChallengePointsReader {
     private final PlayerChallengeProgressRepository progressRepository;
 
     /**
-     * Barème pricing one validated challenge.
+     * Scoring table pricing one validated challenge.
      */
     private final ScoringRuleset ruleset;
 
@@ -57,67 +58,33 @@ public class ChallengePointsReader {
     }
 
     /**
-     * Returns the reference one week's challenges are priced at.
-     *
-     * @param weekStart Monday identifying the week
-     * @return the reference in force
-     */
-    public int referenceFor(LocalDate weekStart) {
-        return calibrationSource.forWeek(weekStart).reference();
-    }
-
-    /**
-     * Returns the campaign week one week's challenges are priced at, driving the reward
-     * progression; {@code 0} between two campaigns.
-     *
-     * @param weekStart Monday identifying the week
-     * @return the one-based campaign week, or {@code 0}
-     */
-    public int weekIndexFor(LocalDate weekStart) {
-        return calibrationSource.forWeek(weekStart).weekIndex();
-    }
-
-    /**
-     * Prices one selection.
-     *
-     * @param selection selected challenge
-     * @param reference reference in force for its week
-     * @param weekIndex campaign week of that week, {@code 0} between two campaigns
-     * @return the ranking points validating it earns, one per wounded
-     */
-    public int pointsOf(WeeklyChallenge selection, int reference, int weekIndex) {
-        double weight = ruleset.challengeWeight(
-            selection.getChallenge().getCadence(),
-            selection.getChallenge().getDifficulty()
-        );
-
-        return ruleset.challengeRankingPoints(reference, weight, weekIndex);
-    }
-
-    /**
      * Tallies one week's validated challenges per player.
      *
      * @param weekStart Monday identifying the week
      * @return each player's tally, players who validated nothing omitted
      */
     public Map<Long, ChallengeTally> read(LocalDate weekStart) {
-        int reference = referenceFor(weekStart);
-        int weekIndex = weekIndexFor(weekStart);
+        ChallengeCalibration calibration = calibrationSource.forWeek(weekStart);
         Map<Long, ChallengeTally> tallies = new HashMap<>();
 
         for (PlayerChallengeProgress progress : progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(weekStart)) {
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(weekStart)) {
 
             if (!progress.isCompleted()) {
                 continue;
             }
 
-            WeeklyChallenge selection = progress.getWeeklyChallenge();
+            ChallengeSelection selection = progress.getSelection();
             boolean daily = selection.getCadence() == ChallengeCadence.DAILY;
+            int points = ruleset.challengeReward(
+                selection.getCadence(),
+                selection.getChallenge().getTier(),
+                calibration
+            );
 
             tallies.merge(
                 progress.getPlayer().getId(),
-                new ChallengeTally(pointsOf(selection, reference, weekIndex), daily ? 0 : 1, daily ? 1 : 0),
+                new ChallengeTally(points, daily ? 0 : 1, daily ? 1 : 0),
                 ChallengeTally::plus
             );
         }

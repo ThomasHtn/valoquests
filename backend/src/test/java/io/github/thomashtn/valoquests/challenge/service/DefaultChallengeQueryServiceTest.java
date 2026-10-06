@@ -6,21 +6,21 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.dto.CurrentChallengesResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
+import io.github.thomashtn.valoquests.scoring.service.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -60,7 +60,7 @@ class DefaultChallengeQueryServiceTest {
     /**
      * Weekly selection repository dependency.
      */
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Progress repository dependency.
@@ -82,7 +82,7 @@ class DefaultChallengeQueryServiceTest {
      */
     @BeforeEach
     void setUp() {
-        weeklyChallengeRepository = mock(WeeklyChallengeRepository.class);
+        challengeSelectionRepository = mock(ChallengeSelectionRepository.class);
         progressRepository = mock(PlayerChallengeProgressRepository.class);
         playerRepository = mock(PlayerRepository.class);
         ChallengeCalibrationSource calibrationSource = mock(ChallengeCalibrationSource.class);
@@ -100,7 +100,7 @@ class DefaultChallengeQueryServiceTest {
             .thenReturn(Optional.of(SYNCHRONIZED_AT));
 
         service = new DefaultChallengeQueryService(
-            weeklyChallengeRepository,
+            challengeSelectionRepository,
             progressRepository,
             playerRepository,
             new JacksonChallengeDefinitionParser(JsonMapper.builder().build()),
@@ -115,16 +115,16 @@ class DefaultChallengeQueryServiceTest {
      */
     @Test
     void shouldExposeWeeklyPackAndDailyDrawsWithTheirWorth() {
-        WeeklyChallenge hard = weekly(1L, ChallengeDifficulty.HARD, "COMPETITIVE_OR_UNRATED");
-        WeeklyChallenge easy = weekly(2L, ChallengeDifficulty.EASY, "COMPETITIVE_OR_UNRATED");
-        WeeklyChallenge veryHard = weekly(3L, ChallengeDifficulty.VERY_HARD, "COMPETITIVE");
-        WeeklyChallenge monday = daily(4L, WEEK_START);
-        WeeklyChallenge today = daily(5L, TODAY);
+        ChallengeSelection hard = weekly(1L, ChallengeTier.HARD, "COMPETITIVE_OR_UNRATED");
+        ChallengeSelection easy = weekly(2L, ChallengeTier.EASY, "COMPETITIVE_OR_UNRATED");
+        ChallengeSelection veryHard = weekly(3L, ChallengeTier.VERY_HARD, "COMPETITIVE");
+        ChallengeSelection monday = daily(4L, WEEK_START);
+        ChallengeSelection today = daily(5L, TODAY);
 
-        when(weeklyChallengeRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(WEEK_START))
+        when(challengeSelectionRepository.findAllByWeekStartAndFinalizedAtIsNullOrderByIdAsc(WEEK_START))
             .thenReturn(List.of(today, hard, monday, easy, veryHard));
         when(progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START))
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(WEEK_START))
             .thenReturn(List.of(
                 progress(easy, player(3L, PlayerStatus.ACTIVE), true, 3),
                 progress(easy, player(9L, PlayerStatus.INACTIVE), true, 3),
@@ -146,8 +146,8 @@ class DefaultChallengeQueryServiceTest {
         assertThat(response.roster().getFirst().portrait()).isEqualTo("Agent 1");
 
         assertThat(response.challenges())
-            .extracting(CurrentChallengesResponse.ChallengeProgressResponse::difficulty)
-            .containsExactly(ChallengeDifficulty.EASY, ChallengeDifficulty.HARD, ChallengeDifficulty.VERY_HARD);
+            .extracting(CurrentChallengesResponse.ChallengeProgressResponse::tier)
+            .containsExactly(ChallengeTier.EASY, ChallengeTier.HARD, ChallengeTier.VERY_HARD);
         assertThat(response.dailies())
             .extracting(CurrentChallengesResponse.ChallengeProgressResponse::day)
             .containsExactly(WEEK_START, TODAY);
@@ -155,16 +155,11 @@ class DefaultChallengeQueryServiceTest {
         CurrentChallengesResponse.ChallengeProgressResponse easyEntry = response.challenges().getFirst();
         assertThat(easyEntry.id()).isEqualTo(2L);
         assertThat(easyEntry.cadence()).isEqualTo(ChallengeCadence.WEEKLY);
-        assertThat(easyEntry.competitiveOnly()).isFalse();
         assertThat(easyEntry.metric()).isEqualTo("KILLS");
         assertThat(easyEntry.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(3));
         assertThat(easyEntry.survivors()).isEqualTo(5);
-        assertThat(easyEntry.rankingPoints()).isEqualTo(5);
         // The inactive player's completion never inflates the collective count.
-        assertThat(easyEntry.completedPlayers()).isEqualTo(1);
-        assertThat(easyEntry.totalPlayers()).isEqualTo(4);
         assertThat(easyEntry.completedPlayerIds()).containsExactly(3L);
-        assertThat(easyEntry.completionPercentage()).isEqualByComparingTo(BigDecimal.valueOf(25));
         // One line per active player in roster order, zero for those not evaluated yet.
         assertThat(easyEntry.players())
             .extracting(CurrentChallengesResponse.PlayerProgressResponse::playerId)
@@ -176,7 +171,6 @@ class DefaultChallengeQueryServiceTest {
             .extracting(CurrentChallengesResponse.PlayerProgressResponse::completed)
             .containsExactly(false, false, true, false);
 
-        assertThat(response.challenges().getLast().competitiveOnly()).isTrue();
         assertThat(response.challenges().getLast().survivors()).isEqualTo(29);
 
         // A past day's challenge keeps each player's progress too.
@@ -185,10 +179,8 @@ class DefaultChallengeQueryServiceTest {
 
         CurrentChallengesResponse.ChallengeProgressResponse todayEntry = response.dailies().getLast();
         assertThat(todayEntry.cadence()).isEqualTo(ChallengeCadence.DAILY);
-        assertThat(todayEntry.difficulty()).isNull();
+        assertThat(todayEntry.tier()).isNull();
         assertThat(todayEntry.survivors()).isEqualTo(6);
-        assertThat(todayEntry.rankingPoints()).isEqualTo(6);
-        assertThat(todayEntry.completedPlayers()).isEqualTo(1);
         assertThat(todayEntry.completedPlayerIds()).containsExactly(2L);
     }
 
@@ -226,26 +218,26 @@ class DefaultChallengeQueryServiceTest {
      * Creates a weekly selection of a kill-count challenge resolved to three matches of ten kills.
      *
      * @param id         selection identifier
-     * @param difficulty difficulty tier
+     * @param tier tier
      * @param gameMode   game-mode filter of the resolved condition
      * @return weekly selection fixture
      */
-    private WeeklyChallenge weekly(long id, ChallengeDifficulty difficulty, String gameMode) {
+    private ChallengeSelection weekly(long id, ChallengeTier tier, String gameMode) {
         Challenge challenge = new Challenge();
         challenge.setId(id * 10);
-        challenge.setCode(difficulty + "_KILL_GAMES");
+        challenge.setCode(tier + "_KILL_GAMES");
         challenge.setName("Kill games");
         challenge.setDescription("Finish matches with kills.");
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setProgressMode(ProgressMode.COUNT_MATCHES);
         challenge.setSchemaVersion(3);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":10,\"gameMode\":\"" + gameMode
                 + "\",\"occurrences\":3,\"scope\":\"PER_MATCH\"}]"
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setId(id);
         selection.setWeekStart(WEEK_START);
         selection.setChallenge(challenge);
@@ -263,7 +255,7 @@ class DefaultChallengeQueryServiceTest {
      * @param day covered day
      * @return daily selection fixture
      */
-    private WeeklyChallenge daily(long id, LocalDate day) {
+    private ChallengeSelection daily(long id, LocalDate day) {
         Challenge challenge = new Challenge();
         challenge.setId(id * 10);
         challenge.setCode("DAILY_ONE_LONG");
@@ -272,13 +264,13 @@ class DefaultChallengeQueryServiceTest {
         challenge.setCadence(ChallengeCadence.DAILY);
         challenge.setProgressMode(ProgressMode.SUM);
         challenge.setSchemaVersion(3);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             "[{\"metric\":\"MATCHES_PLAYED\",\"operator\":\"GTE\",\"target\":1,"
                 + "\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setId(id);
         selection.setWeekStart(WEEK_START);
         selection.setCadence(ChallengeCadence.DAILY);
@@ -301,14 +293,14 @@ class DefaultChallengeQueryServiceTest {
      * @return progress fixture
      */
     private PlayerChallengeProgress progress(
-        WeeklyChallenge selection,
+        ChallengeSelection selection,
         Player player,
         boolean completed,
         int value
     ) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
-        progress.setWeeklyChallenge(selection);
+        progress.setSelection(selection);
         progress.setCompleted(completed);
         progress.setCurrentValue(BigDecimal.valueOf(value));
         return progress;

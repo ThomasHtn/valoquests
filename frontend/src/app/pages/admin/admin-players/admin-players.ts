@@ -153,7 +153,7 @@ export class AdminPlayers {
     }
 
     return this.translation.translate(
-      player.hasCampaignContribution
+      player.wasOnAnyRoster
         ? 'admin.players.remove.archiveBody'
         : 'admin.players.remove.deleteBody',
     );

@@ -6,15 +6,15 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
+import io.github.thomashtn.valoquests.scoring.service.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -77,7 +77,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
         when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(
             weekly(
                 1L,
-                ChallengeDifficulty.VERY_HARD,
+                ChallengeTier.VERY_HARD,
                 ProgressMode.SUM,
                 "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":90,\"gameMode\":\"COMPETITIVE\"}]",
                 "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":180,\"gameMode\":\"COMPETITIVE\"}]"
@@ -98,22 +98,20 @@ class DefaultChallengeCatalogueQueryServiceTest {
 
         ChallengeCatalogueResponse.ChallengeCatalogueEntry veryHard = response.challenges().getFirst();
         assertThat(veryHard.cadence()).isEqualTo(ChallengeCadence.WEEKLY);
-        assertThat(veryHard.difficulty()).isEqualTo(ChallengeDifficulty.VERY_HARD);
+        assertThat(veryHard.tier()).isEqualTo(ChallengeTier.VERY_HARD);
         assertThat(veryHard.competitiveOnly()).isTrue();
         assertThat(veryHard.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(180));
         // 10 600 x 5.4 / 1 000 x 1.08 (third week) = 61.8.
         assertThat(veryHard.survivors()).isEqualTo(62);
-        assertThat(veryHard.rankingPoints()).isEqualTo(62);
 
         ChallengeCatalogueResponse.ChallengeCatalogueEntry daily = response.challenges().getLast();
         assertThat(daily.cadence()).isEqualTo(ChallengeCadence.DAILY);
-        assertThat(daily.difficulty()).isNull();
+        assertThat(daily.tier()).isNull();
         assertThat(daily.competitiveOnly()).isFalse();
         // The progress target of a count-matches challenge is its number of occurrences; the bar
         // itself is the expert one written in the catalogue.
         assertThat(daily.targetValue()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(daily.survivors()).isEqualTo(14);
-        assertThat(daily.rankingPoints()).isEqualTo(14);
     }
 
     /**
@@ -126,7 +124,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
         when(challengeRepository.findAllByEnabledTrueOrderByIdAsc()).thenReturn(List.of(
             weekly(
                 1L,
-                ChallengeDifficulty.EASY,
+                ChallengeTier.EASY,
                 ProgressMode.SUM,
                 "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":40,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]",
                 "[{\"metric\":\"KILLS\",\"operator\":\"GTE\",\"target\":60,\"gameMode\":\"COMPETITIVE_OR_UNRATED\"}]"
@@ -137,34 +135,33 @@ class DefaultChallengeCatalogueQueryServiceTest {
 
         assertThat(entry.targetValue()).isEqualByComparingTo(BigDecimal.valueOf(40));
         assertThat(entry.survivors()).isEqualTo(2);
-        assertThat(entry.rankingPoints()).isEqualTo(2);
     }
 
     /**
      * Creates one weekly catalogue entry.
      *
      * @param id             challenge identifier
-     * @param difficulty     difficulty tier
+     * @param tier     tier
      * @param progressMode   progress mode
-     * @param conditionsJson base conditions
+     * @param amateurConditionsJson base conditions
      * @return challenge fixture
      */
     private Challenge weekly(
         long id,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         ProgressMode progressMode,
-        String conditionsJson,
-        String expertConditionsJson
+        String amateurConditionsJson,
+        String proConditionsJson
     ) {
         Challenge challenge = new Challenge();
         challenge.setId(id);
         challenge.setCode("CHALLENGE_" + id);
         challenge.setName("Challenge " + id);
         challenge.setDescription("Description " + id);
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setProgressMode(progressMode);
-        challenge.setConditionsJson(conditionsJson);
-        challenge.setExpertConditionsJson(expertConditionsJson);
+        challenge.setAmateurConditionsJson(amateurConditionsJson);
+        challenge.setProConditionsJson(proConditionsJson);
         challenge.setSchemaVersion(3);
         return challenge;
     }
@@ -173,12 +170,12 @@ class DefaultChallengeCatalogueQueryServiceTest {
      * Creates one daily catalogue entry counting matches that cleared a bar.
      *
      * @param id             challenge identifier
-     * @param conditionsJson base conditions
+     * @param amateurConditionsJson base conditions
      * @return challenge fixture
      */
-    private Challenge daily(long id, String conditionsJson, String expertConditionsJson) {
+    private Challenge daily(long id, String amateurConditionsJson, String proConditionsJson) {
         Challenge challenge =
-            weekly(id, null, ProgressMode.COUNT_MATCHES, conditionsJson, expertConditionsJson);
+            weekly(id, null, ProgressMode.COUNT_MATCHES, amateurConditionsJson, proConditionsJson);
         challenge.setCadence(ChallengeCadence.DAILY);
         return challenge;
     }

@@ -2,9 +2,9 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import io.github.thomashtn.valoquests.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valoquests.henrik.dto.mmr.HenrikMmrResponse;
-import io.github.thomashtn.valoquests.henrik.mapper.HenrikMmrMapper;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
+import io.github.thomashtn.valoquests.player.mapper.HenrikMmrMapper;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.player.service.PlayerAccountResolutionService;
 import io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard;
@@ -22,11 +22,8 @@ import org.springframework.stereotype.Service;
  * <p>Resolves the Riot account, refreshes the competitive rank, then delegates the match history to
  * {@link SeasonMatchHistoryWalker}, which owns the season scope and pagination rules.
  *
- * <p><strong>Deliberately not transactional.</strong> Henrik calls must stay outside a database
- * transaction, and the walker relies on each of its steps committing independently to keep the
- * per-season completion flag honest. See {@link SeasonSynchronizationStateService}. Enforced at
- * entry by {@link NonTransactionalGuard}, so wrapping this method in {@code @Transactional} fails
- * fast instead of silently defeating the checkpoint.
+ * <p><strong>Deliberately not transactional</strong>, enforced at entry by {@link NonTransactionalGuard}:
+ * see {@link SeasonSynchronizationStateService}.
  */
 @Service
 public class PlayerSynchronizationService {
@@ -122,21 +119,26 @@ public class PlayerSynchronizationService {
         MatchHistoryWalkResult walkResult = matchHistoryWalker.walk(resolvedPlayer);
         Instant completedAt = clock.instant();
         resolvedPlayer.setLastSuccessfulSynchronizationAt(completedAt);
-        Player savedPlayer = playerRepository.save(resolvedPlayer);
+        // Only the synchronized fields: the player was loaded minutes ago and may have been edited.
+        playerRepository.recordSuccessfulSynchronization(
+            resolvedPlayer.getId(),
+            resolvedPlayer.getCompetitiveTier(),
+            resolvedPlayer.getRankRating(),
+            completedAt
+        );
 
         LOGGER.info(
             "Completed synchronization for player {}: pages={} importedMatches={} stopReason={}",
-            savedPlayer.getId(),
+            resolvedPlayer.getId(),
             walkResult.pagesFetched(),
             walkResult.matchesImported(),
             walkResult.stopReason()
         );
 
         return new PlayerSynchronizationResult(
-            savedPlayer,
+            resolvedPlayer,
             walkResult.pagesFetched(),
             walkResult.matchesImported(),
-            completedAt,
             walkResult.stopReason()
         );
     }

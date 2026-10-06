@@ -87,7 +87,6 @@ class CampaignReplayWriterTest {
         order.verify(snapshotRepository).deleteAllByCampaignId(1L);
         order.verify(playerDayRepository).deleteAllByCampaignId(1L);
         order.verify(snapshotRepository).flush();
-        order.verify(playerDayRepository).flush();
         order.verify(snapshotRepository).saveAll(any());
     }
 
@@ -146,7 +145,7 @@ class CampaignReplayWriterTest {
             List.of(),
             List.of(),
             Map.of(1, GuardianFight.UNTOUCHED),
-            Map.of(1, new WeekChallengeYield(9, Map.of(), Map.of())),
+            Map.of(1, new WeekChallengeYield(9)),
             List.of()
         );
 
@@ -158,10 +157,10 @@ class CampaignReplayWriterTest {
     }
 
     @Test
-    @DisplayName("Stores each day and each operator day the replay computed")
+    @DisplayName("Stores each day and each player day the replay computed")
     void shouldStoreEveryComputedRow() {
-        Player operator = CampaignFixtures.player(1, "Alpha");
-        when(entityManager.getReference(eq(Player.class), anyLong())).thenReturn(operator);
+        Player player = CampaignFixtures.player(1, "Alpha");
+        when(entityManager.getReference(eq(Player.class), anyLong())).thenReturn(player);
 
         CampaignDayState state = new CampaignDayState(
             campaign.getFirstWeekStart(), 2_800, 840, 1_960, 100, 0.8, 0, 0, 0, 839.2, 1_960, 100, 1
@@ -191,7 +190,7 @@ class CampaignReplayWriterTest {
         ArgumentCaptor<List<CampaignPlayerDay>> playerDays = ArgumentCaptor.captor();
         verify(playerDayRepository).saveAll(playerDays.capture());
         assertThat(playerDays.getValue()).singleElement().satisfies(saved -> {
-            assertThat(saved.getPlayer()).isSameAs(operator);
+            assertThat(saved.getPlayer()).isSameAs(player);
             assertThat(saved.getDamage()).isEqualTo(2_800);
             assertThat(saved.getReducedMatchCount()).isEqualTo(1);
             assertThat(saved.getStreakBonusPercent()).isEqualTo(4);
@@ -202,7 +201,7 @@ class CampaignReplayWriterTest {
      * Builds the replay inputs with one week's fight.
      *
      * @param fight      fight of week one
-     * @param playerDays operator days to store
+     * @param playerDays player days to store
      * @return the inputs
      */
     private CampaignReplayInputs inputs(GuardianFight fight, List<CampaignPlayerDayInput> playerDays) {

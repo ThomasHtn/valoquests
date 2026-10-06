@@ -297,11 +297,6 @@ interface ProgressionEntityStatistics {
  */
 interface MapStatistics extends ProgressionEntityStatistics {
   /**
-   * Riot map identifier, or `null` when unknown.
-   */
-  readonly mapId: string | null;
-
-  /**
    * Name of the map.
    */
   readonly mapName: string;
@@ -311,11 +306,6 @@ interface MapStatistics extends ProgressionEntityStatistics {
  * Aggregated statistics for one agent.
  */
 interface AgentStatistics extends ProgressionEntityStatistics {
-  /**
-   * Riot agent identifier, or `null` when unknown.
-   */
-  readonly agentId: string | null;
-
   /**
    * Agent played.
    */

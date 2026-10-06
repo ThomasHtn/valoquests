@@ -4,18 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.ranking.RankingFixtures;
 import io.github.thomashtn.valoquests.ranking.service.ChallengePointsReader.ChallengeTally;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
+import io.github.thomashtn.valoquests.scoring.service.DefaultScoringRuleset;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -67,46 +67,42 @@ class ChallengePointsReaderTest {
     }
 
     @Test
-    @DisplayName("Prices one point per wounded: 6 for the daily, then 5 to 29 by difficulty on week one")
-    void shouldPriceOnePointPerWounded() {
-        assertThat(reader.pointsOf(selection(1, ChallengeCadence.DAILY, null), REFERENCE, 1)).isEqualTo(6);
-        assertThat(reader.pointsOf(selection(2, ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY), REFERENCE, 1))
-            .isEqualTo(5);
-        assertThat(reader.pointsOf(selection(3, ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD), REFERENCE, 1))
-            .isEqualTo(29);
-    }
-
-    @Test
     @DisplayName("Tallies each player's validations, daily and weekly counted apart")
     void shouldTallyValidationsPerPlayer() {
-        when(progressRepository.findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START))
+        when(progressRepository.findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(WEEK_START))
             .thenReturn(List.of(
-                progress(ALPHA, selection(1, ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY), true),
-                progress(ALPHA, selection(2, ChallengeCadence.WEEKLY, ChallengeDifficulty.HARD), true),
+                progress(ALPHA, selection(1, ChallengeCadence.WEEKLY, ChallengeTier.EASY), true),
+                progress(ALPHA, selection(2, ChallengeCadence.WEEKLY, ChallengeTier.HARD), true),
                 progress(ALPHA, selection(3, ChallengeCadence.DAILY, null), true),
-                progress(ALPHA, selection(4, ChallengeCadence.WEEKLY, ChallengeDifficulty.VERY_HARD), false),
-                progress(BRAVO, selection(1, ChallengeCadence.WEEKLY, ChallengeDifficulty.EASY), false)
+                progress(ALPHA, selection(4, ChallengeCadence.WEEKLY, ChallengeTier.VERY_HARD), false),
+                progress(BRAVO, selection(1, ChallengeCadence.WEEKLY, ChallengeTier.EASY), false)
             ));
 
         Map<Long, ChallengeTally> tallies = reader.read(WEEK_START);
 
-        // EASY 53 + HARD 207 + daily 64: the incomplete VERY_HARD pays nothing.
+        // Week three: EASY 6 + HARD 22 + daily 7; the incomplete VERY_HARD pays nothing.
         assertThat(tallies).containsOnlyKeys(ALPHA.getId());
         assertThat(tallies.get(ALPHA.getId())).isEqualTo(new ChallengeTally(35, 2, 1));
     }
 
     @Test
-    @DisplayName("Reads the reference in force from the calibration source")
-    void shouldReadTheReferenceInForce() {
-        assertThat(reader.referenceFor(WEEK_START)).isEqualTo(REFERENCE);
+    @DisplayName("Prices a challenge at the cadence it was drawn with, whatever the catalogue says today")
+    void shouldPriceAtTheDrawnCadence() {
+        ChallengeSelection drawnDaily = selection(1, ChallengeCadence.DAILY, ChallengeTier.VERY_HARD);
+        drawnDaily.getChallenge().setCadence(ChallengeCadence.WEEKLY);
+        when(progressRepository.findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(WEEK_START))
+            .thenReturn(List.of(progress(ALPHA, drawnDaily, true)));
+
+        // Daily weight 1.2 at week three: 5 300 x 1.2 / 1 000 x 1.08, rounded.
+        assertThat(reader.read(WEEK_START).get(ALPHA.getId())).isEqualTo(new ChallengeTally(7, 0, 1));
     }
 
-    private static WeeklyChallenge selection(long id, ChallengeCadence cadence, ChallengeDifficulty difficulty) {
+    private static ChallengeSelection selection(long id, ChallengeCadence cadence, ChallengeTier tier) {
         Challenge challenge = new Challenge();
         challenge.setCadence(cadence);
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setId(id);
         selection.setWeekStart(WEEK_START);
         selection.setCadence(cadence);
@@ -115,10 +111,10 @@ class ChallengePointsReaderTest {
         return selection;
     }
 
-    private static PlayerChallengeProgress progress(Player player, WeeklyChallenge selection, boolean completed) {
+    private static PlayerChallengeProgress progress(Player player, ChallengeSelection selection, boolean completed) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
-        progress.setWeeklyChallenge(selection);
+        progress.setSelection(selection);
         progress.setCompleted(completed);
 
         return progress;

@@ -10,8 +10,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record HenrikMatchPlayer(
 
     String puuid,
-    String name,
-    String tag,
     @JsonProperty("team_id") String teamId,
     HenrikAgent agent,
     HenrikPlayerStats stats,
@@ -40,7 +38,7 @@ public record HenrikMatchPlayer(
      * @param headshots shots that hit the head
      * @param bodyshots shots that hit the body
      * @param legshots  shots that hit the legs
-     * @param damage    damage dealt and received
+     * @param damage    damage dealt
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikPlayerStats(
@@ -56,21 +54,19 @@ public record HenrikMatchPlayer(
     ) {}
 
     /**
-     * Reports the damage exchanged by one player.
+     * Reports the damage one player dealt.
      *
-     * @param dealt    damage dealt to opponents
-     * @param received damage taken from opponents
+     * @param dealt damage dealt to opponents
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record HenrikDamage(Integer dealt, Integer received) {}
+    public record HenrikDamage(Integer dealt) {}
 
     /**
      * Identifies the competitive tier a player held during the match.
      *
-     * @param id   Henrik tier identifier
      * @param name human-readable tier name, such as {@code Gold 2}
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record HenrikTier(Integer id, String name) {}
+    public record HenrikTier(String name) {}
 
 }

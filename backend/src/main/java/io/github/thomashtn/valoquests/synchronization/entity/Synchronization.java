@@ -35,7 +35,7 @@ public class Synchronization extends AuditableEntity {
     private Long id;
 
     /**
-     * Standard or deep synchronization mode.
+     * Synchronization type: standard, or the legacy history backfill on older rows.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)

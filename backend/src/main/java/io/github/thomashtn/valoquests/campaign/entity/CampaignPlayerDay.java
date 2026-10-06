@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * What one frozen-roster operator produced on one day of a campaign.
+ * What one frozen-roster player produced on one day of a campaign.
  *
  * <p>Written by the replay alongside the base's own day. Stored rather than re-priced on demand:
  * the weekly titles, the squad table and the profile all read the same figures, and each of them
@@ -45,7 +45,7 @@ public class CampaignPlayerDay extends AuditableEntity {
     private Campaign campaign;
 
     /**
-     * Operator the day belongs to.
+     * Player the day belongs to.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "player_id", nullable = false)
@@ -91,10 +91,10 @@ public class CampaignPlayerDay extends AuditableEntity {
      * Days of the week played up to this day, this day included.
      */
     @Column(name = "streak_days", nullable = false)
-    private int streakDays;
+    private int playedDays;
 
     /**
-     * Bonus every match of the day earned from that streak.
+     * Bonus every match of the day earned from those played days.
      */
     @Column(name = "streak_bonus_percent", nullable = false)
     private int streakBonusPercent;

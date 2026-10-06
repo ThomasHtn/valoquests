@@ -1,7 +1,7 @@
 package io.github.thomashtn.valoquests.challenge.dto;
 
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -73,19 +73,14 @@ public record CurrentChallengesResponse(
      * @param name                 challenge name shown to players
      * @param description          challenge description shown to players
      * @param cadence              whether the challenge covers the week or one day
-     * @param difficulty           difficulty tier, {@code null} for a daily challenge
+     * @param tier           tier, {@code null} for a daily challenge
      * @param day                  day a daily challenge covers, {@code null} for a weekly one
-     * @param competitiveOnly      whether only ranked matches count
      * @param metric               metric the challenge measures
      * @param targetValue          value a player's progress must reach to complete it, resolved
      *                             against the campaign in force at draw time
      * @param survivors            survivors one player brings back by completing it, before the
-     *                             weekly progression
-     * @param rankingPoints        points one player earns in the weekly ranking by completing it
-     * @param completedPlayers     active players who completed it
-     * @param totalPlayers         active players it applies to
+     *                             weekly progression, also the points it earns in the weekly ranking
      * @param completedPlayerIds   identifiers of the active players who completed it, ascending
-     * @param completionPercentage completed players as a percentage of the total
      * @param players              each active player's progress, in roster order
      */
     public record ChallengeProgressResponse(
@@ -95,17 +90,12 @@ public record CurrentChallengesResponse(
         String name,
         String description,
         ChallengeCadence cadence,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         LocalDate day,
-        boolean competitiveOnly,
         String metric,
         BigDecimal targetValue,
         int survivors,
-        int rankingPoints,
-        int completedPlayers,
-        int totalPlayers,
         List<Long> completedPlayerIds,
-        BigDecimal completionPercentage,
         List<PlayerProgressResponse> players
     ) {
         /**

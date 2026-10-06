@@ -8,13 +8,11 @@ import io.github.thomashtn.valoquests.campaign.dto.CampaignTodayResponse;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
-import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.campaign.model.ExtractionEstimate;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignDailySnapshotRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -91,7 +89,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
     @Override
     public CampaignResponse currentCampaign() {
         LocalDate today = weekCalendar.today();
-        Optional<Campaign> shown = campaignToShow();
+        Optional<Campaign> shown = campaignRepository.findShown();
 
         if (shown.isEmpty()) {
             return CampaignResponse.none(today);
@@ -130,7 +128,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
     public CampaignTodayResponse today() {
         LocalDate today = weekCalendar.today();
 
-        return campaignToShow()
+        return campaignRepository.findShown()
             .filter(campaign -> campaign.getStatus() == CampaignStatus.RUNNING)
             .map(campaign -> dayReader.read(campaign, today, weekCalendar.weekStartOf(today)))
             .orElseGet(() -> CampaignTodayResponse.none(today));
@@ -143,24 +141,9 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
      */
     @Override
     public List<CampaignHistoryResponse> history() {
-        return campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED).stream()
+        return campaignRepository.findAllClosed().stream()
             .map(this::toHistoryResponse)
             .toList();
-    }
-
-    /**
-     * Resolves which campaign the site shows: the live one, else the last closed one.
-     *
-     * @return the campaign to show, empty on a database that never had one
-     */
-    private Optional<Campaign> campaignToShow() {
-        Optional<Campaign> live = campaignRepository.findByStatusNot(CampaignStatus.CLOSED);
-
-        if (live.isPresent()) {
-            return live;
-        }
-
-        return campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED).stream().findFirst();
     }
 
     /**
@@ -175,7 +158,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
             return null;
         }
 
-        return Math.clamp(campaign.weekIndexOf(weekCalendar.weekStartOf(today)), 1, CampaignSchedule.WEEK_COUNT);
+        return campaign.scheduleWeekIndexOf(weekCalendar.weekStartOf(today));
     }
 
     /**
@@ -202,35 +185,13 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
         }
 
         LocalDate weekStart = weekCalendar.weekStartOf(today);
-        Optional<CampaignWeek> current = weeks.stream()
+
+        return weeks.stream()
             .filter(week -> week.getWeekStart().equals(weekStart))
             .filter(week -> !week.isSettled())
-            .findFirst();
-
-        if (current.isEmpty()) {
-            return null;
-        }
-
-        CampaignWeek week = current.orElseThrow();
-        CampaignDailySnapshot last = days.getLast();
-        ExtractionEstimate estimate = ExtractionEstimate.of(
-            week.getWoundedCount(),
-            week.getChallengeRescued(),
-            last.getFoodStock().doubleValue(),
-            last.getComponentsStock().doubleValue(),
-            last.getPopulation().doubleValue(),
-            CampaignResponseMapper.progressPercent(week) / (double) CampaignResponseMapper.PERCENT
-        );
-
-        return new CampaignForecastResponse(
-            week.getWeekIndex(),
-            week.getWoundedCount(),
-            estimate.challengeRescued(),
-            estimate.extracted(),
-            estimate.rescued(),
-            week.getWoundedCount() - estimate.rescued(),
-            estimate.limiter()
-        );
+            .findFirst()
+            .map(week -> CampaignResponseMapper.forecast(week, days.getLast()))
+            .orElse(null);
     }
 
     /**
@@ -243,19 +204,6 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
         List<CampaignWeek> weeks = weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId());
         List<CampaignDailySnapshot> days = snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId());
 
-        return new CampaignHistoryResponse(
-            campaign.getId(),
-            campaign.getNumber(),
-            campaign.getDifficulty(),
-            campaign.reference(),
-            campaign.getRosterSize(),
-            campaign.getFirstWeekStart(),
-            campaign.getLastWeekStart(),
-            campaign.getStoppedOn(),
-            (int) weeks.stream().filter(CampaignWeek::isDefeated).count(),
-            days.isEmpty() ? 0 : (int) Math.round(days.getLast().getPopulation().doubleValue()),
-            weeks.stream().filter(CampaignWeek::isSettled).mapToInt(CampaignWeek::rescued).sum(),
-            CampaignResponseMapper.weeklyPopulation(weeks, days)
-        );
+        return CampaignResponseMapper.history(campaign, weeks, days);
     }
 }

@@ -1,27 +1,21 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressResult;
-import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
-import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContextFactory;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
+import io.github.thomashtn.valoquests.challenge.model.CalculatedProgress;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.ranking.service.RankingRecalculationService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -30,7 +24,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 /**
  * Tests current-week challenge progress orchestration, weekly pack and daily draws alike.
@@ -53,14 +46,14 @@ class DefaultChallengeRecalculationServiceTest {
     private PlayerRepository playerRepository;
 
     /**
-     * Challenge selection dependency.
+     * Weekly pack draw dependency.
      */
-    private WeeklyChallengeSelectionService selectionService;
+    private WeeklyChallengeDrawService weeklyDrawService;
 
     /**
-     * Player context factory dependency.
+     * Daily challenge draw dependency.
      */
-    private PlayerChallengeContextFactory contextFactory;
+    private DailyChallengeDrawService dailyDrawService;
 
     /**
      * Challenge calculation dependency.
@@ -68,19 +61,14 @@ class DefaultChallengeRecalculationServiceTest {
     private ChallengeProgressCalculationService calculationService;
 
     /**
-     * Progress persistence dependency.
+     * Progress writer dependency.
      */
-    private PlayerChallengeProgressPersistenceService persistenceService;
+    private PlayerChallengeProgressWriter progressWriter;
 
     /**
-     * Ranking recalculation dependency.
+     * Listener standing for the ranking, told once the current week is rebuilt.
      */
-    private RankingRecalculationService rankingRecalculationService;
-
-    /**
-     * Calendar shared with the service.
-     */
-    private WeekCalendar weekCalendar;
+    private CurrentWeekProgressListener progressListener;
 
     /**
      * Service under test.
@@ -93,23 +81,23 @@ class DefaultChallengeRecalculationServiceTest {
     @BeforeEach
     void setUp() {
         playerRepository = mock(PlayerRepository.class);
-        selectionService = mock(WeeklyChallengeSelectionService.class);
-        contextFactory = mock(PlayerChallengeContextFactory.class);
+        weeklyDrawService = mock(WeeklyChallengeDrawService.class);
+        dailyDrawService = mock(DailyChallengeDrawService.class);
         calculationService = mock(ChallengeProgressCalculationService.class);
-        persistenceService = mock(PlayerChallengeProgressPersistenceService.class);
-        rankingRecalculationService = mock(RankingRecalculationService.class);
-        weekCalendar = new WeekCalendar(
+        progressWriter = mock(PlayerChallengeProgressWriter.class);
+        progressListener = mock(CurrentWeekProgressListener.class);
+        WeekCalendar weekCalendar = new WeekCalendar(
             Clock.fixed(Instant.parse("2026-07-22T12:00:00Z"), ZoneOffset.UTC),
             ZoneOffset.UTC
         );
 
         service = new DefaultChallengeRecalculationService(
             playerRepository,
-            contextFactory,
             calculationService,
-            persistenceService,
-            rankingRecalculationService,
-            selectionService,
+            progressWriter,
+            progressListener,
+            weeklyDrawService,
+            dailyDrawService,
             weekCalendar
         );
     }
@@ -121,69 +109,26 @@ class DefaultChallengeRecalculationServiceTest {
     @Test
     void shouldSelectAndRecalculateCurrentWeekProgress() {
         Player player = createPlayer();
-        WeeklyChallenge weekly = createWeekly();
-        WeeklyChallenge daily = createDaily(TODAY);
-        PlayerChallengeContext context = weekContext(player);
-        ChallengeProgressResult weeklyResult = result(50);
-        ChallengeProgressResult dailyResult = result(10);
-
-        when(selectionService.selectWeekChallenges(WEEK_START)).thenReturn(List.of(weekly));
-        when(selectionService.selectDailyChallenge(TODAY)).thenReturn(daily);
-        when(selectionService.findDailyChallenges(WEEK_START, TODAY)).thenReturn(List.of(daily));
-        when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
-            .thenReturn(List.of(player));
-        when(contextFactory.create(player, WEEK_START)).thenReturn(context);
-        when(calculationService.calculate(eq(weekly), any())).thenReturn(weeklyResult);
-        when(calculationService.calculate(eq(daily), any())).thenReturn(dailyResult);
-
-        service.recalculateCurrentWeekProgress();
-
-        verify(selectionService).selectDailyChallenge(TODAY);
-        verify(calculationService).calculate(weekly, context);
-        verify(persistenceService).saveAll(
-            player,
-            List.of(weekly, daily),
-            List.of(weeklyResult, dailyResult)
-        );
-        verify(rankingRecalculationService).recalculateCurrentRanking();
-    }
-
-    /**
-     * Verifies that a daily selection is evaluated over its own day only, carved out of the week.
-     */
-    @Test
-    void shouldEvaluateADailyChallengeOverItsDayOnly() {
-        Player player = createPlayer();
-        WeeklyChallenge daily = createDaily(TODAY);
-        PlayerMatch yesterday = matchAt(Instant.parse("2026-07-21T23:30:00Z"));
-        PlayerMatch today = matchAt(Instant.parse("2026-07-22T09:00:00Z"));
-        PlayerChallengeContext context = new PlayerChallengeContext(
-            player.getId(),
-            WEEK_START,
-            weekCalendar.startOf(WEEK_START),
-            weekCalendar.endOf(WEEK_START),
-            List.of(yesterday, today)
+        ChallengeSelection weekly = createWeekly();
+        ChallengeSelection daily = createDaily(TODAY);
+        List<CalculatedProgress> calculated = List.of(
+            new CalculatedProgress(weekly, result(50)),
+            new CalculatedProgress(daily, result(10))
         );
 
-        when(selectionService.selectWeekChallenges(WEEK_START)).thenReturn(List.of());
-        when(selectionService.selectDailyChallenge(TODAY)).thenReturn(daily);
-        when(selectionService.findDailyChallenges(WEEK_START, TODAY)).thenReturn(List.of(daily));
+        when(weeklyDrawService.selectWeekChallenges(WEEK_START)).thenReturn(List.of(weekly));
+        when(dailyDrawService.selectDailyChallenge(TODAY)).thenReturn(daily);
+        when(dailyDrawService.findDailyChallenges(WEEK_START, TODAY)).thenReturn(List.of(daily));
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(player));
-        when(contextFactory.create(player, WEEK_START)).thenReturn(context);
-        when(calculationService.calculate(eq(daily), any())).thenReturn(result(1));
+        when(calculationService.calculateWeek(player, WEEK_START, List.of(weekly, daily)))
+            .thenReturn(calculated);
 
-        service.recalculateCurrentWeekProgress();
+        service.drawAndRecalculateCurrentWeek();
 
-        ArgumentCaptor<PlayerChallengeContext> captor =
-            ArgumentCaptor.forClass(PlayerChallengeContext.class);
-        verify(calculationService).calculate(eq(daily), captor.capture());
-
-        PlayerChallengeContext dayContext = captor.getValue();
-        assertThat(dayContext.periodStart()).isEqualTo(weekCalendar.startOfDay(TODAY));
-        assertThat(dayContext.periodEnd()).isEqualTo(weekCalendar.endOfDay(TODAY));
-        assertThat(dayContext.playerMatches()).containsExactly(today);
-        assertThat(dayContext.weekStart()).isEqualTo(WEEK_START);
+        verify(dailyDrawService).selectDailyChallenge(TODAY);
+        verify(progressWriter).saveAll(player, calculated);
+        verify(progressListener).currentWeekProgressRecalculated();
     }
 
     /**
@@ -194,22 +139,21 @@ class DefaultChallengeRecalculationServiceTest {
     void shouldRecalculateAPastWeekFromItsOwnSelections() {
         Player player = createPlayer();
         LocalDate pastWeek = WEEK_START.minusWeeks(1);
-        WeeklyChallenge weekly = createWeekly();
+        ChallengeSelection weekly = createWeekly();
         weekly.setWeekStart(pastWeek);
-        PlayerChallengeContext context = weekContext(player);
+        List<CalculatedProgress> calculated = List.of(new CalculatedProgress(weekly, result(1)));
 
-        when(selectionService.findExistingWeekChallenges(pastWeek)).thenReturn(List.of(weekly));
+        when(weeklyDrawService.findExistingWeekChallenges(pastWeek)).thenReturn(List.of(weekly));
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(player));
-        when(contextFactory.create(player, pastWeek)).thenReturn(context);
-        when(calculationService.calculate(eq(weekly), any())).thenReturn(result(1));
+        when(calculationService.calculateWeek(player, pastWeek, List.of(weekly))).thenReturn(calculated);
 
         service.recalculateWeekProgress(pastWeek);
 
-        verify(selectionService, never()).selectWeekChallenges(any());
-        verify(selectionService, never()).selectDailyChallenge(any());
-        verify(persistenceService).saveAll(player, List.of(weekly), List.of(result(1)));
-        verify(rankingRecalculationService, never()).recalculateCurrentRanking();
+        verify(weeklyDrawService, never()).selectWeekChallenges(any());
+        verify(dailyDrawService, never()).selectDailyChallenge(any());
+        verify(progressWriter).saveAll(player, calculated);
+        verify(progressListener, never()).currentWeekProgressRecalculated();
     }
 
     /**
@@ -217,16 +161,16 @@ class DefaultChallengeRecalculationServiceTest {
      */
     @Test
     void shouldSkipCalculationsWhenNoPlayerExists() {
-        when(selectionService.selectWeekChallenges(WEEK_START)).thenReturn(List.of(createWeekly()));
-        when(selectionService.selectDailyChallenge(TODAY)).thenReturn(createDaily(TODAY));
+        when(weeklyDrawService.selectWeekChallenges(WEEK_START)).thenReturn(List.of(createWeekly()));
+        when(dailyDrawService.selectDailyChallenge(TODAY)).thenReturn(createDaily(TODAY));
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of());
 
-        service.recalculateCurrentWeekProgress();
+        service.drawAndRecalculateCurrentWeek();
 
-        verify(contextFactory, never()).create(any(Player.class), any(LocalDate.class));
-        verify(persistenceService, never()).saveAll(any(Player.class), anyList(), anyList());
-        verify(rankingRecalculationService).recalculateCurrentRanking();
+        verify(calculationService, never()).calculateWeek(any(Player.class), any(LocalDate.class), anyList());
+        verify(progressWriter, never()).saveAll(any(Player.class), anyList());
+        verify(progressListener).currentWeekProgressRecalculated();
     }
 
     /**
@@ -243,32 +187,16 @@ class DefaultChallengeRecalculationServiceTest {
     }
 
     /**
-     * Creates an empty context spanning the current week.
-     *
-     * @param player context owner
-     * @return weekly context
-     */
-    private PlayerChallengeContext weekContext(Player player) {
-        return new PlayerChallengeContext(
-            player.getId(),
-            WEEK_START,
-            weekCalendar.startOf(WEEK_START),
-            weekCalendar.endOf(WEEK_START),
-            List.of()
-        );
-    }
-
-    /**
      * Creates a weekly selection of the current week.
      *
      * @return weekly selection fixture
      */
-    private WeeklyChallenge createWeekly() {
+    private ChallengeSelection createWeekly() {
         Challenge challenge = new Challenge();
         challenge.setId(20L);
         challenge.setCode("WEEKLY_CHALLENGE");
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setId(10L);
         selection.setWeekStart(WEEK_START);
         selection.setChallenge(challenge);
@@ -281,34 +209,19 @@ class DefaultChallengeRecalculationServiceTest {
      * @param day covered day
      * @return daily selection fixture
      */
-    private WeeklyChallenge createDaily(LocalDate day) {
+    private ChallengeSelection createDaily(LocalDate day) {
         Challenge challenge = new Challenge();
         challenge.setId(21L);
         challenge.setCode("DAILY_CHALLENGE");
         challenge.setCadence(ChallengeCadence.DAILY);
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setId(11L);
         selection.setWeekStart(WEEK_START);
         selection.setCadence(ChallengeCadence.DAILY);
         selection.setDay(day);
         selection.setChallenge(challenge);
         return selection;
-    }
-
-    /**
-     * Creates a player match started at one instant.
-     *
-     * @param startedAt match start
-     * @return player match fixture
-     */
-    private PlayerMatch matchAt(Instant startedAt) {
-        ValorantMatch match = new ValorantMatch();
-        match.setStartedAt(startedAt);
-
-        PlayerMatch playerMatch = new PlayerMatch();
-        playerMatch.setMatch(match);
-        return playerMatch;
     }
 
     /**

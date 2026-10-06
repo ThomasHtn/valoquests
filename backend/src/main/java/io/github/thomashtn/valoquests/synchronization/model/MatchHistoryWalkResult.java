@@ -32,17 +32,4 @@ public record MatchHistoryWalkResult(
             throw new IllegalArgumentException("stopReason must not be null");
         }
     }
-
-    /**
-     * Creates the result of a walk that found no match to process.
-     *
-     * @return an empty walk result
-     */
-    public static MatchHistoryWalkResult empty() {
-        return new MatchHistoryWalkResult(
-            0,
-            0,
-            SynchronizationStopReason.EMPTY_PAGE
-        );
-    }
 }

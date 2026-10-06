@@ -5,9 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.github.thomashtn.valoquests.challenge.exception.UnsupportedChallengeProgressModeException;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -19,36 +20,32 @@ class ChallengeProgressCalculatorRegistryTest {
      * Verifies that a calculator can be retrieved by its supported mode.
      */
     @Test
+    @DisplayName("Returns the calculator registered for a progress mode")
     void shouldReturnCalculatorForSupportedMode() {
-        ChallengeProgressCalculator calculator =
-            createCalculator(ProgressMode.SUM);
+        List<ChallengeProgressCalculator> calculators = Arrays.stream(ProgressMode.values())
+            .map(this::createCalculator)
+            .toList();
 
         ChallengeProgressCalculatorRegistry registry =
-            new ChallengeProgressCalculatorRegistry(
-                List.of(calculator)
-            );
+            new ChallengeProgressCalculatorRegistry(calculators);
 
         assertThat(registry.getCalculator(ProgressMode.SUM))
-            .isSameAs(calculator);
+            .isSameAs(calculators.get(ProgressMode.SUM.ordinal()));
     }
 
     /**
-     * Verifies that an unsupported progress mode produces a clear exception.
+     * Verifies that a progress mode without a calculator stops the application at startup.
      */
     @Test
-    void shouldRejectUnsupportedProgressMode() {
-        ChallengeProgressCalculatorRegistry registry =
-            new ChallengeProgressCalculatorRegistry(
-                List.of()
-            );
-
+    @DisplayName("Refuses to start when a progress mode has no calculator")
+    void shouldRejectAMissingCalculator() {
         assertThatThrownBy(
-            () -> registry.getCalculator(ProgressMode.RATIO)
-        )
-            .isInstanceOf(
-                UnsupportedChallengeProgressModeException.class
+            () -> new ChallengeProgressCalculatorRegistry(
+                List.of(createCalculator(ProgressMode.SUM))
             )
-            .hasMessageContaining("RATIO");
+        )
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("No challenge calculator supports progress mode");
     }
 
     /**

@@ -20,25 +20,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Reads one day of a campaign, operator by operator.
+ * Reads one day of a campaign, player by player.
  *
  * <p>Reads only what the replay already wrote. Re-pricing the day here would be a second answer to
  * a question the campaign has already answered, and two answers to the same question is how a
  * squad table ends up disagreeing with the base it feeds.
+ *
+ * <p>The week's titles are read here too, because the day's squad table shows them beside each
+ * player. They come from the ranking rows as they stand, resolved by the same resolvers the ranking
+ * uses, so the two screens can never award a title differently.
  */
 @Service
 @Transactional(readOnly = true)
 public class CampaignDayReader {
 
     /**
-     * Orders the day's operators by what they brought in, most first.
+     * Orders the day's players by what they brought in, most first.
      */
     private static final Comparator<CampaignPlayerDay> MOST_PRODUCTIVE_FIRST = Comparator
         .comparingInt(CampaignPlayerDay::getDamage).reversed()
         .thenComparing(day -> day.getPlayer().getId());
 
     /**
-     * Repository holding the campaign's per-operator days.
+     * Repository holding the campaign's per-player days.
      */
     private final CampaignPlayerDayRepository playerDayRepository;
 
@@ -95,20 +99,18 @@ public class CampaignDayReader {
      * @param campaign  campaign to read
      * @param day       calendar day
      * @param weekStart Monday of the week the honours are read over
-     * @return the day, empty of operators when nobody has played it
+     * @return the day, empty of players when nobody has played it
      */
     public CampaignTodayResponse read(Campaign campaign, LocalDate day, LocalDate weekStart) {
         List<CampaignPlayerDay> playerDays = playerDayRepository
-            .findAllByCampaignIdAndDayBetweenOrderByDayAsc(campaign.getId(), day, day)
+            .findAllByCampaignIdAndDay(campaign.getId(), day)
             .stream()
             .sorted(MOST_PRODUCTIVE_FIRST)
             .toList();
 
         int upkeep = snapshotRepository.findByCampaignIdAndDay(campaign.getId(), day)
             .map(CampaignDailySnapshot::getPopulation)
-            .map(population -> (int) Math.round(
-                population.doubleValue() * CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY
-            ))
+            .map(population -> (int) Math.round(CampaignRuleset.dailyUpkeep(population.doubleValue())))
             .orElse(0);
 
         int food = playerDays.stream().mapToInt(CampaignPlayerDay::getFood).sum();
@@ -127,15 +129,16 @@ public class CampaignDayReader {
             playerDays.stream().map(this::toResponse).toList(),
             titleResolver.resolve(
                 scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(weekStart),
+                null,
                 championResolver.reigningChampion()
             )
         );
     }
 
     /**
-     * Maps one stored operator day to what the site shows.
+     * Maps one stored player day to what the site shows.
      *
-     * @param day stored operator day
+     * @param day stored player day
      * @return the response row
      */
     private CampaignPlayerDayResponse toResponse(CampaignPlayerDay day) {
@@ -150,7 +153,7 @@ public class CampaignDayReader {
             day.getComponents(),
             day.getMatchCount(),
             day.getReducedMatchCount(),
-            day.getStreakDays(),
+            day.getPlayedDays(),
             day.getStreakBonusPercent()
         );
     }

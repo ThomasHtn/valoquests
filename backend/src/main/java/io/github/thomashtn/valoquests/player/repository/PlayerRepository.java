@@ -1,12 +1,16 @@
 package io.github.thomashtn.valoquests.player.repository;
 
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.player.model.CompetitiveTier;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Provides persistence operations for tracked Valorant players.
@@ -32,14 +36,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
      * @return {@code true} when a player already holds that Riot identity
      */
     boolean existsByGameNameIgnoreCaseAndTagLineIgnoreCase(String gameName, String tagLine);
-
-    /**
-     * Counts tracked players having the requested lifecycle status.
-     *
-     * @param status player lifecycle status
-     * @return number of matching players
-     */
-    long countByStatus(PlayerStatus status);
 
     /**
      * Returns tracked players having the requested status in deterministic
@@ -85,4 +81,63 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
      */
     @Query("select max(player.lastSuccessfulSynchronizationAt) from Player player")
     Optional<Instant> findLatestSuccessfulSynchronizationAt();
+
+    /**
+     * Stores the Riot PUUID resolved for a player, unless its Riot identity changed meanwhile.
+     *
+     * <p>A targeted update rather than a save of the loaded entity: the Henrik call in between may
+     * take long enough for an administrator to edit the player, and a full save would undo that edit.
+     *
+     * @param playerId  tracked player identifier
+     * @param gameName  Riot game name the PUUID was resolved from
+     * @param tagLine   Riot tag line the PUUID was resolved from
+     * @param riotPuuid resolved Riot PUUID
+     * @param updatedAt instant of the update
+     * @return number of updated rows, zero when the identity changed meanwhile
+     */
+    @Transactional
+    @Modifying
+    @Query("""
+        update Player player
+        set player.riotPuuid = :riotPuuid,
+            player.updatedAt = :updatedAt
+        where player.id = :playerId
+          and player.gameName = :gameName
+          and player.tagLine = :tagLine
+        """)
+    int storeResolvedPuuid(
+        @Param("playerId") Long playerId,
+        @Param("gameName") String gameName,
+        @Param("tagLine") String tagLine,
+        @Param("riotPuuid") String riotPuuid,
+        @Param("updatedAt") Instant updatedAt
+    );
+
+    /**
+     * Stores what a successful synchronization learned about a player, and nothing else.
+     *
+     * <p>A targeted update rather than a save of the entity loaded minutes earlier, which would
+     * overwrite any name, portrait, status or Riot identity an administrator changed meanwhile.
+     *
+     * @param playerId        tracked player identifier
+     * @param competitiveTier current competitive tier
+     * @param rankRating      current Rank Rating, {@code null} when unranked
+     * @param synchronizedAt  instant the synchronization completed
+     */
+    @Transactional
+    @Modifying
+    @Query("""
+        update Player player
+        set player.competitiveTier = :competitiveTier,
+            player.rankRating = :rankRating,
+            player.lastSuccessfulSynchronizationAt = :synchronizedAt,
+            player.updatedAt = :synchronizedAt
+        where player.id = :playerId
+        """)
+    void recordSuccessfulSynchronization(
+        @Param("playerId") Long playerId,
+        @Param("competitiveTier") CompetitiveTier competitiveTier,
+        @Param("rankRating") Integer rankRating,
+        @Param("synchronizedAt") Instant synchronizedAt
+    );
 }

@@ -23,14 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
  * history and a checkpoint no more advanced than what is actually stored, which the next run repairs
  * by resuming from that checkpoint; {@code complete = true} with missing pages is unreachable.
  *
- * <p><strong>Callers must not wrap the walk in a transaction.</strong> Adding {@code @Transactional}
- * above {@link SeasonMatchHistoryWalker#walk} or its callers would join all of these calls into one
- * transaction, defer every commit to the end, and let a rollback erase the {@code complete = false}
- * row along with the imported matches, silently abandoning a season that was being caught up.
- * {@link io.github.thomashtn.valoquests.synchronization.service.DefaultSynchronizationCommandService}
- * is non-transactional for that same reason. Enforced by {@link
- * io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard} at the entry of {@link
- * PlayerSynchronizationService#synchronize}.
+ * <p><strong>Callers must not wrap the walk in a transaction.</strong> This is the one home of that
+ * rule for the whole synchronization chain ({@link DefaultSynchronizationCommandService},
+ * {@link PlayerSynchronizationService}, {@link SeasonMatchHistoryWalker}). Adding
+ * {@code @Transactional} above {@link SeasonMatchHistoryWalker#walk} or its callers would join all
+ * of these calls into one transaction, defer every commit to the end, and let a rollback erase the
+ * {@code complete = false} row along with the imported matches, silently abandoning a season that
+ * was being caught up. It would also hold that transaction open across every Henrik call. Enforced
+ * by {@link io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard} at the entry of
+ * {@link PlayerSynchronizationService#synchronize} and of both synchronization commands.
  */
 @Service
 public class SeasonSynchronizationStateService {
@@ -73,17 +74,17 @@ public class SeasonSynchronizationStateService {
      *
      * @param player tracked player
      * @param season season about to be walked
-     * @return the local season identifier and the offset a resumed walk may start from
+     * @return the offset a resumed walk may start from and whether the season was already complete
      */
     @Transactional
     public SeasonWalkStart startSeason(Player player, Season season) {
         return stateRepository
             .findByPlayerIdAndSeasonId(player.getId(), season.getId())
-            .map(existing -> new SeasonWalkStart(
-                existing.getSeason().getId(),
-                existing.getNextStartOffset()
-            ))
-            .orElseGet(() -> new SeasonWalkStart(create(player, season), 0));
+            .map(existing -> new SeasonWalkStart(existing.getNextStartOffset(), existing.isComplete()))
+            .orElseGet(() -> {
+                create(player, season);
+                return new SeasonWalkStart(0, false);
+            });
     }
 
     /**
@@ -102,10 +103,23 @@ public class SeasonSynchronizationStateService {
         stateRepository
             .findByPlayerIdAndSeasonId(playerId, seasonId)
             .filter(state -> newOffset > state.getNextStartOffset())
-            .ifPresent(state -> {
-                state.setNextStartOffset(newOffset);
-                stateRepository.save(state);
-            });
+            .ifPresent(state -> state.setNextStartOffset(newOffset));
+    }
+
+    /**
+     * Forgets the checkpoint of a season, so no later run jumps to it.
+     *
+     * <p>Called when matches played since the checkpoint was written may have shifted the history
+     * by a page or more: the offset no longer points at the match it was recorded for.
+     *
+     * @param playerId tracked player identifier
+     * @param seasonId local season identifier
+     */
+    @Transactional
+    public void discardProgress(Long playerId, Long seasonId) {
+        stateRepository
+            .findByPlayerIdAndSeasonId(playerId, seasonId)
+            .ifPresent(state -> state.setNextStartOffset(0));
     }
 
     /**
@@ -125,28 +139,12 @@ public class SeasonSynchronizationStateService {
             .ifPresent(state -> {
                 state.setComplete(true);
                 state.setCompletedAt(clock.instant());
-                stateRepository.save(state);
                 LOGGER.info(
                     "Season synchronization completed: player={} season={}",
                     playerId,
                     seasonId
                 );
             });
-    }
-
-    /**
-     * Indicates whether a season was already walked back to its oldest match.
-     *
-     * @param playerId tracked player identifier
-     * @param seasonId local season identifier
-     * @return {@code true} when stopping at the first already-stored match is safe
-     */
-    @Transactional(readOnly = true)
-    public boolean isComplete(Long playerId, Long seasonId) {
-        return stateRepository
-            .findByPlayerIdAndSeasonId(playerId, seasonId)
-            .map(PlayerSeasonSynchronization::isComplete)
-            .orElse(false);
     }
 
     /**
@@ -173,16 +171,17 @@ public class SeasonSynchronizationStateService {
     /**
      * State of a season a walk is about to start or resume.
      *
-     * @param seasonId       local season identifier
-     * @param resumeOffset   pagination offset a resumed walk may start from, zero for a fresh season
+     * @param resumeOffset pagination offset a resumed walk may start from, zero for a fresh season
+     * @param complete     whether the season was already walked back to its oldest match, so
+     *     stopping at the first already-stored match is safe
      */
-    public record SeasonWalkStart(Long seasonId, int resumeOffset) {
+    public record SeasonWalkStart(int resumeOffset, boolean complete) {
     }
 
     /**
      * Creates the initial, incomplete state of a season.
      */
-    private Long create(Player player, Season season) {
+    private void create(Player player, Season season) {
         PlayerSeasonSynchronization state = new PlayerSeasonSynchronization();
         state.setPlayer(player);
         state.setSeason(season);
@@ -195,6 +194,5 @@ public class SeasonSynchronizationStateService {
             season.getId(),
             season.getExternalId()
         );
-        return season.getId();
     }
 }

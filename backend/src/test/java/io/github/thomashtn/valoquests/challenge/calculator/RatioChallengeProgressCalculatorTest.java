@@ -1,7 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
@@ -16,7 +15,6 @@ import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -73,8 +71,6 @@ class RatioChallengeProgressCalculatorTest {
             .isEqualByComparingTo("1.2500");
         assertThat(result.targetValue())
             .isEqualByComparingTo("1.2");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("100.00");
         assertThat(result.completed()).isTrue();
     }
 
@@ -109,8 +105,6 @@ class RatioChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("1.2500");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("83.33");
         assertThat(result.completed()).isFalse();
     }
 
@@ -140,8 +134,6 @@ class RatioChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("1.5000");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("100.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -171,8 +163,6 @@ class RatioChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("1.2000");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("100.00");
         assertThat(result.completed()).isTrue();
     }
 
@@ -269,73 +259,7 @@ class RatioChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("0");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("0.00");
         assertThat(result.completed()).isFalse();
-    }
-
-    /**
-     * Verifies that unsupported metrics are rejected clearly.
-     */
-    @Test
-    void shouldRejectUnsupportedRatioMetric() {
-        ChallengeDefinition definition = createDefinition(
-            ChallengeMetric.KILLS,
-            100,
-            15
-        );
-
-        assertThatThrownBy(
-            () -> calculator.calculate(
-                definition,
-                createContext()
-            )
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Unsupported ratio metric")
-            .hasMessageContaining("KILLS");
-    }
-
-    /**
-     * Verifies that a minimum match requirement is mandatory.
-     */
-    @Test
-    void shouldRejectDefinitionWithoutMinimumMatches() {
-        ChallengeDefinition definition = createDefinition(
-            ChallengeMetric.KD,
-            BigDecimal.valueOf(1.20),
-            null
-        );
-
-        assertThatThrownBy(
-            () -> calculator.calculate(
-                definition,
-                createContext()
-            )
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("minimum number of matches");
-    }
-
-    /**
-     * Verifies that the minimum match requirement must be positive.
-     */
-    @Test
-    void shouldRejectNonPositiveMinimumMatches() {
-        ChallengeDefinition definition = createDefinition(
-            ChallengeMetric.KD,
-            BigDecimal.valueOf(1.20),
-            0
-        );
-
-        assertThatThrownBy(
-            () -> calculator.calculate(
-                definition,
-                createContext()
-            )
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("greater than zero");
     }
 
     /**
@@ -384,7 +308,6 @@ class RatioChallengeProgressCalculatorTest {
         );
 
         return new ChallengeDefinition(
-            3,
             ProgressMode.RATIO,
             List.of(condition)
         );
@@ -399,13 +322,7 @@ class RatioChallengeProgressCalculatorTest {
     private PlayerChallengeContext createContext(
         PlayerMatch... playerMatches
     ) {
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            List.of(playerMatches)
-        );
+        return new PlayerChallengeContext(List.of(playerMatches));
     }
 
     /**
@@ -417,13 +334,7 @@ class RatioChallengeProgressCalculatorTest {
     private PlayerChallengeContext createContext(
         List<PlayerMatch> playerMatches
     ) {
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            playerMatches
-        );
+        return new PlayerChallengeContext(playerMatches);
     }
 
     /**

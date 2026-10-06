@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.github.thomashtn.valoquests.challenge.calculator.AggregateRateCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.AllChallengeProgressCalculator;
-import io.github.thomashtn.valoquests.challenge.calculator.BaselineChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeMatchFilter;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeMetricEvaluator;
 import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressCalculator;
@@ -19,12 +18,9 @@ import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContex
 import io.github.thomashtn.valoquests.challenge.calculator.RatioChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.calculator.SumChallengeProgressCalculator;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGameMode;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
@@ -33,14 +29,15 @@ import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser
 import io.github.thomashtn.valoquests.challenge.parser.JacksonChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +75,7 @@ class ChallengeCatalogueCompatibilityTest {
     private static final String QUOTED = "'((?:[^']|'')*)'";
 
     /**
-     * Pattern extracting one challenge row: nullable difficulty, two rule grids, cadence last.
+     * Pattern extracting one challenge row: nullable tier, two rule grids, cadence last.
      */
     private static final Pattern ROW = Pattern.compile(
         "\\(" + QUOTED + "," + QUOTED + "," + QUOTED + ",(NULL|" + QUOTED + "),"
@@ -88,9 +85,9 @@ class ChallengeCatalogueCompatibilityTest {
     );
 
     /**
-     * Weekly entries expected per difficulty: two campaigns without a repeat inside one tier.
+     * Weekly entries expected per tier: two campaigns without a repeat inside one tier.
      */
-    private static final int WEEKLY_PER_DIFFICULTY = 20;
+    private static final int WEEKLY_PER_TIER = 20;
 
     /**
      * Daily entries expected: four weeks without a repeat.
@@ -125,9 +122,9 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Progress modes the catalogue still declares.
      *
-     * <p>Ratios held across the week, streaks and baselines are deliberately absent: each could be
-     * lost by one bad match, or decided before the week opened. The modes and their calculators
-     * stay registered — {@link #shouldRegisterCalculatorForEveryProgressMode()} still covers them.
+     * <p>Ratios held across the week and streaks are deliberately absent: each could be lost by one
+     * bad match. The modes and their calculators stay registered, which
+     * {@link #shouldRegisterCalculatorForEveryProgressMode()} still covers.
      */
     private static final Set<ProgressMode> EXPECTED_CATALOGUE_MODES = EnumSet.of(
         ProgressMode.SUM,
@@ -168,19 +165,12 @@ class ChallengeCatalogueCompatibilityTest {
             new MaxGroupChallengeProgressCalculator(metricEvaluator, matchFilter, weekCalendar),
             new AllChallengeProgressCalculator(metricEvaluator, matchFilter),
             new RatioChallengeProgressCalculator(matchFilter, new AggregateRateCalculator()),
-            new MaxStreakChallengeProgressCalculator(metricEvaluator, matchFilter),
-            new BaselineChallengeProgressCalculator(new AggregateRateCalculator(), matchFilter)
+            new MaxStreakChallengeProgressCalculator(metricEvaluator, matchFilter)
         );
 
         definitionParser = new JacksonChallengeDefinitionParser(JsonMapper.builder().build());
         calculatorRegistry = new ChallengeProgressCalculatorRegistry(calculators);
-        emptyContext = new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            List.of()
-        );
+        emptyContext = new PlayerChallengeContext(List.of());
     }
 
     /**
@@ -194,7 +184,7 @@ class ChallengeCatalogueCompatibilityTest {
 
         assertThat(challenges)
             .as("production challenge count")
-            .hasSize(WEEKLY_PER_DIFFICULTY * ChallengeDifficulty.values().length + DAILY_POOL_SIZE);
+            .hasSize(WEEKLY_PER_TIER * ChallengeTier.values().length + DAILY_POOL_SIZE);
 
         for (Challenge challenge : challenges) {
             for (CampaignDifficulty level : CampaignDifficulty.values()) {
@@ -209,9 +199,6 @@ class ChallengeCatalogueCompatibilityTest {
                     .as("target of %s at %s", challenge.getCode(), level)
                     .isNotNull()
                     .isGreaterThan(BigDecimal.ZERO);
-                assertThat(result.progressPercentage())
-                    .isNotNull()
-                    .isBetween(BigDecimal.ZERO, BigDecimal.valueOf(100));
                 assertThat(result.completed()).isFalse();
             }
         }
@@ -226,8 +213,8 @@ class ChallengeCatalogueCompatibilityTest {
     void shouldHoldTwentyPerTierAndTwentyEightDailies() throws IOException {
         List<Challenge> challenges = loadChallenges();
         Set<String> uniqueCodes = new HashSet<>();
-        EnumMap<ChallengeDifficulty, Integer> weeklyByDifficulty =
-            new EnumMap<>(ChallengeDifficulty.class);
+        EnumMap<ChallengeTier, Integer> weeklyByTier =
+            new EnumMap<>(ChallengeTier.class);
         int dailies = 0;
 
         for (Challenge challenge : challenges) {
@@ -237,19 +224,19 @@ class ChallengeCatalogueCompatibilityTest {
             assertThat(challenge.isEnabled()).as("%s enabled", challenge.getCode()).isTrue();
 
             if (challenge.getCadence() == ChallengeCadence.DAILY) {
-                assertThat(challenge.getDifficulty()).as("%s has no tier", challenge.getCode()).isNull();
+                assertThat(challenge.getTier()).as("%s has no tier", challenge.getCode()).isNull();
                 dailies++;
             } else {
-                assertThat(challenge.getDifficulty()).as("%s has a tier", challenge.getCode()).isNotNull();
-                weeklyByDifficulty.merge(challenge.getDifficulty(), 1, Integer::sum);
+                assertThat(challenge.getTier()).as("%s has a tier", challenge.getCode()).isNotNull();
+                weeklyByTier.merge(challenge.getTier(), 1, Integer::sum);
             }
         }
 
         assertThat(dailies).isEqualTo(DAILY_POOL_SIZE);
-        assertThat(weeklyByDifficulty)
-            .allSatisfy((difficulty, count) ->
-                assertThat(count).as(difficulty.name()).isEqualTo(WEEKLY_PER_DIFFICULTY));
-        assertThat(weeklyByDifficulty.keySet()).containsExactlyInAnyOrder(ChallengeDifficulty.values());
+        assertThat(weeklyByTier)
+            .allSatisfy((tier, count) ->
+                assertThat(count).as(tier.name()).isEqualTo(WEEKLY_PER_TIER));
+        assertThat(weeklyByTier.keySet()).containsExactlyInAnyOrder(ChallengeTier.values());
         assertThat(challenges.stream().map(Challenge::getProgressMode).collect(Collectors.toSet()))
             .containsExactlyInAnyOrderElementsOf(EXPECTED_CATALOGUE_MODES);
     }
@@ -301,9 +288,9 @@ class ChallengeCatalogueCompatibilityTest {
     @Test
     void shouldRequireCompetitiveInTheHardestTierOnly() throws IOException {
         for (Challenge challenge : loadChallenges()) {
-            boolean competitiveOnly = definitionParser.parse(challenge).isCompetitiveOnly();
+            boolean competitiveOnly = definitionParser.parse(challenge, CampaignDifficulty.AMATEUR).isCompetitiveOnly();
             boolean hardestWeekly = challenge.getCadence() == ChallengeCadence.WEEKLY
-                && challenge.getDifficulty() == ChallengeDifficulty.VERY_HARD;
+                && challenge.getTier() == ChallengeTier.VERY_HARD;
 
             if (!hardestWeekly) {
                 assertThat(competitiveOnly)
@@ -413,7 +400,7 @@ class ChallengeCatalogueCompatibilityTest {
         Pattern gameModePattern = Pattern.compile("\"gameMode\"\\s*:\\s*\"([A-Z_]+)\"");
 
         for (Challenge challenge : loadChallenges()) {
-            for (String json : List.of(challenge.getConditionsJson(), challenge.getExpertConditionsJson())) {
+            for (String json : List.of(challenge.getAmateurConditionsJson(), challenge.getProConditionsJson())) {
                 Matcher matcher = gameModePattern.matcher(json);
 
                 while (matcher.find()) {
@@ -429,7 +416,6 @@ class ChallengeCatalogueCompatibilityTest {
     @Test
     void shouldRegisterCalculatorForEveryProgressMode() {
         for (ProgressMode progressMode : ProgressMode.values()) {
-            assertThat(calculatorRegistry.supports(progressMode)).isTrue();
             assertThat(calculatorRegistry.getCalculator(progressMode).supportedMode())
                 .isEqualTo(progressMode);
         }
@@ -489,16 +475,16 @@ class ChallengeCatalogueCompatibilityTest {
      */
     private Challenge toChallenge(Matcher matcher) {
         Challenge challenge = new Challenge();
-        String difficulty = parseNullableSqlString(matcher.group(4));
+        String tier = parseNullableSqlString(matcher.group(4));
 
         challenge.setCode(matcher.group(1));
         challenge.setName(unescape(matcher.group(2)));
         challenge.setDescription(unescape(matcher.group(3)));
-        challenge.setDifficulty(difficulty == null ? null : ChallengeDifficulty.valueOf(difficulty));
+        challenge.setTier(tier == null ? null : ChallengeTier.valueOf(tier));
         challenge.setCategory(ChallengeCategory.valueOf(matcher.group(6)));
         challenge.setProgressMode(ProgressMode.valueOf(matcher.group(7)));
-        challenge.setConditionsJson(matcher.group(8));
-        challenge.setExpertConditionsJson(matcher.group(9));
+        challenge.setAmateurConditionsJson(matcher.group(8));
+        challenge.setProConditionsJson(matcher.group(9));
         challenge.setExclusionGroup(parseNullableSqlString(matcher.group(10)));
         challenge.setEnabled(Boolean.parseBoolean(matcher.group(12)));
         challenge.setSchemaVersion(Integer.parseInt(matcher.group(13)));

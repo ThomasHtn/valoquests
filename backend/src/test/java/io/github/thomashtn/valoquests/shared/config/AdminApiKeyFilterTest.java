@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.shared.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,13 @@ class AdminApiKeyFilterTest {
     void rejectsMissingAdminKey() throws Exception {
         mockMvc
             .perform(post(SYNCHRONIZATION_ENDPOINT))
-            .andExpect(status().isUnauthorized());
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.title").value("Unauthorized"))
+            .andExpect(jsonPath("$.status").value(401))
+            .andExpect(jsonPath("$.code").value("ADMIN_KEY_MISSING"))
+            .andExpect(jsonPath("$.instance").value(SYNCHRONIZATION_ENDPOINT))
+            .andExpect(jsonPath("$.timestamp").exists())
+            .andExpect(jsonPath("$.errors").isEmpty());
     }
 
     /**
@@ -49,7 +56,9 @@ class AdminApiKeyFilterTest {
                         "invalid-admin-key"
                     )
             )
-            .andExpect(status().isForbidden());
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.title").value("Forbidden"))
+            .andExpect(jsonPath("$.code").value("ADMIN_KEY_INVALID"));
     }
 
     /**

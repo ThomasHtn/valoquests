@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
@@ -19,7 +20,6 @@ import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.entity.SynchronizationPlayerResult;
 import io.github.thomashtn.valoquests.synchronization.model.PlayerSynchronizationResult;
@@ -35,12 +35,14 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Unit tests for {@link DefaultSynchronizationCommandService}.
@@ -50,12 +52,6 @@ class DefaultSynchronizationCommandServiceTest {
 
     private static final Instant STARTED_AT =
         Instant.parse("2026-07-18T14:00:00Z");
-
-    private static final Instant PLAYER_ONE_COMPLETED_AT =
-        Instant.parse("2026-07-18T14:00:03Z");
-
-    private static final Instant PLAYER_TWO_COMPLETED_AT =
-        Instant.parse("2026-07-18T14:00:05Z");
 
     @Mock
     private PlayerSynchronizationService playerSynchronizationService;
@@ -90,11 +86,9 @@ class DefaultSynchronizationCommandServiceTest {
         service = new DefaultSynchronizationCommandService(
             playerSynchronizationService,
             playerRepository,
-            synchronizationRepository,
-            playerResultRepository,
+            new SynchronizationRecorder(synchronizationRepository, playerResultRepository, clock),
             challengeRecalculationService,
-            campaignReplayService,
-            clock
+            campaignReplayService
         );
 
         // Shared by most tests; lenient so the fail-fast paths that never save do not trip strict stubs.
@@ -111,6 +105,44 @@ class DefaultSynchronizationCommandServiceTest {
     }
 
     /**
+     * Verifies that a batch run inside a transaction fails before recording anything.
+     *
+     * <p>Checked only per player, the failure would be swallowed and stored as a player failure.
+     */
+    @Test
+    @DisplayName("Fails fast when a batch synchronization is called inside a transaction")
+    void shouldRejectABatchRunInsideAnActiveTransaction() {
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+
+        try {
+            assertThatThrownBy(() -> service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL))
+                .isInstanceOf(IllegalStateException.class);
+
+            verifyNoInteractions(synchronizationRepository, playerSynchronizationService);
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    /**
+     * Verifies that a single-player run inside a transaction fails before recording anything.
+     */
+    @Test
+    @DisplayName("Fails fast when a single-player synchronization is called inside a transaction")
+    void shouldRejectASinglePlayerRunInsideAnActiveTransaction() {
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+
+        try {
+            assertThatThrownBy(() -> service.synchronizePlayer(1L))
+                .isInstanceOf(IllegalStateException.class);
+
+            verifyNoInteractions(synchronizationRepository, playerSynchronizationService);
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+        }
+    }
+
+    /**
      * Verifies that all successful player executions produce a completed
      * global synchronization.
      */
@@ -124,33 +156,23 @@ class DefaultSynchronizationCommandServiceTest {
 
         when(playerSynchronizationService.synchronize(1L))
             .thenReturn(
-                result(
-                    firstPlayer,
-                    10,
-                    PLAYER_ONE_COMPLETED_AT
-                )
+                result(firstPlayer, 10)
             );
 
         when(playerSynchronizationService.synchronize(2L))
             .thenReturn(
-                result(
-                    secondPlayer,
-                    4,
-                    PLAYER_TWO_COMPLETED_AT
-                )
+                result(secondPlayer, 4)
             );
 
-        SynchronizationResponse response =
-            service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.COMPLETED);
-        assertThat(response.playersProcessed()).isEqualTo(2);
-        assertThat(response.failureCount()).isZero();
-        assertThat(response.matchesImported()).isEqualTo(14);
-        assertThat(response.lastSuccessfulSynchronizationAt())
-            .isEqualTo(PLAYER_TWO_COMPLETED_AT);
-        assertThat(response.errorMessage()).isNull();
+        assertThat(execution.getPlayersProcessed()).isEqualTo(2);
+        assertThat(execution.getFailureCount()).isZero();
+        assertThat(execution.getMatchesImported()).isEqualTo(14);
+        assertThat(execution.getErrorMessage()).isNull();
 
         InOrder orderedSynchronizations = inOrder(
             playerSynchronizationService
@@ -179,14 +201,15 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(List.of(activePlayer, inactivePlayer));
 
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(activePlayer, 10, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(activePlayer, 10));
 
         when(playerSynchronizationService.synchronize(2L))
-            .thenReturn(result(inactivePlayer, 4, PLAYER_TWO_COMPLETED_AT));
+            .thenReturn(result(inactivePlayer, 4));
 
-        SynchronizationResponse response = service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.playersProcessed()).isEqualTo(2);
+        assertThat(execution.getPlayersProcessed()).isEqualTo(2);
         verify(playerSynchronizationService).synchronize(1L);
         verify(playerSynchronizationService).synchronize(2L);
     }
@@ -212,24 +235,18 @@ class DefaultSynchronizationCommandServiceTest {
 
         when(playerSynchronizationService.synchronize(2L))
             .thenReturn(
-                result(
-                    secondPlayer,
-                    5,
-                    PLAYER_TWO_COMPLETED_AT
-                )
+                result(secondPlayer, 5)
             );
 
-        SynchronizationResponse response =
-            service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.PARTIAL);
-        assertThat(response.playersProcessed()).isEqualTo(2);
-        assertThat(response.failureCount()).isEqualTo(1);
-        assertThat(response.matchesImported()).isEqualTo(5);
-        assertThat(response.lastSuccessfulSynchronizationAt())
-            .isEqualTo(PLAYER_TWO_COMPLETED_AT);
-        assertThat(response.errorMessage())
+        assertThat(execution.getPlayersProcessed()).isEqualTo(2);
+        assertThat(execution.getFailureCount()).isEqualTo(1);
+        assertThat(execution.getMatchesImported()).isEqualTo(5);
+        assertThat(execution.getErrorMessage())
             .contains("Player 1")
             .contains("Henrik unavailable");
 
@@ -254,16 +271,15 @@ class DefaultSynchronizationCommandServiceTest {
         when(playerSynchronizationService.synchronize(2L))
             .thenThrow(new IllegalStateException("Second failure"));
 
-        SynchronizationResponse response =
-            service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.FAILED);
-        assertThat(response.playersProcessed()).isEqualTo(2);
-        assertThat(response.failureCount()).isEqualTo(2);
-        assertThat(response.matchesImported()).isZero();
-        assertThat(response.lastSuccessfulSynchronizationAt()).isNull();
-        assertThat(response.errorMessage())
+        assertThat(execution.getPlayersProcessed()).isEqualTo(2);
+        assertThat(execution.getFailureCount()).isEqualTo(2);
+        assertThat(execution.getMatchesImported()).isZero();
+        assertThat(execution.getErrorMessage())
             .contains("Player 1")
             .contains("First failure")
             .contains("Player 2")
@@ -278,11 +294,10 @@ class DefaultSynchronizationCommandServiceTest {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of());
 
-        SynchronizationResponse response = service.synchronizeAllPlayers(
-            SynchronizationTrigger.SCHEDULED
-        );
+        service.synchronizeAllPlayers(SynchronizationTrigger.SCHEDULED);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.trigger())
+        assertThat(execution.getTrigger())
             .isEqualTo(SynchronizationTrigger.SCHEDULED);
     }
 
@@ -295,15 +310,14 @@ class DefaultSynchronizationCommandServiceTest {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of());
 
-        SynchronizationResponse response =
-            service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.COMPLETED);
-        assertThat(response.playersProcessed()).isZero();
-        assertThat(response.failureCount()).isZero();
-        assertThat(response.matchesImported()).isZero();
-        assertThat(response.lastSuccessfulSynchronizationAt()).isNull();
+        assertThat(execution.getPlayersProcessed()).isZero();
+        assertThat(execution.getFailureCount()).isZero();
+        assertThat(execution.getMatchesImported()).isZero();
     }
 
     /**
@@ -317,35 +331,31 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(Optional.of(player));
         when(playerSynchronizationService.synchronize(3L))
             .thenReturn(
-                result(
-                    player,
-                    7,
-                    PLAYER_ONE_COMPLETED_AT
-                )
+                result(player, 7)
             );
 
-        SynchronizationResponse response =
-            service.synchronizePlayer(3L);
+        service.synchronizePlayer(3L);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.id()).isEqualTo(10L);
-        assertThat(response.type())
+        assertThat(execution.getId()).isEqualTo(10L);
+        assertThat(execution.getType())
             .isEqualTo(SynchronizationType.STANDARD);
-        assertThat(response.trigger())
+        assertThat(execution.getTrigger())
             .isEqualTo(SynchronizationTrigger.MANUAL);
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.COMPLETED);
-        assertThat(response.startedAt()).isEqualTo(STARTED_AT);
-        assertThat(response.finishedAt())
+        assertThat(execution.getStartedAt()).isEqualTo(STARTED_AT);
+        assertThat(execution.getFinishedAt())
             .isEqualTo(STARTED_AT);
-        assertThat(response.playersProcessed()).isEqualTo(1);
-        assertThat(response.failureCount()).isZero();
-        assertThat(response.matchesImported()).isEqualTo(7);
-        assertThat(response.errorMessage()).isNull();
+        assertThat(execution.getPlayersProcessed()).isEqualTo(1);
+        assertThat(execution.getFailureCount()).isZero();
+        assertThat(execution.getMatchesImported()).isEqualTo(7);
+        assertThat(execution.getErrorMessage()).isNull();
     }
 
     /**
-     * Verifies that an individual failure is recorded, produces a failed player result, and is
-     * propagated to the caller.
+     * Verifies that an individual failure is recorded and produces a failed player result, without
+     * being thrown back to the caller.
      */
     @Test
     void shouldRecordFailedPlayerSynchronization() {
@@ -360,10 +370,9 @@ class DefaultSynchronizationCommandServiceTest {
         when(playerSynchronizationService.synchronize(3L))
             .thenThrow(exception);
 
-        assertThatThrownBy(
-            () -> service.synchronizePlayer(3L)
-        ).isSameAs(exception);
+        service.synchronizePlayer(3L);
 
+        assertThat(lastSavedSynchronization().getStatus()).isEqualTo(SynchronizationStatus.FAILED);
         verify(
             synchronizationRepository,
             times(2)
@@ -420,12 +429,11 @@ class DefaultSynchronizationCommandServiceTest {
                     secondPlayer,
                     1,
                     5,
-                    PLAYER_TWO_COMPLETED_AT,
                     SynchronizationStopReason.PAGE_LIMIT_REACHED
                 )
             );
 
-        service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
 
         ArgumentCaptor<SynchronizationPlayerResult> results =
             ArgumentCaptor.forClass(SynchronizationPlayerResult.class);
@@ -456,11 +464,11 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 3));
 
-        service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
 
-        verify(challengeRecalculationService).recalculateCurrentWeekProgress();
+        verify(challengeRecalculationService).drawAndRecalculateCurrentWeek();
     }
 
     /**
@@ -477,12 +485,12 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 3));
 
-        service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
 
         InOrder ordered = inOrder(challengeRecalculationService, campaignReplayService, synchronizationRepository);
-        ordered.verify(challengeRecalculationService).recalculateCurrentWeekProgress();
+        ordered.verify(challengeRecalculationService).drawAndRecalculateCurrentWeek();
         ordered.verify(campaignReplayService).replayRunningCampaign();
         ordered.verify(synchronizationRepository).save(any(Synchronization.class));
     }
@@ -496,7 +504,7 @@ class DefaultSynchronizationCommandServiceTest {
 
         when(playerRepository.findById(1L)).thenReturn(Optional.of(firstPlayer));
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 3));
 
         service.synchronizePlayer(1L);
 
@@ -519,9 +527,9 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 0, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 0));
 
-        service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
 
         verifyNoInteractions(challengeRecalculationService);
     }
@@ -540,18 +548,19 @@ class DefaultSynchronizationCommandServiceTest {
             .thenReturn(List.of(firstPlayer));
 
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 3, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 3));
 
         doThrow(new IllegalStateException("recalculation failed"))
             .when(challengeRecalculationService)
-            .recalculateCurrentWeekProgress();
+            .drawAndRecalculateCurrentWeek();
 
-        SynchronizationResponse response = service.synchronizeAllPlayers();
+        service.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
+        Synchronization execution = lastSavedSynchronization();
 
-        assertThat(response.status())
+        assertThat(execution.getStatus())
             .isEqualTo(SynchronizationStatus.COMPLETED);
-        assertThat(response.matchesImported()).isEqualTo(3);
-        assertThat(response.errorMessage()).isNull();
+        assertThat(execution.getMatchesImported()).isEqualTo(3);
+        assertThat(execution.getErrorMessage()).isNull();
     }
 
     /**
@@ -564,11 +573,11 @@ class DefaultSynchronizationCommandServiceTest {
         when(playerRepository.findById(1L))
             .thenReturn(Optional.of(firstPlayer));
         when(playerSynchronizationService.synchronize(1L))
-            .thenReturn(result(firstPlayer, 7, PLAYER_ONE_COMPLETED_AT));
+            .thenReturn(result(firstPlayer, 7));
 
         service.synchronizePlayer(1L);
 
-        verify(challengeRecalculationService).recalculateCurrentWeekProgress();
+        verify(challengeRecalculationService).drawAndRecalculateCurrentWeek();
     }
 
     /**
@@ -588,20 +597,28 @@ class DefaultSynchronizationCommandServiceTest {
      *
      * @param player          synchronized player
      * @param matchesImported imported match count
-     * @param completedAt     completion timestamp
      * @return synchronization result
      */
     private PlayerSynchronizationResult result(
         Player player,
-        int matchesImported,
-        Instant completedAt
+        int matchesImported
     ) {
         return new PlayerSynchronizationResult(
             player,
             1,
             matchesImported,
-            completedAt,
             SynchronizationStopReason.SEASON_BOUNDARY
         );
+    }
+
+    /**
+     * Returns the execution as it was last saved.
+     *
+     * @return last saved execution
+     */
+    private Synchronization lastSavedSynchronization() {
+        ArgumentCaptor<Synchronization> saved = ArgumentCaptor.forClass(Synchronization.class);
+        verify(synchronizationRepository, atLeastOnce()).save(saved.capture());
+        return saved.getValue();
     }
 }

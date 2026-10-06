@@ -15,11 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Closes synchronization executions that a shutdown interrupted.
  *
- * <p>A synchronization now runs on a background thread and is guarded by "no execution may be
- * pending or running". Nothing else ever moves an execution out of those statuses, so a process
- * killed mid-run would leave a row claiming to be running forever and permanently refuse every
- * later request. Since no run can survive the process that started it, any such row found at
- * startup is by definition dead.
+ * <p>Only the run itself moves an execution out of {@code RUNNING}, so a process killed mid-run
+ * would leave a row the public status reports as in progress forever. The application runs as a
+ * single instance and no run survives the process that started it, so any such row found at
+ * startup is by definition dead; a second instance would break that assumption.
  */
 @Component
 public class StaleSynchronizationReconciler implements ApplicationRunner {
@@ -29,12 +28,6 @@ public class StaleSynchronizationReconciler implements ApplicationRunner {
      */
     private static final Logger LOGGER =
         LoggerFactory.getLogger(StaleSynchronizationReconciler.class);
-
-    /**
-     * Statuses that cannot legitimately survive a restart.
-     */
-    private static final List<SynchronizationStatus> INTERRUPTIBLE_STATUSES =
-        List.of(SynchronizationStatus.PENDING, SynchronizationStatus.RUNNING);
 
     /**
      * Message stored on the executions this reconciler closes.
@@ -76,7 +69,7 @@ public class StaleSynchronizationReconciler implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         List<Synchronization> interrupted =
-            synchronizationRepository.findAllByStatusIn(INTERRUPTIBLE_STATUSES);
+            synchronizationRepository.findAllByStatusIn(SynchronizationStatus.IN_PROGRESS);
 
         if (interrupted.isEmpty()) {
             return;

@@ -1,9 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeMetric;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeScope;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import java.math.BigDecimal;
@@ -20,17 +17,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MaxStreakChallengeProgressCalculator
-    implements ChallengeProgressCalculator {
+    extends SingleConditionChallengeProgressCalculator {
 
     /**
      * Evaluates the configured metric for individual matches.
      */
     private final ChallengeMetricEvaluator metricEvaluator;
-
-    /**
-     * Applies the common game-mode filters.
-     */
-    private final ChallengeMatchFilter matchFilter;
 
     /**
      * Creates the maximum-streak calculator.
@@ -42,8 +34,8 @@ public class MaxStreakChallengeProgressCalculator
         ChallengeMetricEvaluator metricEvaluator,
         ChallengeMatchFilter matchFilter
     ) {
+        super(matchFilter);
         this.metricEvaluator = metricEvaluator;
-        this.matchFilter = matchFilter;
     }
 
     /**
@@ -60,41 +52,17 @@ public class MaxStreakChallengeProgressCalculator
      * Calculates the longest chronological sequence of matches satisfying the
      * configured condition.
      *
-     * @param definition parsed challenge definition
-     * @param context    weekly player context
-     * @return normalized streak progress
+     * @param condition       the challenge's single condition
+     * @param eligibleMatches matches the condition's filters accept
+     * @return longest streak
      */
     @Override
-    public ChallengeProgressResult calculate(
-        ChallengeDefinition definition,
-        PlayerChallengeContext context
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        validateCondition(condition);
-
-        List<PlayerMatch> eligibleMatches = context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
-            .sorted(
-                Comparator.comparing(
-                    playerMatch ->
-                        playerMatch.getMatch().getStartedAt()
-                )
-            )
+    protected BigDecimal measure(ChallengeCondition condition, List<PlayerMatch> eligibleMatches) {
+        List<PlayerMatch> chronologicalMatches = eligibleMatches.stream()
+            .sorted(Comparator.comparing(playerMatch -> playerMatch.getMatch().getStartedAt()))
             .toList();
 
-        int maximumStreak = calculateMaximumStreak(
-            eligibleMatches,
-            condition
-        );
-
-        return ChallengeProgressResult.from(
-            BigDecimal.valueOf(maximumStreak),
-            BigDecimal.valueOf(condition.streak())
-        );
+        return BigDecimal.valueOf(calculateMaximumStreak(chronologicalMatches, condition));
     }
 
     /**
@@ -138,39 +106,9 @@ public class MaxStreakChallengeProgressCalculator
         PlayerMatch playerMatch,
         ChallengeCondition condition
     ) {
-        BigDecimal currentValue = metricEvaluator.evaluate(
+        return condition.isMetBy(metricEvaluator.evaluate(
             playerMatch,
             condition.metric()
-        );
-
-        // ChallengeOperator declares GTE alone, so there is no other comparison to dispatch on.
-        return currentValue.compareTo(condition.target()) >= 0;
-    }
-
-    /**
-     * Validates the configuration required by a streak challenge.
-     *
-     * @param condition challenge condition
-     */
-    private void validateCondition(
-        ChallengeCondition condition
-    ) {
-        if (condition.scope() != ChallengeScope.PER_MATCH) {
-            throw new IllegalArgumentException(
-                "MAX_STREAK challenges require the PER_MATCH scope."
-            );
-        }
-
-        if (condition.streak() == null || condition.streak() <= 0) {
-            throw new IllegalArgumentException(
-                "MAX_STREAK challenges require a positive streak value."
-            );
-        }
-
-        if (condition.metric() == ChallengeMetric.PLAY_DAY) {
-            throw new IllegalArgumentException(
-                "PLAY_DAY cannot be evaluated by MAX_STREAK."
-            );
-        }
+        ));
     }
 }

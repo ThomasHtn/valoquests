@@ -1,6 +1,6 @@
 import { GuardianCategory } from '@core/campaign/campaign-week.model';
 import { CampaignDifficulty } from '@core/campaign/campaign.model';
-import { ChallengeDifficulty } from '@core/challenges/challenge.model';
+import { ChallengeTier } from '@core/challenges/challenge.model';
 
 /**
  * Icon of a closing-sheet constant.
@@ -194,7 +194,7 @@ export interface ChallengeWorth {
   /**
    * Difficulty, `null` for the daily challenge.
    */
-  readonly difficulty: ChallengeDifficulty | null;
+  readonly difficulty: ChallengeTier | null;
 
   /**
    * Weight against the reference.

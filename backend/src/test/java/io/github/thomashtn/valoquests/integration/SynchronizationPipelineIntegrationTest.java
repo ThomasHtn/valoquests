@@ -7,15 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.henrik.client.HenrikAccountClient;
 import io.github.thomashtn.valoquests.henrik.client.HenrikMatchClient;
@@ -26,6 +24,7 @@ import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchPlayer;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchTeam;
 import io.github.thomashtn.valoquests.henrik.dto.mmr.HenrikMmrResponse;
+import io.github.thomashtn.valoquests.henrik.model.HenrikAccount;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
@@ -38,6 +37,10 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.roster.dto.PlayerUpdateRequest;
+import io.github.thomashtn.valoquests.roster.service.PlayerAdminService;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
@@ -45,6 +48,7 @@ import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.synchronization.service.SynchronizationCommandService;
+import io.github.thomashtn.valoquests.synchronization.service.SynchronizationQueryService;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
@@ -55,6 +59,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -73,9 +78,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
  * synchronization persistence use production components and the real migrated
  * PostgreSQL schema.</p>
  *
- * <p>Deliberately <strong>not</strong> {@code @Transactional}: match creation races are resolved by
- * committing in their own transaction (see {@code MatchImportService}), which cannot see the
- * uncommitted fixture data an ambient test transaction would otherwise hold. Fixture rows are
+ * <p>Deliberately <strong>not</strong> {@code @Transactional}: the synchronization commits row by
+ * row and refuses to run inside a transaction (see {@code MatchImportService}). Fixture rows are
  * committed for real and removed in {@link #tearDown()} instead.
  */
 @SpringBootTest(
@@ -150,7 +154,7 @@ class SynchronizationPipelineIntegrationTest
      * Weekly challenge repository used to create the deterministic pack.
      */
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Progress repository used to verify calculator output.
@@ -175,6 +179,12 @@ class SynchronizationPipelineIntegrationTest
      */
     @Autowired
     private SynchronizationPlayerResultRepository playerResultRepository;
+
+    /**
+     * Service reading back the execution a synchronization recorded.
+     */
+    @Autowired
+    private SynchronizationQueryService synchronizationQueryService;
 
     /**
      * Persistence context used to force fresh PostgreSQL reads.
@@ -207,6 +217,12 @@ class SynchronizationPipelineIntegrationTest
     private JdbcTemplate jdbcTemplate;
 
     /**
+     * Administration service editing a player while a synchronization runs.
+     */
+    @Autowired
+    private PlayerAdminService playerAdminService;
+
+    /**
      * Removes every row this test committed and restores seeded players.
      */
     @AfterEach
@@ -222,6 +238,7 @@ class SynchronizationPipelineIntegrationTest
         jdbcTemplate.update("DELETE FROM valorant_match WHERE external_match_id LIKE 'pipeline-match-%'");
         jdbcTemplate.update("DELETE FROM season WHERE external_id = 'pipeline-season'");
         jdbcTemplate.update("DELETE FROM player WHERE riot_puuid = ?", PLAYER_PUUID);
+        jdbcTemplate.update("DELETE FROM player WHERE game_name LIKE 'Pipeline%'");
         jdbcTemplate.update("UPDATE player SET status = ?", PlayerStatus.ACTIVE.name());
     }
 
@@ -245,10 +262,8 @@ class SynchronizationPipelineIntegrationTest
         when(matchClient.getMatches(PLAYER_PUUID, 0, 10))
             .thenReturn(historyResponse);
 
-        SynchronizationResponse firstSynchronization =
-            synchronizationCommandService.synchronizePlayer(
-                player.getId()
-            );
+        synchronizationCommandService.synchronizePlayer(player.getId());
+        SynchronizationResponse firstSynchronization = synchronizationQueryService.findLatest();
 
         // No explicit recalculation: importing matches is what triggers it. Calling it here as well
         // would rebuild the ranking twice and shift the previous position on the very first run.
@@ -280,16 +295,14 @@ class SynchronizationPipelineIntegrationTest
 
         Long firstScoreId = loadScore(player).getId();
 
-        SynchronizationResponse secondSynchronization =
-            synchronizationCommandService.synchronizePlayer(
-                player.getId()
-            );
+        synchronizationCommandService.synchronizePlayer(player.getId());
+        SynchronizationResponse secondSynchronization = synchronizationQueryService.findLatest();
 
         // The second synchronization imports nothing, so it deliberately skips the recalculation.
         // This call stands in for the administrative repair route and proves the calculation is
         // idempotent: it rewrites the same values in place and only shifts the previous position.
         challengeRecalculationService
-            .recalculateCurrentWeekProgress();
+            .drawAndRecalculateCurrentWeek();
 
         flushAndClear();
 
@@ -324,6 +337,77 @@ class SynchronizationPipelineIntegrationTest
 
         verify(matchClient, org.mockito.Mockito.times(2))
             .getMatches(PLAYER_PUUID, 0, 10);
+    }
+
+    /**
+     * Verifies that the final write of a synchronization does not undo an admin edit.
+     *
+     * <p>The player is loaded before the Henrik calls and written after them; a full save of that
+     * copy would bring back the name and portrait the administrator just replaced.
+     */
+    @Test
+    @DisplayName("Keeps an admin edit made during the synchronization while storing the new rank")
+    void shouldKeepAnAdminEditMadeDuringTheSynchronization() {
+        Player player = createPlayer();
+        when(mmrClient.getCurrentMmr(PLAYER_PUUID)).thenAnswer(invocation -> {
+            playerAdminService.update(player.getId(), new PlayerUpdateRequest(
+                "PipelinePlayer", "TEST", "Renamed meanwhile", "new-portrait"
+            ));
+            return createMmrResponse();
+        });
+        when(matchClient.getMatches(PLAYER_PUUID, 0, 10))
+            .thenReturn(new HenrikMatchHistoryResponse(List.of()));
+
+        synchronizationCommandService.synchronizePlayer(player.getId());
+
+        Player stored = playerRepository.findById(player.getId()).orElseThrow();
+        assertThat(stored.getDisplayName()).isEqualTo("Renamed meanwhile");
+        assertThat(stored.getPortrait()).isEqualTo("new-portrait");
+        assertThat(stored.getCompetitiveTier()).isEqualTo(CompetitiveTier.DIAMOND_2);
+        assertThat(stored.getLastSuccessfulSynchronizationAt()).isEqualTo(SYNCHRONIZATION_TIME);
+    }
+
+    /**
+     * Verifies that a resolved PUUID is stored without a full save of the player.
+     */
+    @Test
+    @DisplayName("Stores the PUUID resolved for a player that had none")
+    void shouldStoreTheResolvedPuuid() {
+        Player player = createPlayerWithoutPuuid();
+        when(accountClient.getAccount("PipelinePlayer", "TEST"))
+            .thenReturn(new HenrikAccount(PLAYER_PUUID, "PipelinePlayer", "TEST"));
+        when(mmrClient.getCurrentMmr(PLAYER_PUUID)).thenReturn(createMmrResponse());
+        when(matchClient.getMatches(PLAYER_PUUID, 0, 10))
+            .thenReturn(new HenrikMatchHistoryResponse(List.of()));
+
+        synchronizationCommandService.synchronizePlayer(player.getId());
+
+        assertThat(playerRepository.findById(player.getId()).orElseThrow().getRiotPuuid())
+            .isEqualTo(PLAYER_PUUID);
+    }
+
+    /**
+     * Verifies that a PUUID resolved for a Riot identity the administrator replaced is dropped.
+     *
+     * <p>Stored anyway, it would import the matches of an account the player no longer names.
+     */
+    @Test
+    @DisplayName("Drops a PUUID resolved for a Riot identity changed during the lookup")
+    void shouldDropAPuuidResolvedForAnIdentityChangedMeanwhile() {
+        Player player = createPlayerWithoutPuuid();
+        when(accountClient.getAccount("PipelinePlayer", "TEST")).thenAnswer(invocation -> {
+            playerAdminService.update(player.getId(), new PlayerUpdateRequest(
+                "PipelineRenamed", "TEST", "PipelinePlayer#TEST", null
+            ));
+            return new HenrikAccount(PLAYER_PUUID, "PipelinePlayer", "TEST");
+        });
+
+        synchronizationCommandService.synchronizePlayer(player.getId());
+
+        assertThat(synchronizationQueryService.findLatest().status()).isEqualTo(SynchronizationStatus.FAILED);
+        Player stored = playerRepository.findById(player.getId()).orElseThrow();
+        assertThat(stored.getGameName()).isEqualTo("PipelineRenamed");
+        assertThat(stored.getRiotPuuid()).isNull();
     }
 
     /**
@@ -421,8 +505,6 @@ class SynchronizationPipelineIntegrationTest
             .isEqualTo(SYNCHRONIZATION_TIME);
         assertThat(response.finishedAt())
             .isEqualTo(SYNCHRONIZATION_TIME);
-        assertThat(response.lastAttemptAt())
-            .isEqualTo(SYNCHRONIZATION_TIME);
         assertThat(response.lastSuccessfulSynchronizationAt())
             .isEqualTo(SYNCHRONIZATION_TIME);
         assertThat(response.playersProcessed()).isEqualTo(1);
@@ -486,7 +568,7 @@ class SynchronizationPipelineIntegrationTest
                 .collect(
                     Collectors.toMap(
                         progress -> progress
-                            .getWeeklyChallenge()
+                            .getSelection()
                             .getChallenge()
                             .getCode(),
                         Function.identity()
@@ -544,9 +626,7 @@ class SynchronizationPipelineIntegrationTest
             .isEqualTo(857);
         assertThat(score.getMatchCount())
             .isEqualTo(2);
-        assertThat(score.getActiveDays())
-            .isEqualTo(2);
-        assertThat(score.getStreakDays())
+        assertThat(score.getPlayedDays())
             .isEqualTo(2);
         assertThat(score.getChallengePoints())
             .isEqualTo(78 + dailyPoints);
@@ -587,10 +667,10 @@ class SynchronizationPipelineIntegrationTest
      */
     private int completedDailies(Player player) {
         return (int) progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(WEEK_START)
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(WEEK_START)
             .stream()
             .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
-            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(progress -> progress.getSelection().getCadence() == ChallengeCadence.DAILY)
             .filter(PlayerChallengeProgress::isCompleted)
             .count();
     }
@@ -624,7 +704,7 @@ class SynchronizationPipelineIntegrationTest
      */
     private List<PlayerChallengeProgress> loadProgress(Player player) {
         return progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(
                 WEEK_START
             )
             .stream()
@@ -661,6 +741,15 @@ class SynchronizationPipelineIntegrationTest
     }
 
     /**
+     * Creates one active player whose PUUID is still to be resolved.
+     */
+    private Player createPlayerWithoutPuuid() {
+        Player player = createPlayer();
+        player.setRiotPuuid(null);
+        return playerRepository.save(player);
+    }
+
+    /**
      * Marks migration-seeded players inactive for deterministic calculations.
      */
     private void deactivateSeededPlayers() {
@@ -679,7 +768,7 @@ class SynchronizationPipelineIntegrationTest
             List.of(
                 createChallenge(
                     "PIPELINE_KILLS",
-                    ChallengeDifficulty.EASY,
+                    ChallengeTier.EASY,
                     ProgressMode.SUM,
                     "KILLS",
                     "50",
@@ -687,7 +776,7 @@ class SynchronizationPipelineIntegrationTest
                 ),
                 createChallenge(
                     "PIPELINE_DAMAGE",
-                    ChallengeDifficulty.NORMAL,
+                    ChallengeTier.NORMAL,
                     ProgressMode.SUM,
                     "DAMAGE_DEALT",
                     "5000",
@@ -695,7 +784,7 @@ class SynchronizationPipelineIntegrationTest
                 ),
                 createChallenge(
                     "PIPELINE_WINS",
-                    ChallengeDifficulty.MEDIUM,
+                    ChallengeTier.MEDIUM,
                     ProgressMode.SUM,
                     "MATCHES_WON",
                     "1",
@@ -703,7 +792,7 @@ class SynchronizationPipelineIntegrationTest
                 ),
                 createChallenge(
                     "PIPELINE_KD",
-                    ChallengeDifficulty.HARD,
+                    ChallengeTier.HARD,
                     ProgressMode.RATIO,
                     "KD",
                     "2",
@@ -711,7 +800,7 @@ class SynchronizationPipelineIntegrationTest
                 ),
                 createChallenge(
                     "PIPELINE_PLAY_DAYS",
-                    ChallengeDifficulty.VERY_HARD,
+                    ChallengeTier.VERY_HARD,
                     ProgressMode.DISTINCT_COUNT,
                     "PLAY_DAY",
                     "2",
@@ -720,9 +809,9 @@ class SynchronizationPipelineIntegrationTest
             )
         );
 
-        weeklyChallengeRepository.saveAll(
+        challengeSelectionRepository.saveAll(
             challenges.stream()
-                .map(this::createWeeklyChallenge)
+                .map(this::createSelection)
                 .toList()
         );
     }
@@ -732,7 +821,7 @@ class SynchronizationPipelineIntegrationTest
      */
     private Challenge createChallenge(
         String code,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         ProgressMode progressMode,
         String metric,
         String target,
@@ -748,10 +837,10 @@ class SynchronizationPipelineIntegrationTest
         challenge.setDescription(
             "Synchronization pipeline challenge " + code
         );
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setProgressMode(progressMode);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             """
                 [
                   {
@@ -768,7 +857,7 @@ class SynchronizationPipelineIntegrationTest
                 additionalJson
             )
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
         return challenge;
@@ -777,17 +866,17 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Associates one deterministic challenge with the current week.
      */
-    private WeeklyChallenge createWeeklyChallenge(
+    private ChallengeSelection createSelection(
         Challenge challenge
     ) {
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setWeekStart(WEEK_START);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
-        weeklyChallenge.setSelectedAt(
+        ChallengeSelection selection = new ChallengeSelection();
+        selection.setWeekStart(WEEK_START);
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
+        selection.setSelectedAt(
             SYNCHRONIZATION_TIME.minusSeconds(3_600)
         );
-        return weeklyChallenge;
+        return selection;
     }
 
     /**
@@ -795,15 +884,10 @@ class SynchronizationPipelineIntegrationTest
      */
     private HenrikMmrResponse createMmrResponse() {
         return new HenrikMmrResponse(
-            200,
             new HenrikMmrResponse.HenrikMmrData(
                 new HenrikMmrResponse.HenrikCurrentMmr(
-                    new HenrikMmrResponse.HenrikTier(
-                        22,
-                        "Diamond 2"
-                    ),
-                    73,
-                    1_873
+                    new HenrikMmrResponse.HenrikTier("Diamond 2"),
+                    73
                 )
             )
         );
@@ -814,7 +898,6 @@ class SynchronizationPipelineIntegrationTest
      */
     private HenrikMatchHistoryResponse createHistoryResponse() {
         return new HenrikMatchHistoryResponse(
-            200,
             List.of(
                 createMatch(
                     "pipeline-match-1",
@@ -874,8 +957,6 @@ class SynchronizationPipelineIntegrationTest
 
         HenrikMatchPlayer trackedPlayer = new HenrikMatchPlayer(
             PLAYER_PUUID,
-            "PipelinePlayer",
-            "TEST",
             playerTeam,
             new HenrikMatchPlayer.HenrikAgent(
                 "omen",
@@ -890,20 +971,13 @@ class SynchronizationPipelineIntegrationTest
                 kills * 2,
                 0,
                 new HenrikMatchPlayer.HenrikDamage(
-                    damageDealt,
-                    2_500
-                )
+                    damageDealt)
             ),
-            new HenrikMatchPlayer.HenrikTier(
-                22,
-                "Diamond 2"
-            )
+            new HenrikMatchPlayer.HenrikTier("Diamond 2")
         );
 
         HenrikMatchPlayer opponent = new HenrikMatchPlayer(
             "pipeline-opponent-" + matchId,
-            "Opponent",
-            "TEST",
             "Red",
             new HenrikMatchPlayer.HenrikAgent(
                 "jett",
@@ -918,14 +992,9 @@ class SynchronizationPipelineIntegrationTest
                 10,
                 0,
                 new HenrikMatchPlayer.HenrikDamage(
-                    1_000,
-                    damageDealt
-                )
+                    1_000)
             ),
-            new HenrikMatchPlayer.HenrikTier(
-                21,
-                "Diamond 1"
-            )
+            new HenrikMatchPlayer.HenrikTier("Diamond 1")
         );
 
         HenrikMatchTeam blueTeam = new HenrikMatchTeam(

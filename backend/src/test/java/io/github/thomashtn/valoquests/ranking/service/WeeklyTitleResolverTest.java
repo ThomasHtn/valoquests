@@ -13,7 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Verifies the four weekly honours, one per operator at most, and that a tie awards none of them.
+ * Verifies the four weekly honours, one per player at most, and that a tie awards none of them.
  */
 class WeeklyTitleResolverTest {
 
@@ -52,7 +52,7 @@ class WeeklyTitleResolverTest {
         WeeklyPlayerScore delta = row(DELTA, 3, 0, 0, 5, 0, 0);
         WeeklyPlayerScore echo = row(ECHO, 4, 0, 0, 0, 2, 2);
 
-        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta, echo), null);
+        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta, echo), null, null);
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
             WeeklyTitle.MECHANIC, ALPHA.getId(),
@@ -63,12 +63,12 @@ class WeeklyTitleResolverTest {
     }
 
     @Test
-    @DisplayName("Gives an operator one title at most, passing the others to the next best figure")
+    @DisplayName("Gives a player one title at most, passing the others to the next best figure")
     void shouldGiveOneTitleAtMostPerOperator() {
         WeeklyPlayerScore alpha = row(ALPHA, 1, 900, 800, 5, 2, 2);
         WeeklyPlayerScore bravo = row(BRAVO, 2, 200, 100, 3, 1, 0);
 
-        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo), null);
+        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo), null, null);
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
             WeeklyTitle.REGULAR, ALPHA.getId(),
@@ -83,7 +83,7 @@ class WeeklyTitleResolverTest {
         WeeklyPlayerScore bravo = row(BRAVO, 2, 200, 100, 3, 1, 0);
         WeeklyPlayerScore delta = row(DELTA, 3, 100, 300, 1, 0, 0);
 
-        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta), ALPHA.getId());
+        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, bravo, delta), ALPHA.getId(), null);
 
         assertThat(titles).containsExactlyInAnyOrderEntriesOf(Map.of(
             WeeklyTitle.REGULAR, BRAVO.getId(),
@@ -111,8 +111,8 @@ class WeeklyTitleResolverTest {
         WeeklyPlayerScore alpha = row(ALPHA, 1, 500, 0, 0, 0, 0);
         WeeklyPlayerScore bravo = row(BRAVO, 2, 500, 0, 0, 0, 0);
 
-        assertThat(resolver.resolve(List.of(alpha, bravo), null)).isEmpty();
-        assertThat(resolver.resolve(List.of(), null)).isEmpty();
+        assertThat(resolver.resolve(List.of(alpha, bravo), null, null)).isEmpty();
+        assertThat(resolver.resolve(List.of(), null, null)).isEmpty();
     }
 
     @Test
@@ -121,7 +121,7 @@ class WeeklyTitleResolverTest {
         WeeklyPlayerScore alpha = row(ALPHA, 1, 0, 0, 0, 1, 0);
         WeeklyPlayerScore charlie = row(CHARLIE, null, 0, 0, 0, 5, 3);
 
-        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, charlie), null);
+        Map<WeeklyTitle, Long> titles = resolver.resolve(List.of(alpha, charlie), null, null);
 
         assertThat(titles).containsExactly(Map.entry(WeeklyTitle.SCOUT, ALPHA.getId()));
     }
@@ -131,14 +131,14 @@ class WeeklyTitleResolverTest {
         Integer position,
         int components,
         int food,
-        int streakDays,
+        int playedDays,
         int completedWeekly,
         int completedDaily
     ) {
         WeeklyPlayerScore score = RankingFixtures.score(player, position, food + components, 0);
         score.setComponents(components);
         score.setFood(food);
-        score.setStreakDays(streakDays);
+        score.setPlayedDays(playedDays);
         score.setCompletedChallenges(completedWeekly);
         score.setCompletedDailyChallenges(completedDaily);
 

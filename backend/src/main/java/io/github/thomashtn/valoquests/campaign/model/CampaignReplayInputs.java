@@ -13,7 +13,7 @@ import java.util.Map;
  * @param weeks      the weeks whose Sunday has been reached, week one first
  * @param fights     how each started week's guardian fight stands, by one-based week index
  * @param yields     what each week's challenges brought back, by one-based week index
- * @param playerDays what each roster operator produced on each day
+ * @param playerDays what each roster player produced on each day
  */
 public record CampaignReplayInputs(
     List<CampaignDayInput> days,

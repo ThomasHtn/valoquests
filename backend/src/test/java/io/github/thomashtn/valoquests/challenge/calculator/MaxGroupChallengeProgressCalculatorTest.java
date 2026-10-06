@@ -1,7 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
@@ -16,11 +15,10 @@ import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -113,8 +111,6 @@ class MaxGroupChallengeProgressCalculatorTest {
             .isEqualByComparingTo("3");
         assertThat(result.targetValue())
             .isEqualByComparingTo("4");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("75.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -162,8 +158,6 @@ class MaxGroupChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("15");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("75.00");
     }
 
     /**
@@ -229,8 +223,6 @@ class MaxGroupChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("0");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("0.00");
         assertThat(result.completed()).isFalse();
     }
 
@@ -295,28 +287,6 @@ class MaxGroupChallengeProgressCalculatorTest {
     }
 
     /**
-     * Verifies that a grouping dimension is mandatory for this mode.
-     */
-    @Test
-    void shouldRejectDefinitionWithoutGroupingDimension() {
-        ChallengeDefinition definition = createDefinition(
-            ChallengeMetric.MATCHES_PLAYED,
-            ChallengeGameMode.COMPETITIVE,
-            null,
-            12
-        );
-
-        assertThatThrownBy(
-            () -> calculator.calculate(
-                definition,
-                createContext()
-            )
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("grouping dimension");
-    }
-
-    /**
      * Creates a single-condition maximum-group definition.
      *
      * @param metric   evaluated metric
@@ -344,7 +314,6 @@ class MaxGroupChallengeProgressCalculatorTest {
         );
 
         return new ChallengeDefinition(
-            3,
             ProgressMode.MAX_GROUP,
             List.of(condition)
         );
@@ -359,13 +328,7 @@ class MaxGroupChallengeProgressCalculatorTest {
     private PlayerChallengeContext createContext(
         PlayerMatch... playerMatches
     ) {
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            List.of(playerMatches)
-        );
+        return new PlayerChallengeContext(List.of(playerMatches));
     }
 
     /**

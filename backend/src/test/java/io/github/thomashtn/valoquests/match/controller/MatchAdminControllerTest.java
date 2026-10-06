@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.match.dto.MatchCorrectionResponse;
 import io.github.thomashtn.valoquests.match.exception.MatchNotFoundException;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.GameModeSource;
@@ -44,10 +44,8 @@ class MatchAdminControllerTest {
      */
     @Test
     void shouldCorrectGameMode() throws Exception {
-        ValorantMatch corrected = new ValorantMatch();
-        corrected.setId(1204L);
-        corrected.setGameMode(GameMode.DEATHMATCH);
-        corrected.setGameModeSource(GameModeSource.MANUALLY_CORRECTED);
+        MatchCorrectionResponse corrected =
+            new MatchCorrectionResponse(1204L, GameMode.DEATHMATCH, GameModeSource.MANUALLY_CORRECTED);
 
         when(correctionService.correctGameMode(1204L, GameMode.DEATHMATCH))
             .thenReturn(corrected);

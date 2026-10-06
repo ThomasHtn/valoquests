@@ -1,6 +1,8 @@
 package io.github.thomashtn.valoquests.shared.config;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import jakarta.servlet.DispatcherType;
+import java.time.Clock;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Configures stateless HTTP security and CORS rules for the application.
@@ -35,6 +38,8 @@ public class SecurityConfig {
      * @param http                 Spring Security HTTP configuration
      * @param properties           application-level configuration properties
      * @param adminAuthRateLimiter throttle applied to repeated invalid admin-key attempts
+     * @param objectMapper         application JSON mapper, used for admin-key refusals
+     * @param clock                application clock
      * @return the configured security filter chain
      * @throws Exception when Spring Security cannot build the chain
      */
@@ -50,7 +55,9 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         ApplicationProperties properties,
-        AdminAuthRateLimiter adminAuthRateLimiter
+        AdminAuthRateLimiter adminAuthRateLimiter,
+        ObjectMapper objectMapper,
+        Clock clock
     ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
@@ -61,6 +68,10 @@ public class SecurityConfig {
                 SessionCreationPolicy.STATELESS
             ))
             .authorizeHttpRequests(authorize -> {
+                // The container forwards its own errors to /error; denying that dispatch would turn
+                // them into an empty 403.
+                authorize.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
+
                 authorize
                     // Must stay ahead of the public GET rule below, which would otherwise open
                     // every administrative read endpoint.
@@ -86,7 +97,12 @@ public class SecurityConfig {
                     .anyRequest().denyAll();
             })
             .addFilterBefore(
-                new AdminApiKeyFilter(properties.adminApiKey(), adminAuthRateLimiter),
+                new AdminApiKeyFilter(
+                    properties.adminApiKey(),
+                    adminAuthRateLimiter,
+                    objectMapper,
+                    clock
+                ),
                 UsernamePasswordAuthenticationFilter.class
             );
 

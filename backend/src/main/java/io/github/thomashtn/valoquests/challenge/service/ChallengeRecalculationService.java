@@ -11,9 +11,10 @@ import java.time.LocalDate;
 public interface ChallengeRecalculationService {
 
     /**
-     * Recalculates active-week progress and then updates the current ranking.
+     * Draws the current week's pack and today's challenge when missing, recalculates the week's
+     * progress, then updates the current ranking.
      */
-    void recalculateCurrentWeekProgress();
+    void drawAndRecalculateCurrentWeek();
 
     /**
      * Recalculates the progress of one week without touching any ranking.

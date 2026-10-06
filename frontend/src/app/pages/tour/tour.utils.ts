@@ -31,17 +31,12 @@ export function buildTourDailyRow(
     name: translate(`tour.samples.challenges.${daily.key}.name`),
     description: translate(`tour.samples.challenges.${daily.key}.description`),
     cadence: 'DAILY',
-    difficulty: null,
-    competitiveOnly: false,
+    tier: null,
     metric: 'MATCHES_PLAYED',
     targetValue: daily.target,
     survivors: daily.survivors,
-    rankingPoints: daily.survivors,
     day: null,
-    completedPlayers: completedPlayerIds.length,
-    totalPlayers: operators.length,
     completedPlayerIds,
-    completionPercentage: Math.round((completedPlayerIds.length / operators.length) * 100),
     players,
   };
   const look = { tone: DAILY_TONE, mark: 'D' as const, kind: translate('challenges.daily.key') };

@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
@@ -83,6 +84,8 @@ class HenrikRequestExecutorTest {
         );
 
         HenrikRequestExecutor executor = new HenrikRequestExecutor(
+            WebClient.create(),
+            new HenrikResponseHandler(),
             new HenrikRetryStrategy(properties),
             new HenrikRequestLimiter(properties)
         );

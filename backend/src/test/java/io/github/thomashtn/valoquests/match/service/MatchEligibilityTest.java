@@ -28,7 +28,7 @@ class MatchEligibilityTest {
     }
 
     /**
-     * Verifies that every mode the barème prices is counted.
+     * Verifies that every mode the scoring table prices is counted.
      *
      * <p>Pins the two lists together: a mode priced by {@code DefaultScoringRuleset#matchDamage} but
      * rejected here would be worth damage while counting as no day played.
@@ -48,21 +48,12 @@ class MatchEligibilityTest {
      * Verifies that an unrecognized queue never counts, however real the match looks.
      *
      * <p>{@link GameMode#OTHER} is imported on purpose so a later reclassification stays a data
-     * migration, but the barème cannot price it. It used to be worth no damage while still counting
+     * migration, but the scoring table cannot price it. It used to be worth no damage while still counting
      * as a day played and still progressing any challenge filtered on no particular mode.
      */
     @Test
     void shouldNotCountAnUnrecognizedQueue() {
         assertThat(eligibility.isEligible(playerMatch(GameMode.OTHER, 24, 250, MatchResult.WIN)))
-            .isFalse();
-    }
-
-    /**
-     * Verifies that a remake never counts.
-     */
-    @Test
-    void shouldNotCountARemake() {
-        assertThat(eligibility.isEligible(playerMatch(GameMode.COMPETITIVE, 3, 40, MatchResult.REMAKE)))
             .isFalse();
     }
 

@@ -13,13 +13,11 @@ import java.util.List;
  * Unknown properties are ignored so that additional fields introduced by
  * Henrik do not break deserialization.</p>
  *
- * @param status HTTP-like status returned in the Henrik response body
  * @param data matches returned for the requested player
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMatchHistoryResponse(
 
-    Integer status,
     List<HenrikMatchData> data
 ) {
 
@@ -100,6 +98,19 @@ public record HenrikMatchHistoryResponse(
         )
         public List<HenrikMatchTeam> teams() {
             return teams;
+        }
+
+        /**
+         * Returns the identifier of the season the match was played in.
+         *
+         * @return the season identifier, {@code null} when absent or blank
+         */
+        public String seasonId() {
+            if (metadata == null || metadata.season() == null) {
+                return null;
+            }
+            String id = metadata.season().id();
+            return id == null || id.isBlank() ? null : id;
         }
     }
 

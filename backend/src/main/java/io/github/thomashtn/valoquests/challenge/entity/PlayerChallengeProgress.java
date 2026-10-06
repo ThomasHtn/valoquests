@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Stores a player's calculated progress for one weekly challenge.
+ * Stores a player's calculated progress for one challenge selection, weekly or daily.
  */
 @Getter
 @Setter
@@ -49,11 +49,11 @@ public class PlayerChallengeProgress extends AuditableEntity {
     private Player player;
 
     /**
-     * Weekly challenge being evaluated.
+     * Selection being evaluated, weekly or daily.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "weekly_challenge_id", nullable = false)
-    private WeeklyChallenge weeklyChallenge;
+    private ChallengeSelection selection;
 
     /**
      * Current calculated metric value.

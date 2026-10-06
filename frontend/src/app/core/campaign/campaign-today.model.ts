@@ -45,12 +45,12 @@ interface CampaignPlayerDay {
   readonly reducedMatchCount: number;
 
   /**
-   * Days of the week played up to this day.
+   * Days played this week up to this day.
    */
-  readonly streakDays: number;
+  readonly playedDays: number;
 
   /**
-   * Bonus the streak grants, in percent.
+   * Bonus the days played this week grant, in percent.
    */
   readonly streakBonusPercent: number;
 }
@@ -95,14 +95,14 @@ export interface CampaignToday {
   readonly dailyUpkeep: number;
 
   /**
-   * Wounded today's components add to what the ship can carry.
+   * Wounded today's components add to what the ship can reach.
    */
-  readonly carryGained: number;
+  readonly rescuesByComponentsGained: number;
 
   /**
    * Wounded today's food adds to what the base can settle.
    */
-  readonly shelterGained: number;
+  readonly rescuesByFoodGained: number;
 
   /**
    * One line per player, best day first.

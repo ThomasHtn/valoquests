@@ -1,7 +1,6 @@
 package io.github.thomashtn.valoquests.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,7 +62,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     /**
      * Number of matches Henrik returns for a full page.
      */
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = HenrikMatchClient.MAX_PAGE_SIZE;
 
     /**
      * Stable PUUID of the tracked test player.
@@ -138,9 +138,9 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         player = playerRepository.save(tracked);
 
         when(mmrClient.getCurrentMmr(PUUID)).thenReturn(
-            new HenrikMmrResponse(200, new HenrikMmrResponse.HenrikMmrData(
+            new HenrikMmrResponse(new HenrikMmrResponse.HenrikMmrData(
                 new HenrikMmrResponse.HenrikCurrentMmr(
-                    new HenrikMmrResponse.HenrikTier(22, "Diamond 2"), 73, 1_873
+                    new HenrikMmrResponse.HenrikTier("Diamond 2"), 73
                 )
             ))
         );
@@ -262,9 +262,8 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         when(matchClient.getMatches(eq(PUUID), eq(PAGE_SIZE), anyInt()))
             .thenThrow(new IllegalStateException("Henrik unavailable"));
 
-        assertThatThrownBy(
-            () -> synchronizationCommandService.synchronizePlayer(player.getId())
-        ).isInstanceOf(IllegalStateException.class);
+        // The failure is recorded on the execution, not thrown.
+        synchronizationCommandService.synchronizePlayer(player.getId());
 
         assertThat(importedMatchCount()).isEqualTo(10);
         assertThat(isSeasonComplete(SEASON_A)).isFalse();
@@ -299,9 +298,8 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
                 return response(index < pages.size() ? pages.get(index) : List.of());
             });
 
-        assertThatThrownBy(
-            () -> synchronizationCommandService.synchronizePlayer(player.getId())
-        ).isInstanceOf(IllegalStateException.class);
+        // The failure is recorded on the execution, not thrown.
+        synchronizationCommandService.synchronizePlayer(player.getId());
 
         // Pages 0-14 (offsets 0-140) committed before the failure at offset 150.
         assertThat(importedMatchCount()).isEqualTo(150);
@@ -331,6 +329,34 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         verify(matchClient, times(2)).getMatches(PUUID, 150, PAGE_SIZE);
         verify(matchClient, times(1)).getMatches(PUUID, 190, PAGE_SIZE);
         verify(matchClient, times(1)).getMatches(PUUID, 200, PAGE_SIZE);
+    }
+
+    /**
+     * Verifies that a first page of custom games, which are never stored, keeps the checkpoint usable
+     * when it reaches back to the season's newest stored match.
+     */
+    @Test
+    @DisplayName("Resumes from the checkpoint when the first page holds only ignored modes reaching stored history")
+    void shouldResumeFromTheCheckpointWhenTheFirstPageHoldsOnlyIgnoredModes() {
+        List<HenrikMatchData> secondPage = fullPage(SEASON_A, "competitive");
+        when(matchClient.getMatches(eq(PUUID), anyInt(), anyInt()))
+            .thenAnswer(invocation -> switch ((int) invocation.getArgument(1)) {
+                case 0 -> response(fullPage(SEASON_A, "competitive"));
+                case 10 -> response(secondPage);
+                default -> throw new IllegalStateException("Henrik unavailable");
+            });
+        synchronizationCommandService.synchronizePlayer(player.getId());
+        assertThat(seasonNextStartOffset(SEASON_A)).isEqualTo(20);
+
+        doAnswer(invocation -> switch ((int) invocation.getArgument(1)) {
+            case 0 -> response(fullPage(SEASON_A, "custom"));
+            case 10 -> response(secondPage);
+            default -> response(boundaryPage(SEASON_A, OLDER_SEASON, 5));
+        }).when(matchClient).getMatches(eq(PUUID), anyInt(), anyInt());
+        synchronizationCommandService.synchronizePlayer(player.getId());
+
+        verify(matchClient, times(1)).getMatches(PUUID, 10, PAGE_SIZE);
+        assertThat(isSeasonComplete(SEASON_A)).isTrue();
     }
 
     /**
@@ -389,9 +415,9 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
         secondPlayer = playerRepository.save(secondPlayer);
 
         when(mmrClient.getCurrentMmr("season-rollover-player-2")).thenReturn(
-            new HenrikMmrResponse(200, new HenrikMmrResponse.HenrikMmrData(
+            new HenrikMmrResponse(new HenrikMmrResponse.HenrikMmrData(
                 new HenrikMmrResponse.HenrikCurrentMmr(
-                    new HenrikMmrResponse.HenrikTier(22, "Diamond 2"), 73, 1_873
+                    new HenrikMmrResponse.HenrikTier("Diamond 2"), 73
                 )
             ))
         );
@@ -452,7 +478,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
      * Wraps matches in a Henrik response.
      */
     private HenrikMatchHistoryResponse response(List<HenrikMatchData> matches) {
-        return new HenrikMatchHistoryResponse(200, matches);
+        return new HenrikMatchHistoryResponse(matches);
     }
 
     /**
@@ -510,27 +536,23 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
             List.of(
                 new HenrikMatchPlayer(
                     PUUID,
-                    "Rollover",
-                    "EUW",
                     "Red",
                     new HenrikMatchPlayer.HenrikAgent("agent-1", "Jett"),
                     new HenrikMatchPlayer.HenrikPlayerStats(
                         4000, 20, 12, 3, 10, 25, 2,
-                        new HenrikMatchPlayer.HenrikDamage(3200, 2800)
+                        new HenrikMatchPlayer.HenrikDamage(3200)
                     ),
-                    new HenrikMatchPlayer.HenrikTier(22, "Diamond 2")
+                    new HenrikMatchPlayer.HenrikTier("Diamond 2")
                 ),
                 new HenrikMatchPlayer(
                     secondPuuid,
-                    "RolloverTwo",
-                    "EUW",
                     "Blue",
                     new HenrikMatchPlayer.HenrikAgent("agent-2", "Sova"),
                     new HenrikMatchPlayer.HenrikPlayerStats(
                         3500, 18, 14, 5, 9, 20, 3,
-                        new HenrikMatchPlayer.HenrikDamage(2900, 2600)
+                        new HenrikMatchPlayer.HenrikDamage(2900)
                     ),
-                    new HenrikMatchPlayer.HenrikTier(20, "Platinum 3")
+                    new HenrikMatchPlayer.HenrikTier("Platinum 3")
                 )
             ),
             List.of(
@@ -556,15 +578,13 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
             ),
             List.of(new HenrikMatchPlayer(
                 PUUID,
-                "Rollover",
-                "EUW",
                 "Red",
                 new HenrikMatchPlayer.HenrikAgent("agent-1", "Jett"),
                 new HenrikMatchPlayer.HenrikPlayerStats(
                     4000, 20, 12, 3, 10, 25, 2,
-                    new HenrikMatchPlayer.HenrikDamage(3200, 2800)
+                    new HenrikMatchPlayer.HenrikDamage(3200)
                 ),
-                new HenrikMatchPlayer.HenrikTier(22, "Diamond 2")
+                new HenrikMatchPlayer.HenrikTier("Diamond 2")
             )),
             List.of(
                 new HenrikMatchTeam("Red", true, new HenrikMatchTeam.HenrikRounds(13, 7)),

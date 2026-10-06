@@ -2,10 +2,11 @@ package io.github.thomashtn.valoquests.campaign.service;
 
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.WeekChallengeYield;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.service.ScoringRuleset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>A challenge never damages a guardian: it rescues wounded, and those wounded are acquired
  * whatever else happens that week. They leave first on Sunday, spending neither food nor
- * components and without suffering the guardian progress — the operators went and got them.
+ * components and without suffering the guardian progress — the players went and got them.
  *
  * <p>Both cadences are read the same way. The daily challenge resolves on its own evening but its
  * rescues wait for the ship like everyone else's, so it is credited to the week it falls in.
@@ -33,7 +34,7 @@ public class CampaignChallengeReader {
     private final PlayerChallengeProgressRepository progressRepository;
 
     /**
-     * Barème pricing one validated challenge in wounded.
+     * Scoring table pricing one validated challenge in wounded.
      */
     private final ScoringRuleset ruleset;
 
@@ -57,57 +58,35 @@ public class CampaignChallengeReader {
      */
     public Map<Integer, WeekChallengeYield> read(Campaign campaign, Set<Long> rosterIdentifiers) {
         List<PlayerChallengeProgress> completed = progressRepository
-            .findAllByCompletedTrueAndWeeklyChallengeWeekStartBetweenOrderByIdAsc(
+            .findAllByCompletedTrueAndSelectionWeekStartBetweenOrderByIdAsc(
                 campaign.getFirstWeekStart(),
                 campaign.getLastWeekStart()
             );
 
         Map<Integer, Integer> totals = new HashMap<>();
-        Map<Integer, Map<Long, Integer>> survivorsByPlayer = new HashMap<>();
-        Map<Integer, Map<Long, Integer>> completionsByPlayer = new HashMap<>();
 
         for (PlayerChallengeProgress progress : completed) {
-            long playerId = progress.getPlayer().getId();
-
-            if (!rosterIdentifiers.contains(playerId)) {
+            if (!rosterIdentifiers.contains(progress.getPlayer().getId())) {
                 continue;
             }
 
-            WeeklyChallenge selection = progress.getWeeklyChallenge();
+            ChallengeSelection selection = progress.getSelection();
             int weekIndex = campaign.weekIndexOf(selection.getWeekStart());
-            int survivors = survivorsOf(selection, campaign.reference(), weekIndex);
 
-            totals.merge(weekIndex, survivors, Integer::sum);
-            survivorsByPlayer.computeIfAbsent(weekIndex, ignored -> new HashMap<>())
-                .merge(playerId, survivors, Integer::sum);
-            completionsByPlayer.computeIfAbsent(weekIndex, ignored -> new HashMap<>())
-                .merge(playerId, 1, Integer::sum);
+            ChallengeCalibration calibration =
+                new ChallengeCalibration(campaign.reference(), weekIndex, campaign.getDifficulty());
+            int rescued = ruleset.challengeReward(
+                selection.getCadence(),
+                selection.getChallenge().getTier(),
+                calibration
+            );
+
+            totals.merge(weekIndex, rescued, Integer::sum);
         }
 
         Map<Integer, WeekChallengeYield> yields = new HashMap<>(totals.size());
-        totals.forEach((weekIndex, survivors) -> yields.put(weekIndex, new WeekChallengeYield(
-            survivors,
-            survivorsByPlayer.getOrDefault(weekIndex, Map.of()),
-            completionsByPlayer.getOrDefault(weekIndex, Map.of())
-        )));
+        totals.forEach((weekIndex, rescued) -> yields.put(weekIndex, new WeekChallengeYield(rescued)));
 
         return yields;
-    }
-
-    /**
-     * Prices one validated selection in wounded.
-     *
-     * @param selection selection the operator validated
-     * @param reference campaign reference
-     * @param weekIndex one-based week the selection belongs to
-     * @return the wounded it brings back
-     */
-    private int survivorsOf(WeeklyChallenge selection, int reference, int weekIndex) {
-        double weight = ruleset.challengeWeight(
-            selection.getChallenge().getCadence(),
-            selection.getChallenge().getDifficulty()
-        );
-
-        return ruleset.challengeSurvivors(reference, weight, weekIndex);
     }
 }

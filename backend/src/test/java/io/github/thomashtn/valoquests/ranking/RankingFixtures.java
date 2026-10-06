@@ -77,31 +77,31 @@ public final class RankingFixtures {
      *
      * @param damage     damage, split 30/70 into food and components
      * @param matchCount matches played
-     * @param streakDays streak the day sits at
+     * @param playedDays days played this week up to that day
      * @return the output
      */
-    public static PlayerDayOutput dayOutput(int damage, int matchCount, int streakDays) {
+    public static PlayerDayOutput dayOutput(int damage, int matchCount, int playedDays) {
         int food = damage * 3 / 10;
 
-        return new PlayerDayOutput(damage, food, damage - food, matchCount, 0, streakDays, 0);
+        return new PlayerDayOutput(damage, food, damage - food, matchCount, 0, playedDays, 0);
     }
 
     /**
-     * Builds a reading from per-player, per-day outputs; the streak of each day is taken from the
-     * output itself.
+     * Builds a reading from per-player, per-day outputs; the days played this week are
+     * taken from each output itself.
      *
      * @param outputs output per player and per day
      * @return the reading
      */
     public static DailyOutput output(Map<Long, Map<LocalDate, PlayerDayOutput>> outputs) {
         Map<LocalDate, Map<Long, PlayerDayOutput>> byDay = new HashMap<>();
-        Map<Long, Map<LocalDate, Integer>> streaks = new HashMap<>();
+        Map<Long, Map<LocalDate, Integer>> playedDays = new HashMap<>();
 
         outputs.forEach((playerId, days) -> days.forEach((day, output) -> {
             byDay.computeIfAbsent(day, ignored -> new HashMap<>()).put(playerId, output);
-            streaks.computeIfAbsent(playerId, ignored -> new HashMap<>()).put(day, output.streakDays());
+            playedDays.computeIfAbsent(playerId, ignored -> new HashMap<>()).put(day, output.playedDays());
         }));
 
-        return new DailyOutput(byDay, streaks, List.of());
+        return new DailyOutput(byDay, playedDays, List.of());
     }
 }

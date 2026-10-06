@@ -5,6 +5,7 @@ import io.github.thomashtn.valoquests.henrik.model.HenrikAccount;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerAccountConflictException;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import java.time.Clock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,17 +33,25 @@ public class PlayerAccountResolutionService {
     private final PlayerRepository playerRepository;
 
     /**
+     * Clock stamping the update of the resolved player.
+     */
+    private final Clock clock;
+
+    /**
      * Creates the player account resolution service.
      *
      * @param accountClient Henrik account client
      * @param playerRepository tracked player repository
+     * @param clock application clock
      */
     public PlayerAccountResolutionService(
         HenrikAccountClient accountClient,
-        PlayerRepository playerRepository
+        PlayerRepository playerRepository,
+        Clock clock
     ) {
         this.accountClient = accountClient;
         this.playerRepository = playerRepository;
+        this.clock = clock;
     }
 
     /**
@@ -56,6 +65,7 @@ public class PlayerAccountResolutionService {
      * @throws IllegalArgumentException when the player is null
      * @throws PlayerAccountConflictException when the resolved PUUID already
      *                                        belongs to another player
+     * @throws IllegalStateException when the player's Riot identity changed during the resolution
      */
     public Player resolvePuuid(Player player) {
         if (player == null) {
@@ -83,15 +93,27 @@ public class PlayerAccountResolutionService {
 
         verifyPuuidAvailability(account.puuid());
 
+        int updatedRows = playerRepository.storeResolvedPuuid(
+            player.getId(),
+            player.getGameName(),
+            player.getTagLine(),
+            account.puuid(),
+            clock.instant()
+        );
+        if (updatedRows == 0) {
+            // Storing it anyway would import the matches of the account the player no longer names.
+            throw new IllegalStateException(
+                "Player " + player.getId() + " changed while its Riot account was being resolved"
+            );
+        }
         player.setRiotPuuid(account.puuid());
-        Player savedPlayer = playerRepository.save(player);
 
         LOGGER.info(
             "Resolved Riot account for player {}",
-            savedPlayer.getId()
+            player.getId()
         );
 
-        return savedPlayer;
+        return player;
     }
 
     /**

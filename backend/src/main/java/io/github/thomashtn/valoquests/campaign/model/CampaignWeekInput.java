@@ -36,10 +36,6 @@ public record CampaignWeekInput(
      * @return progress between zero and one
      */
     public double progress() {
-        if (defeated || guardianHitPoints <= 0) {
-            return 1;
-        }
-
-        return Math.min(1, (double) damageDealt / guardianHitPoints);
+        return GuardianProgress.of(defeated, damageDealt, guardianHitPoints);
     }
 }

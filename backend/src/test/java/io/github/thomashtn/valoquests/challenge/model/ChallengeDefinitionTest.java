@@ -18,16 +18,16 @@ class ChallengeDefinitionTest {
     void shouldExposeTheTargetCalculatorsCompareAgainst() {
         ChallengeCondition bar = condition(ChallengeMetric.KILLS, 20, ChallengeGameMode.COMPETITIVE, 5, null);
 
-        assertThat(new ChallengeDefinition(3, ProgressMode.COUNT_MATCHES, List.of(bar)).progressTarget())
+        assertThat(new ChallengeDefinition(ProgressMode.COUNT_MATCHES, List.of(bar)).progressTarget())
             .isEqualByComparingTo(BigDecimal.valueOf(5));
-        assertThat(new ChallengeDefinition(3, ProgressMode.MAX_STREAK, List.of(
+        assertThat(new ChallengeDefinition(ProgressMode.MAX_STREAK, List.of(
             condition(ChallengeMetric.MATCHES_WON, 1, ChallengeGameMode.COMPETITIVE, null, 3)
         )).progressTarget()).isEqualByComparingTo(BigDecimal.valueOf(3));
-        assertThat(new ChallengeDefinition(3, ProgressMode.ALL, List.of(
+        assertThat(new ChallengeDefinition(ProgressMode.ALL, List.of(
             condition(ChallengeMetric.MATCHES_PLAYED, 6, ChallengeGameMode.DEATHMATCH, null, null),
             condition(ChallengeMetric.MATCHES_PLAYED, 4, ChallengeGameMode.TEAM_DEATHMATCH, null, null)
         )).progressTarget()).isEqualByComparingTo(BigDecimal.TEN);
-        assertThat(new ChallengeDefinition(3, ProgressMode.SUM, List.of(
+        assertThat(new ChallengeDefinition(ProgressMode.SUM, List.of(
             condition(ChallengeMetric.KILLS, 60, ChallengeGameMode.COMPETITIVE_OR_UNRATED, null, null)
         )).progressTarget()).isEqualByComparingTo(BigDecimal.valueOf(60));
     }
@@ -37,11 +37,11 @@ class ChallengeDefinitionTest {
      */
     @Test
     void shouldBeCompetitiveOnlyWhenAnyConditionRequiresRanked() {
-        ChallengeDefinition mixed = new ChallengeDefinition(3, ProgressMode.ALL, List.of(
+        ChallengeDefinition mixed = new ChallengeDefinition(ProgressMode.ALL, List.of(
             condition(ChallengeMetric.KILLS, 300, ChallengeGameMode.DEATHMATCH, null, null),
             condition(ChallengeMetric.KILLS, 90, ChallengeGameMode.COMPETITIVE, null, null)
         ));
-        ChallengeDefinition open = new ChallengeDefinition(3, ProgressMode.SUM, List.of(
+        ChallengeDefinition open = new ChallengeDefinition(ProgressMode.SUM, List.of(
             condition(ChallengeMetric.KILLS, 90, ChallengeGameMode.COMPETITIVE_OR_UNRATED, null, null)
         ));
 

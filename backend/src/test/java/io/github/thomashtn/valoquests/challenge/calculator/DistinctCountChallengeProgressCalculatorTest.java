@@ -1,7 +1,6 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
@@ -16,11 +15,10 @@ import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.service.MatchEligibility;
 import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -105,8 +103,6 @@ class DistinctCountChallengeProgressCalculatorTest {
             .isEqualByComparingTo("2");
         assertThat(result.targetValue())
             .isEqualByComparingTo("3");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("66.67");
         assertThat(result.completed()).isFalse();
     }
 
@@ -151,16 +147,14 @@ class DistinctCountChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("2");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("100.00");
         assertThat(result.completed()).isTrue();
     }
 
     /**
-     * Verifies that several matches played on the same UTC day count once.
+     * Verifies that several matches played on the same calendar day count once.
      */
     @Test
-    void shouldCountDistinctUtcPlayDays() {
+    void shouldCountDistinctPlayDays() {
         ChallengeDefinition definition = createDefinition(
             ChallengeMetric.PLAY_DAY,
             ChallengeGameMode.ANY,
@@ -197,8 +191,6 @@ class DistinctCountChallengeProgressCalculatorTest {
 
         assertThat(result.currentValue())
             .isEqualByComparingTo("2");
-        assertThat(result.progressPercentage())
-            .isEqualByComparingTo("66.67");
     }
 
     /**
@@ -283,27 +275,6 @@ class DistinctCountChallengeProgressCalculatorTest {
     }
 
     /**
-     * Verifies that a grouping dimension is mandatory for this mode.
-     */
-    @Test
-    void shouldRejectDefinitionWithoutGroupingDimension() {
-        ChallengeDefinition definition = createDefinition(
-            ChallengeMetric.MATCHES_PLAYED,
-            ChallengeGameMode.ANY,
-            null,
-            2
-        );
-
-        PlayerChallengeContext context = createContext();
-
-        assertThatThrownBy(
-            () -> calculator.calculate(definition, context)
-        )
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("grouping dimension");
-    }
-
-    /**
      * Creates a single-condition distinct-count definition.
      *
      * @param metric   evaluated metric
@@ -331,7 +302,6 @@ class DistinctCountChallengeProgressCalculatorTest {
         );
 
         return new ChallengeDefinition(
-            3,
             ProgressMode.DISTINCT_COUNT,
             List.of(condition)
         );
@@ -346,13 +316,7 @@ class DistinctCountChallengeProgressCalculatorTest {
     private PlayerChallengeContext createContext(
         PlayerMatch... playerMatches
     ) {
-        return new PlayerChallengeContext(
-            1L,
-            LocalDate.of(2026, 7, 20),
-            Instant.parse("2026-07-20T00:00:00Z"),
-            Instant.parse("2026-07-27T00:00:00Z"),
-            List.of(playerMatches)
-        );
+        return new PlayerChallengeContext(List.of(playerMatches));
     }
 
     /**

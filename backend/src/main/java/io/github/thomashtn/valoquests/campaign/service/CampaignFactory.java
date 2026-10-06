@@ -12,9 +12,11 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignWeekShape;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
+import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.service.ScoringRuleset;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -31,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Builds a whole campaign at opening: its row, its frozen roster and its ten weeks.
+ *
+ * <p>The roster is the players active on the day it is opened, frozen there for the ten weeks.
  *
  * <p>The ten weeks exist before the first match is played, guardians included. The map is what the
  * squad plans against — a week ten with the biggest group behind the biggest guardian only means
@@ -52,12 +56,12 @@ public class CampaignFactory {
     private final GuardianRepository guardianRepository;
 
     /**
-     * Barème sizing guardians and groups.
+     * Repository resolving the active players to freeze into the roster.
      */
-    private final CampaignRuleset campaignRuleset;
+    private final PlayerRepository playerRepository;
 
     /**
-     * Barème holding the weekly reward progression.
+     * Scoring table holding the weekly reward progression.
      */
     private final ScoringRuleset scoringRuleset;
 
@@ -70,18 +74,18 @@ public class CampaignFactory {
      * Creates the campaign factory.
      *
      * @param guardianRepository guardian repository
-     * @param campaignRuleset    campaign ruleset
+     * @param playerRepository   player repository
      * @param scoringRuleset     scoring ruleset
      * @param clock              clock
      */
     public CampaignFactory(
         GuardianRepository guardianRepository,
-        CampaignRuleset campaignRuleset,
+        PlayerRepository playerRepository,
         ScoringRuleset scoringRuleset,
         Clock clock
     ) {
         this.guardianRepository = guardianRepository;
-        this.campaignRuleset = campaignRuleset;
+        this.playerRepository = playerRepository;
         this.scoringRuleset = scoringRuleset;
         this.clock = clock;
     }
@@ -89,21 +93,26 @@ public class CampaignFactory {
     /**
      * Builds one campaign, unsaved.
      *
+     * <p>A campaign whose first Monday is today or already past starts {@link CampaignStatus#RUNNING}:
+     * it is under way and never waits for the nightly tick to start it.
+     *
      * @param number         campaign number, one more than the last one ever opened
-     * @param roster         players to freeze, never empty
      * @param difficulty     difficulty the campaign is played at
      * @param firstWeekStart Monday the campaign starts on
+     * @param today          day the campaign is opened on
      * @return the campaign, its roster and its ten weeks
+     * @throws CampaignLifecycleException when no player is active
      */
     public NewCampaign build(
         int number,
-        List<Player> roster,
         CampaignDifficulty difficulty,
-        LocalDate firstWeekStart
+        LocalDate firstWeekStart,
+        LocalDate today
     ) {
+        List<Player> roster = activeRoster();
         Campaign campaign = new Campaign();
         campaign.setNumber(number);
-        campaign.setStatus(CampaignStatus.OPENED);
+        campaign.setStatus(today.isBefore(firstWeekStart) ? CampaignStatus.OPENED : CampaignStatus.RUNNING);
         campaign.setOpenedAt(clock.instant());
         campaign.setFirstWeekStart(firstWeekStart);
         campaign.setLastWeekStart(firstWeekStart.plusWeeks(CampaignSchedule.WEEK_COUNT - 1L));
@@ -114,20 +123,38 @@ public class CampaignFactory {
     }
 
     /**
-     * Sizes a week's guardian and group from its campaign's current reference.
+     * Returns the players a campaign opened today freezes.
+     *
+     * @return the active roster
+     * @throws CampaignLifecycleException when no player is active
+     */
+    private List<Player> activeRoster() {
+        List<Player> roster = playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE);
+
+        if (roster.isEmpty()) {
+            throw new CampaignLifecycleException(
+                "No player is active. Activate at least one before opening a campaign."
+            );
+        }
+
+        return roster;
+    }
+
+    /**
+     * Sizes a week's guardian and group from its campaign's reference.
      *
      * @param week     week to size, its weights already set
      * @param campaign campaign the week belongs to
      */
-    public void size(CampaignWeek week, Campaign campaign) {
+    private void sizeGuardianAndGroup(CampaignWeek week, Campaign campaign) {
         int progressionPercent = scoringRuleset.rewardProgressionPercent(week.getWeekIndex());
 
-        week.setGuardianHitPoints(campaignRuleset.guardianHitPoints(
+        week.setGuardianHitPoints(CampaignRuleset.guardianHitPoints(
             campaign.reference(),
             week.getGuardianWeight().doubleValue(),
             campaign.getRosterSize()
         ));
-        week.setWoundedCount(campaignRuleset.groupSize(
+        week.setWoundedCount(CampaignRuleset.woundedCount(
             campaign.reference(),
             week.getGroupWeight().doubleValue(),
             campaign.getRosterSize(),
@@ -189,7 +216,7 @@ public class CampaignFactory {
         week.setGuardianWeight(BigDecimal.valueOf(shape.guardianWeight()));
         week.setGroupWeight(BigDecimal.valueOf(shape.groupWeight()));
         week.setGuardian(guardian);
-        size(week, campaign);
+        sizeGuardianAndGroup(week, campaign);
 
         return week;
     }

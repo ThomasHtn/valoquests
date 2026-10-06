@@ -13,12 +13,11 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.repository.GuardianRepository;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.maintenance.service.CampaignResetService;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -29,16 +28,24 @@ import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.match.repository.SeasonRepository;
 import io.github.thomashtn.valoquests.match.repository.ValorantMatchRepository;
-import io.github.thomashtn.valoquests.player.dto.PlayerSummaryResponse;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.player.service.PlayerQueryService;
+import io.github.thomashtn.valoquests.profile.dto.PlayerSummaryResponse;
+import io.github.thomashtn.valoquests.profile.service.PlayerQueryService;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.roster.dto.PlayerDeletionResponse;
+import io.github.thomashtn.valoquests.roster.model.PlayerDeletionOutcome;
+import io.github.thomashtn.valoquests.roster.service.PlayerAdminService;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.synchronization.entity.PlayerSeasonSynchronization;
+import io.github.thomashtn.valoquests.synchronization.repository.PlayerSeasonSynchronizationRepository;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -79,6 +86,15 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     private PlayerQueryService playerQueryService;
 
     @Autowired
+    private PlayerAdminService playerAdminService;
+
+    @Autowired
+    private PlayerSeasonSynchronizationRepository seasonSynchronizationRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     private PlayerRepository playerRepository;
 
     @Autowired
@@ -94,7 +110,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     private ChallengeRepository challengeRepository;
 
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     @Autowired
     private PlayerChallengeProgressRepository progressRepository;
@@ -139,7 +155,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(playerMatchRepository.count()).isZero();
         assertThat(valorantMatchRepository.count()).isZero();
         assertThat(seasonRepository.count()).isZero();
-        assertThat(weeklyChallengeRepository.count()).isZero();
+        assertThat(challengeSelectionRepository.count()).isZero();
         assertThat(progressRepository.count()).isZero();
         assertThat(scoreRepository.count()).isZero();
         assertThat(campaignWeekRepository.count()).isZero();
@@ -184,18 +200,108 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(playerRepository.findById(player.getId())).isPresent();
     }
 
+    @Test
+    @DisplayName("Deletes a synchronized player no campaign counted, with its matches, scores and progress")
+    void shouldDeleteASynchronizedPlayerOffEveryRoster() {
+        Player player = new Player();
+        player.setGameName("Benched");
+        player.setTagLine("EUW");
+        player.setDisplayName("Benched");
+        player.setStatus(PlayerStatus.INACTIVE);
+        player = playerRepository.save(player);
+        long playerId = player.getId();
+
+        PlayerMatch playerMatch = seedPlayerHistory(player);
+
+        PlayerSeasonSynchronization checkpoint = new PlayerSeasonSynchronization();
+        checkpoint.setPlayer(player);
+        checkpoint.setSeason(playerMatch.getMatch().getSeason());
+        seasonSynchronizationRepository.save(checkpoint);
+        entityManager.flush();
+
+        PlayerDeletionResponse response = playerAdminService.removeFromRoster(playerId);
+        entityManager.flush();
+
+        assertThat(response.outcome()).isEqualTo(PlayerDeletionOutcome.DELETED);
+        assertThat(playerRepository.findById(playerId)).isEmpty();
+        assertThat(playerMatchRepository.findAllByPlayerIdOrderByMatchStartedAtDesc(playerId)).isEmpty();
+        assertThat(progressRepository.findAllByPlayerId(playerId)).isEmpty();
+        assertThat(scoreRepository.findAllByPlayerId(playerId)).isEmpty();
+        assertThat(seasonSynchronizationRepository.findAllByPlayerId(playerId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Lists every player with its campaign contribution and recent play")
+    void shouldFlagContributionAndRecentPlayInTheAdministrationListing() {
+        Player veteran = playerRepository.findAllByOrderByIdAsc().getFirst();
+        seedCampaignData(veteran);
+
+        assertThat(playerAdminService.findAll())
+            .allSatisfy(listed -> {
+                boolean isVeteran = listed.id().equals(veteran.getId());
+                assertThat(listed.wasOnAnyRoster()).isEqualTo(isVeteran);
+                assertThat(listed.hasRecentMatch()).isFalse();
+            });
+        assertThat(playerMatchRepository.findPlayerIdsWithMatchStartedSince(MATCH_TIME))
+            .containsExactly(veteran.getId());
+        assertThat(playerMatchRepository.findPlayerIdsWithMatchStartedSince(MATCH_TIME.plusSeconds(1)))
+            .isEmpty();
+    }
+
     /**
      * Persists one row in each table the reset is expected to empty.
      *
      * @param player player the campaign data belongs to
      */
     private void seedCampaignData(Player player) {
+        PlayerMatch playerMatch = seedPlayerHistory(player);
+
+        Guardian guardian = guardianRepository
+            .findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.MINOR)
+            .getFirst();
+
+        Campaign campaign = new Campaign();
+        campaign.setNumber(1);
+        campaign.setStatus(CampaignStatus.RUNNING);
+        campaign.setOpenedAt(MATCH_TIME);
+        campaign.setFirstWeekStart(WEEK_START);
+        campaign.setLastWeekStart(WEEK_START.plusWeeks(9));
+        campaign.setRosterSize(7);
+        campaign.setDifficulty(CampaignDifficulty.AMATEUR);
+        campaignRepository.save(campaign);
+
+        CampaignPlayer member = new CampaignPlayer();
+        member.setCampaign(campaign);
+        member.setPlayer(player);
+        campaignPlayerRepository.save(member);
+
+        CampaignWeek week = new CampaignWeek();
+        week.setCampaign(campaign);
+        week.setWeekIndex(1);
+        week.setWeekStart(WEEK_START);
+        week.setPlanetName("Orune");
+        week.setCategory(GuardianCategory.MINOR);
+        week.setGuardianWeight(new BigDecimal("0.60"));
+        week.setGroupWeight(BigDecimal.ONE);
+        week.setGuardian(guardian);
+        week.setGuardianHitPoints(10_000);
+        week.setWoundedCount(1_855);
+        week.setDefeated(true);
+        week.setDefeatedByPlayer(player);
+        week.setFinishingPlayerMatch(playerMatch);
+        campaignWeekRepository.save(week);
+    }
+
+    /**
+     * Persists a match, a challenge progress and a weekly score for one player.
+     *
+     * @param player player the history belongs to
+     * @return the stored player match
+     */
+    private PlayerMatch seedPlayerHistory(Player player) {
         Season season = new Season();
         season.setExternalId("admin-reset-season");
         season.setName("Admin Reset Season");
-        season.setStartsAt(MATCH_TIME.minusSeconds(86_400));
-        season.setEndsAt(MATCH_TIME.plusSeconds(86_400));
-        season.setActive(true);
         season = seasonRepository.save(season);
 
         ValorantMatch match = new ValorantMatch();
@@ -232,16 +338,16 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
 
         Challenge challenge = challengeRepository.findAll().getFirst();
 
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setWeekStart(WEEK_START);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
-        weeklyChallenge.setSelectedAt(MATCH_TIME);
-        weeklyChallenge = weeklyChallengeRepository.save(weeklyChallenge);
+        ChallengeSelection selection = new ChallengeSelection();
+        selection.setWeekStart(WEEK_START);
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
+        selection.setSelectedAt(MATCH_TIME);
+        selection = challengeSelectionRepository.save(selection);
 
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
-        progress.setWeeklyChallenge(weeklyChallenge);
+        progress.setSelection(selection);
         progress.setCurrentValue(BigDecimal.ONE);
         progress.setTargetValue(BigDecimal.TEN);
         progress.setCompleted(false);
@@ -255,44 +361,10 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
         score.setCompletedChallenges(0);
         score.setGuardianDamage(50);
         score.setTotalPoints(150);
-        score.setActiveDays(1);
         score.setPosition(1);
         score.setCalculatedAt(MATCH_TIME);
         scoreRepository.save(score);
 
-        Guardian guardian = guardianRepository
-            .findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.MINOR)
-            .getFirst();
-
-        Campaign campaign = new Campaign();
-        campaign.setNumber(1);
-        campaign.setStatus(CampaignStatus.RUNNING);
-        campaign.setOpenedAt(MATCH_TIME);
-        campaign.setFirstWeekStart(WEEK_START);
-        campaign.setLastWeekStart(WEEK_START.plusWeeks(9));
-        campaign.setRosterSize(7);
-        campaign.setDifficulty(CampaignDifficulty.AMATEUR);
-        campaignRepository.save(campaign);
-
-        CampaignPlayer member = new CampaignPlayer();
-        member.setCampaign(campaign);
-        member.setPlayer(player);
-        campaignPlayerRepository.save(member);
-
-        CampaignWeek week = new CampaignWeek();
-        week.setCampaign(campaign);
-        week.setWeekIndex(1);
-        week.setWeekStart(WEEK_START);
-        week.setPlanetName("Orune");
-        week.setCategory(GuardianCategory.MINOR);
-        week.setGuardianWeight(new BigDecimal("0.60"));
-        week.setGroupWeight(BigDecimal.ONE);
-        week.setGuardian(guardian);
-        week.setGuardianHitPoints(10_000);
-        week.setWoundedCount(1_855);
-        week.setDefeated(true);
-        week.setDefeatedByPlayer(player);
-        week.setFinishingPlayerMatch(playerMatch);
-        campaignWeekRepository.save(week);
+        return playerMatch;
     }
 }

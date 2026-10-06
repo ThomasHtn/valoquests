@@ -8,15 +8,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse.HenrikMatchData;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchPlayer;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchTeam;
-import io.github.thomashtn.valoquests.henrik.mapper.HenrikMatchMapper;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
+import io.github.thomashtn.valoquests.match.mapper.HenrikMatchMapper;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.GameModeSource;
 import io.github.thomashtn.valoquests.match.model.MatchImportResult;
@@ -38,7 +37,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * Unit tests for {@link MatchImportService}, focused on the game-mode filter.
@@ -70,9 +68,6 @@ class MatchImportServiceTest {
     @Mock
     private SeasonResolutionService seasonResolutionService;
 
-    @Mock
-    private PlatformTransactionManager transactionManager;
-
     /**
      * Service under test, driven by the production mapper.
      */
@@ -92,8 +87,7 @@ class MatchImportServiceTest {
             matchRepository,
             playerMatchRepository,
             seasonResolutionService,
-            new HenrikMatchMapper(),
-            transactionManager
+            new HenrikMatchMapper()
         );
 
         player = new Player();
@@ -290,10 +284,7 @@ class MatchImportServiceTest {
             List.of()
         );
 
-        MatchImportResult result = service.importMatchesWithSummary(
-            player,
-            new HenrikMatchHistoryResponse(200, List.of(incomplete))
-        );
+        MatchImportResult result = service.importPage(player, List.of(incomplete));
 
         assertThat(result.rejected()).isEqualTo(1);
         assertThat(result.skipped()).isZero();
@@ -322,10 +313,7 @@ class MatchImportServiceTest {
             List.of()
         );
 
-        MatchImportResult result = service.importMatchesWithSummary(
-            player,
-            new HenrikMatchHistoryResponse(200, List.of(seasonless))
-        );
+        MatchImportResult result = service.importPage(player, List.of(seasonless));
 
         assertThat(result.rejected()).isEqualTo(1);
         assertThat(result.imported()).isZero();
@@ -385,17 +373,17 @@ class MatchImportServiceTest {
      */
     @Test
     void shouldCountEveryOutcomeOfAMixedPage() {
-        MatchImportResult result = service.importMatchesWithSummary(
+        MatchImportResult result = service.importPage(
             player,
-            // Arrays.asList rather than List.of: Henrik does return null entries, and the response
-            // record preserves them so they are counted as rejected instead of vanishing.
-            new HenrikMatchHistoryResponse(200, Arrays.asList(
+            // Arrays.asList rather than List.of: Henrik does return null entries, and the page keeps
+            // them so they are counted as rejected instead of vanishing.
+            Arrays.asList(
                 match("match-1", "competitive"),
                 match("match-2", "newmap"),
                 match("match-3", "custom"),
                 match("match-4", "deathmatch"),
                 null
-            ))
+            )
         );
 
         assertThat(result.received()).isEqualTo(5);
@@ -409,10 +397,7 @@ class MatchImportServiceTest {
      * Imports a single match of the given queue.
      */
     private MatchImportResult importOne(String queueId) {
-        return service.importMatchesWithSummary(
-            player,
-            new HenrikMatchHistoryResponse(200, List.of(match("match-1", queueId)))
-        );
+        return service.importPage(player, List.of(match("match-1", queueId)));
     }
 
     /**
@@ -422,10 +407,7 @@ class MatchImportServiceTest {
         String matchId,
         HenrikMatchMetadata.HenrikQueue queue
     ) {
-        return service.importMatchesWithSummary(
-            player,
-            new HenrikMatchHistoryResponse(200, List.of(match(matchId, queue)))
-        );
+        return service.importPage(player, List.of(match(matchId, queue)));
     }
 
     /**
@@ -451,15 +433,13 @@ class MatchImportServiceTest {
             ),
             List.of(new HenrikMatchPlayer(
                 PUUID,
-                "Player",
-                "EUW",
                 "Red",
                 new HenrikMatchPlayer.HenrikAgent("agent-1", "Jett"),
                 new HenrikMatchPlayer.HenrikPlayerStats(
                     4000, 20, 12, 3, 10, 25, 2,
-                    new HenrikMatchPlayer.HenrikDamage(3200, 2800)
+                    new HenrikMatchPlayer.HenrikDamage(3200)
                 ),
-                new HenrikMatchPlayer.HenrikTier(21, "Immortal 1")
+                new HenrikMatchPlayer.HenrikTier("Immortal 1")
             )),
             List.of(
                 new HenrikMatchTeam("Red", true, new HenrikMatchTeam.HenrikRounds(13, 7)),

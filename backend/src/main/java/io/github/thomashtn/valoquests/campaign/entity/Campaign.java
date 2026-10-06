@@ -1,8 +1,10 @@
 package io.github.thomashtn.valoquests.campaign.entity;
 
+import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * One ten-week rescue campaign, opened from the backoffice and calibrated once.
+ * One ten-week rescue campaign, opened from the backoffice at a fixed difficulty.
  *
  * <p>The difficulty is written at opening and never touched again. It sizes the guardians and the
  * groups, and decides which of a challenge's two written grids is played, so a difficulty that moved
@@ -53,13 +55,13 @@ public class Campaign extends AuditableEntity {
     private CampaignStatus status = CampaignStatus.OPENED;
 
     /**
-     * Instant an operator opened the campaign, which is when the roster froze.
+     * Instant an admin opened the campaign, which is when the roster froze.
      */
     @Column(name = "opened_at", nullable = false)
     private Instant openedAt;
 
     /**
-     * Monday the campaign's first week starts on, always strictly after {@link #openedAt}.
+     * Monday the campaign's first week starts on: the week of {@link #openedAt} or the next one.
      */
     @Column(name = "first_week_start", nullable = false)
     private LocalDate firstWeekStart;
@@ -77,7 +79,7 @@ public class Campaign extends AuditableEntity {
     private Instant closedAt;
 
     /**
-     * Day an operator cut the campaign short, or {@code null} for one that ran its course.
+     * Day an admin cut the campaign short, or {@code null} for one that ran its course.
      *
      * <p>{@link #closedAt} cannot tell the two apart: it is set either way. This gives the replay a
      * day to stop on, so a campaign stopped in week four is never credited weeks five to ten.
@@ -92,7 +94,7 @@ public class Campaign extends AuditableEntity {
     private int rosterSize;
 
     /**
-     * Difficulty the operator chose at opening, frozen for the whole run.
+     * Difficulty the admin chose at opening, frozen for the whole campaign.
      *
      * <p>The only dial: it carries the reference every other figure is a multiple of, and decides
      * which of the two grids written in the catalogue this campaign's challenges are drawn from.
@@ -116,13 +118,13 @@ public class Campaign extends AuditableEntity {
     /**
      * Returns the last day this campaign's base is ever computed on.
      *
-     * <p>The tenth Sunday, or the day an operator stopped it. Not the Monday after: the tenth week
+     * <p>The tenth Sunday, or the day an admin stopped it. Not the Monday after: the tenth week
      * settles on its own Sunday, so there is nothing left to credit on day seventy-one.
      *
      * @return the campaign's final day
      */
     public LocalDate finalDay() {
-        return stoppedOn != null ? stoppedOn : lastWeekStart.plusDays(6);
+        return stoppedOn != null ? stoppedOn : WeekCalendar.lastDayOf(lastWeekStart);
     }
 
     /**
@@ -138,10 +140,20 @@ public class Campaign extends AuditableEntity {
     /**
      * Places one week inside this campaign, counting from one.
      *
-     * @param weekStart Monday identifying the week, must not be {@code null}
+     * @param day any day of the week, must not be {@code null}
      * @return the week's one-based position, outside {@code 1..10} for a week outside the campaign
      */
-    public int weekIndexOf(LocalDate weekStart) {
-        return (int) ChronoUnit.WEEKS.between(firstWeekStart, weekStart) + 1;
+    public int weekIndexOf(LocalDate day) {
+        return (int) ChronoUnit.WEEKS.between(firstWeekStart, day) + 1;
+    }
+
+    /**
+     * Places one week inside this campaign, clamped to its ten weeks.
+     *
+     * @param weekStart Monday identifying the week, must not be {@code null}
+     * @return the week's one-based position, week one before the campaign and week ten after it
+     */
+    public int scheduleWeekIndexOf(LocalDate weekStart) {
+        return Math.clamp(weekIndexOf(weekStart), 1, CampaignSchedule.WEEK_COUNT);
     }
 }

@@ -84,6 +84,7 @@ public class HenrikRequestLimiter {
      * @throws IllegalStateException when the waiting thread is interrupted
      */
     public void acquire() {
+        // A retry runs this on a Reactor parallel thread after Mono.delay and parks it: fine at one or two callers.
         lock.lock();
 
         try {
@@ -113,9 +114,8 @@ public class HenrikRequestLimiter {
 
             LockSupport.parkNanos(remainingNanos);
 
+            // The interrupt flag stays set for the caller: isInterrupted does not clear it.
             if (Thread.currentThread().isInterrupted()) {
-                Thread.currentThread().interrupt();
-
                 throw new IllegalStateException(
                     "Interrupted while waiting for a Henrik API permit"
                 );

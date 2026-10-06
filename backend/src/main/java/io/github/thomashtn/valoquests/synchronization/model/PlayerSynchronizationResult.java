@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.synchronization.model;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import java.time.Instant;
 
 /**
  * Contains the result of a successful synchronization.
@@ -10,7 +9,6 @@ import java.time.Instant;
  * @param player synchronized player
  * @param pagesFetched number of Henrik match-history pages retrieved
  * @param matchesImported number of newly imported player matches
- * @param completedAt completion timestamp
  * @param stopReason condition that ended the match-history walk
  */
 @SuppressFBWarnings(
@@ -22,7 +20,6 @@ public record PlayerSynchronizationResult(
     Player player,
     int pagesFetched,
     int matchesImported,
-    Instant completedAt,
     SynchronizationStopReason stopReason
 ) {
 
@@ -41,11 +38,6 @@ public record PlayerSynchronizationResult(
         if (matchesImported < 0) {
             throw new IllegalArgumentException(
                 "matchesImported must not be negative"
-            );
-        }
-        if (completedAt == null) {
-            throw new IllegalArgumentException(
-                "completedAt must not be null"
             );
         }
         if (stopReason == null) {

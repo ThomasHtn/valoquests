@@ -16,7 +16,6 @@ import java.time.Instant;
  * @param status current or final execution status
  * @param startedAt execution start timestamp
  * @param finishedAt execution completion timestamp
- * @param lastAttemptAt timestamp of the represented attempt
  * @param lastSuccessfulSynchronizationAt latest successful player
  *                                                synchronization
  * @param playersProcessed number of processed players
@@ -35,7 +34,6 @@ public record SynchronizationResponse(
     SynchronizationStatus status,
     Instant startedAt,
     Instant finishedAt,
-    Instant lastAttemptAt,
     Instant lastSuccessfulSynchronizationAt,
     int playersProcessed,
     int failureCount,
@@ -61,7 +59,6 @@ public record SynchronizationResponse(
             synchronization.getStatus(),
             synchronization.getStartedAt(),
             synchronization.getFinishedAt(),
-            synchronization.getStartedAt(),
             lastSuccessfulSynchronizationAt,
             synchronization.getPlayersProcessed(),
             synchronization.getFailureCount(),

@@ -120,14 +120,9 @@ export interface ChallengeCard extends ChallengeLook {
   readonly description: string;
 
   /**
-   * Wounded one operator brings back by validating it.
+   * Wounded one operator brings back by validating it, also the ranking points it pays.
    */
   readonly survivors: number;
-
-  /**
-   * Ranking points paid, shown while no campaign runs.
-   */
-  readonly rankingPoints: number;
 
   /**
    * Whether a campaign runs, so the card shows wounded instead of points.

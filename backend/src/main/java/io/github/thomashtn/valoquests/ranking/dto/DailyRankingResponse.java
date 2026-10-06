@@ -5,30 +5,24 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Exposes one day's board: what every player of the roster brought in, how the day was priced, and
- * how that compares to the day before.
+ * Exposes one day's board: what every player of the roster brought in and how the day was priced.
  *
  * <p>A day is not a short week. Only match output exists at this scale, the challenge points are
  * settled on the week, so a day's figure is the damage its matches dealt, split into the two
- * resources, and {@link DailyRankingEntryResponse#damageVariation()} is what turns it into an
- * answer to "did we have a good evening?".
+ * resources.
  *
- * <p>The turnout the two counts report is measured on the competing squad alone, the same players the
- * positions below are handed to. A deactivated player is still listed and still priced, but counting
- * them here would put a presence over a board holding no slot for them.
+ * <p>The roster count is measured on the competing squad alone, the same players the positions below
+ * are handed to. A deactivated player is still listed and still priced, but counting them here would
+ * put a presence over a board holding no slot for them.
  *
  * @param day               the day on the board, as an ISO-8601 date
- * @param previousDay       the day the variation is measured against
- * @param playedPlayerCount competing players who played at all that day
  * @param rosterPlayerCount competing players, deactivated and archived ones excluded
  * @param ranking           one entry per player of the roster, archived ones aside, best day first
  */
-@Schema(description = "One day's ranking, and how it compares to the day before.")
+@Schema(description = "One day's ranking.")
 public record DailyRankingResponse(
 
     LocalDate day,
-    LocalDate previousDay,
-    int playedPlayerCount,
     int rosterPlayerCount,
     List<DailyRankingEntryResponse> ranking
 ) {
@@ -39,7 +33,7 @@ public record DailyRankingResponse(
      * reader the weekly ranking and the campaign use, both multipliers included, so one evening is
      * priced identically wherever it is shown. Both multipliers are reported, not just applied: a rule
      * that discourages marathon sessions only discourages one if the player can see it coming, and a
-     * streak only rewards regularity if the counter is on screen.
+     * bonus for the days played this week only rewards regularity if the counter is on screen.
      *
      * @param position           rank on the day, starting at 1, shared on equal damage, {@code null}
      *     when the player dealt none or is not competitive
@@ -52,11 +46,9 @@ public record DailyRankingResponse(
      * @param components         components share of that damage
      * @param matchCount         valued matches played that day
      * @param reducedMatchCount  those the day's diminishing returns priced below full value
-     * @param streakDays         days of the week played up to that day included, zero when not played
-     * @param streakBonusPercent bonus every match of the day earned from that streak
+     * @param playedDays         days played this week up to that day included, zero when not played
+     * @param streakBonusPercent bonus every match of the day earned from the days played this week
      * @param weekPlayedDays     days of the week played from Monday up to that day included
-     * @param previousDamage     the damage figure for {@link DailyRankingResponse#previousDay()}
-     * @param damageVariation    {@code damage} minus {@code previousDamage}
      */
     public record DailyRankingEntryResponse(
 
@@ -70,11 +62,9 @@ public record DailyRankingResponse(
         int components,
         int matchCount,
         int reducedMatchCount,
-        int streakDays,
+        int playedDays,
         int streakBonusPercent,
-        List<LocalDate> weekPlayedDays,
-        int previousDamage,
-        int damageVariation
+        List<LocalDate> weekPlayedDays
     ) {
 
         /**

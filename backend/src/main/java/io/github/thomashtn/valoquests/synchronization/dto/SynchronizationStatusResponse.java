@@ -6,8 +6,8 @@ import java.time.Instant;
 /**
  * Exposes whether the public data is being rebuilt and when it last was.
  *
- * @param inProgress      whether a synchronization is pending or running, recalculation included
- * @param lastCompletedAt end of the last synchronization that synchronized at least one player,
+ * @param inProgress      whether a synchronization is running, recalculation included
+ * @param lastCompletedAt end of the last synchronization that completed or partially succeeded,
  *                        {@code null} when none ever did
  */
 @Schema(description = "Public synchronization status.")

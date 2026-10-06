@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.henrik.exception;
 
 import java.time.Duration;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 /**
  * Indicates that Henrik temporarily rejected a request because its rate limit
@@ -26,7 +25,7 @@ public class HenrikRateLimitException extends HenrikApiException {
         String message,
         Duration retryAfter
     ) {
-        super(message, HttpStatus.TOO_MANY_REQUESTS, true);
+        super(message, true);
         this.retryAfter = retryAfter;
     }
 }

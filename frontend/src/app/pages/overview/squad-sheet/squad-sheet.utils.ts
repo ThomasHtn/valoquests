@@ -23,7 +23,7 @@ export function buildSquad(
   return active.map((entry) => {
     const title = primaryTitleOf(titles, entry.playerId);
     const played = entry.matchCount > 0;
-    const daysPlayed = entry.weekPlayedDays.length;
+    const playedDays = entry.weekPlayedDays.length;
     return {
       position: played ? entry.position : null,
       playerId: entry.playerId,
@@ -33,8 +33,8 @@ export function buildSquad(
       title: title === null ? null : { key: title, ...resolveTitleVisual(title) },
       played,
       // An idle operator shows the bonus playing today would earn, not yesterday's.
-      streakBonusPercent: played ? entry.streakBonusPercent : streakBonusOf(daysPlayed + 1),
-      streakDays: daysPlayed,
+      streakBonusPercent: played ? entry.streakBonusPercent : streakBonusOf(playedDays + 1),
+      playedDays,
       streakWeek: streakWeekOf(daily.day, entry.weekPlayedDays),
       damage: entry.damage,
       matchCount: entry.matchCount,

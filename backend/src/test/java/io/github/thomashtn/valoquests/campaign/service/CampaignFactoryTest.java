@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
-import io.github.thomashtn.valoquests.campaign.CampaignRuleset;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
@@ -13,9 +12,11 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignSchedule;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
 import io.github.thomashtn.valoquests.campaign.model.NewCampaign;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
-import io.github.thomashtn.valoquests.scoring.DefaultScoringRuleset;
+import io.github.thomashtn.valoquests.player.model.PlayerStatus;
+import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.service.DefaultScoringRuleset;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -41,6 +42,11 @@ class CampaignFactoryTest {
     private static final LocalDate FIRST_WEEK_START = CampaignFixtures.FIRST_WEEK_START;
 
     /**
+     * Friday the campaign is opened on, before its first Monday.
+     */
+    private static final LocalDate OPENING_DAY = FIRST_WEEK_START.minusDays(3);
+
+    /**
      * Roster the fixtures freeze.
      */
     private static final List<Player> ROSTER = IntStream.rangeClosed(1, 7)
@@ -50,13 +56,16 @@ class CampaignFactoryTest {
     @Mock
     private GuardianRepositoryStub guardianRepository;
 
+    @Mock
+    private PlayerRepository playerRepository;
+
     private CampaignFactory factory;
 
     @BeforeEach
     void setUp() {
         factory = new CampaignFactory(
             guardianRepository,
-            new CampaignRuleset(),
+            playerRepository,
             new DefaultScoringRuleset(),
             Clock.fixed(CampaignFixtures.OPENED_AT, ZoneOffset.UTC)
         );
@@ -65,9 +74,10 @@ class CampaignFactoryTest {
     @Test
     @DisplayName("Freezes the roster, the difficulty and the ten weeks in one go")
     void shouldBuildTheWholeCampaign() {
+        givenActiveRoster();
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(3, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
+        NewCampaign built = factory.build(3, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY);
 
         assertThat(built.campaign().getNumber()).isEqualTo(3);
         assertThat(built.campaign().getStatus()).isEqualTo(CampaignStatus.OPENED);
@@ -82,11 +92,33 @@ class CampaignFactoryTest {
     }
 
     @Test
-    @DisplayName("Sizes each week's guardian and group from the reference and the roster")
-    void shouldSizeEveryWeek() {
+    @DisplayName("Starts a campaign right away when its first Monday is today")
+    void shouldStartACampaignOpenedOnItsFirstMonday() {
+        givenActiveRoster();
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
+        NewCampaign built = factory.build(1, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, FIRST_WEEK_START);
+
+        assertThat(built.campaign().getStatus()).isEqualTo(CampaignStatus.RUNNING);
+    }
+
+    @Test
+    @DisplayName("Refuses to open a campaign nobody is active for")
+    void shouldRefuseAnEmptyRoster() {
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(List.of());
+
+        assertThatThrownBy(() -> factory.build(1, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY))
+            .isInstanceOf(CampaignLifecycleException.class)
+            .hasMessageContaining("No player is active");
+    }
+
+    @Test
+    @DisplayName("Sizes each week's guardian and group from the reference and the roster")
+    void shouldSizeEveryWeek() {
+        givenActiveRoster();
+        stockCatalogue(6, 10, 6);
+
+        NewCampaign built = factory.build(1, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY);
         CampaignWeek first = built.weeks().getFirst();
         CampaignWeek last = built.weeks().getLast();
 
@@ -101,9 +133,10 @@ class CampaignFactoryTest {
     @Test
     @DisplayName("Never draws the same guardian twice inside one campaign")
     void shouldDrawEveryGuardianOnlyOnce() {
+        givenActiveRoster();
         stockCatalogue(6, 10, 6);
 
-        NewCampaign built = factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START);
+        NewCampaign built = factory.build(1, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY);
 
         assertThat(built.weeks())
             .extracting(week -> week.getGuardian().getCode())
@@ -115,10 +148,11 @@ class CampaignFactoryTest {
     @Test
     @DisplayName("Draws the same guardians for the same campaign number")
     void shouldDrawReproducibly() {
+        givenActiveRoster();
         stockCatalogue(6, 10, 6);
 
-        List<String> first = codesOf(factory.build(4, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START));
-        List<String> second = codesOf(factory.build(4, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START));
+        List<String> first = codesOf(factory.build(4, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY));
+        List<String> second = codesOf(factory.build(4, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY));
 
         assertThat(first).isEqualTo(second);
     }
@@ -126,15 +160,23 @@ class CampaignFactoryTest {
     @Test
     @DisplayName("Refuses to open on a catalogue too small to fill a weight class")
     void shouldRefuseAThinCatalogue() {
+        givenActiveRoster();
         // Only the classes the draw reaches before it gives up: it walks minor, then standard.
         when(guardianRepository.findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.MINOR))
             .thenReturn(entries(GuardianCategory.MINOR, 0, 6));
         when(guardianRepository.findAllByEnabledTrueAndCategoryOrderByIdAsc(GuardianCategory.STANDARD))
             .thenReturn(entries(GuardianCategory.STANDARD, 100, 3));
 
-        assertThatThrownBy(() -> factory.build(1, ROSTER, CampaignDifficulty.AMATEUR, FIRST_WEEK_START))
+        assertThatThrownBy(() -> factory.build(1, CampaignDifficulty.AMATEUR, FIRST_WEEK_START, OPENING_DAY))
             .isInstanceOf(CampaignLifecycleException.class)
             .hasMessageContaining("STANDARD");
+    }
+
+    /**
+     * Declares the fixtures' roster as the players active today.
+     */
+    private void givenActiveRoster() {
+        when(playerRepository.findAllByStatusOrderByIdAsc(PlayerStatus.ACTIVE)).thenReturn(ROSTER);
     }
 
     /**

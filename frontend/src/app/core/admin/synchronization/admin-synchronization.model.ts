@@ -1,8 +1,7 @@
 /**
- * Mirrors the backend `SynchronizationStatus`; all but `PENDING` and `RUNNING` are terminal.
+ * Mirrors the backend `SynchronizationStatus`; all but `RUNNING` are terminal.
  */
-export type SynchronizationRunStatus =
-  'PENDING' | 'RUNNING' | 'PARTIAL' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type SynchronizationRunStatus = 'RUNNING' | 'PARTIAL' | 'COMPLETED' | 'FAILED';
 
 /**
  * What started a run: the scheduler or an operator.
@@ -68,11 +67,6 @@ interface SynchronizationRun {
  * One synchronization run; mirrors the backend `SynchronizationResponse`.
  */
 export interface SynchronizationExecution extends SynchronizationRun {
-  /**
-   * Instant of the last run, ISO-8601, or `null` when none ran.
-   */
-  readonly lastAttemptAt: string | null;
-
   /**
    * Instant of the last successful run, ISO-8601, or `null` when none succeeded.
    */

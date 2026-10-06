@@ -6,8 +6,8 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
 import io.github.thomashtn.valoquests.campaign.entity.Guardian;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.player.entity.Player;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,7 +42,7 @@ public final class CampaignFixtures {
     }
 
     /**
-     * Builds a running campaign of seven operators.
+     * Builds a running campaign of seven players.
      *
      * @param id campaign identifier
      * @return the campaign
@@ -126,7 +126,7 @@ public final class CampaignFixtures {
      * Freezes one player into a campaign's roster.
      *
      * @param campaign campaign the roster belongs to
-     * @param player   operator taking part
+     * @param player   player taking part
      * @return the roster row
      */
     public static CampaignPlayer member(Campaign campaign, Player player) {

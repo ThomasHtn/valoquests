@@ -14,7 +14,7 @@ export function resolveTitleMeasures(entry: RankingEntry): Partial<Record<Weekly
   return {
     MECHANIC: entry.components,
     QUARTERMASTER: entry.food,
-    REGULAR: entry.streakDays,
+    REGULAR: entry.playedDays,
     SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
   };
 }

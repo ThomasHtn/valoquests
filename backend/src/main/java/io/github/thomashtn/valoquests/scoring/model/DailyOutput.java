@@ -12,9 +12,10 @@ import java.util.Map;
  * match by match through {@link #valuedMatches()}. A day, or a player inside a day, absent from a
  * reading played nothing.
  *
- * <p>Streaks are kept on their own, per player and per played day, over a window that starts before
- * the range: {@link #streakEndingOn(long, LocalDate)} therefore answers for the day before the range
- * too, which is what a screen needs to say how far a player who has not played yet today stands.
+ * <p>Days played this week are kept on their own, per player and per played day, over a window
+ * that starts before the range: {@link #playedDaysUpTo(long, LocalDate)} therefore answers for the
+ * day before the range too, which is what a screen needs to say how far a player who has not
+ * played yet today stands.
  */
 public final class DailyOutput {
 
@@ -24,9 +25,9 @@ public final class DailyOutput {
     private final Map<LocalDate, Map<Long, PlayerDayOutput>> byDayAndPlayer;
 
     /**
-     * Streak length per player and per played day, lookback days included.
+     * Days played this week per player and per played day, lookback days included.
      */
-    private final Map<Long, Map<LocalDate, Integer>> streakByPlayerAndDay;
+    private final Map<Long, Map<LocalDate, Integer>> playedDaysByPlayerAndDay;
 
     /**
      * Every valued match inside the requested range, in chronological order.
@@ -36,17 +37,17 @@ public final class DailyOutput {
     /**
      * Creates an immutable reading, copying every level of every map handed in.
      *
-     * @param byDayAndPlayer       output per day and per player
-     * @param streakByPlayerAndDay streak length per player and per played day
-     * @param valuedMatches        every valued match of the range, chronological
+     * @param byDayAndPlayer           output per day and per player
+     * @param playedDaysByPlayerAndDay days played this week per player and per played day
+     * @param valuedMatches            every valued match of the range, chronological
      */
     public DailyOutput(
         Map<LocalDate, Map<Long, PlayerDayOutput>> byDayAndPlayer,
-        Map<Long, Map<LocalDate, Integer>> streakByPlayerAndDay,
+        Map<Long, Map<LocalDate, Integer>> playedDaysByPlayerAndDay,
         List<ValuedMatch> valuedMatches
     ) {
         this.byDayAndPlayer = copyNested(byDayAndPlayer);
-        this.streakByPlayerAndDay = copyNested(streakByPlayerAndDay);
+        this.playedDaysByPlayerAndDay = copyNested(playedDaysByPlayerAndDay);
         this.valuedMatches = List.copyOf(valuedMatches);
     }
 
@@ -75,11 +76,11 @@ public final class DailyOutput {
      * Returns the days of the week played up to a day, that day included.
      *
      * @param playerId internal player identifier
-     * @param day      last day of the run
-     * @return streak length, zero when the player played nothing that day
+     * @param day      day to read
+     * @return days played this week up to that day, zero when the player played nothing that day
      */
-    public int streakEndingOn(long playerId, LocalDate day) {
-        return streakByPlayerAndDay.getOrDefault(playerId, Map.of()).getOrDefault(day, 0);
+    public int playedDaysUpTo(long playerId, LocalDate day) {
+        return playedDaysByPlayerAndDay.getOrDefault(playerId, Map.of()).getOrDefault(day, 0);
     }
 
     /**

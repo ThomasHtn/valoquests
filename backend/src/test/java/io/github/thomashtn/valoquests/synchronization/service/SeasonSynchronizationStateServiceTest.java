@@ -88,8 +88,8 @@ class SeasonSynchronizationStateServiceTest {
         SeasonSynchronizationStateService.SeasonWalkStart walkStart =
             service.startSeason(player, season);
 
-        assertThat(walkStart.seasonId()).isEqualTo(7L);
         assertThat(walkStart.resumeOffset()).isZero();
+        assertThat(walkStart.complete()).isFalse();
 
         ArgumentCaptor<PlayerSeasonSynchronization> saved =
             ArgumentCaptor.forClass(PlayerSeasonSynchronization.class);
@@ -116,8 +116,8 @@ class SeasonSynchronizationStateServiceTest {
         SeasonSynchronizationStateService.SeasonWalkStart walkStart =
             service.startSeason(player, season);
 
-        assertThat(walkStart.seasonId()).isEqualTo(7L);
         assertThat(walkStart.resumeOffset()).isEqualTo(120);
+        assertThat(walkStart.complete()).isTrue();
         verify(stateRepository, never()).save(any());
     }
 
@@ -134,7 +134,6 @@ class SeasonSynchronizationStateServiceTest {
 
         assertThat(state.isComplete()).isTrue();
         assertThat(state.getCompletedAt()).isEqualTo(COMPLETED_AT);
-        verify(stateRepository).save(state);
     }
 
     /**
@@ -169,28 +168,6 @@ class SeasonSynchronizationStateServiceTest {
         service.markSeasonComplete(1L, 7L);
 
         verify(stateRepository, never()).save(any());
-    }
-
-    /**
-     * Verifies that only a complete season allows an early stop.
-     */
-    @Test
-    void shouldReportSeasonCompletion() {
-        when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
-            .thenReturn(Optional.of(state(true)));
-
-        assertThat(service.isComplete(1L, 7L)).isTrue();
-    }
-
-    /**
-     * Verifies that an untracked season never allows an early stop.
-     */
-    @Test
-    void shouldNotReportAnUntrackedSeasonAsComplete() {
-        when(stateRepository.findByPlayerIdAndSeasonId(1L, 7L))
-            .thenReturn(Optional.empty());
-
-        assertThat(service.isComplete(1L, 7L)).isFalse();
     }
 
     /**
@@ -244,7 +221,6 @@ class SeasonSynchronizationStateServiceTest {
         service.recordProgress(1L, 7L, 30);
 
         assertThat(state.getNextStartOffset()).isEqualTo(30);
-        verify(stateRepository).save(state);
     }
 
     /**

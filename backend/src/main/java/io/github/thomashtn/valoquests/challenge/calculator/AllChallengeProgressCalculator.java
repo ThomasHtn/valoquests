@@ -70,7 +70,6 @@ public class AllChallengeProgressCalculator
         PlayerChallengeContext context
     ) {
         BigDecimal currentValue = BigDecimal.ZERO;
-        BigDecimal targetValue = BigDecimal.ZERO;
 
         for (ChallengeCondition condition : definition.conditions()) {
             BigDecimal conditionValue = calculateConditionValue(
@@ -81,13 +80,11 @@ public class AllChallengeProgressCalculator
             currentValue = currentValue.add(
                 conditionValue.min(condition.target())
             );
-
-            targetValue = targetValue.add(condition.target());
         }
 
         return ChallengeProgressResult.from(
             currentValue,
-            targetValue
+            definition.progressTarget()
         );
     }
 
@@ -102,17 +99,14 @@ public class AllChallengeProgressCalculator
         ChallengeCondition condition,
         PlayerChallengeContext context
     ) {
-        return context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
-            .map(playerMatch ->
-                metricEvaluator.evaluate(
-                    playerMatch,
-                    condition.metric()
+        return metricEvaluator.sumOf(
+            condition.metric(),
+            context.playerMatches()
+                .stream()
+                .filter(playerMatch ->
+                    matchFilter.matches(playerMatch, condition)
                 )
-            )
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .toList()
+        );
     }
 }

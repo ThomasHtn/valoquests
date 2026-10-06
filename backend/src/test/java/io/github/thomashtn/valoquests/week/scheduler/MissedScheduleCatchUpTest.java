@@ -6,8 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.campaign.scheduler.CampaignDailyTickScheduler;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -46,7 +46,7 @@ class MissedScheduleCatchUpTest {
     private CampaignDailyTickScheduler tickScheduler;
 
     @Mock
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     @Mock
     private TaskScheduler taskScheduler;
@@ -55,7 +55,8 @@ class MissedScheduleCatchUpTest {
     @DisplayName("Runs a missed rollover, then the day's tick, once this week's rollover time has passed")
     void shouldCatchUpAnOverdueRollover() {
         MissedScheduleCatchUp catchUp = catchUpAt("2026-09-23T10:00:00+02:00");
-        when(weeklyChallengeRepository.findPendingWeekStartsBefore(MONDAY)).thenReturn(List.of(MONDAY.minusWeeks(1)));
+        when(challengeSelectionRepository.findPendingWeekStartsBefore(MONDAY))
+            .thenReturn(List.of(MONDAY.minusWeeks(1)));
 
         catchUp.catchUp();
 
@@ -67,7 +68,8 @@ class MissedScheduleCatchUpTest {
     @DisplayName("Leaves a Monday's rollover to its own firing when the application starts before it")
     void shouldWaitForTheScheduledRolloverOnMondayNight() {
         MissedScheduleCatchUp catchUp = catchUpAt("2026-09-21T01:00:00+02:00");
-        when(weeklyChallengeRepository.findPendingWeekStartsBefore(MONDAY)).thenReturn(List.of(MONDAY.minusWeeks(1)));
+        when(challengeSelectionRepository.findPendingWeekStartsBefore(MONDAY))
+            .thenReturn(List.of(MONDAY.minusWeeks(1)));
 
         catchUp.catchUp();
 
@@ -79,7 +81,7 @@ class MissedScheduleCatchUpTest {
     @DisplayName("Runs no rollover when every past week is already finalized")
     void shouldSkipTheRolloverWhenNothingIsPending() {
         MissedScheduleCatchUp catchUp = catchUpAt("2026-09-23T10:00:00+02:00");
-        when(weeklyChallengeRepository.findPendingWeekStartsBefore(MONDAY)).thenReturn(List.of());
+        when(challengeSelectionRepository.findPendingWeekStartsBefore(MONDAY)).thenReturn(List.of());
 
         catchUp.catchUp();
 
@@ -110,7 +112,7 @@ class MissedScheduleCatchUpTest {
         return new MissedScheduleCatchUp(
             provider(WeeklyRolloverScheduler.class, rolloverScheduler),
             provider(CampaignDailyTickScheduler.class, tickScheduler),
-            weeklyChallengeRepository,
+            challengeSelectionRepository,
             taskScheduler,
             new WeekCalendar(clock, PARIS),
             clock,

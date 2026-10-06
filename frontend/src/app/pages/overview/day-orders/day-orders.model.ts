@@ -20,9 +20,9 @@ export interface DayTally {
   readonly components: number;
 
   /**
-   * Carry capacity gained today.
+   * Wounded today's components add to what the ship can reach.
    */
-  readonly carryGained: number;
+  readonly rescuesByComponentsGained: number;
 
   /**
    * Food gained today.
@@ -30,9 +30,9 @@ export interface DayTally {
   readonly food: number;
 
   /**
-   * Shelter capacity gained today.
+   * Wounded today's food adds to what the base can settle.
    */
-  readonly shelterGained: number;
+  readonly rescuesByFoodGained: number;
 
   /**
    * Food eaten today.

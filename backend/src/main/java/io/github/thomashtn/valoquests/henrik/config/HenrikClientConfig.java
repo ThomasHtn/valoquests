@@ -1,9 +1,6 @@
 package io.github.thomashtn.valoquests.henrik.config;
 
 import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -47,21 +44,8 @@ public class HenrikClientConfig {
                 ChannelOption.CONNECT_TIMEOUT_MILLIS,
                 Math.toIntExact(properties.connectTimeout().toMillis())
             )
-            .responseTimeout(properties.readTimeout())
-            .doOnConnected(connection -> connection
-                .addHandlerLast(
-                    new ReadTimeoutHandler(
-                        properties.readTimeout().toMillis(),
-                        TimeUnit.MILLISECONDS
-                    )
-                )
-                .addHandlerLast(
-                    new WriteTimeoutHandler(
-                        properties.readTimeout().toMillis(),
-                        TimeUnit.MILLISECONDS
-                    )
-                )
-            );
+            // Bounds the wait between two reads of a response, which is what the read timeout means.
+            .responseTimeout(properties.readTimeout());
     }
 
     /**

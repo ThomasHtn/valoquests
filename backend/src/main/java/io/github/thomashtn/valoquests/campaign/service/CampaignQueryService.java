@@ -23,7 +23,7 @@ public interface CampaignQueryService {
     /**
      * Returns the day in progress.
      *
-     * @return today, empty of operators between two campaigns
+     * @return today, empty of players between two campaigns
      */
     CampaignTodayResponse today();
 

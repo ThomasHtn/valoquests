@@ -2,12 +2,13 @@ package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.dto.ChallengeCatalogueResponse;
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.scoring.service.ScoringRuleset;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
     private final ChallengeDefinitionParser definitionParser;
 
     /**
-     * Barème saying what a challenge of each weight is worth.
+     * Scoring table saying what a challenge of each weight is worth.
      */
     private final ScoringRuleset ruleset;
 
@@ -100,9 +101,9 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
         Challenge challenge,
         ChallengeCalibration calibration
     ) {
-        ChallengeDefinition base = definitionParser.parse(challenge);
+        ChallengeDefinition base = definitionParser.parse(challenge, CampaignDifficulty.AMATEUR);
         ChallengeDefinition definition = definitionParser.parse(challenge, calibration.difficulty());
-        double weight = ruleset.challengeWeight(challenge.getCadence(), challenge.getDifficulty());
+        int reward = ruleset.challengeReward(challenge.getCadence(), challenge.getTier(), calibration);
 
         return new ChallengeCatalogueResponse.ChallengeCatalogueEntry(
             challenge.getId(),
@@ -110,12 +111,11 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
             challenge.getName(),
             ChallengeDescriptionResolver.resolve(challenge.getDescription(), base, definition),
             challenge.getCadence(),
-            challenge.getDifficulty(),
+            challenge.getTier(),
             definition.isCompetitiveOnly(),
             ChallengeMetricLabels.of(definition),
             definition.progressTarget(),
-            ruleset.challengeSurvivors(calibration.reference(), weight, calibration.weekIndex()),
-            ruleset.challengeRankingPoints(calibration.reference(), weight, calibration.weekIndex())
+            reward
         );
     }
 }

@@ -1,5 +1,6 @@
 package io.github.thomashtn.valoquests.synchronization.service;
 
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.shared.config.AsyncConfig;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
 import org.slf4j.Logger;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
  * <p>Separate from {@link SynchronizationLaunchService} on purpose: {@code @Async} is applied by a
  * proxy, so a self-call inside a single class would run inline and defeat the whole point. The
  * caller keeps the guard, this class keeps the dispatch.
+ *
+ * <p>Each run releases the {@link MatchHistoryLock} its caller took before dispatching it.
  */
 @Service
 public class AsyncSynchronizationRunner {
@@ -28,12 +31,22 @@ public class AsyncSynchronizationRunner {
     private final SynchronizationCommandService synchronizationCommandService;
 
     /**
+     * Lock taken by the caller before dispatching, released once the run ends.
+     */
+    private final MatchHistoryLock matchHistoryLock;
+
+    /**
      * Creates the asynchronous synchronization runner.
      *
      * @param synchronizationCommandService synchronization command service
+     * @param matchHistoryLock              lock shared by every job writing the match history
      */
-    public AsyncSynchronizationRunner(SynchronizationCommandService synchronizationCommandService) {
+    public AsyncSynchronizationRunner(
+        SynchronizationCommandService synchronizationCommandService,
+        MatchHistoryLock matchHistoryLock
+    ) {
         this.synchronizationCommandService = synchronizationCommandService;
+        this.matchHistoryLock = matchHistoryLock;
     }
 
     /**
@@ -49,6 +62,8 @@ public class AsyncSynchronizationRunner {
             synchronizationCommandService.synchronizeAllPlayers(SynchronizationTrigger.MANUAL);
         } catch (RuntimeException exception) {
             LOGGER.error("Manual synchronization of every player failed", exception);
+        } finally {
+            matchHistoryLock.release();
         }
     }
 
@@ -63,6 +78,8 @@ public class AsyncSynchronizationRunner {
             synchronizationCommandService.synchronizePlayer(playerId);
         } catch (RuntimeException exception) {
             LOGGER.error("Manual synchronization of player {} failed", playerId, exception);
+        } finally {
+            matchHistoryLock.release();
         }
     }
 }

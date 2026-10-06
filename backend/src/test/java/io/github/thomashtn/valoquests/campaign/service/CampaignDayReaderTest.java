@@ -3,6 +3,7 @@ package io.github.thomashtn.valoquests.campaign.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
@@ -66,13 +67,13 @@ class CampaignDayReaderTest {
     void setUp() {
         campaign = CampaignFixtures.runningCampaign(1);
         when(championResolver.reigningChampion()).thenReturn(2L);
-        when(titleResolver.resolve(anyList(), eq(2L))).thenReturn(Map.of(WeeklyTitle.MECHANIC, 1L));
+        when(titleResolver.resolve(anyList(), isNull(), eq(2L))).thenReturn(Map.of(WeeklyTitle.MECHANIC, 1L));
     }
 
     @Test
-    @DisplayName("Sums the day and lists its operators, most productive first")
-    void shouldSumTheDayAndRankItsOperators() {
-        when(playerDayRepository.findAllByCampaignIdAndDayBetweenOrderByDayAsc(1L, TODAY, TODAY))
+    @DisplayName("Sums the day and lists its players, most productive first")
+    void shouldSumTheDayAndRankItsPlayers() {
+        when(playerDayRepository.findAllByCampaignIdAndDay(1L, TODAY))
             .thenReturn(List.of(
                 day(CampaignFixtures.player(1, "Alpha"), 400, 120, 280, 2, 1, 3, 4),
                 day(CampaignFixtures.player(2, "Bravo"), 900, 630, 270, 6, 2, 1, 0)
@@ -97,7 +98,7 @@ class CampaignDayReaderTest {
     @Test
     @DisplayName("Reports both multipliers so the rules can be read on screen")
     void shouldReportBothMultipliers() {
-        when(playerDayRepository.findAllByCampaignIdAndDayBetweenOrderByDayAsc(1L, TODAY, TODAY))
+        when(playerDayRepository.findAllByCampaignIdAndDay(1L, TODAY))
             .thenReturn(List.of(day(CampaignFixtures.player(1, "Alpha"), 400, 120, 280, 7, 2, 5, 8)));
         when(snapshotRepository.findByCampaignIdAndDay(1L, TODAY)).thenReturn(Optional.empty());
 
@@ -107,7 +108,7 @@ class CampaignDayReaderTest {
 
         assertThat(row.matchCount()).isEqualTo(7);
         assertThat(row.reducedMatchCount()).isEqualTo(2);
-        assertThat(row.streakDays()).isEqualTo(5);
+        assertThat(row.playedDays()).isEqualTo(5);
         assertThat(row.streakBonusPercent()).isEqualTo(8);
         assertThat(row.tagLine()).isEqualTo("EUW");
     }
@@ -115,7 +116,7 @@ class CampaignDayReaderTest {
     @Test
     @DisplayName("Answers an empty day rather than nothing")
     void shouldAnswerAnEmptyDay() {
-        when(playerDayRepository.findAllByCampaignIdAndDayBetweenOrderByDayAsc(1L, TODAY, TODAY))
+        when(playerDayRepository.findAllByCampaignIdAndDay(1L, TODAY))
             .thenReturn(List.of());
         when(snapshotRepository.findByCampaignIdAndDay(1L, TODAY)).thenReturn(Optional.empty());
 
@@ -128,16 +129,16 @@ class CampaignDayReaderTest {
     }
 
     /**
-     * Builds one stored operator day.
+     * Builds one stored player day.
      *
-     * @param player             operator
+     * @param player             player
      * @param damage             damage dealt
      * @param food               food produced
      * @param components         components produced
      * @param matchCount         valued matches played
      * @param reducedMatchCount  matches priced below full value
-     * @param streakDays         streak reached
-     * @param streakBonusPercent bonus the streak earned
+     * @param playedDays         days played this week
+     * @param streakBonusPercent bonus those played days earned
      * @return the row
      */
     private CampaignPlayerDay day(
@@ -147,7 +148,7 @@ class CampaignDayReaderTest {
         int components,
         int matchCount,
         int reducedMatchCount,
-        int streakDays,
+        int playedDays,
         int streakBonusPercent
     ) {
         CampaignPlayerDay row = new CampaignPlayerDay();
@@ -159,7 +160,7 @@ class CampaignDayReaderTest {
         row.setComponents(components);
         row.setMatchCount(matchCount);
         row.setReducedMatchCount(reducedMatchCount);
-        row.setStreakDays(streakDays);
+        row.setPlayedDays(playedDays);
         row.setStreakBonusPercent(streakBonusPercent);
 
         return row;

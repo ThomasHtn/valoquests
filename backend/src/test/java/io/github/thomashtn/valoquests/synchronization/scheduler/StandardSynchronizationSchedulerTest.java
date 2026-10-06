@@ -3,9 +3,12 @@ package io.github.thomashtn.valoquests.synchronization.scheduler;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valoquests.synchronization.service.SynchronizationCommandService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,7 +33,8 @@ class StandardSynchronizationSchedulerTest {
     void shouldRunScheduledStandardSynchronization() {
         StandardSynchronizationScheduler scheduler =
             new StandardSynchronizationScheduler(
-                synchronizationCommandService
+                synchronizationCommandService,
+                new MatchHistoryLock()
             );
 
         scheduler.synchronizeAllActivePlayers();
@@ -47,7 +51,8 @@ class StandardSynchronizationSchedulerTest {
     void shouldKeepSchedulerAliveWhenSynchronizationFails() {
         StandardSynchronizationScheduler scheduler =
             new StandardSynchronizationScheduler(
-                synchronizationCommandService
+                synchronizationCommandService,
+                new MatchHistoryLock()
             );
 
         doThrow(new IllegalStateException("Unexpected failure"))
@@ -56,5 +61,20 @@ class StandardSynchronizationSchedulerTest {
 
         assertThatCode(scheduler::synchronizeAllActivePlayers)
             .doesNotThrowAnyException();
+    }
+
+    /**
+     * Verifies that a scheduled run does not overlap a job already holding the lock.
+     */
+    @Test
+    @DisplayName("Skips the scheduled run while another guarded job runs")
+    void shouldSkipWhileAnotherGuardedJobRuns() {
+        MatchHistoryLock lock = new MatchHistoryLock();
+        lock.acquireOrReject();
+
+        new StandardSynchronizationScheduler(synchronizationCommandService, lock)
+            .synchronizeAllActivePlayers();
+
+        verifyNoInteractions(synchronizationCommandService);
     }
 }

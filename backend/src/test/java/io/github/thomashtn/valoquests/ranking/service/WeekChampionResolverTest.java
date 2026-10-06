@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.campaign.service.CampaignWeekCoverageSource;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.ranking.RankingFixtures;
@@ -54,7 +55,7 @@ class WeekChampionResolverTest {
 
     @BeforeEach
     void setUp() {
-        resolver = new WeekChampionResolver(scoreRepository, campaignRepository);
+        resolver = new WeekChampionResolver(scoreRepository, new CampaignWeekCoverageSource(campaignRepository));
     }
 
     @Test

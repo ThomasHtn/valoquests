@@ -7,7 +7,6 @@ import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
 import io.github.thomashtn.valoquests.integration.PostgreSqlIntegrationTest;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -18,6 +17,7 @@ import io.github.thomashtn.valoquests.match.model.MatchResult;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumSet;
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,7 +150,7 @@ class PlayerMatchRepositoryIntegrationTest
 
     /**
      * Ensures the {@code periodStart}/{@code periodEnd} range keeps matches inside the week and
-     * excludes matches outside it, mirroring {@link PlayerMatchRepository#findForChallengePeriod}.
+     * excludes matches outside it, mirroring {@link PlayerMatchRepository#findByPlayerInPeriod}.
      */
     @Test
     void shouldFilterHistoryByWeekPeriod() {
@@ -182,18 +183,18 @@ class PlayerMatchRepositoryIntegrationTest
     }
 
     /**
-     * Exercises {@link PlayerMatchRepository#findAllByPlayerIdAndSeasonAndGameMode} against real
-     * PostgreSQL: a narrow period keeps only the matches inside it, and
+     * Exercises {@link PlayerMatchRepository#findHistory} unpaged, as the profile statistics read
+     * it, against real PostgreSQL: a narrow period keeps only the matches inside it, and
      * {@link PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_START}/{@link
      * PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_END} (what callers use in place of a week filter)
      * still return every match regardless of date.
      *
-     * <p>Regression guard for a bug where this query bound {@code periodStart}/{@code periodEnd}
-     * through a {@code :param IS NULL OR ...} check: PostgreSQL 16 rejected it with "could not
-     * determine data type of parameter", since that placeholder's only usage in the query text
-     * carried no type information at statement-prepare time - independent of whether the bound
-     * value later turned out to be null. See {@link PlayerMatchHistoryCriteria}'s Javadoc for the
-     * full explanation and why the fix is an unconditional comparison rather than a cast.
+     * <p>Regression guard for a bug where the period was bound through a
+     * {@code :param IS NULL OR ...} check: PostgreSQL 16 rejected it with "could not determine data
+     * type of parameter", since that placeholder's only usage in the query text carried no type
+     * information at statement-prepare time - independent of whether the bound value later turned
+     * out to be null. See {@link PlayerMatchHistoryCriteria}'s Javadoc for the full explanation and
+     * why the fix is an unconditional comparison rather than a cast.
      */
     @Test
     void shouldFilterStatisticsByWeekPeriodWithoutAPostgresTypeInferenceError() {
@@ -201,31 +202,35 @@ class PlayerMatchRepositoryIntegrationTest
         Season season = createSeason();
         ValorantMatch match = createMatch(season);
         playerMatchRepository.save(createPlayerMatch(player, match));
+        Pageable everyMatch = Pageable.unpaged(Sort.by(Sort.Direction.DESC, "match.startedAt", "id"));
 
-        var insideWeek = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+        List<PlayerMatch> insideWeek = playerMatchRepository.findHistory(
             player.getId(),
             new PlayerMatchHistoryCriteria(
                 null, null, null, null, null,
                 Instant.parse("2026-07-20T00:00:00Z"),
                 Instant.parse("2026-07-27T00:00:00Z")
-            )
-        );
-        var outsideWeek = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            ),
+            everyMatch
+        ).getContent();
+        List<PlayerMatch> outsideWeek = playerMatchRepository.findHistory(
             player.getId(),
             new PlayerMatchHistoryCriteria(
                 null, null, null, null, null,
                 Instant.parse("2026-07-27T00:00:00Z"),
                 Instant.parse("2026-08-03T00:00:00Z")
-            )
-        );
-        var unbounded = playerMatchRepository.findAllByPlayerIdAndSeasonAndGameMode(
+            ),
+            everyMatch
+        ).getContent();
+        List<PlayerMatch> unbounded = playerMatchRepository.findHistory(
             player.getId(),
             new PlayerMatchHistoryCriteria(
                 null, null, null, null, null,
                 PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_START,
                 PlayerMatchHistoryCriteria.UNBOUNDED_PERIOD_END
-            )
-        );
+            ),
+            everyMatch
+        ).getContent();
 
         assertThat(unbounded).hasSize(1);
         assertThat(insideWeek).hasSize(1);
@@ -312,9 +317,6 @@ class PlayerMatchRepositoryIntegrationTest
 
         season.setExternalId("player-match-repository-test-season");
         season.setName("Repository Test Season");
-        season.setStartsAt(Instant.parse("2026-07-01T00:00:00Z"));
-        season.setEndsAt(Instant.parse("2026-08-31T23:59:59Z"));
-        season.setActive(true);
 
         return seasonRepository.save(season);
     }

@@ -1,6 +1,5 @@
 package io.github.thomashtn.valoquests.henrik.exception;
 
-import org.springframework.http.HttpStatus;
 
 /**
  * Indicates that HenrikDev or the underlying Riot service is temporarily
@@ -14,6 +13,6 @@ public class HenrikServiceUnavailableException extends HenrikApiException {
      * @param message external error description
      */
     public HenrikServiceUnavailableException(String message) {
-        super(message, HttpStatus.SERVICE_UNAVAILABLE, true);
+        super(message, true);
     }
 }

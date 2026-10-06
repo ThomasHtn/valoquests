@@ -50,7 +50,7 @@ export interface MatchDay<T extends Match = Match> {
   readonly wins: number;
 
   /**
-   * Matches lost that day; draws, remakes and unknown results count as neither.
+   * Matches lost that day; draws and unknown results count as neither.
    */
   readonly losses: number;
 

@@ -1,10 +1,10 @@
 package io.github.thomashtn.valoquests.challenge.entity;
 
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -64,13 +64,13 @@ public class Challenge extends AuditableEntity {
     private ChallengeCadence cadence = ChallengeCadence.WEEKLY;
 
     /**
-     * Difficulty tier controlling weekly selection and reward size.
+     * Tier controlling weekly selection and reward size.
      *
      * <p>{@code null} for a daily challenge: the daily pool is its own tier, priced by its cadence.
      */
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private ChallengeDifficulty difficulty;
+    @Column(name = "difficulty", length = 20)
+    private ChallengeTier tier;
 
     /**
      * Functional category used to diversify weekly challenge packs.
@@ -87,7 +87,7 @@ public class Challenge extends AuditableEntity {
     private ProgressMode progressMode;
 
     /**
-     * Versioned JSON rule definition played by a squad at the reference level.
+     * Versioned JSON rule grid played by an amateur campaign.
      *
      * <p>Its numbers are written by hand and never computed. A draw copies the grid matching the
      * campaign's level onto the selection; calculators only ever read that copy.
@@ -98,13 +98,13 @@ public class Challenge extends AuditableEntity {
         nullable = false,
         columnDefinition = "jsonb"
     )
-    private String conditionsJson;
+    private String amateurConditionsJson;
 
     /**
-     * Same rule, with the numbers written for a squad at the expert level.
+     * Same rule, with the numbers written for a pro campaign.
      *
-     * <p>Same conditions in the same order as {@link #conditionsJson}, so a description written for
-     * one grid reads correctly against the other.
+     * <p>Same conditions in the same order as {@link #amateurConditionsJson}, so a description written
+     * for one grid reads correctly against the other.
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(
@@ -112,7 +112,7 @@ public class Challenge extends AuditableEntity {
         nullable = false,
         columnDefinition = "jsonb"
     )
-    private String expertConditionsJson;
+    private String proConditionsJson;
 
     /**
      * Optional group preventing incompatible challenges from being selected together.
@@ -135,7 +135,7 @@ public class Challenge extends AuditableEntity {
     /**
      * Returns the rule grid one campaign difficulty plays against.
      *
-     * <p>Named apart from this challenge's own {@code difficulty}, which grades the challenge inside
+     * <p>Named apart from this challenge's own {@code tier}, which grades the challenge inside
      * a week and has nothing to do with the campaign's setting.
      *
      * @param campaignDifficulty difficulty of the campaign in force
@@ -144,6 +144,6 @@ public class Challenge extends AuditableEntity {
     public String conditionsFor(CampaignDifficulty campaignDifficulty) {
         Objects.requireNonNull(campaignDifficulty, "Campaign difficulty must not be null.");
 
-        return campaignDifficulty == CampaignDifficulty.PRO ? expertConditionsJson : conditionsJson;
+        return campaignDifficulty == CampaignDifficulty.PRO ? proConditionsJson : amateurConditionsJson;
     }
 }

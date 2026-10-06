@@ -1,8 +1,10 @@
 package io.github.thomashtn.valoquests.week.scheduler;
 
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
 import io.github.thomashtn.valoquests.synchronization.service.SynchronizationCommandService;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
+import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,10 +14,12 @@ import org.springframework.stereotype.Component;
 /**
  * Automatically finalizes the previous week and prepares the new one.
  *
- * <p>A synchronization runs first, and the job fires two hours after midnight rather than at it.
+ * <p>A synchronization runs first, and the job fires two hours after midnight rather than at it:
  * Henrik only returns finished matches, and a competitive game started late on Sunday ends well
- * after 00:00: frozen at 00:05, the week lost those matches for its ranking and its challenges,
- * which no later run ever revisits, while the campaign, replayed whole, still counted them.
+ * after 00:00. A finalized week is never revisited, so its last matches must be in before it freezes.
+ *
+ * <p>Waits for the {@link MatchHistoryLock} when an administrator holds it, since a skipped
+ * rollover would leave the week open until someone runs it by hand.
  */
 @Component
 @ConditionalOnProperty(
@@ -34,6 +38,11 @@ public class WeeklyRolloverScheduler {
         );
 
     /**
+     * Longest wait for a running job, generous enough for a full manual synchronization.
+     */
+    private static final Duration LOCK_WAIT = Duration.ofHours(2);
+
+    /**
      * Service executing the transactional weekly rollover.
      */
     private final WeeklyRolloverService
@@ -48,33 +57,64 @@ public class WeeklyRolloverScheduler {
         synchronizationCommandService;
 
     /**
+     * Lock keeping the rollover and its synchronization from overlapping another guarded job.
+     */
+    private final MatchHistoryLock matchHistoryLock;
+
+    /**
      * Creates the weekly rollover scheduler.
      *
      * @param weeklyRolloverService        weekly rollover service
      * @param synchronizationCommandService synchronization command service
+     * @param matchHistoryLock             lock shared by every job writing the match history
      */
     public WeeklyRolloverScheduler(
         WeeklyRolloverService weeklyRolloverService,
-        SynchronizationCommandService synchronizationCommandService
+        SynchronizationCommandService synchronizationCommandService,
+        MatchHistoryLock matchHistoryLock
     ) {
         this.weeklyRolloverService =
             weeklyRolloverService;
 
         this.synchronizationCommandService =
             synchronizationCommandService;
+
+        this.matchHistoryLock = matchHistoryLock;
     }
 
     /**
-     * Executes the rollover every Monday, at the configured hour of the week zone.
+     * Executes the rollover every Monday, at the configured hour of the calendar zone.
      *
-     * <p>Errors are logged and allowed to be retried during the next
-     * execution. The transactional service prevents partial finalization.</p>
+     * <p>Errors are logged; the transactional service prevents partial finalization. A failed or
+     * skipped rollover is caught up by {@link MissedScheduleCatchUp} at the next startup, or by
+     * {@code POST /api/admin/weeks/rollover}.</p>
      */
     @Scheduled(
         cron = "${app.scheduling.week-rollover-cron}",
-        zone = "${app.scheduling.week-rollover-zone}"
+        zone = "${app.calendar-zone}"
     )
     public void rolloverWeek() {
+        try {
+            if (!matchHistoryLock.runWhenFree(this::synchronizeThenRollover, LOCK_WAIT)) {
+                LOGGER.error(
+                    "Scheduled weekly rollover skipped: another synchronization, rollover or reset "
+                        + "still ran after {}. Run POST /api/admin/weeks/rollover once it has finished.",
+                    LOCK_WAIT
+                );
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            LOGGER.error(
+                "Scheduled weekly rollover interrupted while waiting for another job. "
+                    + "Run POST /api/admin/weeks/rollover."
+            );
+        }
+    }
+
+    /**
+     * Imports the last matches, then finalizes the previous week and opens the new one.
+     */
+    private void synchronizeThenRollover() {
         LOGGER.info("Scheduled weekly rollover started");
 
         importMatchesPlayedSinceLastSynchronization();

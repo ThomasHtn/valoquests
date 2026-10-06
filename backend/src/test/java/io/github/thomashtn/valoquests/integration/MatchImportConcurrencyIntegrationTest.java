@@ -2,7 +2,6 @@ package io.github.thomashtn.valoquests.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryResponse.HenrikMatchData;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchPlayer;
@@ -108,12 +107,11 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
         Player playerB = createPlayer("concurrency-puuid-b");
 
         HenrikMatchData sharedMatch = match("concurrency-match-shared", playerA, playerB);
-        HenrikMatchHistoryResponse response =
-            new HenrikMatchHistoryResponse(200, List.of(sharedMatch));
+        List<HenrikMatchData> page = List.of(sharedMatch);
 
         runConcurrently(
-            () -> matchImportService.importMatchesWithSummary(playerA, response),
-            () -> matchImportService.importMatchesWithSummary(playerB, response)
+            () -> matchImportService.importPage(playerA, page),
+            () -> matchImportService.importPage(playerB, page)
         );
 
         List<ValorantMatch> storedMatches = valorantMatchRepository.findAll().stream()
@@ -136,12 +134,11 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
         Player player = createPlayer("concurrency-puuid-single");
 
         HenrikMatchData onlyMatch = match("concurrency-match-single", player, null);
-        HenrikMatchHistoryResponse response =
-            new HenrikMatchHistoryResponse(200, List.of(onlyMatch));
+        List<HenrikMatchData> page = List.of(onlyMatch);
 
         runConcurrently(
-            () -> matchImportService.importMatchesWithSummary(player, response),
-            () -> matchImportService.importMatchesWithSummary(player, response)
+            () -> matchImportService.importPage(player, page),
+            () -> matchImportService.importPage(player, page)
         );
 
         List<PlayerMatch> storedAssociations = playerMatchRepository.findAll().stream()
@@ -221,15 +218,13 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
     private HenrikMatchPlayer henrikPlayer(Player player, String teamId) {
         return new HenrikMatchPlayer(
             player.getRiotPuuid(),
-            player.getGameName(),
-            player.getTagLine(),
             teamId,
             new HenrikMatchPlayer.HenrikAgent("agent-1", "Jett"),
             new HenrikMatchPlayer.HenrikPlayerStats(
                 4000, 20, 12, 3, 10, 25, 2,
-                new HenrikMatchPlayer.HenrikDamage(3200, 2800)
+                new HenrikMatchPlayer.HenrikDamage(3200)
             ),
-            new HenrikMatchPlayer.HenrikTier(21, "Immortal 1")
+            new HenrikMatchPlayer.HenrikTier("Immortal 1")
         );
     }
 }

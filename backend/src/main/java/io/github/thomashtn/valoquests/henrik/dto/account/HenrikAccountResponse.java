@@ -10,13 +10,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * are deliberately ignored so that additional Henrik fields do not break
  * deserialization.</p>
  *
- * @param status Henrik response status
  * @param data resolved Riot account information
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikAccountResponse(
 
-    Integer status,
     HenrikAccountData data
 ) {
 

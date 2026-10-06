@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
+import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayerDay;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
@@ -21,9 +22,7 @@ import io.github.thomashtn.valoquests.campaign.repository.CampaignPlayerReposito
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeCalibrationSource;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -39,6 +38,8 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import jakarta.persistence.EntityManager;
@@ -47,6 +48,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
@@ -149,7 +151,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private CampaignPlayerDayRepository playerDayRepository;
 
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     @Autowired
     private WeeklyPlayerScoreRepository scoreRepository;
@@ -203,7 +205,7 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(post("/api/admin/campaigns").header("X-Admin-Key", ADMIN_KEY))
             .andExpect(status().isConflict());
 
-        Campaign campaign = campaignRepository.findByStatusNot(CampaignStatus.CLOSED).orElseThrow();
+        Campaign campaign = campaignRepository.findLive().orElseThrow();
         assertThat(campaign.getDifficulty()).isEqualTo(CampaignDifficulty.AMATEUR);
         assertThat(campaign.reference()).isEqualTo(CampaignDifficulty.AMATEUR.reference());
         assertThat(campaign.getOpenedAt()).isEqualTo(OPENING_TIME);
@@ -232,6 +234,27 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     @Test
+    @DisplayName("Opens a campaign on the week in progress and rebuilds the days already played on the spot")
+    void shouldReplayACampaignOpenedOnTheCurrentWeek() throws Exception {
+        LocalDate monday = LocalDate.of(2026, 7, 13);
+        playCompetitiveMatches(alpha, monday, 2);
+
+        mockMvc.perform(post("/api/admin/campaigns")
+                .param("startWeek", "CURRENT_WEEK")
+                .header("X-Admin-Key", ADMIN_KEY))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("RUNNING"))
+            .andExpect(jsonPath("$.firstWeekStart").value(monday.toString()));
+
+        Campaign campaign = campaignRepository.findLive().orElseThrow();
+        List<CampaignDailySnapshot> days = snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId());
+
+        assertThat(days).extracting(CampaignDailySnapshot::getDay)
+            .containsExactly(monday, monday.plusDays(1), monday.plusDays(2));
+        assertThat(days.getFirst().getDamage()).isPositive();
+    }
+
+    @Test
     @DisplayName("Starts, replays, settles and closes the campaign through the production rollover")
     void shouldRunTheCampaignFromItsFirstMondayToItsClosing() throws Exception {
         Campaign campaign = lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.NEXT_WEEK);
@@ -241,11 +264,11 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(campaignRepository.findById(campaign.getId()).orElseThrow().getStatus())
             .isEqualTo(CampaignStatus.RUNNING);
-        assertThat(weeklyChallengeRepository.findAllByWeekStartAndCadenceOrderByIdAsc(
+        assertThat(challengeSelectionRepository.findAllByWeekStartAndCadenceOrderByIdAsc(
             FIRST_WEEK_START,
             ChallengeCadence.WEEKLY
         )).hasSize(5);
-        assertThat(weeklyChallengeRepository.findByCadenceAndDay(ChallengeCadence.DAILY, FIRST_WEEK_START))
+        assertThat(challengeSelectionRepository.findByCadenceAndDay(ChallengeCadence.DAILY, FIRST_WEEK_START))
             .isPresent();
         assertThat(calibrationSource.forWeek(FIRST_WEEK_START).reference()).isEqualTo(campaign.reference());
         assertThat(calibrationSource.forWeek(FIRST_WEEK_START).weekIndex()).isEqualTo(1);
@@ -258,14 +281,12 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
             .andExpect(status().isNoContent());
 
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).hasSize(3);
-        List<CampaignPlayerDay> alphaDays = playerDayRepository
-            .findAllByCampaignIdAndPlayerIdOrderByDayAsc(campaign.getId(), alpha.getId());
+        List<CampaignPlayerDay> alphaDays = storedDaysOf(campaign, alpha);
         assertThat(alphaDays).hasSize(1);
         assertThat(alphaDays.getFirst().getDay()).isEqualTo(FIRST_WEEK_START.plusDays(1));
         assertThat(alphaDays.getFirst().getDamage()).isPositive();
         assertThat(alphaDays.getFirst().getMatchCount()).isEqualTo(3);
-        assertThat(playerDayRepository.findAllByCampaignIdAndPlayerIdOrderByDayAsc(campaign.getId(), bravo.getId()))
-            .isEmpty();
+        assertThat(storedDaysOf(campaign, bravo)).isEmpty();
 
         mockMvc.perform(get("/api/campaign/today"))
             .andExpect(status().isOk())
@@ -345,8 +366,23 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         assertThat(campaignWeekRepository.findAllByCampaignIdOrderByWeekIndexAsc(campaign.getId())).isEmpty();
         assertThat(campaignPlayerRepository.findAllByCampaignIdOrderByPlayerIdAsc(campaign.getId())).isEmpty();
         assertThat(snapshotRepository.findAllByCampaignIdOrderByDayAsc(campaign.getId())).isEmpty();
-        assertThat(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).map(Campaign::getId)
+        assertThat(campaignRepository.findLive()).map(Campaign::getId)
             .contains(next.getId());
+    }
+
+    /**
+     * Returns one player's stored days of a campaign, oldest first.
+     *
+     * @param campaign campaign to read
+     * @param player   player whose days are kept
+     * @return the player's days in order
+     */
+    private List<CampaignPlayerDay> storedDaysOf(Campaign campaign, Player player) {
+        return playerDayRepository.findAll().stream()
+            .filter(day -> day.getCampaign().getId().equals(campaign.getId()))
+            .filter(day -> day.getPlayer().getId().equals(player.getId()))
+            .sorted(Comparator.comparing(CampaignPlayerDay::getDay))
+            .toList();
     }
 
     private static List<LocalDate> weekStarts() {
@@ -370,7 +406,6 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         Season created = new Season();
         created.setExternalId("campaign-lifecycle-season");
         created.setName("Campaign Lifecycle Season");
-        created.setActive(true);
         return seasonRepository.save(created);
     }
 

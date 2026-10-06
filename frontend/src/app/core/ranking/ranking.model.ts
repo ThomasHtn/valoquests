@@ -1,5 +1,4 @@
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
-import { ChallengeCadence, ChallengeDifficulty } from '@core/challenges/challenge.model';
 import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
 
 /**
@@ -33,71 +32,6 @@ interface PlayerRanking {
 }
 
 /**
- * Progress on one board challenge, weekly or daily. Mirrors `ChallengeProgressResponse`.
- */
-interface RankingChallengeProgress {
-  /**
-   * Identifier of the challenge.
-   */
-  readonly id: number;
-
-  /**
-   * Stable catalogue code of the challenge.
-   */
-  readonly code: string;
-
-  /**
-   * Translated name of the challenge.
-   */
-  readonly name: string;
-
-  /**
-   * Whether the challenge is daily or weekly.
-   */
-  readonly cadence: ChallengeCadence;
-
-  /**
-   * Difficulty of a weekly challenge, `null` for the daily.
-   */
-  readonly difficulty: ChallengeDifficulty | null;
-
-  /**
-   * Day of a daily (`YYYY-MM-DD`), `null` for a weekly.
-   */
-  readonly day: string | null;
-
-  /**
-   * Metric the challenge measures.
-   */
-  readonly metric: string;
-
-  /**
-   * Progress so far.
-   */
-  readonly currentValue: number;
-
-  /**
-   * Value to reach, `null` when open-ended.
-   */
-  readonly targetValue: number | null;
-
-  /**
-   * Unit of the values.
-   */
-  readonly unit: string;
-
-  /**
-   * Whether the challenge is validated.
-   */
-  readonly completed: boolean;
-
-  /**
-   * Points the challenge adds to the ranking once validated.
-   */
-  readonly rankingPoints: number;
-}
-
-/**
  * One row of the current weekly ranking. Mirrors the backend `RankingEntryResponse`.
  */
 export interface RankingEntry {
@@ -110,11 +44,6 @@ export interface RankingEntry {
    * `false` for an inactive player, out of the ranking.
    */
   readonly competing: boolean;
-
-  /**
-   * Position at the previous calculation, `null` when new.
-   */
-  readonly previousPosition: number | null;
 
   /**
    * Places gained (positive) or lost since the previous calculation.
@@ -147,14 +76,9 @@ export interface RankingEntry {
   readonly matchCount: number;
 
   /**
-   * Days with at least one match this week.
+   * Days played this week so far.
    */
-  readonly activeDays: number;
-
-  /**
-   * Days played in the week so far.
-   */
-  readonly streakDays: number;
+  readonly playedDays: number;
 
   /**
    * Points from this week's validated challenges, weekly and daily.
@@ -185,15 +109,10 @@ export interface RankingEntry {
    * Titles the player holds on the week so far.
    */
   readonly titles: readonly WeeklyTitle[];
-
-  /**
-   * One line per board challenge: the five weeklies and today's daily.
-   */
-  readonly challengeProgress: readonly RankingChallengeProgress[];
 }
 
 /**
- * Current weekly ranking with challenge progress. Mirrors the backend `CurrentRankingResponse`.
+ * Current weekly ranking. Mirrors the backend `CurrentRankingResponse`.
  */
 export interface CurrentRanking {
   /**
@@ -212,18 +131,13 @@ export interface CurrentRanking {
   readonly today: string;
 
   /**
-   * Last calculation instant (ISO-8601), `null` before the week's first one.
-   */
-  readonly calculatedAt: string | null;
-
-  /**
    * Entries in board order.
    */
   readonly ranking: readonly RankingEntry[];
 }
 
 /**
- * One player's day against the day before. Mirrors the backend `DailyRankingEntryResponse`.
+ * One player's day. Mirrors the backend `DailyRankingEntryResponse`.
  */
 export interface DailyRankingEntry {
   /**
@@ -277,12 +191,12 @@ export interface DailyRankingEntry {
   readonly reducedMatchCount: number;
 
   /**
-   * Week days played up to this day included, `0` when not played.
+   * Days played this week up to this day included, `0` when not played.
    */
-  readonly streakDays: number;
+  readonly playedDays: number;
 
   /**
-   * Bonus the streak grants, in percent.
+   * Bonus the days played this week grant, in percent.
    */
   readonly streakBonusPercent: number;
 
@@ -290,16 +204,6 @@ export interface DailyRankingEntry {
    * Week days played up to this day included, ascending ISO dates.
    */
   readonly weekPlayedDays: readonly string[];
-
-  /**
-   * Guardian damage before today.
-   */
-  readonly previousDamage: number;
-
-  /**
-   * Damage minus previous damage, what the daily board is for.
-   */
-  readonly damageVariation: number;
 }
 
 /**
@@ -312,17 +216,7 @@ export interface DailyRanking {
   readonly day: string;
 
   /**
-   * Day the variation is measured against (`YYYY-MM-DD`).
-   */
-  readonly previousDay: string;
-
-  /**
-   * Competing players who played at all that day.
-   */
-  readonly playedPlayerCount: number;
-
-  /**
-   * Competing players, the denominator of `playedPlayerCount`.
+   * Competing players, deactivated and archived ones excluded.
    */
   readonly rosterPlayerCount: number;
 
@@ -382,14 +276,9 @@ export interface RankingHistoryEntry {
   readonly matchCount: number;
 
   /**
-   * Days with at least one match this week.
+   * Days played that week.
    */
-  readonly activeDays: number;
-
-  /**
-   * Days played in the week.
-   */
-  readonly streakDays: number;
+  readonly playedDays: number;
 
   /**
    * Weekly titles held.
@@ -410,11 +299,6 @@ export interface RankingHistoryWeek {
    * Sunday of the week (`YYYY-MM-DD`).
    */
   readonly weekEnd: string;
-
-  /**
-   * Freeze instant, ISO-8601.
-   */
-  readonly finalizedAt: string;
 
   /**
    * Winner, `null` when nobody was ranked.

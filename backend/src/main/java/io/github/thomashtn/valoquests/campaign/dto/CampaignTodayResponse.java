@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -12,18 +13,19 @@ import java.util.Map;
  * cheaper one down a tier and move a total that was already on screen. The day is only final once
  * it is over.
  *
- * @param day             calendar day
- * @param damage          damage the roster has dealt today
- * @param food            food produced today
- * @param components      components produced today
- * @param presenceCount   operators who have played today
- * @param rosterSize      operators the campaign froze
- * @param dailyUpkeep     food the base will eat this evening
- * @param carryGained     wounded today's components add to what the ship can carry
- * @param shelterGained   wounded today's food adds to what the base can settle
- * @param players         each operator's day, most damage first
- * @param titles          the week's honours as they stand, ties omitted
+ * @param day                       calendar day
+ * @param damage                    damage the roster has dealt today
+ * @param food                      food produced today
+ * @param components                components produced today
+ * @param presenceCount             players who have played today
+ * @param rosterSize                players the campaign froze
+ * @param dailyUpkeep               food the base will eat this evening
+ * @param rescuesByComponentsGained wounded today's components add to what the ship can reach
+ * @param rescuesByFoodGained       wounded today's food adds to what the base can settle
+ * @param players                   each player's day, most damage first
+ * @param titles                    the week's honours as they stand, ties omitted
  */
+@Schema(description = "The day in progress: the squad's gains and who brought them.")
 public record CampaignTodayResponse(
     LocalDate day,
     int damage,
@@ -32,8 +34,8 @@ public record CampaignTodayResponse(
     int presenceCount,
     int rosterSize,
     int dailyUpkeep,
-    int carryGained,
-    int shelterGained,
+    int rescuesByComponentsGained,
+    int rescuesByFoodGained,
     List<CampaignPlayerDayResponse> players,
     Map<WeeklyTitle, Long> titles
 ) {

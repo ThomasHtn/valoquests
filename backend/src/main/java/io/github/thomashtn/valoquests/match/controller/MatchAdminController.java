@@ -4,7 +4,6 @@ import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_K
 
 import io.github.thomashtn.valoquests.match.dto.GameModeCorrectionRequest;
 import io.github.thomashtn.valoquests.match.dto.MatchCorrectionResponse;
-import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.service.MatchCorrectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,13 +68,6 @@ public class MatchAdminController {
 
         @Valid @RequestBody GameModeCorrectionRequest request
     ) {
-        ValorantMatch corrected =
-            correctionService.correctGameMode(matchId, request.gameMode());
-
-        return new MatchCorrectionResponse(
-            corrected.getId(),
-            corrected.getGameMode(),
-            corrected.getGameModeSource()
-        );
+        return correctionService.correctGameMode(matchId, request.gameMode());
     }
 }

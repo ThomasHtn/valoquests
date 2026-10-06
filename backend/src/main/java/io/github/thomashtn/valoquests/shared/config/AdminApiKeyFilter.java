@@ -1,13 +1,18 @@
 package io.github.thomashtn.valoquests.shared.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.thomashtn.valoquests.shared.exception.ApiErrorResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Clock;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Protects administrative routes with a static API key supplied through an
@@ -74,14 +80,37 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     private final AdminAuthRateLimiter rateLimiter;
 
     /**
+     * Mapper writing refusals in the same format as every other API error.
+     */
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Clock stamping each refusal.
+     */
+    private final Clock clock;
+
+    /**
      * Creates an administrative API key filter.
      *
      * @param expectedApiKey configured key used to validate incoming requests
      * @param rateLimiter    throttle applied to repeated invalid-key attempts
+     * @param objectMapper   application JSON mapper
+     * @param clock          application clock
      */
-    public AdminApiKeyFilter(String expectedApiKey, AdminAuthRateLimiter rateLimiter) {
+    @SuppressFBWarnings(
+        value = "EI_EXPOSE_REP2",
+        justification = "The injected collaborator is managed by Spring and cannot be defensively copied."
+    )
+    public AdminApiKeyFilter(
+        String expectedApiKey,
+        AdminAuthRateLimiter rateLimiter,
+        ObjectMapper objectMapper,
+        Clock clock
+    ) {
         this.expectedApiKey = expectedApiKey;
         this.rateLimiter = rateLimiter;
+        this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     /**
@@ -131,8 +160,9 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
 
         if (rateLimiter.isLockedOut(remoteAddress)) {
             writeProblemResponse(
+                request,
                 response,
-                HttpStatus.TOO_MANY_REQUESTS.value(),
+                HttpStatus.TOO_MANY_REQUESTS,
                 "ADMIN_KEY_RATE_LIMITED",
                 "Too many invalid administrator key attempts. Try again later."
             );
@@ -143,8 +173,9 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
 
         if (providedApiKey == null) {
             writeProblemResponse(
+                request,
                 response,
-                HttpServletResponse.SC_UNAUTHORIZED,
+                HttpStatus.UNAUTHORIZED,
                 "ADMIN_KEY_MISSING",
                 "The X-Admin-Key header is required."
             );
@@ -154,8 +185,9 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
         if (!matchesExpectedKey(providedApiKey)) {
             rateLimiter.recordFailure(remoteAddress);
             writeProblemResponse(
+                request,
                 response,
-                HttpServletResponse.SC_FORBIDDEN,
+                HttpStatus.FORBIDDEN,
                 "ADMIN_KEY_INVALID",
                 "The administrator key is invalid."
             );
@@ -203,35 +235,36 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Writes a minimal RFC 7807-compatible problem response.
+     * Writes the refusal as an {@link ApiErrorResponse}, like any other API error.
      *
+     * @param request  current HTTP request
      * @param response current HTTP response
-     * @param status   HTTP status code
+     * @param status   HTTP status
      * @param code     application error code
      * @param detail   human-readable error detail
      * @throws IOException when the response body cannot be written
      */
     private void writeProblemResponse(
+        HttpServletRequest request,
         HttpServletResponse response,
-        int status,
+        HttpStatus status,
         String code,
         String detail
     ) throws IOException {
+        ApiErrorResponse body = new ApiErrorResponse(
+            URI.create("about:blank"),
+            status.getReasonPhrase(),
+            status.value(),
+            code,
+            detail,
+            URI.create(request.getRequestURI()),
+            clock.instant(),
+            Map.of()
+        );
 
-        response.setStatus(status);
+        response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-
-        String responseBody = (
-            "{%n"
-                + "  \"type\": \"about:blank\",%n"
-                + "  \"title\": \"Unauthorized administration request\",%n"
-                + "  \"status\": %d,%n"
-                + "  \"code\": \"%s\",%n"
-                + "  \"detail\": \"%s\"%n"
-                + "}%n"
-        ).formatted(status, code, detail);
-
-        response.getWriter().write(responseBody);
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 }

@@ -11,10 +11,10 @@ import java.time.LocalDate;
  * rule.
  *
  * @param day            calendar day
- * @param damage         damage every roster operator dealt that day, food and components summed
+ * @param damage         damage every roster player dealt that day, food and components summed
  * @param food           food produced that day
  * @param components     components produced that day
- * @param presenceCount  roster operators who played at least one valued match that day
+ * @param presenceCount  roster players who played at least one valued match that day
  */
 public record CampaignDayInput(
     LocalDate day,

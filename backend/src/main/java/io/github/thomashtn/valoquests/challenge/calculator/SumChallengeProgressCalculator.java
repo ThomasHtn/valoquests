@@ -1,9 +1,10 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
+import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,17 +13,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class SumChallengeProgressCalculator
-    implements ChallengeProgressCalculator {
+    extends SingleConditionChallengeProgressCalculator {
 
     /**
      * Evaluates metric contributions for individual matches.
      */
     private final ChallengeMetricEvaluator metricEvaluator;
-
-    /**
-     * Applies filters declared by challenge conditions.
-     */
-    private final ChallengeMatchFilter matchFilter;
 
     /**
      * Creates the summed-progress calculator.
@@ -34,8 +30,8 @@ public class SumChallengeProgressCalculator
         ChallengeMetricEvaluator metricEvaluator,
         ChallengeMatchFilter matchFilter
     ) {
+        super(matchFilter);
         this.metricEvaluator = metricEvaluator;
-        this.matchFilter = matchFilter;
     }
 
     /**
@@ -51,33 +47,12 @@ public class SumChallengeProgressCalculator
     /**
      * Sums the selected metric across every eligible weekly match.
      *
-     * @param definition parsed challenge definition
-     * @param context    weekly player context
-     * @return normalized progress result
+     * @param condition       the challenge's single condition
+     * @param eligibleMatches matches the condition's filters accept
+     * @return summed metric
      */
     @Override
-    public ChallengeProgressResult calculate(
-        ChallengeDefinition definition,
-        PlayerChallengeContext context
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-
-        BigDecimal currentValue = context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
-            .map(playerMatch ->
-                metricEvaluator.evaluate(
-                    playerMatch,
-                    condition.metric()
-                )
-            )
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return ChallengeProgressResult.from(
-            currentValue,
-            condition.target()
-        );
+    protected BigDecimal measure(ChallengeCondition condition, List<PlayerMatch> eligibleMatches) {
+        return metricEvaluator.sumOf(condition.metric(), eligibleMatches);
     }
 }

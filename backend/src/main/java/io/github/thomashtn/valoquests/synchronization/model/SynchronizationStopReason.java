@@ -3,7 +3,7 @@ package io.github.thomashtn.valoquests.synchronization.model;
 /**
  * Describes why a match-history walk stopped.
  *
- * <p>Reported alongside every synchronization result so an operator can tell a healthy incremental
+ * <p>Reported alongside every synchronization result so an admin can tell a healthy incremental
  * run from a truncated one without reading through the logs.
  */
 public enum SynchronizationStopReason {
@@ -12,6 +12,11 @@ public enum SynchronizationStopReason {
      * Henrik returned no match at all, either for a player with no history or past its end.
      */
     EMPTY_PAGE,
+
+    /**
+     * No match of the first page carried a season, so nothing could be imported safely.
+     */
+    SEASON_UNRESOLVED,
 
     /**
      * Henrik returned a partial page, which only happens at the end of the available history.

@@ -1,8 +1,6 @@
 package io.github.thomashtn.valoquests.campaign.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -25,7 +23,7 @@ import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import io.github.thomashtn.valoquests.match.model.GameMode;
 import io.github.thomashtn.valoquests.match.model.MatchResult;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -184,6 +182,40 @@ class DefaultCampaignQueryServiceTest {
     }
 
     @Test
+    @DisplayName("Forecasts the extraction on the exact progress the Sunday settlement uses, not a rounded percent")
+    void shouldForecastOnTheExactProgress() {
+        live();
+        CampaignWeek current = CampaignFixtures.week(campaign, 2, 1_000, 1_010);
+        current.setDamageDealt(333);
+        current.setChallengeRescued(10);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(List.of(current));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L))
+            .thenReturn(List.of(snapshot(TODAY, 1_000, 20_000, 20_000)));
+
+        CampaignResponse response = service.currentCampaign();
+
+        // A thousand wounded within reach at 33.3 %: the truncated 33 % extracted 330.
+        assertThat(response.forecast().extractionRescued()).isEqualTo(333);
+        assertThat(response.weeks().getFirst().progressPercent()).isEqualTo(33);
+    }
+
+    @Test
+    @DisplayName("Reads a guardian without hit points as broken through, and 29 damage out of 100 as 29 %")
+    void shouldReadProgressPercentLikeTheSettlement() {
+        live();
+        CampaignWeek noHitPoints = CampaignFixtures.week(campaign, 1, 0, 50);
+        CampaignWeek nearlyThird = CampaignFixtures.week(campaign, 2, 100, 50);
+        nearlyThird.setDamageDealt(29);
+        when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L))
+            .thenReturn(List.of(noHitPoints, nearlyThird));
+        when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(1L)).thenReturn(List.of());
+
+        assertThat(service.currentCampaign().weeks())
+            .extracting(CampaignWeekResponse::progressPercent)
+            .containsExactly(100, 29);
+    }
+
+    @Test
     @DisplayName("Forecasts nothing once the week in progress is settled")
     void shouldNotForecastASettledWeek() {
         live();
@@ -245,9 +277,7 @@ class DefaultCampaignQueryServiceTest {
         Campaign closed = CampaignFixtures.runningCampaign(2);
         closed.setStatus(CampaignStatus.CLOSED);
 
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
-        when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED))
-            .thenReturn(List.of(closed));
+        when(campaignRepository.findShown()).thenReturn(Optional.of(closed));
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(2L)).thenReturn(List.of());
         when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(2L)).thenReturn(List.of());
 
@@ -257,8 +287,7 @@ class DefaultCampaignQueryServiceTest {
     @Test
     @DisplayName("Answers a null status rather than a 404 on a database without a campaign")
     void shouldAnswerWithoutACampaign() {
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
-        when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED)).thenReturn(List.of());
+        when(campaignRepository.findShown()).thenReturn(Optional.empty());
 
         CampaignResponse response = service.currentCampaign();
 
@@ -284,7 +313,7 @@ class DefaultCampaignQueryServiceTest {
     void shouldReportAnEmptyDayOutsideACampaign() {
         Campaign opened = CampaignFixtures.runningCampaign(1);
         opened.setStatus(CampaignStatus.OPENED);
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(opened));
+        when(campaignRepository.findShown()).thenReturn(Optional.of(opened));
 
         assertThat(service.today().players()).isEmpty();
         verifyNoInteractions(dayReader);
@@ -301,8 +330,7 @@ class DefaultCampaignQueryServiceTest {
         settled.setChallengeRescued(10);
         settled.setExtractionRescued(20);
 
-        when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED))
-            .thenReturn(List.of(closed));
+        when(campaignRepository.findAllClosed()).thenReturn(List.of(closed));
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(3L)).thenReturn(List.of(settled));
         when(snapshotRepository.findAllByCampaignIdOrderByDayAsc(3L))
             .thenReturn(List.of(snapshot(settled.settlementDay(), 4_200, 0, 0)));
@@ -321,8 +349,7 @@ class DefaultCampaignQueryServiceTest {
      * Declares the fixture campaign as the live one.
      */
     private void live() {
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
-        lenient().when(campaignRepository.findAllByStatusOrderByNumberDesc(any())).thenReturn(List.of());
+        when(campaignRepository.findShown()).thenReturn(Optional.of(campaign));
     }
 
     /**

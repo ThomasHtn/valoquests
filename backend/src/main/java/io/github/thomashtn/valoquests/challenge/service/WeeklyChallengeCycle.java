@@ -1,8 +1,8 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * No-repeat cycle of the weekly draw, replayed from past selections.
  *
- * <p>Cycles run per difficulty rather than over the catalogue as a whole: a pack draws exactly one
+ * <p>Cycles run per tier rather than over the catalogue as a whole: a pack draws exactly one
  * challenge per tier, so tiers empty at their own pace and a shared cycle would let the largest
  * one hold the smallest hostage. A tier holding a single enabled challenge clears on every draw,
  * which is what keeps it drawable at all.</p>
@@ -26,26 +26,26 @@ final class WeeklyChallengeCycle {
     }
 
     /**
-     * Drops the candidates already drawn in the current cycle of their own difficulty.
+     * Drops the candidates already drawn in the current cycle of their own tier.
      *
-     * @param candidatesByDifficulty eligible candidates grouped by difficulty
+     * @param candidatesByTier eligible candidates grouped by tier
      * @param pastSelections         weekly selections strictly before the week being drawn, oldest first
      * @return the same grouping, keeping only challenges the cycle has not used yet
      */
-    static Map<ChallengeDifficulty, List<Challenge>> withoutCurrentCycle(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        List<WeeklyChallenge> pastSelections
+    static Map<ChallengeTier, List<Challenge>> withoutCurrentCycle(
+        Map<ChallengeTier, List<Challenge>> candidatesByTier,
+        List<ChallengeSelection> pastSelections
     ) {
-        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty =
-            usedInCurrentCycle(candidatesByDifficulty, pastSelections);
+        Map<ChallengeTier, Set<Long>> usedByTier =
+            usedInCurrentCycle(candidatesByTier, pastSelections);
 
-        Map<ChallengeDifficulty, List<Challenge>> remaining = new EnumMap<>(ChallengeDifficulty.class);
+        Map<ChallengeTier, List<Challenge>> remaining = new EnumMap<>(ChallengeTier.class);
 
-        candidatesByDifficulty.forEach((difficulty, candidates) -> {
-            Set<Long> used = usedByDifficulty.getOrDefault(difficulty, Set.of());
+        candidatesByTier.forEach((tier, candidates) -> {
+            Set<Long> used = usedByTier.getOrDefault(tier, Set.of());
 
             remaining.put(
-                difficulty,
+                tier,
                 candidates.stream()
                     .filter(candidate -> !used.contains(candidate.getId()))
                     .toList()
@@ -57,32 +57,32 @@ final class WeeklyChallengeCycle {
 
     /**
      * Replays every past selection to determine which challenges were already used in the cycle
-     * still in progress, per difficulty, resetting whenever a tier's cycle completes.
+     * still in progress, per tier, resetting whenever a tier's cycle completes.
      *
-     * @param candidatesByDifficulty eligible candidates grouped by difficulty
+     * @param candidatesByTier eligible candidates grouped by tier
      * @param pastSelections         weekly selections strictly before the week being drawn, oldest first
-     * @return identifiers used since each difficulty's last completed cycle
+     * @return identifiers used since each tier's last completed cycle
      */
-    private static Map<ChallengeDifficulty, Set<Long>> usedInCurrentCycle(
-        Map<ChallengeDifficulty, List<Challenge>> candidatesByDifficulty,
-        List<WeeklyChallenge> pastSelections
+    private static Map<ChallengeTier, Set<Long>> usedInCurrentCycle(
+        Map<ChallengeTier, List<Challenge>> candidatesByTier,
+        List<ChallengeSelection> pastSelections
     ) {
-        Map<ChallengeDifficulty, Set<Long>> usedByDifficulty = new EnumMap<>(ChallengeDifficulty.class);
+        Map<ChallengeTier, Set<Long>> usedByTier = new EnumMap<>(ChallengeTier.class);
 
-        for (WeeklyChallenge selection : pastSelections) {
+        for (ChallengeSelection selection : pastSelections) {
             Challenge challenge = selection.getChallenge();
-            ChallengeDifficulty difficulty = challenge.getDifficulty();
+            ChallengeTier tier = challenge.getTier();
 
-            Set<Long> used = usedByDifficulty.computeIfAbsent(difficulty, tier -> new HashSet<>());
+            Set<Long> used = usedByTier.computeIfAbsent(tier, key -> new HashSet<>());
             used.add(challenge.getId());
 
-            int tierSize = candidatesByDifficulty.getOrDefault(difficulty, List.of()).size();
+            int tierSize = candidatesByTier.getOrDefault(tier, List.of()).size();
 
             if (used.size() >= tierSize) {
                 used.clear();
             }
         }
 
-        return usedByDifficulty;
+        return usedByTier;
     }
 }

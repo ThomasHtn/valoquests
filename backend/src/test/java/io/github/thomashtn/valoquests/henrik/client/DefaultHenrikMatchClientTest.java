@@ -309,10 +309,10 @@ class DefaultHenrikMatchClientTest {
         );
 
         return new DefaultHenrikMatchClient(
-            new HenrikClientConfig().henrikWebClient(properties),
             properties,
-            new HenrikResponseHandler(),
             new HenrikRequestExecutor(
+                new HenrikClientConfig().henrikWebClient(properties),
+                new HenrikResponseHandler(),
                 new HenrikRetryStrategy(properties),
                 new HenrikRequestLimiter(properties)
             )

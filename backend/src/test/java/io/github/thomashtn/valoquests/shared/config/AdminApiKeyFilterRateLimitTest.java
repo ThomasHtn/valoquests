@@ -1,6 +1,7 @@
 package io.github.thomashtn.valoquests.shared.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,9 @@ class AdminApiKeyFilterRateLimitTest {
                         "test-admin-key-0123456789abcdef0"
                     )
             )
-            .andExpect(status().isTooManyRequests());
+            .andExpect(status().isTooManyRequests())
+            .andExpect(jsonPath("$.title").value("Too Many Requests"))
+            .andExpect(jsonPath("$.status").value(429))
+            .andExpect(jsonPath("$.code").value("ADMIN_KEY_RATE_LIMITED"));
     }
 }

@@ -1,5 +1,7 @@
 package io.github.thomashtn.valoquests.match.model;
 
+import java.util.Map;
+
 /**
  * Summarizes the processing of one Henrik match-history response.
  *
@@ -32,6 +34,23 @@ public record MatchImportResult(
                 "match import counters must equal the received count"
             );
         }
+    }
+
+    /**
+     * Builds the result from the outcome of each received entry.
+     *
+     * @param received number of entries returned by Henrik
+     * @param counts   number of entries per outcome, an absent outcome counting zero
+     * @return the import counters
+     */
+    public static MatchImportResult of(int received, Map<MatchImportOutcome, Integer> counts) {
+        return new MatchImportResult(
+            received,
+            counts.getOrDefault(MatchImportOutcome.IMPORTED, 0),
+            counts.getOrDefault(MatchImportOutcome.ALREADY_KNOWN, 0),
+            counts.getOrDefault(MatchImportOutcome.REJECTED, 0),
+            counts.getOrDefault(MatchImportOutcome.SKIPPED, 0)
+        );
     }
 
     /**

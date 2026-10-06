@@ -104,7 +104,6 @@ describe('buildContribution', () => {
     return {
       position: id,
       competing: true,
-      previousPosition: id,
       positionVariation: 0,
       player: {
         id,
@@ -117,15 +116,13 @@ describe('buildContribution', () => {
       food: 0,
       components: 0,
       matchCount: 1,
-      activeDays: 1,
-      streakDays: 1,
+      playedDays: 1,
       challengePoints: points,
       completedChallenges: 0,
       totalChallenges: 5,
       completedDailyChallenges: 0,
       totalPoints: damage + points,
       titles: [],
-      challengeProgress: [],
     };
   }
 
@@ -134,7 +131,6 @@ describe('buildContribution', () => {
       weekStart: '2026-01-05',
       weekEnd: '2026-01-11',
       today: '2026-01-08',
-      calculatedAt: null,
       ranking: entries,
     };
   }

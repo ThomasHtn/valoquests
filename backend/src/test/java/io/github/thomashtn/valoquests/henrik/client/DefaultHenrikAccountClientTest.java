@@ -332,13 +332,13 @@ class DefaultHenrikAccountClientTest {
 
         HenrikRequestExecutor requestExecutor =
             new HenrikRequestExecutor(
+                webClient,
+                new HenrikResponseHandler(),
                 retryStrategy,
                 requestLimiter
             );
 
         return new DefaultHenrikAccountClient(
-            webClient,
-            new HenrikResponseHandler(),
             requestExecutor,
             new HenrikAccountMapper()
         );

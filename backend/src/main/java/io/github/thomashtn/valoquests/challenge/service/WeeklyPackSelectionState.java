@@ -1,9 +1,9 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -12,12 +12,12 @@ import java.util.Set;
 /**
  * Immutable compatibility data of one weekly pack selection branch.
  *
- * @param selectedDifficulties selected difficulty tiers
+ * @param selectedTiers selected tiers
  * @param categories           selected categories
  * @param exclusionGroups      selected exclusion groups
  */
 record WeeklyPackSelectionState(
-    Set<ChallengeDifficulty> selectedDifficulties,
+    Set<ChallengeTier> selectedTiers,
     Set<ChallengeCategory> categories,
     Set<String> exclusionGroups
 ) {
@@ -28,14 +28,14 @@ record WeeklyPackSelectionState(
      * @param selections existing selections
      * @return initialized selection state
      */
-    static WeeklyPackSelectionState from(List<WeeklyChallenge> selections) {
-        Set<ChallengeDifficulty> difficulties = EnumSet.noneOf(ChallengeDifficulty.class);
+    static WeeklyPackSelectionState from(List<ChallengeSelection> selections) {
+        Set<ChallengeTier> tiers = EnumSet.noneOf(ChallengeTier.class);
         Set<ChallengeCategory> categories = EnumSet.noneOf(ChallengeCategory.class);
         Set<String> exclusionGroups = new HashSet<>();
 
-        for (WeeklyChallenge selection : selections) {
+        for (ChallengeSelection selection : selections) {
             Challenge challenge = selection.getChallenge();
-            difficulties.add(challenge.getDifficulty());
+            tiers.add(challenge.getTier());
             categories.add(challenge.getCategory());
 
             if (challenge.getExclusionGroup() != null) {
@@ -44,7 +44,7 @@ record WeeklyPackSelectionState(
         }
 
         return new WeeklyPackSelectionState(
-            Set.copyOf(difficulties),
+            Set.copyOf(tiers),
             Set.copyOf(categories),
             Set.copyOf(exclusionGroups)
         );
@@ -74,11 +74,11 @@ record WeeklyPackSelectionState(
      * @return extended immutable state
      */
     WeeklyPackSelectionState with(Challenge challenge) {
-        Set<ChallengeDifficulty> nextDifficulties = copyDifficulties();
-        Set<ChallengeCategory> nextCategories = copyCategories();
+        Set<ChallengeTier> nextTiers = new HashSet<>(selectedTiers);
+        Set<ChallengeCategory> nextCategories = new HashSet<>(categories);
         Set<String> nextExclusionGroups = new HashSet<>(exclusionGroups);
 
-        nextDifficulties.add(challenge.getDifficulty());
+        nextTiers.add(challenge.getTier());
         nextCategories.add(challenge.getCategory());
 
         if (challenge.getExclusionGroup() != null) {
@@ -86,31 +86,9 @@ record WeeklyPackSelectionState(
         }
 
         return new WeeklyPackSelectionState(
-            Set.copyOf(nextDifficulties),
+            Set.copyOf(nextTiers),
             Set.copyOf(nextCategories),
             Set.copyOf(nextExclusionGroups)
         );
-    }
-
-    /**
-     * Creates a mutable difficulty set preserving the enum implementation.
-     *
-     * @return mutable difficulty copy
-     */
-    private Set<ChallengeDifficulty> copyDifficulties() {
-        return selectedDifficulties.isEmpty()
-            ? EnumSet.noneOf(ChallengeDifficulty.class)
-            : EnumSet.copyOf(selectedDifficulties);
-    }
-
-    /**
-     * Creates a mutable category set preserving the enum implementation.
-     *
-     * @return mutable category copy
-     */
-    private Set<ChallengeCategory> copyCategories() {
-        return categories.isEmpty()
-            ? EnumSet.noneOf(ChallengeCategory.class)
-            : EnumSet.copyOf(categories);
     }
 }

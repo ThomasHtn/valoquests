@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -23,6 +24,7 @@ import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchHistoryRespons
 import io.github.thomashtn.valoquests.henrik.dto.match.HenrikMatchMetadata;
 import io.github.thomashtn.valoquests.match.entity.Season;
 import io.github.thomashtn.valoquests.match.model.MatchImportResult;
+import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.match.service.MatchImportService;
 import io.github.thomashtn.valoquests.match.service.SeasonResolutionService;
 import io.github.thomashtn.valoquests.player.entity.Player;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -57,7 +60,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Number of matches Henrik returns for a full page.
      */
-    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_SIZE = HenrikMatchClient.MAX_PAGE_SIZE;
 
     /**
      * Riot identifier of the walked player.
@@ -94,6 +97,11 @@ class SeasonMatchHistoryWalkerTest {
      */
     private static final long OLDER_SEASON_ID = 18L;
 
+    /**
+     * Start instant shared by every scripted match.
+     */
+    private static final Instant MATCH_START = Instant.parse("2026-07-20T18:00:00Z");
+
     @Mock
     private HenrikMatchClient matchClient;
 
@@ -105,6 +113,9 @@ class SeasonMatchHistoryWalkerTest {
 
     @Mock
     private SeasonSynchronizationStateService stateService;
+
+    @Mock
+    private PlayerMatchRepository playerMatchRepository;
 
     /**
      * Walker under test.
@@ -125,7 +136,8 @@ class SeasonMatchHistoryWalkerTest {
             matchClient,
             matchImportService,
             seasonResolutionService,
-            stateService
+            stateService,
+            playerMatchRepository
         );
 
         player = new Player();
@@ -140,14 +152,10 @@ class SeasonMatchHistoryWalkerTest {
             return season;
         });
         when(stateService.startSeason(any(), any()))
-            .thenAnswer(invocation -> new SeasonSynchronizationStateService.SeasonWalkStart(
-                ((Season) invocation.getArgument(1)).getId(),
-                0
-            ));
-        when(stateService.isComplete(anyLong(), anyLong())).thenReturn(false);
+            .thenReturn(new SeasonSynchronizationStateService.SeasonWalkStart(0, false));
         when(stateService.findResumableSeasonId(anyLong(), anyString()))
             .thenReturn(Optional.empty());
-        when(matchImportService.importMatchesWithSummary(any(), any()))
+        when(matchImportService.importPage(any(), any()))
             .thenAnswer(invocation -> allImported(invocation.getArgument(1)));
     }
 
@@ -234,7 +242,9 @@ class SeasonMatchHistoryWalkerTest {
 
         MatchHistoryWalkResult result = walker.walk(player);
 
-        assertThat(result).isEqualTo(MatchHistoryWalkResult.empty());
+        assertThat(result).isEqualTo(
+            new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.EMPTY_PAGE)
+        );
         verifyNoInteractions(seasonResolutionService, matchImportService);
         verify(stateService, never()).startSeason(any(), any());
     }
@@ -243,16 +253,18 @@ class SeasonMatchHistoryWalkerTest {
      * Verifies that an unclassifiable first page ends the walk without an exception.
      *
      * <p>The season cannot be determined, so nothing can be imported safely. Failing here would mark
-     * the player failed on every single run.
+     * the player failed on every single run, and reporting an empty page would hide a full one.
      */
     @Test
+    @DisplayName("Reports an unresolved season, not an empty page, when no match carries a season")
     void shouldStopWhenNoMatchCarriesASeason() {
         givenPages(seasonlessPage(PAGE_SIZE));
 
         MatchHistoryWalkResult result = walker.walk(player);
 
         assertThat(result.stopReason())
-            .isEqualTo(SynchronizationStopReason.EMPTY_PAGE);
+            .isEqualTo(SynchronizationStopReason.SEASON_UNRESOLVED);
+        assertThat(result.pagesFetched()).isEqualTo(1);
         verifyNoInteractions(seasonResolutionService, matchImportService);
     }
 
@@ -297,7 +309,7 @@ class SeasonMatchHistoryWalkerTest {
 
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.EMPTY_PAGE);
-        assertThat(result.pagesFetched()).isEqualTo(1);
+        assertThat(result.pagesFetched()).isEqualTo(2);
         verify(stateService).markSeasonComplete(1L, CURRENT_SEASON_ID);
     }
 
@@ -308,13 +320,14 @@ class SeasonMatchHistoryWalkerTest {
      */
     @Test
     void shouldStopAtKnownHistoryWhenTheSeasonIsComplete() {
-        when(stateService.isComplete(1L, CURRENT_SEASON_ID)).thenReturn(true);
+        when(stateService.startSeason(any(), argThatSeasonIs(CURRENT_SEASON)))
+            .thenReturn(new SeasonSynchronizationStateService.SeasonWalkStart(0, true));
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
             page(CURRENT_SEASON, PAGE_SIZE)
         );
         doAnswer(invocation -> allKnown(invocation.getArgument(1)))
-            .when(matchImportService).importMatchesWithSummary(any(), any());
+            .when(matchImportService).importPage(any(), any());
 
         MatchHistoryWalkResult result = walker.walk(player);
 
@@ -331,7 +344,8 @@ class SeasonMatchHistoryWalkerTest {
      */
     @Test
     void shouldIgnoreKnownHistoryWhileTheSeasonIsIncomplete() {
-        when(stateService.isComplete(1L, CURRENT_SEASON_ID)).thenReturn(false);
+        when(stateService.startSeason(any(), argThatSeasonIs(CURRENT_SEASON)))
+            .thenReturn(new SeasonSynchronizationStateService.SeasonWalkStart(0, false));
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
             page(CURRENT_SEASON, PAGE_SIZE),
@@ -339,7 +353,7 @@ class SeasonMatchHistoryWalkerTest {
             straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
         );
         doAnswer(invocation -> allKnown(invocation.getArgument(1)))
-            .when(matchImportService).importMatchesWithSummary(any(), any());
+            .when(matchImportService).importPage(any(), any());
 
         MatchHistoryWalkResult result = walker.walk(player);
 
@@ -393,7 +407,7 @@ class SeasonMatchHistoryWalkerTest {
         walker.walk(player);
 
         verify(matchClient, times(1)).getMatches(PUUID, 0, PAGE_SIZE);
-        verify(matchImportService, times(2)).importMatchesWithSummary(any(), any());
+        verify(matchImportService, times(2)).importPage(any(), any());
         assertThat(importedSeasonIds()).contains(CURRENT_SEASON, PREVIOUS_SEASON);
     }
 
@@ -411,7 +425,7 @@ class SeasonMatchHistoryWalkerTest {
             straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4)
         );
         doAnswer(invocation -> allSkipped(invocation.getArgument(1)))
-            .when(matchImportService).importMatchesWithSummary(any(), any());
+            .when(matchImportService).importPage(any(), any());
 
         MatchHistoryWalkResult result = walker.walk(player);
 
@@ -469,7 +483,7 @@ class SeasonMatchHistoryWalkerTest {
         givenPages(page(CURRENT_SEASON, PAGE_SIZE), page(CURRENT_SEASON, PAGE_SIZE));
         doAnswer(invocation -> allImported(invocation.getArgument(1)))
             .doThrow(new IllegalStateException("database unavailable"))
-            .when(matchImportService).importMatchesWithSummary(any(), any());
+            .when(matchImportService).importPage(any(), any());
 
         assertThatThrownBy(() -> walker.walk(player))
             .isInstanceOf(IllegalStateException.class);
@@ -487,10 +501,10 @@ class SeasonMatchHistoryWalkerTest {
      */
     @Test
     void shouldResumeFromThePersistedCheckpointInsteadOfOffsetZero() {
-        doAnswer(invocation -> new SeasonSynchronizationStateService.SeasonWalkStart(
-            ((Season) invocation.getArgument(1)).getId(),
-            30
-        )).when(stateService).startSeason(any(), any());
+        givenCheckpoint(30);
+        doAnswer(invocation -> allKnown(invocation.getArgument(1)))
+            .doAnswer(invocation -> allImported(invocation.getArgument(1)))
+            .when(matchImportService).importPage(any(), any());
         givenPages(
             page(CURRENT_SEASON, PAGE_SIZE),
             page(CURRENT_SEASON, PAGE_SIZE),
@@ -504,6 +518,137 @@ class SeasonMatchHistoryWalkerTest {
         verify(matchClient, never()).getMatches(PUUID, 10, PAGE_SIZE);
         verify(matchClient, never()).getMatches(PUUID, 20, PAGE_SIZE);
         verify(matchClient, times(1)).getMatches(PUUID, 30, PAGE_SIZE);
+    }
+
+    /**
+     * Verifies that matches played since an interrupted run are not skipped by the checkpoint jump.
+     *
+     * <p>Henrik offsets count from the newest match: with more than a page of new matches, jumping
+     * from the first page straight to the checkpoint would skip the new matches beyond that page,
+     * then mark the season complete with that hole.
+     */
+    @Test
+    @DisplayName("Walks on page by page and discards the checkpoint when the first page is all new")
+    void shouldNotJumpToTheCheckpointWhenTheFirstPageHoldsOnlyNewMatches() {
+        givenCheckpoint(30);
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, 4)
+        );
+
+        MatchHistoryWalkResult result = walker.walk(player);
+
+        verify(matchClient).getMatches(PUUID, 10, PAGE_SIZE);
+        verify(matchClient).getMatches(PUUID, 20, PAGE_SIZE);
+        verify(stateService).discardProgress(1L, CURRENT_SEASON_ID);
+        assertThat(result.pagesFetched()).isEqualTo(5);
+        assertThat(result.matchesImported()).isEqualTo(44);
+    }
+
+    /**
+     * Verifies that a first page of ignored game modes does not cost a valid checkpoint.
+     *
+     * <p>Custom games are never stored, so such a page holds no stored match; reaching back to the
+     * newest stored match is what proves no new match lies beyond it.
+     */
+    @Test
+    @DisplayName("Jumps to the checkpoint when a first page of ignored modes reaches back to stored history")
+    void shouldJumpToTheCheckpointWhenTheFirstPageOfSkippedModesReachesStoredHistory() {
+        givenCheckpoint(30);
+        when(playerMatchRepository.findNewestMatchStartInSeason(1L, CURRENT_SEASON_ID))
+            .thenReturn(Optional.of(MATCH_START.plusSeconds(60)));
+        doAnswer(invocation -> allSkipped(invocation.getArgument(1)))
+            .doAnswer(invocation -> allImported(invocation.getArgument(1)))
+            .when(matchImportService).importPage(any(), any());
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, 4)
+        );
+
+        walker.walk(player);
+
+        verify(matchClient, never()).getMatches(PUUID, 10, PAGE_SIZE);
+        verify(matchClient).getMatches(PUUID, 30, PAGE_SIZE);
+        verify(stateService, never()).discardProgress(anyLong(), anyLong());
+    }
+
+    /**
+     * Verifies that a first page of ignored game modes all newer than the stored history keeps the
+     * checkpoint from being applied.
+     */
+    @Test
+    @DisplayName("Walks on page by page when a first page of ignored modes is newer than stored history")
+    void shouldNotJumpToTheCheckpointWhenTheSkippedFirstPageIsNewerThanStoredHistory() {
+        givenCheckpoint(30);
+        when(playerMatchRepository.findNewestMatchStartInSeason(1L, CURRENT_SEASON_ID))
+            .thenReturn(Optional.of(MATCH_START.minusSeconds(60)));
+        doAnswer(invocation -> allSkipped(invocation.getArgument(1)))
+            .doAnswer(invocation -> allImported(invocation.getArgument(1)))
+            .when(matchImportService).importPage(any(), any());
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, PAGE_SIZE),
+            page(CURRENT_SEASON, 4)
+        );
+
+        walker.walk(player);
+
+        verify(matchClient).getMatches(PUUID, 10, PAGE_SIZE);
+        verify(stateService).discardProgress(1L, CURRENT_SEASON_ID);
+    }
+
+    /**
+     * Verifies that only the starting season gets a checkpoint.
+     *
+     * <p>A season entered by crossing a boundary never becomes the starting season again, so its
+     * checkpoint would never be read.
+     */
+    @Test
+    @DisplayName("Records checkpoints for the starting season only")
+    void shouldNotRecordProgressForACrossedSeason() {
+        givenPages(
+            page(CURRENT_SEASON, PAGE_SIZE),
+            straddlingPage(4),
+            page(PREVIOUS_SEASON, PAGE_SIZE),
+            page(PREVIOUS_SEASON, 2)
+        );
+
+        walker.walk(player);
+
+        verify(stateService).recordProgress(1L, CURRENT_SEASON_ID, 10);
+        verify(stateService, never()).recordProgress(eq(1L), eq(PREVIOUS_SEASON_ID), anyInt());
+    }
+
+    /**
+     * Verifies that unfinished seasons are resumed even once the trailing budget is spent.
+     *
+     * <p>Their state proves an earlier run targeted them; the budget only bounds the seasons the
+     * walk starts on its own.
+     */
+    @Test
+    @DisplayName("Resumes an unfinished older season even after the trailing budget is spent")
+    void shouldResumeAnUnfinishedSeasonBeyondTheTrailingBudget() {
+        when(stateService.findResumableSeasonId(1L, PREVIOUS_SEASON))
+            .thenReturn(Optional.of(PREVIOUS_SEASON_ID));
+        when(stateService.findResumableSeasonId(1L, OLDER_SEASON))
+            .thenReturn(Optional.of(OLDER_SEASON_ID));
+        givenPages(
+            straddlingPage(6),
+            straddlingPage(PREVIOUS_SEASON, OLDER_SEASON, 4),
+            page(OLDER_SEASON, 3)
+        );
+
+        MatchHistoryWalkResult result = walker.walk(player);
+
+        assertThat(result.stopReason())
+            .isEqualTo(SynchronizationStopReason.END_OF_HISTORY);
+        verify(stateService).markSeasonComplete(1L, OLDER_SEASON_ID);
+        verify(stateService, never()).startSeason(any(), argThatSeasonIs(OLDER_SEASON));
     }
 
     /**
@@ -547,6 +692,14 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
+     * Gives every season a checkpoint left by a previous, interrupted run.
+     */
+    private void givenCheckpoint(int offset) {
+        doReturn(new SeasonSynchronizationStateService.SeasonWalkStart(offset, false))
+            .when(stateService).startSeason(any(), any());
+    }
+
+    /**
      * Scripts the pages Henrik returns, in order.
      */
     @SafeVarargs
@@ -563,7 +716,7 @@ class SeasonMatchHistoryWalkerTest {
      * Wraps matches in a Henrik response.
      */
     private HenrikMatchHistoryResponse response(List<HenrikMatchData> matches) {
-        return new HenrikMatchHistoryResponse(200, matches);
+        return new HenrikMatchHistoryResponse(matches);
     }
 
     /**
@@ -625,7 +778,7 @@ class SeasonMatchHistoryWalkerTest {
                 "match-" + System.nanoTime(),
                 null,
                 null,
-                Instant.parse("2026-07-20T18:00:00Z"),
+                MATCH_START,
                 true,
                 new HenrikMatchMetadata.HenrikQueue("competitive", null, null),
                 seasonId == null ? null : new HenrikMatchMetadata.HenrikSeason(seasonId, "V26")
@@ -638,24 +791,24 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Reports every match of the submitted page as newly imported.
      */
-    private MatchImportResult allImported(HenrikMatchHistoryResponse response) {
-        int size = response.data().size();
+    private MatchImportResult allImported(List<HenrikMatchData> page) {
+        int size = page.size();
         return new MatchImportResult(size, size, 0, 0, 0);
     }
 
     /**
      * Reports every match of the submitted page as already stored.
      */
-    private MatchImportResult allKnown(HenrikMatchHistoryResponse response) {
-        int size = response.data().size();
+    private MatchImportResult allKnown(List<HenrikMatchData> page) {
+        int size = page.size();
         return new MatchImportResult(size, 0, size, 0, 0);
     }
 
     /**
      * Reports every match of the submitted page as an ignored game mode.
      */
-    private MatchImportResult allSkipped(HenrikMatchHistoryResponse response) {
-        int size = response.data().size();
+    private MatchImportResult allSkipped(List<HenrikMatchData> page) {
+        int size = page.size();
         return new MatchImportResult(size, 0, 0, 0, size);
     }
 
@@ -663,13 +816,13 @@ class SeasonMatchHistoryWalkerTest {
      * Collects the seasons of every match handed to the import service.
      */
     private List<String> importedSeasonIds() {
-        ArgumentCaptor<HenrikMatchHistoryResponse> captor =
-            ArgumentCaptor.forClass(HenrikMatchHistoryResponse.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<HenrikMatchData>> captor = ArgumentCaptor.forClass(List.class);
         verify(matchImportService, atLeastOnce())
-            .importMatchesWithSummary(any(), captor.capture());
+            .importPage(any(), captor.capture());
 
         return captor.getAllValues().stream()
-            .flatMap(response -> response.data().stream())
+            .flatMap(List::stream)
             .map(match -> match.metadata().season() == null
                 ? null
                 : match.metadata().season().id())

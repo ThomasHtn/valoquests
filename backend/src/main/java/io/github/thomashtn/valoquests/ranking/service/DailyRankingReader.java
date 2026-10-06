@@ -7,9 +7,8 @@ import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
-import java.time.DayOfWeek;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -22,12 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <p>Nothing is persisted at this scale. The day is read back off the stored matches through the
  * same reader the weekly ranking and the campaign use, so one evening is worth the same wherever it
- * is shown. The day before is read in the same pass, because a day's total says nothing without
- * last night to hold it against.
+ * is shown.
  *
  * <p>Every player of the roster gets a line, archived ones aside, whether they played or not: a zero
  * on an evening the rest of the squad played is exactly what this board exists to show. Only the
- * competing squad takes a slot and counts towards the turnout.
+ * competing squad takes a slot and counts towards the roster.
  */
 @Service
 @Transactional(readOnly = true)
@@ -44,14 +42,25 @@ public class DailyRankingReader {
     private final DailyOutputReader dailyOutputReader;
 
     /**
+     * Calendar placing a day in its week.
+     */
+    private final WeekCalendar weekCalendar;
+
+    /**
      * Creates the daily ranking reader.
      *
      * @param playerRepository  player repository
      * @param dailyOutputReader daily output reader
+     * @param weekCalendar      calendar placing a day in its week
      */
-    public DailyRankingReader(PlayerRepository playerRepository, DailyOutputReader dailyOutputReader) {
+    public DailyRankingReader(
+        PlayerRepository playerRepository,
+        DailyOutputReader dailyOutputReader,
+        WeekCalendar weekCalendar
+    ) {
         this.playerRepository = playerRepository;
         this.dailyOutputReader = dailyOutputReader;
+        this.weekCalendar = weekCalendar;
     }
 
     /**
@@ -61,10 +70,9 @@ public class DailyRankingReader {
      * @return the day's board
      */
     public DailyRankingResponse read(LocalDate day) {
-        LocalDate previous = day.minusDays(1);
         DailyOutput output = dailyOutputReader.read(
             EnumSet.complementOf(EnumSet.of(PlayerStatus.ARCHIVED)),
-            previous,
+            day,
             day
         );
 
@@ -75,34 +83,21 @@ public class DailyRankingReader {
             .comparingInt((Player player) -> output.of(player.getId(), day).damage()).reversed()
             .thenComparing(Player::getId));
 
+        // No damage, no position.
+        List<Integer> positions = CompetitionRanking.positions(
+            ordered,
+            player -> player.isCompetitive() && output.of(player.getId(), day).damage() > 0,
+            player -> output.of(player.getId(), day).damage()
+        );
+        int competitors = (int) ordered.stream().filter(Player::isCompetitive).count();
         List<DailyRankingResponse.DailyRankingEntryResponse> ranking = new ArrayList<>(ordered.size());
-        int rank = 0;
-        int position = 0;
-        int lastRankedDamage = -1;
-        int played = 0;
-        int competitors = 0;
 
-        for (Player player : ordered) {
+        for (int index = 0; index < ordered.size(); index++) {
+            Player player = ordered.get(index);
             PlayerDayOutput today = output.of(player.getId(), day);
-            int previousDamage = output.of(player.getId(), previous).damage();
-            Integer ranked = null;
-
-            if (player.isCompetitive()) {
-                competitors++;
-                played += today.matchCount() > 0 ? 1 : 0;
-            }
-            // Equal damage shares a position, the next one skips ahead; no damage, no position.
-            if (player.isCompetitive() && today.damage() > 0) {
-                rank++;
-                if (today.damage() != lastRankedDamage) {
-                    position = rank;
-                    lastRankedDamage = today.damage();
-                }
-                ranked = position;
-            }
 
             ranking.add(new DailyRankingResponse.DailyRankingEntryResponse(
-                ranked,
+                positions.get(index),
                 player.isCompetitive(),
                 player.getId(),
                 player.getDisplayName(),
@@ -112,15 +107,13 @@ public class DailyRankingReader {
                 today.components(),
                 today.matchCount(),
                 today.reducedMatchCount(),
-                today.streakDays(),
+                today.playedDays(),
                 today.streakBonusPercent(),
-                weekPlayedDays(output, player.getId(), day),
-                previousDamage,
-                today.damage() - previousDamage
+                weekPlayedDays(output, player.getId(), day)
             ));
         }
 
-        return new DailyRankingResponse(day, previous, played, competitors, ranking);
+        return new DailyRankingResponse(day, competitors, ranking);
     }
 
     /**
@@ -131,11 +124,10 @@ public class DailyRankingReader {
      * @param day      last day to look at, included
      * @return played days in ascending order
      */
-    private static List<LocalDate> weekPlayedDays(DailyOutput output, long playerId, LocalDate day) {
+    private List<LocalDate> weekPlayedDays(DailyOutput output, long playerId, LocalDate day) {
         List<LocalDate> played = new ArrayList<>();
-        LocalDate monday = day.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        for (LocalDate current = monday; !current.isAfter(day); current = current.plusDays(1)) {
-            if (output.streakEndingOn(playerId, current) > 0) {
+        for (LocalDate current = weekCalendar.weekStartOf(day); !current.isAfter(day); current = current.plusDays(1)) {
+            if (output.playedDaysUpTo(playerId, current) > 0) {
                 played.add(current);
             }
         }

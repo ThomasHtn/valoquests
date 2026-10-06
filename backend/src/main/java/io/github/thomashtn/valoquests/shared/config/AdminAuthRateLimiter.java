@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +13,8 @@ import org.springframework.stereotype.Component;
  *
  * <p>The admin key is a single shared secret compared in constant time by {@link AdminApiKeyFilter},
  * which defeats timing attacks but not a caller simply guessing values fast enough. This tracks
- * invalid-key failures per remote address in memory and locks an address out for a short window once
- * it crosses a small budget — enough to make brute-forcing impractical without penalizing an operator
+ * invalid-key failures per remote address in memory and locks an address out for a short duration
+ * once it crosses a small budget — enough to make brute-forcing impractical without penalizing an admin
  * who mistypes the key once or twice.
  */
 @Component
@@ -25,8 +26,8 @@ public class AdminAuthRateLimiter {
     private final int maxFailures;
 
     /**
-     * Duration a remote address stays locked out once it crosses {@link #maxFailures}, and the
-     * duration after which an address's failure count resets.
+     * Duration a remote address stays locked out from the failure that crosses {@link #maxFailures},
+     * and the duration after which a failure count below the budget resets.
      */
     private final Duration lockoutDuration;
 
@@ -38,7 +39,7 @@ public class AdminAuthRateLimiter {
     /**
      * Number of tracked addresses beyond which expired windows are swept before a new one is added.
      *
-     * <p>Far above what this application's handful of operators can produce, so a legitimate
+     * <p>Far above what this application's handful of admins can produce, so a legitimate
      * mistyped key never triggers the sweep.</p>
      */
     private static final int SWEEP_THRESHOLD = 1_000;
@@ -71,7 +72,7 @@ public class AdminAuthRateLimiter {
      * Determines whether a remote address is currently locked out.
      *
      * @param remoteAddress caller's remote address
-     * @return {@code true} when the address has crossed the failure budget within the current window
+     * @return {@code true} when the address crossed the failure budget less than a lockout ago
      */
     public boolean isLockedOut(String remoteAddress) {
         AttemptWindow window = windowsByRemoteAddress.get(remoteAddress);
@@ -80,12 +81,12 @@ public class AdminAuthRateLimiter {
             return false;
         }
 
-        if (window.isExpired(clock, lockoutDuration)) {
+        if (window.isExpired(clock.instant(), lockoutDuration)) {
             windowsByRemoteAddress.remove(remoteAddress, window);
             return false;
         }
 
-        return window.failureCount() >= maxFailures;
+        return window.lockedUntil() != null;
     }
 
     /**
@@ -96,11 +97,13 @@ public class AdminAuthRateLimiter {
     public void recordFailure(String remoteAddress) {
         sweepExpiredWindows();
 
+        Instant now = clock.instant();
+
         windowsByRemoteAddress.compute(
             remoteAddress,
-            (key, existing) -> existing == null || existing.isExpired(clock, lockoutDuration)
-                ? new AttemptWindow(1, clock.instant())
-                : existing.increment()
+            (key, existing) -> existing == null || existing.isExpired(now, lockoutDuration)
+                ? new AttemptWindow(0, now, null).withFailureAt(now, maxFailures, lockoutDuration)
+                : existing.withFailureAt(now, maxFailures, lockoutDuration)
         );
     }
 
@@ -139,8 +142,10 @@ public class AdminAuthRateLimiter {
             return;
         }
 
+        Instant now = clock.instant();
+
         windowsByRemoteAddress.values()
-            .removeIf(window -> window.isExpired(clock, lockoutDuration));
+            .removeIf(window -> window.isExpired(now, lockoutDuration));
     }
 
     /**
@@ -148,27 +153,44 @@ public class AdminAuthRateLimiter {
      *
      * @param failureCount   number of invalid-key attempts recorded in this window
      * @param firstFailureAt instant the window started at
+     * @param lockedUntil    end of the lockout, once the failure budget has been crossed
      */
-    private record AttemptWindow(int failureCount, Instant firstFailureAt) {
+    private record AttemptWindow(
+        int failureCount,
+        Instant firstFailureAt,
+        @Nullable Instant lockedUntil
+    ) {
 
         /**
-         * Returns a window with one additional failure, keeping the original start instant.
+         * Returns a window with one additional failure, starting the lockout when it crosses the budget.
          *
-         * @return incremented attempt window
+         * @param now     instant of the failure
+         * @param budget  failed attempts allowed before a lockout
+         * @param lockout duration of the lockout
+         * @return updated attempt window
          */
-        AttemptWindow increment() {
-            return new AttemptWindow(failureCount + 1, firstFailureAt);
+        AttemptWindow withFailureAt(Instant now, int budget, Duration lockout) {
+            int failures = failureCount + 1;
+            Instant lockEnd = lockedUntil == null && failures >= budget
+                ? now.plus(lockout)
+                : lockedUntil;
+
+            return new AttemptWindow(failures, firstFailureAt, lockEnd);
         }
 
         /**
-         * Determines whether this window is old enough to no longer apply.
+         * Determines whether this window no longer applies: its lockout is over, or, below the
+         * budget, its first failure is older than the lockout duration.
          *
-         * @param currentClock  application clock
-         * @param windowMaxAge  configured window duration
-         * @return {@code true} when the window started more than {@code windowMaxAge} ago
+         * @param now     current instant
+         * @param lockout configured lockout duration
+         * @return {@code true} when the window can be forgotten
          */
-        boolean isExpired(Clock currentClock, Duration windowMaxAge) {
-            return currentClock.instant().isAfter(firstFailureAt.plus(windowMaxAge));
+        boolean isExpired(Instant now, Duration lockout) {
+            if (lockedUntil != null) {
+                return !now.isBefore(lockedUntil);
+            }
+            return now.isAfter(firstFailureAt.plus(lockout));
         }
     }
 }

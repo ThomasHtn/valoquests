@@ -13,7 +13,7 @@ import java.util.List;
  * no map, and a campaign without its roster has no denominator.
  *
  * @param campaign the campaign row
- * @param roster   the operators frozen into it
+ * @param roster   the players frozen into it
  * @param weeks    its ten weeks, week one first
  */
 @SuppressFBWarnings(

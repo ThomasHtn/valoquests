@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 /**
  * Provides access to a campaign's daily snapshots.
@@ -29,15 +27,6 @@ public interface CampaignDailySnapshotRepository extends JpaRepository<CampaignD
      * @return the day, empty when the replay never reached it
      */
     Optional<CampaignDailySnapshot> findByCampaignIdAndDay(Long campaignId, LocalDate day);
-
-    /**
-     * Returns the last day a campaign was computed up to.
-     *
-     * @param campaignId campaign identifier
-     * @return the most recent computed day, empty when the campaign has never been replayed
-     */
-    @Query("SELECT MAX(snapshot.day) FROM CampaignDailySnapshot snapshot WHERE snapshot.campaign.id = :campaignId")
-    Optional<LocalDate> findLastDayByCampaignId(@Param("campaignId") Long campaignId);
 
     /**
      * Deletes every day of one campaign, so a replay can write them again.

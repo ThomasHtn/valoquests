@@ -71,6 +71,20 @@ public enum ChallengeMetric {
 
     /**
      * Calendar day on which at least one eligible match was played.
+     *
+     * <p>Not a value a match carries: only a {@code DISTINCT_COUNT} challenge can count it.
      */
-    PLAY_DAY
+    PLAY_DAY;
+
+    /**
+     * Indicates whether the metric is a rate, calculated from totals, rather than a total.
+     *
+     * @return {@code true} for a rate metric
+     */
+    public boolean isRate() {
+        return switch (this) {
+            case KD, ACS, ADR, HEADSHOT_RATE -> true;
+            default -> false;
+        };
+    }
 }

@@ -409,14 +409,14 @@ export class Leaderboard {
       damage: entry.guardianDamage,
       challengePoints: entry.challengePoints,
       title: this.title(entry.titles, {
-        REGULAR: entry.streakDays,
+        REGULAR: entry.playedDays,
         SCOUT: entry.completedChallenges + entry.completedDailyChallenges,
       }),
       challengesCompleted: entry.completedChallenges + entry.completedDailyChallenges,
       // A closed week keeps no draw size: one challenge per tier.
       challengesMax: weekChallengeCeiling(CHALLENGE_DIFFICULTIES.length),
       matchCount: entry.matchCount,
-      streak: { week: null, days: entry.streakDays, bonusPercent: streakBonusOf(entry.streakDays) },
+      streak: { week: null, days: entry.playedDays, bonusPercent: streakBonusOf(entry.playedDays) },
     }));
     return this.split(rows, week.weekStart, false);
   }
@@ -430,7 +430,7 @@ export class Leaderboard {
     line: DailyRankingEntry | undefined,
   ): BoardStreak {
     if (day === null || !line) {
-      return { week: null, days: entry.streakDays, bonusPercent: streakBonusOf(entry.streakDays) };
+      return { week: null, days: entry.playedDays, bonusPercent: streakBonusOf(entry.playedDays) };
     }
     const days = line.weekPlayedDays.length;
     return {

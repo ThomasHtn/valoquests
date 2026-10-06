@@ -3,6 +3,8 @@ package io.github.thomashtn.valoquests.match.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link MatchImportResult}. */
@@ -67,5 +69,17 @@ class MatchImportResultTest {
         assertThatThrownBy(() -> new MatchImportResult(10, 10, 0, 0, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("must not be negative");
+    }
+
+    @Test
+    @DisplayName("Counts each outcome into its counter, an absent outcome counting zero")
+    void shouldBuildCountersFromOutcomeCounts() {
+        MatchImportResult result = MatchImportResult.of(6, Map.of(
+            MatchImportOutcome.IMPORTED, 3,
+            MatchImportOutcome.REJECTED, 1,
+            MatchImportOutcome.SKIPPED, 2
+        ));
+
+        assertThat(result).isEqualTo(new MatchImportResult(6, 3, 0, 1, 2));
     }
 }

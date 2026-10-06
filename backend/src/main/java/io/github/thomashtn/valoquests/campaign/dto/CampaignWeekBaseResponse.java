@@ -1,5 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * The base at the close of one week, and what the week added to its stocks.
  *
@@ -14,6 +16,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param foodGained       food the week brought in
  * @param componentsGained components the week brought in
  */
+@Schema(description = "The base at the close of one week and what the week added.")
 public record CampaignWeekBaseResponse(
     int population,
     int populationChange,

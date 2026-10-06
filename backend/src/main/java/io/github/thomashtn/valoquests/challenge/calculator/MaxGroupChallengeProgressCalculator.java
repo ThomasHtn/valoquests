@@ -1,14 +1,12 @@
 package io.github.thomashtn.valoquests.challenge.calculator;
 
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCondition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeGroupBy;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +20,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MaxGroupChallengeProgressCalculator
-    implements ChallengeProgressCalculator {
+    extends SingleConditionChallengeProgressCalculator {
 
     /**
      * Extracts the metric value contributed by each eligible match.
@@ -30,14 +28,9 @@ public class MaxGroupChallengeProgressCalculator
     private final ChallengeMetricEvaluator metricEvaluator;
 
     /**
-     * Applies the filters declared by the challenge condition.
+     * Reads the key each match is grouped under.
      */
-    private final ChallengeMatchFilter matchFilter;
-
-    /**
-     * Calendar placing a match on the calendar day it counts towards.
-     */
-    private final WeekCalendar weekCalendar;
+    private final MatchGroupKeyExtractor keyExtractor;
 
     /**
      * Creates the maximum-group challenge-progress calculator.
@@ -51,9 +44,9 @@ public class MaxGroupChallengeProgressCalculator
         ChallengeMatchFilter matchFilter,
         WeekCalendar weekCalendar
     ) {
+        super(matchFilter);
         this.metricEvaluator = metricEvaluator;
-        this.matchFilter = matchFilter;
-        this.weekCalendar = weekCalendar;
+        this.keyExtractor = new MatchGroupKeyExtractor(weekCalendar);
     }
 
     /**
@@ -70,31 +63,15 @@ public class MaxGroupChallengeProgressCalculator
      * Groups eligible matches according to the configured dimension and
      * returns the highest accumulated metric value found in one group.
      *
-     * @param definition parsed challenge definition
-     * @param context    weekly player context
-     * @return normalized progress result
+     * @param condition       the challenge's single condition
+     * @param eligibleMatches matches the condition's filters accept
+     * @return highest metric total of one group
      */
     @Override
-    public ChallengeProgressResult calculate(
-        ChallengeDefinition definition,
-        PlayerChallengeContext context
-    ) {
-        ChallengeCondition condition = definition.singleCondition();
-        ChallengeGroupBy groupBy = condition.groupBy();
-
-        if (groupBy == null) {
-            throw new IllegalArgumentException(
-                "MAX_GROUP challenges require a grouping dimension."
-            );
-        }
-
-        Map<Object, BigDecimal> groupedValues = context.playerMatches()
-            .stream()
-            .filter(playerMatch ->
-                matchFilter.matches(playerMatch, condition)
-            )
+    protected BigDecimal measure(ChallengeCondition condition, List<PlayerMatch> eligibleMatches) {
+        Map<Object, BigDecimal> groupedValues = eligibleMatches.stream()
             .map(playerMatch -> new GroupedMetricValue(
-                extractGroupValue(playerMatch, groupBy),
+                keyExtractor.keyOf(playerMatch, condition.groupBy()),
                 metricEvaluator.evaluate(
                     playerMatch,
                     condition.metric()
@@ -109,57 +86,11 @@ public class MaxGroupChallengeProgressCalculator
                 BigDecimal::add
             ));
 
-        BigDecimal maximumGroupValue = groupedValues
+        return groupedValues
             .values()
             .stream()
-            .filter(Objects::nonNull)
             .max(BigDecimal::compareTo)
             .orElse(BigDecimal.ZERO);
-
-        return ChallengeProgressResult.from(
-            maximumGroupValue,
-            condition.target()
-        );
-    }
-
-    /**
-     * Extracts the value used to group one player match.
-     *
-     * @param playerMatch persisted player-match data
-     * @param groupBy     requested grouping dimension
-     * @return grouping value, or {@code null} when unavailable
-     */
-    private Object extractGroupValue(
-        PlayerMatch playerMatch,
-        ChallengeGroupBy groupBy
-    ) {
-        return switch (groupBy) {
-            case AGENT -> extractAgentValue(playerMatch);
-            case GAME_MODE -> playerMatch.getMatch().getGameMode();
-            case PLAY_DAY -> weekCalendar.dayOf(
-                playerMatch.getMatch().getStartedAt()
-            );
-        };
-    }
-
-    /**
-     * Returns the most stable available agent identifier.
-     *
-     * @param playerMatch persisted player-match data
-     * @return agent identifier or fallback name
-     */
-    private String extractAgentValue(PlayerMatch playerMatch) {
-        if (playerMatch.getAgentId() != null
-            && !playerMatch.getAgentId().isBlank()) {
-            return playerMatch.getAgentId();
-        }
-
-        if (playerMatch.getAgentName() != null
-            && !playerMatch.getAgentName().isBlank()) {
-            return playerMatch.getAgentName();
-        }
-
-        return null;
     }
 
     /**

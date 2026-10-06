@@ -18,7 +18,7 @@ import io.github.thomashtn.valoquests.campaign.model.CampaignReplayResult;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignWeekRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -73,7 +73,7 @@ class CampaignReplayServiceTest {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         List<CampaignWeek> weeks = List.of(CampaignFixtures.week(campaign, 1, 1_000, 50));
 
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+        when(campaignRepository.findLive()).thenReturn(Optional.of(campaign));
         when(weekRepository.findAllByCampaignIdOrderByWeekIndexAsc(1L)).thenReturn(weeks);
         when(assembler.assemble(campaign, weeks, today, today.minusDays(1))).thenReturn(NO_INPUTS);
         when(engine.replay(anyList(), anyList())).thenReturn(NO_RESULT);
@@ -133,7 +133,7 @@ class CampaignReplayServiceTest {
     }
 
     @Test
-    @DisplayName("Freezes a campaign an operator stopped at the day it stopped on")
+    @DisplayName("Freezes a campaign an admin stopped at the day it stopped on")
     void shouldStopAtTheDayItWasStoppedOn() {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         campaign.setStoppedOn(CampaignFixtures.FIRST_WEEK_START.plusDays(10));
@@ -155,7 +155,7 @@ class CampaignReplayServiceTest {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         campaign.setStatus(CampaignStatus.OPENED);
 
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+        when(campaignRepository.findLive()).thenReturn(Optional.of(campaign));
 
         assertThat(service.replayRunningCampaign()).isEmpty();
         verifyNoInteractions(assembler, engine, writer);
@@ -166,7 +166,7 @@ class CampaignReplayServiceTest {
     void shouldNotReplayWithoutACampaign() {
         CampaignReplayService service = serviceOn(CampaignFixtures.FIRST_WEEK_START);
 
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
+        when(campaignRepository.findLive()).thenReturn(Optional.empty());
 
         assertThat(service.replayRunningCampaign()).isEmpty();
         verify(weekRepository, never()).findAllByCampaignIdOrderByWeekIndexAsc(any());

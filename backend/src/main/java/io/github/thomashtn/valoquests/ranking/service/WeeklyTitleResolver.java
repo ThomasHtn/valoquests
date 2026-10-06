@@ -12,14 +12,14 @@ import org.springframework.stereotype.Component;
 /**
  * Awards the four weekly honours from a week's ranking rows.
  *
- * <p>An operator holds one title at most. Titles are awarded in declaration order, the week's
+ * <p>A player holds one title at most. Titles are awarded in declaration order, the week's
  * champion taking none of them, and a title whose best figure already holds one passes to the next
- * operator on that figure.
+ * player on that figure.
  *
- * <p>A tie awards nothing. Two operators who both did the most are not both the most, and a title
+ * <p>A tie awards nothing. Two players who both did the most are not both the most, and a title
  * that can be shared stops meaning anything the first time it is.
  *
- * <p>Reads the ranking rather than the campaign: the rows already carry what each operator's week
+ * <p>Reads the ranking rather than the campaign: the rows already carry what each player's week
  * was worth, and they exist between two campaigns too, so a squad keeps its honours while it waits
  * for the next one. Only ranked rows compete: an inactive player's counts are for their own eyes.
  */
@@ -27,34 +27,27 @@ import org.springframework.stereotype.Component;
 public class WeeklyTitleResolver {
 
     /**
-     * Awards one week's titles, leaving the champion out of them.
-     *
-     * @param scores     the week's ranking rows
-     * @param championId the champion, who already holds the highest title, or {@code null}
-     * @return the holder of each title, titles nobody won outright omitted
-     */
-    public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores, Long championId) {
-        return resolve(scores, championId, null);
-    }
-
-    /**
-     * Awards one finalized week's titles, leaving out both its champion and the one reigning over it.
+     * Awards one week's titles, leaving out both its own champion and the one reigning over it.
      *
      * @param scores             the week's ranking rows
-     * @param championId         the week's own champion, or {@code null}
+     * @param weekChampionId     the week's own champion, or {@code null} while the week is in progress
      * @param reigningChampionId the previous week's champion, who wore the crown that week, or {@code null}
      * @return the holder of each title, titles nobody won outright omitted
      */
-    public Map<WeeklyTitle, Long> resolve(List<WeeklyPlayerScore> scores, Long championId, Long reigningChampionId) {
+    public Map<WeeklyTitle, Long> resolve(
+        List<WeeklyPlayerScore> scores,
+        Long weekChampionId,
+        Long reigningChampionId
+    ) {
         List<WeeklyPlayerScore> ranked = scores.stream()
             .filter(score -> score.getPosition() != null)
-            .filter(score -> !Objects.equals(score.getPlayer().getId(), championId))
+            .filter(score -> !Objects.equals(score.getPlayer().getId(), weekChampionId))
             .filter(score -> !Objects.equals(score.getPlayer().getId(), reigningChampionId))
             .toList();
 
         Map<WeeklyTitle, Long> titles = new EnumMap<>(WeeklyTitle.class);
-        award(titles, ranked, WeeklyTitle.REGULAR, WeeklyPlayerScore::getStreakDays);
-        award(titles, ranked, WeeklyTitle.SCOUT, WeeklyPlayerScore::completedAllChallenges);
+        award(titles, ranked, WeeklyTitle.REGULAR, WeeklyPlayerScore::getPlayedDays);
+        award(titles, ranked, WeeklyTitle.SCOUT, WeeklyPlayerScore::totalCompletedChallenges);
         award(titles, ranked, WeeklyTitle.QUARTERMASTER, WeeklyPlayerScore::getFood);
         award(titles, ranked, WeeklyTitle.MECHANIC, WeeklyPlayerScore::getComponents);
 
@@ -62,7 +55,7 @@ public class WeeklyTitleResolver {
     }
 
     /**
-     * Awards one title to the single untitled operator holding the highest figure, if there is one.
+     * Awards one title to the single untitled player holding the highest figure, if there is one.
      *
      * @param titles titles awarded so far, whose holders no longer compete
      * @param ranked the week's ranked rows

@@ -11,10 +11,9 @@ import org.springframework.stereotype.Component;
 /**
  * Calculates ratio-based weekly challenges.
  *
- * <p>Checks a rate against a fixed threshold, where {@code BASELINE} checks it against the player's
- * own past. The rate itself is calculated by {@link AggregateRateCalculator}, from totals across all
- * eligible matches rather than from an average of per-match ratios, so both modes agree on what the
- * number means.</p>
+ * <p>Checks a rate against a fixed threshold. The rate itself is calculated by
+ * {@link AggregateRateCalculator}, from totals across all eligible matches rather than from an
+ * average of per-match ratios.</p>
  */
 @Component
 public class RatioChallengeProgressCalculator
@@ -73,8 +72,6 @@ public class RatioChallengeProgressCalculator
     ) {
         ChallengeCondition condition = definition.singleCondition();
 
-        validateCondition(condition);
-
         List<PlayerMatch> eligibleMatches = context.playerMatches()
             .stream()
             .filter(playerMatch ->
@@ -89,7 +86,7 @@ public class RatioChallengeProgressCalculator
         ChallengeProgressResult normalizedResult =
             ChallengeProgressResult.from(
                 currentValue,
-                condition.target()
+                definition.progressTarget()
             );
 
         boolean minimumMatchesReached =
@@ -98,36 +95,8 @@ public class RatioChallengeProgressCalculator
         return new ChallengeProgressResult(
             normalizedResult.currentValue(),
             normalizedResult.targetValue(),
-            normalizedResult.progressPercentage(),
             normalizedResult.completed() && minimumMatchesReached
         );
-    }
-
-    /**
-     * Validates the configuration required by a ratio challenge.
-     *
-     * @param condition challenge condition
-     */
-    private void validateCondition(
-        ChallengeCondition condition
-    ) {
-        if (!rateCalculator.supports(condition.metric())) {
-            throw new IllegalArgumentException(
-                "Unsupported ratio metric: " + condition.metric()
-            );
-        }
-
-        if (condition.minimumMatches() == null) {
-            throw new IllegalArgumentException(
-                "RATIO challenges require a minimum number of matches."
-            );
-        }
-
-        if (condition.minimumMatches() <= 0) {
-            throw new IllegalArgumentException(
-                "The minimum number of matches must be greater than zero."
-            );
-        }
     }
 
 }

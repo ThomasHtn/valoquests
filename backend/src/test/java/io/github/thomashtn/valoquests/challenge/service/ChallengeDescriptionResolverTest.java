@@ -71,11 +71,11 @@ class ChallengeDescriptionResolverTest {
      */
     @Test
     void rewritesEveryCondition() {
-        ChallengeDefinition base = new ChallengeDefinition(1, ProgressMode.ALL, List.of(
+        ChallengeDefinition base = new ChallengeDefinition(ProgressMode.ALL, List.of(
             cumulative(ChallengeMetric.KILLS, "300"),
             cumulative(ChallengeMetric.KILLS, "150")
         ));
-        ChallengeDefinition resolved = new ChallengeDefinition(1, ProgressMode.ALL, List.of(
+        ChallengeDefinition resolved = new ChallengeDefinition(ProgressMode.ALL, List.of(
             cumulative(ChallengeMetric.KILLS, "120"),
             cumulative(ChallengeMetric.KILLS, "60")
         ));
@@ -122,11 +122,11 @@ class ChallengeDescriptionResolverTest {
     }
 
     private static ChallengeDefinition sum(ChallengeCondition condition) {
-        return new ChallengeDefinition(1, ProgressMode.SUM, List.of(condition));
+        return new ChallengeDefinition(ProgressMode.SUM, List.of(condition));
     }
 
     private static ChallengeDefinition count(ChallengeCondition condition) {
-        return new ChallengeDefinition(1, ProgressMode.COUNT_MATCHES, List.of(condition));
+        return new ChallengeDefinition(ProgressMode.COUNT_MATCHES, List.of(condition));
     }
 
     private static ChallengeCondition cumulative(ChallengeMetric metric, String target) {

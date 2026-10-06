@@ -1,15 +1,11 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
-import io.github.thomashtn.valoquests.challenge.calculator.ChallengeProgressResult;
-import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContext;
-import io.github.thomashtn.valoquests.challenge.calculator.PlayerChallengeContextFactory;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
+import io.github.thomashtn.valoquests.challenge.model.CalculatedProgress;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.ranking.service.RankingRecalculationService;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,29 +38,29 @@ public class DefaultChallengeRecalculationService
     private final PlayerRepository playerRepository;
 
     /**
-     * Factory used to load each player's eligible weekly matches.
-     */
-    private final PlayerChallengeContextFactory contextFactory;
-
-    /**
-     * Service used to calculate one challenge for one player.
+     * Service used to calculate one player's progress on the week's selections.
      */
     private final ChallengeProgressCalculationService calculationService;
 
     /**
-     * Service used to persist calculated challenge progress.
+     * Writer storing calculated challenge progress.
      */
-    private final PlayerChallengeProgressPersistenceService persistenceService;
+    private final PlayerChallengeProgressWriter progressWriter;
 
     /**
-     * Service used to rebuild the current weekly ranking.
+     * Listener told once the current week's progress is rebuilt, the ranking in practice.
      */
-    private final RankingRecalculationService rankingRecalculationService;
+    private final CurrentWeekProgressListener progressListener;
 
     /**
      * Service used to prepare the active weekly challenge pack.
      */
-    private final WeeklyChallengeSelectionService weeklyChallengeSelectionService;
+    private final WeeklyChallengeDrawService weeklyDrawService;
+
+    /**
+     * Service used to draw today's challenge and read the week's daily draws.
+     */
+    private final DailyChallengeDrawService dailyDrawService;
 
     /**
      * Calendar resolving the current week.
@@ -74,55 +70,56 @@ public class DefaultChallengeRecalculationService
     /**
      * Creates the current-week challenge recalculation service.
      *
-     * @param playerRepository                player repository
-     * @param contextFactory                  player challenge context factory
-     * @param calculationService              challenge calculation service
-     * @param persistenceService              progress persistence service
-     * @param rankingRecalculationService     ranking recalculation service
-     * @param weeklyChallengeSelectionService weekly selection service
-     * @param weekCalendar                    calendar resolving the current week
+     * @param playerRepository            player repository
+     * @param calculationService          challenge calculation service
+     * @param progressWriter              progress writer
+     * @param progressListener            listener told once the current week's progress is rebuilt
+     * @param weeklyDrawService           weekly challenge draw service
+     * @param dailyDrawService            daily challenge draw service
+     * @param weekCalendar                calendar resolving the current week
      */
     public DefaultChallengeRecalculationService(
         PlayerRepository playerRepository,
-        PlayerChallengeContextFactory contextFactory,
         ChallengeProgressCalculationService calculationService,
-        PlayerChallengeProgressPersistenceService persistenceService,
-        RankingRecalculationService rankingRecalculationService,
-        WeeklyChallengeSelectionService weeklyChallengeSelectionService,
+        PlayerChallengeProgressWriter progressWriter,
+        CurrentWeekProgressListener progressListener,
+        WeeklyChallengeDrawService weeklyDrawService,
+        DailyChallengeDrawService dailyDrawService,
         WeekCalendar weekCalendar
     ) {
         this.playerRepository = playerRepository;
-        this.contextFactory = contextFactory;
         this.calculationService = calculationService;
-        this.persistenceService = persistenceService;
-        this.rankingRecalculationService = rankingRecalculationService;
-        this.weeklyChallengeSelectionService = weeklyChallengeSelectionService;
+        this.progressWriter = progressWriter;
+        this.progressListener = progressListener;
+        this.weeklyDrawService = weeklyDrawService;
+        this.dailyDrawService = dailyDrawService;
         this.weekCalendar = weekCalendar;
     }
 
     /**
-     * Recalculates every tracked player's progress for the current UTC week.
+     * Draws what the current week still lacks, then recalculates every tracked player's progress
+     * for that calendar week.
      *
      * <p>Only matches already stored in PostgreSQL are used. The Henrik API is
      * never called by this operation.</p>
      */
     @Override
     @Transactional
-    public void recalculateCurrentWeekProgress() {
+    public void drawAndRecalculateCurrentWeek() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
         LocalDate today = weekCalendar.today();
 
         // Selected rather than loaded: the current pack and today's challenge are created when they
         // do not exist yet. Earlier days of the week are only loaded, never drawn after the fact.
-        List<WeeklyChallenge> selections = new ArrayList<>(
-            weeklyChallengeSelectionService.selectWeekChallenges(weekStart)
+        List<ChallengeSelection> selections = new ArrayList<>(
+            weeklyDrawService.selectWeekChallenges(weekStart)
         );
-        weeklyChallengeSelectionService.selectDailyChallenge(today);
-        selections.addAll(weeklyChallengeSelectionService.findDailyChallenges(weekStart, today));
+        dailyDrawService.selectDailyChallenge(today);
+        selections.addAll(dailyDrawService.findDailyChallenges(weekStart, today));
 
         recalculateWeek(weekStart, selections);
 
-        rankingRecalculationService.recalculateCurrentRanking();
+        progressListener.currentWeekProgressRecalculated();
     }
 
     /**
@@ -137,7 +134,7 @@ public class DefaultChallengeRecalculationService
     public void recalculateWeekProgress(LocalDate weekStart) {
         recalculateWeek(
             weekStart,
-            weeklyChallengeSelectionService.findExistingWeekChallenges(weekStart)
+            weeklyDrawService.findExistingWeekChallenges(weekStart)
         );
     }
 
@@ -145,13 +142,13 @@ public class DefaultChallengeRecalculationService
      * Rebuilds every tracked player's progress against one week's challenge pack.
      *
      * @param weekStart        Monday identifying the recalculated week
-     * @param weeklyChallenges every selection of that week, weekly pack and daily draws
+     * @param selections every selection of that week, weekly pack and daily draws
      */
     private void recalculateWeek(
         LocalDate weekStart,
-        List<WeeklyChallenge> weeklyChallenges
+        List<ChallengeSelection> selections
     ) {
-        if (weeklyChallenges.isEmpty()) {
+        if (selections.isEmpty()) {
             LOGGER.info(
                 "No active weekly challenges found for week {}.",
                 weekStart
@@ -168,7 +165,7 @@ public class DefaultChallengeRecalculationService
                 + "{} player(s), {} challenge(s).",
             weekStart,
             players.size(),
-            weeklyChallenges.size()
+            selections.size()
         );
 
         int progressCount = 0;
@@ -177,7 +174,7 @@ public class DefaultChallengeRecalculationService
             progressCount += recalculatePlayerProgress(
                 player,
                 weekStart,
-                weeklyChallenges
+                selections
             );
         }
 
@@ -194,87 +191,19 @@ public class DefaultChallengeRecalculationService
      *
      * @param player           player being recalculated
      * @param weekStart        current week start
-     * @param weeklyChallenges active weekly challenges
+     * @param selections active weekly challenges
      * @return number of processed challenge progress records
      */
     private int recalculatePlayerProgress(
         Player player,
         LocalDate weekStart,
-        List<WeeklyChallenge> weeklyChallenges
+        List<ChallengeSelection> selections
     ) {
-        PlayerChallengeContext context =
-            contextFactory.create(
-                player,
-                weekStart
-            );
+        List<CalculatedProgress> calculated =
+            calculationService.calculateWeek(player, weekStart, selections);
 
-        LOGGER.debug(
-            "Calculating {} challenge(s) for player {} using {} match(es).",
-            weeklyChallenges.size(),
-            player.getDisplayName(),
-            context.playerMatches().size()
-        );
+        progressWriter.saveAll(player, calculated);
 
-        List<ChallengeProgressResult> results = weeklyChallenges.stream()
-            .map(
-                weeklyChallenge -> calculateProgress(
-                    player,
-                    weeklyChallenge,
-                    context
-                )
-            )
-            .toList();
-
-        persistenceService.saveAll(
-            player,
-            weeklyChallenges,
-            results
-        );
-
-        return results.size();
+        return calculated.size();
     }
-
-    /**
-     * Calculates and logs one selection's result for a player.
-     *
-     * <p>A daily selection is evaluated over its own day, carved out of the week's context.
-     *
-     * @param player          player being recalculated
-     * @param weeklyChallenge evaluated selection
-     * @param context         weekly player context
-     * @return calculated progress result
-     */
-    private ChallengeProgressResult calculateProgress(
-        Player player,
-        WeeklyChallenge weeklyChallenge,
-        PlayerChallengeContext context
-    ) {
-        PlayerChallengeContext periodContext = context;
-
-        if (weeklyChallenge.getCadence() == ChallengeCadence.DAILY) {
-            LocalDate day = weeklyChallenge.getDay();
-            periodContext = context.restrictedTo(
-                weekCalendar.startOfDay(day),
-                weekCalendar.endOfDay(day)
-            );
-        }
-
-        ChallengeProgressResult result = calculationService.calculate(
-            weeklyChallenge,
-            periodContext
-        );
-
-        LOGGER.debug(
-            "Calculated challenge {} for player {}: current={}, "
-                + "target={}, completed={}.",
-            weeklyChallenge.getChallenge().getCode(),
-            player.getDisplayName(),
-            result.currentValue(),
-            result.targetValue(),
-            result.completed()
-        );
-
-        return result;
-    }
-
 }

@@ -83,11 +83,10 @@ describe('reportedTone', () => {
 });
 
 describe('resolveResultTone', () => {
-  it('keeps draws, remakes and unknown results neutral', () => {
+  it('keeps draws and unknown results neutral', () => {
     expect(resolveResultTone('WIN')).toBe('win');
     expect(resolveResultTone('LOSS')).toBe('loss');
     expect(resolveResultTone('DRAW')).toBe('neutral');
-    expect(resolveResultTone('REMAKE')).toBe('neutral');
   });
 });
 

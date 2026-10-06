@@ -2,12 +2,17 @@ package io.github.thomashtn.valoquests.campaign.service;
 
 import io.github.thomashtn.valoquests.campaign.CampaignRuleset;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignBaseResponse;
+import io.github.thomashtn.valoquests.campaign.dto.CampaignForecastResponse;
+import io.github.thomashtn.valoquests.campaign.dto.CampaignHistoryResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignTotalsResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekBaseResponse;
 import io.github.thomashtn.valoquests.campaign.dto.CampaignWeekResponse;
 import io.github.thomashtn.valoquests.campaign.dto.FatalBlowResponse;
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignDailySnapshot;
 import io.github.thomashtn.valoquests.campaign.entity.CampaignWeek;
+import io.github.thomashtn.valoquests.campaign.model.ExtractionEstimate;
+import io.github.thomashtn.valoquests.campaign.model.RescueCapacity;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.ValorantMatch;
 import java.util.ArrayList;
@@ -24,12 +29,17 @@ final class CampaignResponseMapper {
     /**
      * Scale of the percentages exposed by the API.
      */
-    static final int PERCENT = 100;
+    private static final int PERCENT = 100;
+
+    /**
+     * Margin added before rounding a share down to whole percents.
+     */
+    private static final double ROUNDING_TOLERANCE = 1e-9;
 
     /**
      * Share of the base lost on a failed breakthrough, as an integer percentage.
      */
-    static final int GUARDIAN_LOSS_PERCENT = (int) Math.round(CampaignRuleset.GUARDIAN_LOSS_RATE * PERCENT);
+    private static final int GUARDIAN_LOSS_PERCENT = (int) Math.round(CampaignRuleset.GUARDIAN_LOSS_RATE * PERCENT);
 
     /**
      * Not instantiable: static helpers only.
@@ -56,21 +66,48 @@ final class CampaignResponseMapper {
         double population = last.getPopulation().doubleValue();
         double food = last.getFoodStock().doubleValue();
         double components = last.getComponentsStock().doubleValue();
-        double upkeep = population * CampaignRuleset.FOOD_PER_INHABITANT_PER_DAY;
-        double protectedFood = upkeep * CampaignRuleset.PROTECTED_FOOD_DAYS;
+        RescueCapacity capacity = RescueCapacity.of(food, components, population);
 
         return new CampaignBaseResponse(
             (int) Math.round(population),
             (int) Math.round(food),
             (int) Math.round(components),
-            (int) Math.round(upkeep),
-            (int) Math.round(protectedFood),
-            (int) Math.floor(components / CampaignRuleset.COMPONENTS_PER_RESCUE),
-            (int) Math.floor(Math.max(0, food - protectedFood) / CampaignRuleset.FOOD_PER_RESCUE),
+            (int) Math.round(CampaignRuleset.dailyUpkeep(population)),
+            (int) Math.round(capacity.protectedFood()),
+            capacity.byComponents(),
+            capacity.byFood(),
             (int) Math.round(population - previous),
             CampaignRuleset.COMPONENTS_PER_RESCUE,
             CampaignRuleset.FOOD_PER_RESCUE,
             GUARDIAN_LOSS_PERCENT
+        );
+    }
+
+    /**
+     * Forecasts a week's Sunday from the base as it stands after the last replayed day.
+     *
+     * @param week week in progress, not settled yet
+     * @param last last replayed day
+     * @return the forecast
+     */
+    static CampaignForecastResponse forecast(CampaignWeek week, CampaignDailySnapshot last) {
+        ExtractionEstimate estimate = ExtractionEstimate.of(
+            week.getWoundedCount(),
+            week.getChallengeRescued(),
+            last.getFoodStock().doubleValue(),
+            last.getComponentsStock().doubleValue(),
+            last.getPopulation().doubleValue(),
+            week.progress()
+        );
+
+        return new CampaignForecastResponse(
+            week.getWeekIndex(),
+            week.getWoundedCount(),
+            estimate.challengeRescued(),
+            estimate.extracted(),
+            estimate.rescued(),
+            week.getWoundedCount() - estimate.rescued(),
+            estimate.limiter()
         );
     }
 
@@ -99,6 +136,37 @@ final class CampaignResponseMapper {
     }
 
     /**
+     * Maps one closed campaign to its history row.
+     *
+     * @param campaign closed campaign
+     * @param weeks    its weeks
+     * @param days     its replayed days, oldest first
+     * @return the history row
+     */
+    static CampaignHistoryResponse history(
+        Campaign campaign,
+        List<CampaignWeek> weeks,
+        List<CampaignDailySnapshot> days
+    ) {
+        CampaignTotalsResponse totals = totals(weeks, days);
+
+        return new CampaignHistoryResponse(
+            campaign.getId(),
+            campaign.getNumber(),
+            campaign.getDifficulty(),
+            campaign.reference(),
+            campaign.getRosterSize(),
+            campaign.getFirstWeekStart(),
+            campaign.getLastWeekStart(),
+            campaign.getStoppedOn(),
+            totals.guardiansDefeated(),
+            base(days).population(),
+            totals.rescued(),
+            weeklyPopulation(weeks, days)
+        );
+    }
+
+    /**
      * Maps every week, revealing the guardian of the weeks already reached.
      *
      * @param weeks            the campaign's weeks, in order
@@ -117,8 +185,10 @@ final class CampaignResponseMapper {
         int revealedUpTo = currentWeekIndex == null ? 0 : currentWeekIndex;
 
         for (CampaignWeek week : weeks) {
-            CampaignWeekBaseResponse base = weekBase(week, days, previousPopulation);
-            responses.add(week(week, base, dailyDamage(week, days), week.getWeekIndex() <= revealedUpTo));
+            List<CampaignDailySnapshot> weekDays = days.stream().filter(day -> week.contains(day.getDay())).toList();
+            CampaignWeekBaseResponse base = weekBase(weekDays, previousPopulation);
+            List<Integer> dailyDamage = weekDays.stream().map(CampaignDailySnapshot::getDamage).toList();
+            responses.add(week(week, base, dailyDamage, week.getWeekIndex() <= revealedUpTo));
             if (base != null) {
                 previousPopulation = base.population();
             }
@@ -128,17 +198,14 @@ final class CampaignResponseMapper {
     }
 
     /**
-     * Share of the guardian's hit points taken, capped at a full breakthrough.
+     * Share of the guardian's hit points taken, in whole percents rounded down.
      *
      * @param week the week
      * @return the percentage
      */
-    static int progressPercent(CampaignWeek week) {
-        if (week.isDefeated() || week.getGuardianHitPoints() <= 0) {
-            return week.isDefeated() ? PERCENT : 0;
-        }
-
-        return Math.min(PERCENT, week.getDamageDealt() * PERCENT / week.getGuardianHitPoints());
+    private static int progressPercent(CampaignWeek week) {
+        // The tolerance absorbs binary rounding, so 29 damage out of 100 reads 29 and not 28.
+        return (int) Math.floor(week.progress() * PERCENT + ROUNDING_TOLERANCE);
     }
 
     /**
@@ -148,7 +215,7 @@ final class CampaignResponseMapper {
      * @param days  replayed days, oldest first
      * @return one figure per settled week
      */
-    static List<Integer> weeklyPopulation(List<CampaignWeek> weeks, List<CampaignDailySnapshot> days) {
+    private static List<Integer> weeklyPopulation(List<CampaignWeek> weeks, List<CampaignDailySnapshot> days) {
         return weeks.stream()
             .filter(CampaignWeek::isSettled)
             .map(week -> days.stream()
@@ -162,15 +229,7 @@ final class CampaignResponseMapper {
     /**
      * The base at the end of one week, or {@code null} when none of its days were replayed.
      */
-    private static CampaignWeekBaseResponse weekBase(
-        CampaignWeek week,
-        List<CampaignDailySnapshot> days,
-        double previousPopulation
-    ) {
-        List<CampaignDailySnapshot> weekDays = days.stream()
-            .filter(day -> !day.getDay().isBefore(week.getWeekStart()) && !day.getDay().isAfter(week.settlementDay()))
-            .toList();
-
+    private static CampaignWeekBaseResponse weekBase(List<CampaignDailySnapshot> weekDays, double previousPopulation) {
         if (weekDays.isEmpty()) {
             return null;
         }
@@ -186,16 +245,6 @@ final class CampaignResponseMapper {
             weekDays.stream().mapToInt(CampaignDailySnapshot::getFoodGained).sum(),
             weekDays.stream().mapToInt(CampaignDailySnapshot::getComponentsGained).sum()
         );
-    }
-
-    /**
-     * Damage of each replayed day of one week, Monday first: the guardian's descent, day by day.
-     */
-    private static List<Integer> dailyDamage(CampaignWeek week, List<CampaignDailySnapshot> days) {
-        return days.stream()
-            .filter(day -> !day.getDay().isBefore(week.getWeekStart()) && !day.getDay().isAfter(week.settlementDay()))
-            .map(CampaignDailySnapshot::getDamage)
-            .toList();
     }
 
     /**
@@ -235,20 +284,19 @@ final class CampaignResponseMapper {
     }
 
     /**
-     * The match that finished the guardian, seen from the operator's side, or {@code null}.
+     * The match that finished the guardian, seen from the player's side, or {@code null}.
      */
     private static FatalBlowResponse fatalBlow(PlayerMatch playerMatch) {
         if (playerMatch == null) {
             return null;
         }
         ValorantMatch match = playerMatch.getMatch();
-        boolean redTeam = "Red".equalsIgnoreCase(playerMatch.getTeamId());
         return new FatalBlowResponse(
             match.getMapName(),
             match.getGameMode(),
             playerMatch.getResult(),
-            redTeam ? match.getRedScore() : match.getBlueScore(),
-            redTeam ? match.getBlueScore() : match.getRedScore(),
+            playerMatch.allyScore(),
+            playerMatch.enemyScore(),
             playerMatch.getAgentName()
         );
     }

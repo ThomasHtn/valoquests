@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
 
 import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.List;
  * @param progressPercent    share of the guardian's hit points removed, capped at a hundred
  * @param defeated           whether the guardian fell
  * @param defeatedAt         start instant of the match that landed the finishing blow
- * @param defeatedByPlayerId operator who landed it
+ * @param defeatedByPlayerId player who landed it
  * @param fatalBlow          the match that landed it, {@code null} while the guardian stands
  * @param woundedCount       wounded stranded on the planet
  * @param challengeRescued   wounded the week's challenges brought back
@@ -38,6 +39,7 @@ import java.util.List;
  * @param settled            whether the week's Sunday has been settled
  * @param base               the base at the week's close, {@code null} before its first replayed day
  */
+@Schema(description = "One campaign week: its planet, its guardian and its Sunday.")
 public record CampaignWeekResponse(
     int weekIndex,
     LocalDate weekStart,

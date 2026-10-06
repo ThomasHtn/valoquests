@@ -1,23 +1,16 @@
 package io.github.thomashtn.valoquests.synchronization.service;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
-import io.github.thomashtn.valoquests.synchronization.dto.SynchronizationResponse;
+import io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard;
 import io.github.thomashtn.valoquests.synchronization.entity.Synchronization;
 import io.github.thomashtn.valoquests.synchronization.entity.SynchronizationPlayerResult;
 import io.github.thomashtn.valoquests.synchronization.model.PlayerSynchronizationResult;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStatus;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationStopReason;
 import io.github.thomashtn.valoquests.synchronization.model.SynchronizationTrigger;
-import io.github.thomashtn.valoquests.synchronization.model.SynchronizationType;
-import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationPlayerResultRepository;
-import io.github.thomashtn.valoquests.synchronization.repository.SynchronizationRepository;
-import java.time.Clock;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +19,10 @@ import org.springframework.stereotype.Service;
 /**
  * Executes and records scheduled and manual synchronizations.
  *
- * <p>The service deliberately keeps external API calls outside a global
- * database transaction. Each execution is persisted before processing starts,
- * and every player outcome is recorded independently so partial failures remain
- * visible without blocking the remaining players.</p>
- *
- * <p>The absence of a surrounding transaction is also what the per-season completion flag depends
- * on: see {@link SeasonSynchronizationStateService}. Making this service transactional would defer
- * every commit to the end of the batch and let a rollback erase the state that says a season is
- * still being caught up. {@link
- * io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard} enforces this at the
- * entry of {@link PlayerSynchronizationService#synchronize}, called once per player below.</p>
+ * <p>Deliberately not transactional, see {@link SeasonSynchronizationStateService}: each execution
+ * and every player outcome commit on their own, so partial failures stay visible without blocking the
+ * remaining players. {@link NonTransactionalGuard} sits at the entry of both commands because, checked
+ * deeper, its failure would be recorded as an ordinary player failure instead of failing fast.</p>
  *
  * <p>Importing matches is only half of the workflow: challenge progress and the weekly ranking are
  * derived from the stored matches and stay stale until they are rebuilt. Every execution that
@@ -67,14 +53,9 @@ public class DefaultSynchronizationCommandService
     private final PlayerRepository playerRepository;
 
     /**
-     * Repository used to persist global synchronization executions.
+     * Writes the execution row and one outcome row per processed player.
      */
-    private final SynchronizationRepository synchronizationRepository;
-
-    /**
-     * Repository used to persist one outcome per processed player.
-     */
-    private final SynchronizationPlayerResultRepository playerResultRepository;
+    private final SynchronizationRecorder recorder;
 
     /**
      * Service used to rebuild challenge progress and the weekly ranking after an import.
@@ -87,52 +68,70 @@ public class DefaultSynchronizationCommandService
     private final CampaignReplayService campaignReplayService;
 
     /**
-     * Clock used to generate deterministic execution timestamps.
-     */
-    private final Clock clock;
-
-    /**
      * Creates the synchronization command service.
      *
      * @param playerSynchronizationService     player synchronization service
      * @param playerRepository                 tracked-player repository
-     * @param synchronizationRepository        global execution repository
-     * @param playerResultRepository           per-player result repository
+     * @param recorder                         execution and per-player result writer
      * @param challengeRecalculationService    challenge progress recalculation service
      * @param campaignReplayService            campaign replay service
-     * @param clock                            application clock
      */
     public DefaultSynchronizationCommandService(
         PlayerSynchronizationService playerSynchronizationService,
         PlayerRepository playerRepository,
-        SynchronizationRepository synchronizationRepository,
-        SynchronizationPlayerResultRepository playerResultRepository,
+        SynchronizationRecorder recorder,
         ChallengeRecalculationService challengeRecalculationService,
-        CampaignReplayService campaignReplayService,
-        Clock clock
+        CampaignReplayService campaignReplayService
     ) {
         this.playerSynchronizationService = playerSynchronizationService;
         this.playerRepository = playerRepository;
-        this.synchronizationRepository = synchronizationRepository;
-        this.playerResultRepository = playerResultRepository;
+        this.recorder = recorder;
         this.challengeRecalculationService = challengeRecalculationService;
         this.campaignReplayService = campaignReplayService;
-        this.clock = clock;
     }
 
     /**
      * Executes a synchronization for every active player.
      *
      * @param trigger synchronization trigger
-     * @return persisted synchronization summary
      */
     @Override
-    public SynchronizationResponse synchronizeAllPlayers(
+    public void synchronizeAllPlayers(
         SynchronizationTrigger trigger
     ) {
-        Synchronization synchronization = startSynchronization(trigger);
-        List<Player> players =
-            playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED);
+        NonTransactionalGuard.assertNoActiveTransaction("Synchronization");
+
+        runBatch(trigger, playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED));
+    }
+
+    /**
+     * Executes a synchronization for one player and records its outcome.
+     *
+     * <p>Treated as a batch of one: the same per-player step, completion and status derivation as
+     * {@link #synchronizeAllPlayers(SynchronizationTrigger)} apply here, so a failure is logged once
+     * and recorded with a {@link SynchronizationPlayerResult} row exactly like a batch failure.</p>
+     *
+     * @param playerId tracked player identifier
+     * @throws PlayerNotFoundException when no tracked player owns the identifier
+     */
+    @Override
+    public void synchronizePlayer(long playerId) {
+        NonTransactionalGuard.assertNoActiveTransaction("Synchronization");
+
+        Player player = playerRepository.findById(playerId)
+            .orElseThrow(() -> new PlayerNotFoundException(playerId));
+
+        runBatch(SynchronizationTrigger.MANUAL, List.of(player));
+    }
+
+    /**
+     * Records one execution over a set of players: start, each player in turn, rebuild, finish.
+     *
+     * @param trigger synchronization trigger
+     * @param players players to synchronize, in order
+     */
+    private void runBatch(SynchronizationTrigger trigger, List<Player> players) {
+        Synchronization synchronization = recorder.start(trigger);
         SynchronizationBatchSummary summary = SynchronizationBatchSummary.empty();
 
         LOGGER.info(
@@ -141,15 +140,11 @@ public class DefaultSynchronizationCommandService
         );
 
         for (Player player : players) {
-            summary = synchronizeOnePlayer(synchronization, player, summary).summary();
+            summary = synchronizeOnePlayer(synchronization, player, summary);
         }
 
-        refreshChallengeProgress(summary.matchesImported());
-        completeBatchSynchronization(
-            synchronization,
-            players.size(),
-            summary
-        );
+        rebuildDerivedState(summary.matchesImported());
+        recorder.complete(synchronization, players.size(), summary);
 
         LOGGER.info(
             "Synchronization completed with status {}, {} failures and {} imported matches",
@@ -157,83 +152,19 @@ public class DefaultSynchronizationCommandService
             synchronization.getFailureCount(),
             synchronization.getMatchesImported()
         );
-
-        return SynchronizationResponse.from(
-            synchronization,
-            summary.lastSuccessfulSynchronizationAt()
-        );
     }
 
     /**
-     * Executes a synchronization for one player and records its outcome.
+     * Executes one player and returns the batch aggregate updated with its outcome.
      *
-     * <p>Treated as a batch of one: the same per-player step, completion and status derivation as
-     * {@link #synchronizeAllPlayers(SynchronizationTrigger)} apply here, so a failure is recorded
-     * with a {@link SynchronizationPlayerResult} row exactly like a batch failure would be. The
-     * original runtime exception is then deliberately re-thrown, since unlike the batch path this
-     * method reports the outcome of the one player its caller asked for. Preserving the same
-     * exception instance keeps its concrete type, stack trace and diagnostic context.</p>
-     *
-     * @param playerId tracked player identifier
-     * @return persisted synchronization summary
-     * @throws PlayerNotFoundException when no tracked player owns the identifier
-     */
-    @Override
-    @SuppressFBWarnings(
-        value = "THROWS_METHOD_THROWS_RUNTIMEEXCEPTION",
-        justification = """
-            The original synchronization exception is deliberately propagated
-            after the failed execution has been persisted. Preserving the original
-            instance keeps its concrete type, stack trace and diagnostic context.
-            """
-    )
-    public SynchronizationResponse synchronizePlayer(long playerId) {
-        Player player = playerRepository.findById(playerId)
-            .orElseThrow(() -> new PlayerNotFoundException(playerId));
-
-        Synchronization synchronization =
-            startSynchronization(SynchronizationTrigger.MANUAL);
-
-        LOGGER.info("Starting synchronization for player {}", playerId);
-
-        PlayerSynchronizationOutcome outcome = synchronizeOnePlayer(
-            synchronization,
-            player,
-            SynchronizationBatchSummary.empty()
-        );
-
-        refreshChallengeProgress(outcome.summary().matchesImported());
-        completeBatchSynchronization(synchronization, 1, outcome.summary());
-
-        if (outcome.failure() != null) {
-            throw outcome.failure();
-        }
-
-        LOGGER.info(
-            "Synchronization completed for player {} with {} imported matches",
-            playerId,
-            outcome.summary().matchesImported()
-        );
-
-        return SynchronizationResponse.from(
-            synchronization,
-            outcome.summary().lastSuccessfulSynchronizationAt()
-        );
-    }
-
-    /**
-     * Executes one player and returns the updated batch aggregate alongside the original failure,
-     * if any.
-     *
-     * <p>Shared by the batch loop, which discards the failure and moves on to the next player, and
-     * by {@link #synchronizePlayer(long)}, which re-throws it once completion has been recorded.</p>
+     * <p>A failure is logged and recorded here, then the caller moves on: nothing is re-thrown.
      *
      * @param synchronization global execution
      * @param player          player to process
      * @param summary         current batch summary
-     * @return updated batch summary and the original exception, {@code null} on success
+     * @return updated batch summary
      */
-    private PlayerSynchronizationOutcome synchronizeOnePlayer(
+    private SynchronizationBatchSummary synchronizeOnePlayer(
         Synchronization synchronization,
         Player player,
         SynchronizationBatchSummary summary
@@ -241,11 +172,8 @@ public class DefaultSynchronizationCommandService
         try {
             PlayerSynchronizationResult result =
                 playerSynchronizationService.synchronize(player.getId());
-            saveSuccessfulPlayerResult(synchronization, result);
-            return new PlayerSynchronizationOutcome(
-                summary.withSuccess(result),
-                null
-            );
+            recorder.recordSuccess(synchronization, result);
+            return summary.withSuccess(result);
         } catch (RuntimeException exception) {
             String errorMessage = SynchronizationErrorMessage.of(exception);
 
@@ -255,29 +183,35 @@ public class DefaultSynchronizationCommandService
                 exception
             );
 
-            // No stop reason: the walk never reached a stop condition of its own.
-            savePlayerResult(
-                synchronization,
-                player,
-                SynchronizationStatus.FAILED,
-                0,
-                0,
-                errorMessage,
-                null
-            );
+            recorder.recordFailure(synchronization, player, errorMessage);
 
-            return new PlayerSynchronizationOutcome(
-                summary.withFailure(player, errorMessage),
-                exception
-            );
+            return summary.withFailure(player, errorMessage);
         }
     }
 
     /**
-     * Rebuilds challenge progress and the weekly ranking from the newly imported matches.
+     * Rebuilds everything derived from the newly imported matches: challenge progress, the weekly
+     * ranking and the campaign.
      *
-     * <p>Skipped when nothing was imported: progress is derived exclusively from stored matches, so
+     * <p>Skipped when nothing was imported: all of it is derived exclusively from stored matches, so
      * an execution that added none can only recompute the very same values.
+     *
+     * @param matchesImported number of matches imported by the execution
+     */
+    private void rebuildDerivedState(int matchesImported) {
+        if (matchesImported == 0) {
+            LOGGER.debug(
+                "No match imported: progress, ranking and campaign are left untouched"
+            );
+            return;
+        }
+
+        recalculateChallengeProgress(matchesImported);
+        replayCampaign(matchesImported);
+    }
+
+    /**
+     * Rebuilds challenge progress and the weekly ranking from the newly imported matches.
      *
      * <p>A recalculation failure is logged instead of propagated. The matches are already committed
      * and the execution genuinely succeeded, so failing it here would misreport the import and, on
@@ -286,16 +220,9 @@ public class DefaultSynchronizationCommandService
      *
      * @param matchesImported number of matches imported by the execution
      */
-    private void refreshChallengeProgress(int matchesImported) {
-        if (matchesImported == 0) {
-            LOGGER.debug(
-                "No match imported: challenge progress is left untouched"
-            );
-            return;
-        }
-
+    private void recalculateChallengeProgress(int matchesImported) {
         try {
-            challengeRecalculationService.recalculateCurrentWeekProgress();
+            challengeRecalculationService.drawAndRecalculateCurrentWeek();
         } catch (RuntimeException exception) {
             LOGGER.error(
                 "Challenge progress recalculation failed after importing {} match(es). "
@@ -304,8 +231,6 @@ public class DefaultSynchronizationCommandService
                 exception
             );
         }
-
-        replayCampaign(matchesImported);
     }
 
     /**
@@ -331,117 +256,5 @@ public class DefaultSynchronizationCommandService
                 exception
             );
         }
-    }
-
-    /**
-     * Creates and persists a running synchronization execution.
-     *
-     * @param trigger synchronization trigger
-     * @return persisted execution
-     */
-    private Synchronization startSynchronization(
-        SynchronizationTrigger trigger
-    ) {
-        Synchronization synchronization = new Synchronization();
-
-        synchronization.setType(SynchronizationType.STANDARD);
-        synchronization.setTrigger(trigger);
-        synchronization.setStatus(SynchronizationStatus.RUNNING);
-        synchronization.setStartedAt(clock.instant());
-        synchronization.setPlayersProcessed(0);
-        synchronization.setFailureCount(0);
-        synchronization.setMatchesImported(0);
-        synchronization.setErrorMessage(null);
-
-        return synchronizationRepository.save(synchronization);
-    }
-
-    /**
-     * Marks a batch execution as complete and persists its aggregate values.
-     *
-     * @param synchronization global execution
-     * @param playerCount     selected player count
-     * @param summary         aggregated outcomes
-     */
-    private void completeBatchSynchronization(
-        Synchronization synchronization,
-        int playerCount,
-        SynchronizationBatchSummary summary
-    ) {
-        synchronization.setStatus(
-            SynchronizationStatus.ofBatch(
-                playerCount,
-                summary.successfulPlayers(),
-                summary.failureCount()
-            )
-        );
-        synchronization.setFinishedAt(clock.instant());
-        synchronization.setPlayersProcessed(playerCount);
-        synchronization.setFailureCount(summary.failureCount());
-        synchronization.setMatchesImported(summary.matchesImported());
-        synchronization.setErrorMessage(
-            SynchronizationErrorMessage.truncateOrNull(summary.errorMessages())
-        );
-
-        synchronizationRepository.save(synchronization);
-    }
-
-    /**
-     * Persists a successful player outcome.
-     *
-     * @param synchronization global execution
-     * @param result          successful player outcome
-     */
-    private void saveSuccessfulPlayerResult(
-        Synchronization synchronization,
-        PlayerSynchronizationResult result
-    ) {
-        savePlayerResult(
-            synchronization,
-            result.player(),
-            SynchronizationStatus.COMPLETED,
-            result.pagesFetched(),
-            result.matchesImported(),
-            null,
-            result.stopReason()
-        );
-    }
-
-    /**
-     * Persists one player outcome within a global execution.
-     *
-     * @param synchronization global execution
-     * @param player          processed player
-     * @param status          outcome status
-     * @param pagesFetched    retrieved page count
-     * @param matchesImported imported match count
-     * @param errorMessage    optional failure description
-     * @param stopReason      condition that ended the walk, {@code null} when none completed
-     */
-    private void savePlayerResult(
-        Synchronization synchronization,
-        Player player,
-        SynchronizationStatus status,
-        int pagesFetched,
-        int matchesImported,
-        String errorMessage,
-        SynchronizationStopReason stopReason
-    ) {
-        SynchronizationPlayerResult result =
-            new SynchronizationPlayerResult();
-
-        result.setSynchronization(synchronization);
-        result.setPlayer(player);
-        result.setStatus(status);
-        result.setPagesFetched(pagesFetched);
-        result.setMatchesImported(matchesImported);
-        result.setErrorMessage(
-            errorMessage == null
-                ? null
-                : SynchronizationErrorMessage.truncate(errorMessage)
-        );
-        result.setStopReason(stopReason);
-
-        playerResultRepository.save(result);
     }
 }

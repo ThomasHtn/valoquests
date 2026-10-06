@@ -1,7 +1,9 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
+import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 
 /**
@@ -15,8 +17,9 @@ import java.time.LocalDate;
  * @param stoppedOn      day it was cut short, {@code null} otherwise
  * @param reference      squad's weekly reference per player
  * @param difficulty     difficulty the campaign is played at
- * @param rosterSize     operators frozen into it
+ * @param rosterSize     players frozen into it
  */
+@Schema(description = "Campaign state returned after an admin lifecycle action.")
 public record CampaignAdminResponse(
     long id,
     int number,
@@ -28,4 +31,24 @@ public record CampaignAdminResponse(
     CampaignDifficulty difficulty,
     int rosterSize
 ) {
+
+    /**
+     * Maps one campaign to the backoffice's answer.
+     *
+     * @param campaign campaign to map
+     * @return the response
+     */
+    public static CampaignAdminResponse from(Campaign campaign) {
+        return new CampaignAdminResponse(
+            campaign.getId(),
+            campaign.getNumber(),
+            campaign.getStatus(),
+            campaign.getFirstWeekStart(),
+            campaign.getLastWeekStart(),
+            campaign.getStoppedOn(),
+            campaign.reference(),
+            campaign.getDifficulty(),
+            campaign.getRosterSize()
+        );
+    }
 }

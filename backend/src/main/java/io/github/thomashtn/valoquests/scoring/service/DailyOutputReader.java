@@ -2,13 +2,14 @@ package io.github.thomashtn.valoquests.scoring.service;
 
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
+import io.github.thomashtn.valoquests.match.service.MatchEligibility;
+import io.github.thomashtn.valoquests.match.service.MatchOutcomeResolver;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
-import io.github.thomashtn.valoquests.scoring.ScoringRuleset;
 import io.github.thomashtn.valoquests.scoring.model.DailyOutput;
 import io.github.thomashtn.valoquests.scoring.model.DailyYield;
 import io.github.thomashtn.valoquests.scoring.model.PlayerDayOutput;
 import io.github.thomashtn.valoquests.scoring.model.ValuedMatch;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,14 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Prices matches day by day, once, for everything that reads a day.
  *
- * <p>The only place a match's value is resolved. The weekly ranking, the campaign replay, the squad
- * calibration and the match history all read the same figure for one game, so they cannot drift
+ * <p>The only place a match's value is resolved. The weekly ranking, the campaign replay and the
+ * match history all read the same figure for one game, so they cannot drift
  * apart: value = base × daily coefficient × (1 + streak bonus), rounded once, then split into food and
  * components by the mode's share.
  *
  * <p>Both multipliers need more than the requested range. The daily coefficient ranks a match inside
- * its own calendar day, so every day the range touches is loaded whole; the streak counts the days
- * of the week played before the range, so the rest of that week is loaded ahead of it. One query for
+ * its own calendar day, so every day the range touches is loaded whole; the streak bonus counts the
+ * days of the week played before the range, so the rest of that week is loaded ahead of it. One query for
  * the whole roster and the whole window, then grouped in memory: asking per player and per day cost
  * {@code players × days} round trips on a call the campaign replay makes after every synchronization.
  */
@@ -39,15 +40,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class DailyOutputReader {
 
     /**
-     * Days loaded ahead of the requested range so the streak is known on its first day: the rest of
-     * a week, since the streak restarts every Monday.
+     * Days loaded ahead of the requested range so the played days are known on its first day: the
+     * rest of a week, since the count restarts every Monday.
      */
-    static final int STREAK_LOOKBACK_DAYS = 6;
-
-    /**
-     * Divisor turning a percentage into a ratio.
-     */
-    private static final double PERCENT_SCALE = 100.0;
+    static final int PLAYED_DAYS_LOOKBACK = WeekCalendar.DAYS_PER_WEEK - 1;
 
     /**
      * How far past the next match {@link #dailyYield} looks for the ladder's next step down.
@@ -83,12 +79,17 @@ public class DailyOutputReader {
     private final PlayerMatchRepository playerMatchRepository;
 
     /**
-     * Rule deciding whether a match counts at all, and what it is worth before the multipliers.
+     * Rule deciding whether a match counts at all.
      */
-    private final MatchDamageCalculator damageCalculator;
+    private final MatchEligibility matchEligibility;
 
     /**
-     * Barème the value is resolved against.
+     * Rule deciding how a match ended, which prices it before the multipliers.
+     */
+    private final MatchOutcomeResolver outcomeResolver;
+
+    /**
+     * Scoring table the value is resolved against.
      */
     private final ScoringRuleset ruleset;
 
@@ -101,18 +102,21 @@ public class DailyOutputReader {
      * Creates the daily output reader.
      *
      * @param playerMatchRepository player match repository
-     * @param damageCalculator      match damage calculator
+     * @param matchEligibility      shared match eligibility rule
+     * @param outcomeResolver       shared match outcome rule
      * @param ruleset               scoring ruleset
      * @param weekCalendar          week calendar
      */
     public DailyOutputReader(
         PlayerMatchRepository playerMatchRepository,
-        MatchDamageCalculator damageCalculator,
+        MatchEligibility matchEligibility,
+        MatchOutcomeResolver outcomeResolver,
         ScoringRuleset ruleset,
         WeekCalendar weekCalendar
     ) {
         this.playerMatchRepository = playerMatchRepository;
-        this.damageCalculator = damageCalculator;
+        this.matchEligibility = matchEligibility;
+        this.outcomeResolver = outcomeResolver;
         this.ruleset = ruleset;
         this.weekCalendar = weekCalendar;
     }
@@ -126,9 +130,9 @@ public class DailyOutputReader {
      * @return the range's output, days and players without a valued match omitted
      */
     public DailyOutput read(Collection<PlayerStatus> statuses, LocalDate firstDay, LocalDate lastDay) {
-        List<PlayerMatch> matches = playerMatchRepository.findAllForPeriod(
+        List<PlayerMatch> matches = playerMatchRepository.findByPlayerStatusesInPeriod(
             statuses,
-            weekCalendar.startOfDay(firstDay.minusDays(STREAK_LOOKBACK_DAYS)),
+            weekCalendar.startOfDay(firstDay.minusDays(PLAYED_DAYS_LOOKBACK)),
             weekCalendar.endOfDay(lastDay)
         );
 
@@ -144,9 +148,9 @@ public class DailyOutputReader {
      * @return the range's output, days without a valued match omitted
      */
     public DailyOutput readPlayer(long playerId, LocalDate firstDay, LocalDate lastDay) {
-        List<PlayerMatch> matches = playerMatchRepository.findForChallengePeriod(
+        List<PlayerMatch> matches = playerMatchRepository.findByPlayerInPeriod(
             playerId,
-            weekCalendar.startOfDay(firstDay.minusDays(STREAK_LOOKBACK_DAYS)),
+            weekCalendar.startOfDay(firstDay.minusDays(PLAYED_DAYS_LOOKBACK)),
             weekCalendar.endOfDay(lastDay)
         );
 
@@ -189,12 +193,12 @@ public class DailyOutputReader {
      */
     private DailyOutput price(List<PlayerMatch> matches, LocalDate firstDay, LocalDate lastDay) {
         Map<LocalDate, Map<Long, PlayerDayOutput>> byDayAndPlayer = new HashMap<>();
-        Map<Long, Map<LocalDate, Integer>> streakByPlayerAndDay = new HashMap<>();
+        Map<Long, Map<LocalDate, Integer>> playedDaysByPlayerAndDay = new HashMap<>();
         List<ValuedMatch> valuedMatches = new ArrayList<>();
 
         groupEligibleByPlayerAndDay(matches).forEach((playerId, days) -> {
-            Map<LocalDate, Integer> streakByDay = new HashMap<>();
-            int streak = 0;
+            Map<LocalDate, Integer> playedDaysByDay = new HashMap<>();
+            int playedDays = 0;
             LocalDate previousDay = null;
 
             for (Map.Entry<LocalDate, List<PricedMatch>> entry : days.entrySet()) {
@@ -202,15 +206,15 @@ public class DailyOutputReader {
                 // Counts the played days of the week, gaps included; restarts every Monday.
                 boolean continued = previousDay != null
                     && weekCalendar.weekStartOf(previousDay).equals(weekCalendar.weekStartOf(day));
-                streak = continued ? streak + 1 : 1;
+                playedDays = continued ? playedDays + 1 : 1;
                 previousDay = day;
-                streakByDay.put(day, streak);
+                playedDaysByDay.put(day, playedDays);
 
                 if (day.isBefore(firstDay) || day.isAfter(lastDay)) {
                     continue;
                 }
 
-                for (ValuedMatch valued : priceDay(entry.getValue(), streak)) {
+                for (ValuedMatch valued : priceDay(entry.getValue(), playedDays)) {
                     valuedMatches.add(valued);
                     byDayAndPlayer
                         .computeIfAbsent(day, ignored -> new HashMap<>())
@@ -218,24 +222,24 @@ public class DailyOutputReader {
                 }
             }
 
-            streakByPlayerAndDay.put(playerId, streakByDay);
+            playedDaysByPlayerAndDay.put(playerId, playedDaysByDay);
         });
 
         valuedMatches.sort(CHRONOLOGICAL);
 
-        return new DailyOutput(byDayAndPlayer, streakByPlayerAndDay, valuedMatches);
+        return new DailyOutput(byDayAndPlayer, playedDaysByPlayerAndDay, valuedMatches);
     }
 
     /**
      * Ranks one player's matches of one day and prices each of them.
      *
      * @param dayMatches valued matches sharing one player and one calendar day
-     * @param streakDays streak the day sits at, applied to every match of the day
+     * @param playedDays days played this week up to this day, applied to every match of the day
      * @return the day's matches, priced
      */
-    private List<ValuedMatch> priceDay(List<PricedMatch> dayMatches, int streakDays) {
+    private List<ValuedMatch> priceDay(List<PricedMatch> dayMatches, int playedDays) {
         dayMatches.sort(MOST_VALUABLE_FIRST);
-        int streakBonusPercent = ruleset.streakBonusPercent(streakDays);
+        int streakBonusPercent = ruleset.streakBonusPercent(playedDays);
         List<ValuedMatch> priced = new ArrayList<>(dayMatches.size());
 
         int rankInDay = 0;
@@ -244,10 +248,12 @@ public class DailyOutputReader {
             PlayerMatch playerMatch = match.playerMatch();
             int coefficientPercent = ruleset.matchDamageCoefficientPercent(rankInDay);
             int damage = (int) Math.round(
-                match.baseDamage() * (coefficientPercent / PERCENT_SCALE) * (1 + streakBonusPercent / PERCENT_SCALE)
+                match.baseDamage()
+                    * (coefficientPercent / ScoringRuleset.PERCENT_SCALE)
+                    * (1 + streakBonusPercent / ScoringRuleset.PERCENT_SCALE)
             );
             int food = (int) Math.round(
-                damage * ruleset.foodSharePercent(playerMatch.getMatch().getGameMode()) / PERCENT_SCALE
+                damage * ruleset.foodSharePercent(playerMatch.getMatch().getGameMode()) / ScoringRuleset.PERCENT_SCALE
             );
 
             priced.add(new ValuedMatch(
@@ -257,7 +263,7 @@ public class DailyOutputReader {
                 match.day(),
                 match.baseDamage(),
                 coefficientPercent,
-                streakDays,
+                playedDays,
                 streakBonusPercent,
                 damage,
                 food,
@@ -272,7 +278,7 @@ public class DailyOutputReader {
      * Keeps the eligible matches and groups them by player, then by day in ascending order.
      *
      * <p>An ineligible match never consumes a rank and never makes a day: a remake must not push a
-     * real game of the same day into a reduced tier, nor extend a streak.
+     * real game of the same day into a reduced tier, nor count as a played day.
      *
      * @param matches every match of the window
      * @return eligible matches grouped by player and sorted by day
@@ -283,15 +289,19 @@ public class DailyOutputReader {
         Map<Long, TreeMap<LocalDate, List<PricedMatch>>> grouped = new HashMap<>();
 
         for (PlayerMatch playerMatch : matches) {
-            if (!damageCalculator.isEligible(playerMatch)) {
+            if (!matchEligibility.isEligible(playerMatch)) {
                 continue;
             }
 
             LocalDate day = weekCalendar.dayOf(playerMatch.getMatch().getStartedAt());
+            int baseDamage = ruleset.matchDamage(
+                playerMatch.getMatch().getGameMode(),
+                outcomeResolver.outcomeOf(playerMatch)
+            );
             grouped
                 .computeIfAbsent(playerMatch.getPlayer().getId(), ignored -> new TreeMap<>())
                 .computeIfAbsent(day, ignored -> new ArrayList<>())
-                .add(new PricedMatch(playerMatch, day, damageCalculator.damageOf(playerMatch, ruleset)));
+                .add(new PricedMatch(playerMatch, day, baseDamage));
         }
 
         return grouped;

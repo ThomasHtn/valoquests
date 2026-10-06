@@ -3,15 +3,13 @@ package io.github.thomashtn.valoquests.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.match.entity.Season;
@@ -27,6 +25,8 @@ import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import io.github.thomashtn.valoquests.week.service.WeeklyRolloverService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -127,7 +127,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      * Weekly challenge repository used to inspect both weekly packs.
      */
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Progress repository used to verify production calculations.
@@ -176,7 +176,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         createBravoMatches(bravo, season);
         createCompetitionChallengePack();
 
-        challengeRecalculationService.recalculateCurrentWeekProgress();
+        challengeRecalculationService.drawAndRecalculateCurrentWeek();
 
         assertCalculatedProgress(alpha, bravo);
         assertCurrentRanking(alpha, bravo);
@@ -214,7 +214,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void assertCalculatedProgress(Player alpha, Player bravo) {
         Map<Long, Map<String, PlayerChallengeProgress>> progressByPlayer =
             progressRepository
-                .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+                .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(
                     COMPETITION_WEEK_START
                 )
                 .stream()
@@ -222,7 +222,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
                     Collectors.groupingBy(
                         progress -> progress.getPlayer().getId(),
                         Collectors.toMap(
-                            progress -> progress.getWeeklyChallenge().getChallenge().getCode(),
+                            progress -> progress.getSelection().getChallenge().getCode(),
                             Function.identity()
                         )
                     )
@@ -251,7 +251,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies the live ranking created by challenge recalculation.
      *
-     * <p>Guardian damage is priced by the v2 barème with both multipliers. Alpha plays one
+     * <p>Guardian damage is priced by the scoring table with both multipliers. Alpha plays one
      * competitive match a day over four consecutive days, so the streak bonus climbs by 2 % a day:
      * WIN 500 + LOSS 350 × 1.02 + WIN 500 × 1.04 + LOSS 350 × 1.06 = 500 + 357 + 520 + 371 = 1748.
      * Bravo plays two matches a day over two days: LOSS 350 + LOSS 350, then WIN 500 × 1.02 + LOSS
@@ -272,7 +272,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      * Verifies immutable challenge and ranking snapshots after rollover.
      */
     private void assertPreviousWeekFinalized(Player alpha, Player bravo) {
-        List<WeeklyChallenge> challenges = loadChallenges(COMPETITION_WEEK_START);
+        List<ChallengeSelection> challenges = loadChallenges(COMPETITION_WEEK_START);
         // The weekly pack and the day's challenge are frozen together.
         assertThat(challenges)
             .hasSize(6)
@@ -287,17 +287,17 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies creation of one fresh five-difficulty challenge pack, and of the zeroed ranking
+     * Verifies creation of one fresh five-tier challenge pack, and of the zeroed ranking
      * opening it.
      *
      * @param alpha first tracked player, lowest identifier
      * @param bravo second tracked player
      */
     private void assertNextWeekCreated(Player alpha, Player bravo) {
-        // Six rows, not five: opening a week draws its five-difficulty pack and the Monday's own
+        // Six rows, not five: opening a week draws its five-tier pack and the Monday's own
         // daily challenge, so the squad wakes up with something to do rather than with a page that
         // only fills in at the first synchronization.
-        List<WeeklyChallenge> challenges = loadChallenges(NEXT_WEEK_START);
+        List<ChallengeSelection> challenges = loadChallenges(NEXT_WEEK_START);
 
         assertThat(challenges)
             .hasSize(6)
@@ -308,13 +308,13 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
 
         assertThat(challenges)
             .filteredOn(challenge -> challenge.getCadence() == ChallengeCadence.WEEKLY)
-            .extracting(challenge -> challenge.getChallenge().getDifficulty())
+            .extracting(challenge -> challenge.getChallenge().getTier())
             .containsExactlyInAnyOrder(
-                ChallengeDifficulty.EASY,
-                ChallengeDifficulty.NORMAL,
-                ChallengeDifficulty.MEDIUM,
-                ChallengeDifficulty.HARD,
-                ChallengeDifficulty.VERY_HARD
+                ChallengeTier.EASY,
+                ChallengeTier.NORMAL,
+                ChallengeTier.MEDIUM,
+                ChallengeTier.HARD,
+                ChallengeTier.VERY_HARD
             );
 
         assertThat(challenges)
@@ -419,10 +419,10 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private int completedDailies(Player player) {
         return (int) progressRepository
-            .findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(COMPETITION_WEEK_START)
+            .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(COMPETITION_WEEK_START)
             .stream()
             .filter(progress -> progress.getPlayer().getId().equals(player.getId()))
-            .filter(progress -> progress.getWeeklyChallenge().getCadence() == ChallengeCadence.DAILY)
+            .filter(progress -> progress.getSelection().getCadence() == ChallengeCadence.DAILY)
             .filter(PlayerChallengeProgress::isCompleted)
             .count();
     }
@@ -457,9 +457,6 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         Season season = new Season();
         season.setExternalId("lifecycle-season");
         season.setName("Lifecycle Season");
-        season.setStartsAt(Instant.parse("2026-07-01T00:00:00Z"));
-        season.setEndsAt(Instant.parse("2026-08-31T23:59:59Z"));
-        season.setActive(true);
         return seasonRepository.save(season);
     }
 
@@ -522,23 +519,23 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     private void createCompetitionChallengePack() {
         List<Challenge> challenges = challengeRepository.saveAll(
             List.of(
-                createChallenge("LIFECYCLE_KILLS", ChallengeDifficulty.EASY,
+                createChallenge("LIFECYCLE_KILLS", ChallengeTier.EASY,
                     ProgressMode.SUM, "KILLS", "50", null),
-                createChallenge("LIFECYCLE_DAMAGE", ChallengeDifficulty.NORMAL,
+                createChallenge("LIFECYCLE_DAMAGE", ChallengeTier.NORMAL,
                     ProgressMode.SUM, "DAMAGE_DEALT", "6000", null),
-                createChallenge("LIFECYCLE_WINS", ChallengeDifficulty.MEDIUM,
+                createChallenge("LIFECYCLE_WINS", ChallengeTier.MEDIUM,
                     ProgressMode.SUM, "MATCHES_WON", "2", null),
-                createChallenge("LIFECYCLE_KD", ChallengeDifficulty.HARD,
+                createChallenge("LIFECYCLE_KD", ChallengeTier.HARD,
                     ProgressMode.RATIO, "KD", "1.5", "\"minimumMatches\": 4,"),
-                createChallenge("LIFECYCLE_PLAY_DAYS", ChallengeDifficulty.VERY_HARD,
+                createChallenge("LIFECYCLE_PLAY_DAYS", ChallengeTier.VERY_HARD,
                     ProgressMode.DISTINCT_COUNT, "PLAY_DAY", "4",
                     "\"groupBy\": \"PLAY_DAY\",")
             )
         );
 
-        weeklyChallengeRepository.saveAll(
+        challengeSelectionRepository.saveAll(
             challenges.stream()
-                .map(this::createWeeklyChallenge)
+                .map(this::createSelection)
                 .toList()
         );
     }
@@ -548,7 +545,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private Challenge createChallenge(
         String code,
-        ChallengeDifficulty difficulty,
+        ChallengeTier tier,
         ProgressMode progressMode,
         String metric,
         String target,
@@ -559,10 +556,10 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         challenge.setCode(code);
         challenge.setName(code);
         challenge.setDescription("Lifecycle challenge " + code);
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setProgressMode(progressMode);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             """
                 [
                   {
@@ -575,7 +572,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
                 ]
                 """.formatted(metric, target, additionalJson)
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
         return challenge;
@@ -584,20 +581,20 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Associates one challenge with the competition week.
      */
-    private WeeklyChallenge createWeeklyChallenge(Challenge challenge) {
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setWeekStart(COMPETITION_WEEK_START);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
-        weeklyChallenge.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
-        return weeklyChallenge;
+    private ChallengeSelection createSelection(Challenge challenge) {
+        ChallengeSelection selection = new ChallengeSelection();
+        selection.setWeekStart(COMPETITION_WEEK_START);
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
+        selection.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
+        return selection;
     }
 
     /**
      * Loads weekly challenges in persistence order.
      */
-    private List<WeeklyChallenge> loadChallenges(LocalDate weekStart) {
-        return weeklyChallengeRepository.findAllByWeekStartOrderByIdAsc(weekStart);
+    private List<ChallengeSelection> loadChallenges(LocalDate weekStart) {
+        return challengeSelectionRepository.findAllByWeekStartOrderByIdAsc(weekStart);
     }
 
     /**

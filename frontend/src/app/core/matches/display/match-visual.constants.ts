@@ -9,6 +9,5 @@ export const RESULT_TONES: Readonly<Record<MatchResult, ResultTone>> = {
   WIN: 'win',
   LOSS: 'loss',
   DRAW: 'neutral',
-  REMAKE: 'neutral',
   UNKNOWN: 'neutral',
 };

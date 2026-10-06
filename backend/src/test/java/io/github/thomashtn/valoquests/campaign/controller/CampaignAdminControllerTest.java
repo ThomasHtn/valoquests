@@ -1,6 +1,6 @@
 package io.github.thomashtn.valoquests.campaign.controller;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -12,10 +12,11 @@ import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.exception.CampaignLifecycleException;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStartWeek;
 import io.github.thomashtn.valoquests.campaign.service.CampaignLifecycleService;
-import io.github.thomashtn.valoquests.campaign.service.CampaignReplayService;
 import io.github.thomashtn.valoquests.campaign.service.DailyTickService;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,15 +43,15 @@ class CampaignAdminControllerTest {
     private CampaignLifecycleService lifecycleService;
 
     @MockitoBean
-    private CampaignReplayService replayService;
-
-    @MockitoBean
     private DailyTickService dailyTickService;
+
+    @Autowired
+    private MatchHistoryLock matchHistoryLock;
 
     /**
      * Verifies that opening a campaign answers with the ten weeks it just scheduled.
      *
-     * <p>Also pins the default: an unqualified request opens on the next Monday, so the operator
+     * <p>Also pins the default: an unqualified request opens on the next Monday, so the admin
      * who does not choose never starts a campaign retroactively by accident.
      */
     @Test
@@ -85,31 +86,12 @@ class CampaignAdminControllerTest {
      */
     @Test
     void shouldStopACampaign() throws Exception {
-        when(lifecycleService.stop(any())).thenReturn(CampaignFixtures.runningCampaign(1));
+        when(lifecycleService.stop()).thenReturn(CampaignFixtures.runningCampaign(1));
 
         mockMvc.perform(post("/api/admin/campaigns/stop")
                 .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("RUNNING"));
-    }
-
-    /**
-     * Verifies that a campaign opened on the week in progress is replayed on the spot.
-     *
-     * <p>Without that replay the days already played would show as empty until the next tick, on a
-     * campaign the operator opened precisely to count them.
-     */
-    @Test
-    void shouldReplayACampaignOpenedOnTheCurrentWeek() throws Exception {
-        when(lifecycleService.open(CampaignDifficulty.AMATEUR, CampaignStartWeek.CURRENT_WEEK))
-            .thenReturn(CampaignFixtures.runningCampaign(1));
-
-        mockMvc.perform(post("/api/admin/campaigns")
-                .param("startWeek", "CURRENT_WEEK")
-                .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
-            .andExpect(status().isCreated());
-
-        verify(replayService).replay(any());
     }
 
     /**
@@ -122,6 +104,22 @@ class CampaignAdminControllerTest {
             .andExpect(status().isNoContent());
 
         verify(dailyTickService).run();
+    }
+
+    @Test
+    @DisplayName("Refuses the tick with a 409 while another guarded job holds the lock")
+    void shouldRefuseTheTickWhileAnotherJobRuns() throws Exception {
+        matchHistoryLock.acquireOrReject();
+        try {
+            mockMvc.perform(post("/api/admin/campaigns/tick")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CONFLICT"));
+        } finally {
+            matchHistoryLock.release();
+        }
+
+        verify(dailyTickService, never()).run();
     }
 
     /**

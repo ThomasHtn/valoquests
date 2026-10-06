@@ -2,7 +2,9 @@ package io.github.thomashtn.valoquests.campaign.repository;
 
 import io.github.thomashtn.valoquests.campaign.entity.CampaignPlayer;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 /**
  * Provides access to the frozen rosters of campaigns.
@@ -33,4 +35,12 @@ public interface CampaignPlayerRepository extends JpaRepository<CampaignPlayer, 
      * @return {@code true} when the player is on that campaign's roster
      */
     boolean existsByCampaignIdAndPlayerId(Long campaignId, Long playerId);
+
+    /**
+     * Returns the players any campaign froze into its roster.
+     *
+     * @return identifiers of every rostered player
+     */
+    @Query("SELECT DISTINCT member.player.id FROM CampaignPlayer member")
+    Set<Long> findAllRosteredPlayerIds();
 }

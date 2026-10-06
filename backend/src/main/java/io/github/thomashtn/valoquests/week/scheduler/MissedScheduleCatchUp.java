@@ -1,8 +1,8 @@
 package io.github.thomashtn.valoquests.week.scheduler;
 
 import io.github.thomashtn.valoquests.campaign.scheduler.CampaignDailyTickScheduler;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -48,7 +48,7 @@ public class MissedScheduleCatchUp {
     /**
      * Repository telling which past weeks still await finalization.
      */
-    private final WeeklyChallengeRepository weeklyChallengeRepository;
+    private final ChallengeSelectionRepository challengeSelectionRepository;
 
     /**
      * Scheduler the catch-up is handed to.
@@ -75,7 +75,7 @@ public class MissedScheduleCatchUp {
      *
      * @param rolloverScheduler         rollover job, when enabled
      * @param tickScheduler             daily tick job, when enabled
-     * @param weeklyChallengeRepository weekly challenge repository
+     * @param challengeSelectionRepository challenge selection repository
      * @param taskScheduler             scheduler running the catch-up
      * @param weekCalendar              week calendar
      * @param clock                     application clock
@@ -84,7 +84,7 @@ public class MissedScheduleCatchUp {
     public MissedScheduleCatchUp(
         ObjectProvider<WeeklyRolloverScheduler> rolloverScheduler,
         ObjectProvider<CampaignDailyTickScheduler> tickScheduler,
-        WeeklyChallengeRepository weeklyChallengeRepository,
+        ChallengeSelectionRepository challengeSelectionRepository,
         TaskScheduler taskScheduler,
         WeekCalendar weekCalendar,
         Clock clock,
@@ -92,7 +92,7 @@ public class MissedScheduleCatchUp {
     ) {
         this.rolloverScheduler = rolloverScheduler;
         this.tickScheduler = tickScheduler;
-        this.weeklyChallengeRepository = weeklyChallengeRepository;
+        this.challengeSelectionRepository = challengeSelectionRepository;
         this.taskScheduler = taskScheduler;
         this.weekCalendar = weekCalendar;
         this.clock = clock;
@@ -104,6 +104,7 @@ public class MissedScheduleCatchUp {
      */
     @EventListener(ApplicationReadyEvent.class)
     public void scheduleCatchUp() {
+        // Spring Boot's scheduler has a single thread: that is what keeps this from overlapping a cron job.
         taskScheduler.schedule(this::catchUp, clock.instant());
     }
 
@@ -132,7 +133,7 @@ public class MissedScheduleCatchUp {
     private boolean isRolloverOverdue() {
         LocalDate currentWeekStart = weekCalendar.currentWeekStart();
 
-        if (weeklyChallengeRepository.findPendingWeekStartsBefore(currentWeekStart).isEmpty()) {
+        if (challengeSelectionRepository.findPendingWeekStartsBefore(currentWeekStart).isEmpty()) {
             return false;
         }
 

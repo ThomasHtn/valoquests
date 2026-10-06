@@ -2,22 +2,19 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.synchronization.model.PlayerSynchronizationResult;
-import java.time.Instant;
 
 /**
  * Immutable aggregate of all player outcomes in one synchronization batch.
  *
- * @param successfulPlayers               successful player count
- * @param failureCount                    failed player count
- * @param matchesImported                 total imported match count
- * @param lastSuccessfulSynchronizationAt latest successful timestamp
- * @param errorMessages                   aggregated failure descriptions
+ * @param successfulPlayers successful player count
+ * @param failureCount      failed player count
+ * @param matchesImported   total imported match count
+ * @param errorMessages     aggregated failure descriptions
  */
 record SynchronizationBatchSummary(
     int successfulPlayers,
     int failureCount,
     int matchesImported,
-    Instant lastSuccessfulSynchronizationAt,
     String errorMessages
 ) {
 
@@ -27,7 +24,7 @@ record SynchronizationBatchSummary(
      * @return empty summary
      */
     static SynchronizationBatchSummary empty() {
-        return new SynchronizationBatchSummary(0, 0, 0, null, null);
+        return new SynchronizationBatchSummary(0, 0, 0, null);
     }
 
     /**
@@ -43,10 +40,6 @@ record SynchronizationBatchSummary(
             successfulPlayers + 1,
             failureCount,
             matchesImported + result.matchesImported(),
-            latestInstant(
-                lastSuccessfulSynchronizationAt,
-                result.completedAt()
-            ),
             errorMessages
         );
     }
@@ -74,32 +67,7 @@ record SynchronizationBatchSummary(
             successfulPlayers,
             failureCount + 1,
             matchesImported,
-            lastSuccessfulSynchronizationAt,
             updatedErrors
         );
-    }
-
-    /**
-     * Returns the most recent non-null timestamp.
-     *
-     * @param current   retained timestamp
-     * @param candidate candidate timestamp
-     * @return latest timestamp
-     */
-    private static Instant latestInstant(
-        Instant current,
-        Instant candidate
-    ) {
-        if (current == null) {
-            return candidate;
-        }
-
-        if (candidate == null) {
-            return current;
-        }
-
-        return candidate.isAfter(current)
-            ? candidate
-            : current;
     }
 }

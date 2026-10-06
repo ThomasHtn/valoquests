@@ -1,9 +1,9 @@
 package io.github.thomashtn.valoquests.ranking.model;
 
 /**
- * One of the four weekly honours, so recognition never concentrates on a single operator.
+ * One of the four weekly honours, so recognition never concentrates on a single player.
  *
- * <p>Purely honorific: no title touches a score, a resource or a guardian. One operator holds one
+ * <p>Purely honorific: no title touches a score, a resource or a guardian. One player holds one
  * at most, the champion none, and a tie awards nothing — a title shared is a title that says nothing.
  * Declaration order is the award order.
  */

@@ -4,7 +4,6 @@ import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -15,33 +14,21 @@ public interface PlayerChallengeProgressRepository
     extends JpaRepository<PlayerChallengeProgress, Long> {
 
     /**
-     * Finds the progress stored for one player and one weekly challenge.
-     *
-     * @param playerId          internal player identifier
-     * @param weeklyChallengeId weekly challenge identifier
-     * @return matching progress when it already exists
-     */
-    Optional<PlayerChallengeProgress> findByPlayerIdAndWeeklyChallengeId(
-        Long playerId,
-        Long weeklyChallengeId
-    );
-
-    /**
      * Retrieves the existing progress rows for one player and a group of
-     * weekly challenges.
+     * challenge selections.
      *
-     * <p>The weekly challenge association is fetched with the same query so
-     * the persistence service can index results without additional lazy-load
+     * <p>The selection association is fetched with the same query so
+     * {@code PlayerChallengeProgressWriter} can index results without additional lazy-load
      * queries.</p>
      *
-     * @param playerId          internal player identifier
-     * @param weeklyChallengeIds weekly challenge identifiers
+     * @param playerId     internal player identifier
+     * @param selectionIds challenge selection identifiers
      * @return existing progress rows
      */
-    @EntityGraph(attributePaths = "weeklyChallenge")
-    List<PlayerChallengeProgress> findAllByPlayerIdAndWeeklyChallengeIdIn(
+    @EntityGraph(attributePaths = "selection")
+    List<PlayerChallengeProgress> findAllByPlayerIdAndSelectionIdIn(
         Long playerId,
-        Collection<Long> weeklyChallengeIds
+        Collection<Long> selectionIds
     );
 
     /**
@@ -56,11 +43,11 @@ public interface PlayerChallengeProgressRepository
     @EntityGraph(
         attributePaths = {
             "player",
-            "weeklyChallenge",
-            "weeklyChallenge.challenge"
+            "selection",
+            "selection.challenge"
         }
     )
-    List<PlayerChallengeProgress> findAllByWeeklyChallengeWeekStartOrderByPlayerIdAscWeeklyChallengeIdAsc(
+    List<PlayerChallengeProgress> findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(
         LocalDate weekStart
     );
 
@@ -68,15 +55,23 @@ public interface PlayerChallengeProgressRepository
     /**
      * Returns every completed progress row whose week falls inside a range.
      *
-     * <p>The campaign replay's only reading of the challenges: what each operator validated, over
+     * <p>The campaign replay's only reading of the challenges: what each player validated, over
      * the whole campaign, in one query. Incomplete rows are left out because they pay nothing.
      *
      * @param firstWeekStart first Monday of the range, inclusive
      * @param lastWeekStart  last Monday of the range, inclusive
      * @return the completed rows, oldest identifier first
      */
-    List<PlayerChallengeProgress> findAllByCompletedTrueAndWeeklyChallengeWeekStartBetweenOrderByIdAsc(
+    List<PlayerChallengeProgress> findAllByCompletedTrueAndSelectionWeekStartBetweenOrderByIdAsc(
         LocalDate firstWeekStart,
         LocalDate lastWeekStart
     );
+
+    /**
+     * Returns every challenge progress of one player.
+     *
+     * @param playerId internal player identifier
+     * @return the player's progress rows
+     */
+    List<PlayerChallengeProgress> findAllByPlayerId(Long playerId);
 }

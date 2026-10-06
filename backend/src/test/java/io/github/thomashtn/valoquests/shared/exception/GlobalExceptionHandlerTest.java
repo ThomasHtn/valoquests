@@ -14,8 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import io.github.thomashtn.valoquests.henrik.exception.HenrikApiException;
 import io.github.thomashtn.valoquests.henrik.exception.HenrikRateLimitException;
-import io.github.thomashtn.valoquests.match.model.MatchHistoryFilter;
-import io.github.thomashtn.valoquests.match.service.MatchQueryService;
+import io.github.thomashtn.valoquests.match.dto.MatchHistoryFilter;
+import io.github.thomashtn.valoquests.profile.service.MatchQueryService;
 import io.github.thomashtn.valoquests.shared.config.AdminApiKeyFilter;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
@@ -23,9 +23,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.task.TaskRejectedException;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
 /**
  * Verifies how failures are turned into HTTP responses.
@@ -90,6 +92,29 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("keeps the server-side status Spring chose in the body while hiding the detail")
+    void shouldReportTheRealServerSideStatusInTheBody() throws Exception {
+        failWith(new AsyncRequestTimeoutException());
+
+        mockMvc.perform(get(MATCHES))
+            .andExpect(status().isServiceUnavailable())
+            .andExpect(jsonPath("$.status").value(503))
+            .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+            .andExpect(jsonPath("$.detail").value("An unexpected error occurred."));
+    }
+
+    @Test
+    @DisplayName("answers 409 when the background executor refuses a task")
+    void shouldAnswerConflictWhenTheExecutorRejectsATask() throws Exception {
+        failWith(new TaskRejectedException("Executor queue is full"));
+
+        mockMvc.perform(get(MATCHES))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("CONFLICT"))
+            .andExpect(content().string(not(containsString("queue is full"))));
+    }
+
+    @Test
     @DisplayName("answers 400 naming the parameter when a path value has the wrong type")
     void shouldAnswerBadRequestForAPathValueOfTheWrongType() throws Exception {
         mockMvc.perform(get("/api/players/not-a-number/matches"))
@@ -110,7 +135,6 @@ class GlobalExceptionHandlerTest {
     void shouldNotExposeUpstreamFailureDetail() throws Exception {
         failWith(new HenrikApiException(
             "GET https://api.henrikdev.xyz/valorant/v4/by-puuid/matches failed with 503",
-            HttpStatus.SERVICE_UNAVAILABLE,
             true
         ));
 
@@ -164,5 +188,49 @@ class GlobalExceptionHandlerTest {
     void shouldDenyAnUnsupportedMethodOnAPublicRoute() throws Exception {
         mockMvc.perform(post(MATCHES))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("answers 400 rather than 500 for a malformed JSON body")
+    void shouldAnswerBadRequestForAMalformedJsonBody() throws Exception {
+        mockMvc.perform(
+                post("/api/admin/players")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"gameName\":")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.instance").value("/api/admin/players"));
+    }
+
+    @Test
+    @DisplayName("answers 400 rather than 500 for an unknown enum value in the body")
+    void shouldAnswerBadRequestForAnUnknownEnumValue() throws Exception {
+        mockMvc.perform(
+                post("/api/admin/players")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"gameName":"Jett","tagLine":"EUW","displayName":"Jett","status":"NOPE"}
+                        """)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
+    }
+
+    @Test
+    @DisplayName("answers 415 rather than 500 for a body in an unsupported content type")
+    void shouldAnswerUnsupportedMediaTypeForAWrongContentType() throws Exception {
+        mockMvc.perform(
+                post("/api/admin/players")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .content("Jett#EUW")
+            )
+            .andExpect(status().isUnsupportedMediaType())
+            .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+            .andExpect(jsonPath("$.title").value("Unsupported Media Type"));
     }
 }

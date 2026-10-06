@@ -7,6 +7,15 @@ import java.util.Map;
 
 /**
  * Represents the problem-details payload returned for API failures.
+ *
+ * @param type      problem type, always {@code about:blank}
+ * @param title     HTTP reason phrase
+ * @param status    HTTP status code
+ * @param code      application error code
+ * @param detail    human-readable detail, safe to show the caller
+ * @param instance  path of the failed request
+ * @param timestamp instant the error was produced
+ * @param errors    validation messages indexed by field name, empty when none
  */
 @Schema(description = "Standard API problem response.")
 public record ApiErrorResponse(

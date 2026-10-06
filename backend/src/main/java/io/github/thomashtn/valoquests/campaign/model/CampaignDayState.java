@@ -20,7 +20,7 @@ import java.time.LocalDate;
  * @param foodStock        food in reserve at the close of the day
  * @param componentsStock  components in reserve at the close of the day
  * @param population       inhabitants at the close of the day
- * @param presenceCount    roster operators who played that day
+ * @param presenceCount    roster players who played that day
  */
 public record CampaignDayState(
     LocalDate day,

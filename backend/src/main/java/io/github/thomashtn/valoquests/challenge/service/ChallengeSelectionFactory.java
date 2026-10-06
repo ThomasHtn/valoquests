@@ -1,11 +1,11 @@
 package io.github.thomashtn.valoquests.challenge.service;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeDefinition;
 import io.github.thomashtn.valoquests.challenge.parser.ChallengeDefinitionParser;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
 import java.time.Instant;
 import java.time.LocalDate;
 import org.springframework.stereotype.Component;
@@ -53,7 +53,7 @@ public class ChallengeSelectionFactory {
      * @param selectionTime draw timestamp
      * @return unsaved selection carrying its resolved conditions
      */
-    public WeeklyChallenge weekly(LocalDate weekStart, Challenge challenge, Instant selectionTime) {
+    public ChallengeSelection weekly(LocalDate weekStart, Challenge challenge, Instant selectionTime) {
         return create(weekStart, null, challenge, selectionTime);
     }
 
@@ -66,7 +66,7 @@ public class ChallengeSelectionFactory {
      * @param selectionTime draw timestamp
      * @return unsaved selection carrying its resolved conditions
      */
-    public WeeklyChallenge daily(
+    public ChallengeSelection daily(
         LocalDate weekStart,
         LocalDate day,
         Challenge challenge,
@@ -84,7 +84,7 @@ public class ChallengeSelectionFactory {
      * @param selectionTime draw timestamp
      * @return unsaved selection
      */
-    private WeeklyChallenge create(
+    private ChallengeSelection create(
         LocalDate weekStart,
         LocalDate day,
         Challenge challenge,
@@ -94,7 +94,7 @@ public class ChallengeSelectionFactory {
         ChallengeCalibration calibration = calibrationSource.forWeek(weekStart);
         ChallengeDefinition played = definitionParser.parse(challenge, calibration.difficulty());
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setWeekStart(weekStart);
         selection.setCadence(cadence);
         selection.setDay(day);

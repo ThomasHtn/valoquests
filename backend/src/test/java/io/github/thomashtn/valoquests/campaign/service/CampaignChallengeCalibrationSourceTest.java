@@ -7,9 +7,8 @@ import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.model.CampaignStatus;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
-import io.github.thomashtn.valoquests.challenge.model.CampaignDifficulty;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCalibration;
-import java.util.List;
+import io.github.thomashtn.valoquests.scoring.model.CampaignDifficulty;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +37,7 @@ class CampaignChallengeCalibrationSourceTest {
     @DisplayName("Prices a week of the live campaign at its own reference and week index")
     void shouldUseTheLiveCampaign() {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+        when(campaignRepository.findLive()).thenReturn(Optional.of(campaign));
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START.plusWeeks(4));
 
@@ -51,7 +50,7 @@ class CampaignChallengeCalibrationSourceTest {
     void shouldClampTheWeekIndexBeforeTheStart() {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         campaign.setStatus(CampaignStatus.OPENED);
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.of(campaign));
+        when(campaignRepository.findLive()).thenReturn(Optional.of(campaign));
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START.minusWeeks(1));
 
@@ -66,9 +65,8 @@ class CampaignChallengeCalibrationSourceTest {
         closed.setStatus(CampaignStatus.CLOSED);
         closed.setDifficulty(CampaignDifficulty.PRO);
 
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
-        when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED))
-            .thenReturn(List.of(closed));
+        when(campaignRepository.findLive()).thenReturn(Optional.empty());
+        when(campaignRepository.findLatestClosed()).thenReturn(Optional.of(closed));
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START.plusWeeks(20));
 
@@ -79,8 +77,8 @@ class CampaignChallengeCalibrationSourceTest {
     @Test
     @DisplayName("Falls back on the amateur difficulty when no campaign has ever existed")
     void shouldFallBackOnAmateur() {
-        when(campaignRepository.findByStatusNot(CampaignStatus.CLOSED)).thenReturn(Optional.empty());
-        when(campaignRepository.findAllByStatusOrderByNumberDesc(CampaignStatus.CLOSED)).thenReturn(List.of());
+        when(campaignRepository.findLive()).thenReturn(Optional.empty());
+        when(campaignRepository.findLatestClosed()).thenReturn(Optional.empty());
 
         ChallengeCalibration calibration = source.forWeek(CampaignFixtures.FIRST_WEEK_START);
 

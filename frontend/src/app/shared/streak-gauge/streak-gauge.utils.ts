@@ -5,8 +5,8 @@ import { StreakPip } from './streak-gauge.model';
 /**
  * Streak bonus in percent (0 on day one, +2 per day, max 10) for operators not yet priced.
  */
-export function streakBonusOf(streakDays: number): number {
-  return Math.max(0, Math.min(10, (streakDays - 1) * 2));
+export function streakBonusOf(playedDays: number): number {
+  return Math.max(0, Math.min(10, (playedDays - 1) * 2));
 }
 
 /**

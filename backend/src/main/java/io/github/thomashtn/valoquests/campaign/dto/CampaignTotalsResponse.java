@@ -1,5 +1,7 @@
 package io.github.thomashtn.valoquests.campaign.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * What the campaign has amounted to so far, across every week it has played.
  *
@@ -12,6 +14,7 @@ package io.github.thomashtn.valoquests.campaign.dto;
  * @param componentsGained  components the roster has produced
  * @param inhabitantsLost   inhabitants lost to guardians and to famine
  */
+@Schema(description = "Campaign totals across every week played so far.")
 public record CampaignTotalsResponse(
     int guardiansDefeated,
     int weeksSettled,

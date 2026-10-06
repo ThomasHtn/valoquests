@@ -31,6 +31,8 @@ public class RankingController {
     private final RankingQueryService rankingQueryService;
 
     /**
+     * Creates the public ranking controller.
+     *
      * @param rankingQueryService ranking query service
      */
     public RankingController(RankingQueryService rankingQueryService) {
@@ -38,14 +40,16 @@ public class RankingController {
     }
 
     /**
-     * @return active-week ranking with exact progress for every player and challenge
+     * Returns the ranking of the week in progress.
+     *
+     * @return active-week ranking with every player's score and validated challenges
      */
     @GetMapping("/current")
     @Operation(
         summary = "Get the current weekly ranking",
         description = """
-            Returns each player's current position, score, completed-challenge count and exact
-            progress toward every challenge selected for the active calendar week.
+            Returns each player's current position, score and validated-challenge counts for the
+            active calendar week.
             """
     )
     @ApiResponse(responseCode = "200", description = "Current ranking returned successfully.")
@@ -54,17 +58,18 @@ public class RankingController {
     }
 
     /**
-     * @return one day's ranking, and how it compares to the day before
+     * Returns one day's ranking.
      *
      * @param day day to rank, or absent for today
+     * @return one day's ranking
      */
     @GetMapping("/daily")
     @Operation(
         summary = "Get one day's ranking",
         description = """
-            Returns every rostered player's match damage for one day, the same figure for the day
-            before, and the variation between the two. Only match damage exists at this scale: the
-            challenge damage and the bonuses are settled on the week, not on the day.
+            Returns every tracked player's match damage for one day, archived players aside. Only
+            match damage exists at this scale: challenge points are settled on the week, not on the
+            day.
             """
     )
     @ApiResponse(responseCode = "200", description = "Daily ranking returned successfully.")
@@ -77,10 +82,11 @@ public class RankingController {
     }
 
     /**
-     * @return one page of finalized weekly rankings
+     * Returns finalized weekly rankings, newest first.
      *
      * @param page zero-based page index
      * @param size number of finalized weeks returned per page
+     * @return one page of finalized weekly rankings
      */
     @GetMapping("/history")
     @Operation(

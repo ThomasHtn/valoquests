@@ -3,7 +3,8 @@ package io.github.thomashtn.valoquests.challenge.controller;
 import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_KEY_SECURITY_SCHEME;
 
 import io.github.thomashtn.valoquests.challenge.service.ChallengeRecalculationService;
-import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeSelectionService;
+import io.github.thomashtn.valoquests.challenge.service.WeeklyChallengeDrawService;
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,20 +30,30 @@ public class ChallengeAdminController {
     private final ChallengeRecalculationService recalculationService;
 
     /**
-     * Service drawing the weekly packs and the daily challenges.
+     * Service drawing the weekly packs.
      */
-    private final WeeklyChallengeSelectionService selectionService;
+    private final WeeklyChallengeDrawService weeklyDrawService;
 
     /**
+     * Lock keeping the redraw from overlapping another job writing the match history.
+     */
+    private final MatchHistoryLock matchHistoryLock;
+
+    /**
+     * Creates the challenge administration controller.
+     *
      * @param recalculationService challenge progress recalculation service
-     * @param selectionService     challenge selection service
+     * @param weeklyDrawService    weekly challenge draw service
+     * @param matchHistoryLock     lock shared by every job writing the match history
      */
     public ChallengeAdminController(
         ChallengeRecalculationService recalculationService,
-        WeeklyChallengeSelectionService selectionService
+        WeeklyChallengeDrawService weeklyDrawService,
+        MatchHistoryLock matchHistoryLock
     ) {
         this.recalculationService = recalculationService;
-        this.selectionService = selectionService;
+        this.weeklyDrawService = weeklyDrawService;
+        this.matchHistoryLock = matchHistoryLock;
     }
 
     /**
@@ -64,11 +75,13 @@ public class ChallengeAdminController {
 
             Destructive, and the one admin operation that is not idempotent. The progress recorded
             against the discarded challenges is deleted and cannot be recovered: a player who had
-            completed one loses that completion, and the damage it dealt to the week's boss with
+            completed one loses that completion, and the rescues and ranking points it earned with
             it. Only the week in progress is ever touched; past weeks keep the packs their frozen
             rankings were earned against.
 
             The week's daily challenges are not part of the pack and keep their progress.
+
+            Refused with a 409 while another job writing the match history runs.
             """
     )
     @ApiResponse(responseCode = "204", description = "A new pack was drawn and progress rebuilt.")
@@ -76,10 +89,15 @@ public class ChallengeAdminController {
     @ApiResponse(responseCode = "403", description = "X-Admin-Key value is invalid.")
     @ApiResponse(
         responseCode = "409",
-        description = "The current week's pack is finalized. Nothing was changed."
+        description = """
+            The current week's pack is finalized, or another job writing the match history is
+            already running. Nothing was changed.
+            """
     )
     public void redrawCurrentWeekChallenges() {
-        selectionService.redrawCurrentWeekChallenges();
-        recalculationService.recalculateCurrentWeekProgress();
+        matchHistoryLock.runOrReject(() -> {
+            weeklyDrawService.redrawCurrentWeekChallenges();
+            recalculationService.drawAndRecalculateCurrentWeek();
+        });
     }
 }

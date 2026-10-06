@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,8 @@ import static org.mockito.Mockito.when;
 import io.github.thomashtn.valoquests.campaign.CampaignFixtures;
 import io.github.thomashtn.valoquests.campaign.entity.Campaign;
 import io.github.thomashtn.valoquests.campaign.repository.CampaignRepository;
+import io.github.thomashtn.valoquests.campaign.service.CampaignWeekCoverageSource;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.ranking.RankingFixtures;
@@ -22,10 +25,10 @@ import io.github.thomashtn.valoquests.ranking.dto.RankingHistoryWeekResponse;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.model.WeeklyTitle;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
-import io.github.thomashtn.valoquests.ranking.service.RankingProgressMapper.WeekBoard;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.shared.dto.PageResponse;
 import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
-import io.github.thomashtn.valoquests.week.WeekCalendar;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -77,7 +80,7 @@ class DefaultRankingQueryServiceTest {
     private WeeklyPlayerScoreRepository scoreRepository;
 
     @Mock
-    private RankingProgressMapper progressMapper;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     @Mock
     private DailyRankingReader dailyRankingReader;
@@ -94,16 +97,16 @@ class DefaultRankingQueryServiceTest {
     void setUp() {
         service = new DefaultRankingQueryService(
             scoreRepository,
-            progressMapper,
+            challengeSelectionRepository,
             dailyRankingReader,
             titleResolver,
             new WeekCalendar(Clock.fixed(RankingFixtures.MIDWEEK, ZoneOffset.UTC), ZoneOffset.UTC),
-            new WeekChampionResolver(scoreRepository, campaignRepository)
+            new WeekChampionResolver(scoreRepository, new CampaignWeekCoverageSource(campaignRepository))
         );
     }
 
     @Test
-    @DisplayName("Answers the week, its board and each player's honours and variation")
+    @DisplayName("Answers the week, each player's honours and variation, and the week's challenge count")
     void shouldAnswerTheCurrentWeek() {
         LocalDate lastWeek = WEEK_START.minusWeeks(1);
         WeeklyPlayerScore champion = RankingFixtures.score(BRAVO, 1, 2_000, 0);
@@ -115,13 +118,12 @@ class DefaultRankingQueryServiceTest {
         WeeklyPlayerScore alpha = RankingFixtures.score(ALPHA, 1, 1_200, 300);
         alpha.setPreviousPosition(2);
         WeeklyPlayerScore bravo = RankingFixtures.score(BRAVO, 2, 900, 0);
-        bravo.setCalculatedAt(RankingFixtures.MIDWEEK.plusSeconds(60));
         WeeklyPlayerScore charlie = RankingFixtures.score(CHARLIE, null, 0, 0);
         when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START))
             .thenReturn(List.of(alpha, bravo, charlie));
-        when(progressMapper.forWeek(WEEK_START, TODAY, List.of(1L, 2L, 3L)))
-            .thenReturn(new WeekBoard(5, Map.of()));
-        when(titleResolver.resolve(anyList(), eq(BRAVO.getId()))).thenReturn(Map.of(
+        when(challengeSelectionRepository.countByWeekStartAndCadence(WEEK_START, ChallengeCadence.WEEKLY))
+            .thenReturn(5L);
+        when(titleResolver.resolve(anyList(), isNull(), eq(BRAVO.getId()))).thenReturn(Map.of(
             WeeklyTitle.MECHANIC, ALPHA.getId(),
             WeeklyTitle.SCOUT, ALPHA.getId()
         ));
@@ -131,12 +133,10 @@ class DefaultRankingQueryServiceTest {
         assertThat(response.weekStart()).isEqualTo(WEEK_START);
         assertThat(response.weekEnd()).isEqualTo(WEEK_START.plusDays(6));
         assertThat(response.today()).isEqualTo(TODAY);
-        assertThat(response.calculatedAt()).isEqualTo(RankingFixtures.MIDWEEK.plusSeconds(60));
         assertThat(response.ranking()).hasSize(3);
 
         RankingEntryResponse first = response.ranking().getFirst();
         assertThat(first.position()).isEqualTo(1);
-        assertThat(first.previousPosition()).isEqualTo(2);
         assertThat(first.positionVariation()).isEqualTo(1);
         assertThat(first.player().displayName()).isEqualTo("Alpha");
         assertThat(first.guardianDamage()).isEqualTo(1_200);
@@ -144,7 +144,6 @@ class DefaultRankingQueryServiceTest {
         assertThat(first.totalPoints()).isEqualTo(1_500);
         assertThat(first.totalChallenges()).isEqualTo(5);
         assertThat(first.titles()).containsExactly(WeeklyTitle.SCOUT, WeeklyTitle.MECHANIC);
-        assertThat(first.challengeProgress()).isEmpty();
 
         RankingEntryResponse last = response.ranking().getLast();
         assertThat(last.position()).isNull();
@@ -153,16 +152,14 @@ class DefaultRankingQueryServiceTest {
     }
 
     @Test
-    @DisplayName("Answers an empty week without a calculation instant")
+    @DisplayName("Answers an empty week with an empty ranking")
     void shouldAnswerAnEmptyWeek() {
         when(scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START)).thenReturn(List.of());
-        when(progressMapper.forWeek(WEEK_START, TODAY, List.of())).thenReturn(new WeekBoard(0, Map.of()));
         when(scoreRepository.findFinalizedWeekStarts(PageRequest.of(0, 1))).thenReturn(Page.empty());
-        when(titleResolver.resolve(anyList(), eq(null))).thenReturn(Map.of());
+        when(titleResolver.resolve(anyList(), isNull(), isNull())).thenReturn(Map.of());
 
         CurrentRankingResponse response = service.findCurrent();
 
-        assertThat(response.calculatedAt()).isNull();
         assertThat(response.ranking()).isEmpty();
     }
 
@@ -194,7 +191,6 @@ class DefaultRankingQueryServiceTest {
         assertThat(page.totalElements()).isEqualTo(1);
         RankingHistoryWeekResponse week = page.content().getFirst();
         assertThat(week.weekStart()).isEqualTo(lastWeek);
-        assertThat(week.finalizedAt()).isEqualTo(finalizedAt);
         assertThat(week.winnerPlayerId()).isEqualTo(BRAVO.getId());
         assertThat(week.ranking()).hasSize(2);
         assertThat(week.ranking().getFirst().totalPoints()).isEqualTo(2_100);
@@ -224,7 +220,7 @@ class DefaultRankingQueryServiceTest {
     @Test
     @DisplayName("Ranks the requested day, or today when none is asked for")
     void shouldDelegateTheDailyBoard() {
-        DailyRankingResponse board = new DailyRankingResponse(TODAY, TODAY.minusDays(1), 0, 0, List.of());
+        DailyRankingResponse board = new DailyRankingResponse(TODAY, 0, List.of());
         when(dailyRankingReader.read(TODAY)).thenReturn(board);
         when(dailyRankingReader.read(TODAY.minusDays(3))).thenReturn(board);
 

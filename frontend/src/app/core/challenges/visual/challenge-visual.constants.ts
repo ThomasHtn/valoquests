@@ -1,10 +1,10 @@
 import { ChallengeVisual } from './challenge-visual.model';
-import { ChallengeDifficulty } from '../challenge.model';
+import { ChallengeTier } from '../challenge.model';
 
 /**
  * Tier treatment per difficulty, a heat ramp from green to red so the slots read as a ladder.
  */
-export const CHALLENGE_DIFFICULTY_COLORS: Readonly<Record<ChallengeDifficulty, ChallengeVisual>> = {
+export const CHALLENGE_DIFFICULTY_COLORS: Readonly<Record<ChallengeTier, ChallengeVisual>> = {
   EASY: {
     tier: 'I',
     tierColor: 'var(--color-accent-green)',

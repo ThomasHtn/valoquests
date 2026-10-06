@@ -1,7 +1,7 @@
 /**
- * Weekly challenge tier, setting its weight; mirrors the backend `ChallengeDifficulty`.
+ * Weekly challenge tier, setting its weight; mirrors the backend `ChallengeTier`.
  */
-export type ChallengeDifficulty = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
+export type ChallengeTier = 'EASY' | 'NORMAL' | 'MEDIUM' | 'HARD' | 'VERY_HARD';
 
 /**
  * Draw cadence (five weekly on Monday, one daily each morning); mirrors `ChallengeCadence`.
@@ -38,14 +38,9 @@ interface ChallengeIdentity {
   readonly cadence: ChallengeCadence;
 
   /**
-   * Weekly difficulty, `null` for a daily.
+   * Weekly tier, `null` for a daily.
    */
-  readonly difficulty: ChallengeDifficulty | null;
-
-  /**
-   * Whether only competitive matches count.
-   */
-  readonly competitiveOnly: boolean;
+  readonly tier: ChallengeTier | null;
 
   /**
    * Metric(s), joined with `" + "` when composite (`"KILLS + MATCHES_PLAYED"`).
@@ -58,14 +53,9 @@ interface ChallengeIdentity {
   readonly targetValue: number | null;
 
   /**
-   * Survivors one operator rescues by validating it, at its draw week.
+   * Survivors one operator rescues by validating it, at its draw week; also its weekly ranking points.
    */
   readonly survivors: number;
-
-  /**
-   * Weekly ranking points once validated.
-   */
-  readonly rankingPoints: number;
 }
 
 /**
@@ -78,24 +68,9 @@ export interface ChallengeProgress extends ChallengeIdentity {
   readonly day: string | null;
 
   /**
-   * Players who validated it.
-   */
-  readonly completedPlayers: number;
-
-  /**
-   * Roster size.
-   */
-  readonly totalPlayers: number;
-
-  /**
    * Ids of the active operators who validated it, matched against the roster.
    */
   readonly completedPlayerIds: readonly number[];
-
-  /**
-   * Share of the target reached, in percent.
-   */
-  readonly completionPercentage: number;
 
   /**
    * Each active operator's progress, in roster order.
@@ -186,7 +161,12 @@ export interface CurrentChallenges {
 /**
  * One catalogue challenge outside any draw; mirrors `ChallengeCatalogueEntry`.
  */
-export type ChallengeCatalogueEntry = ChallengeIdentity;
+export interface ChallengeCatalogueEntry extends ChallengeIdentity {
+  /**
+   * Whether only competitive matches count.
+   */
+  readonly competitiveOnly: boolean;
+}
 
 /**
  * Full catalogue at the reference in force; mirrors `ChallengeCatalogueResponse`.

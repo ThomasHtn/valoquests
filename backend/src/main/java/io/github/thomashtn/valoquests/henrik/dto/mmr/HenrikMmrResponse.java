@@ -6,13 +6,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Root response returned by Henrik's Valorant MMR v3 endpoint.
  *
- * @param status HTTP-like status embedded in the Henrik response
  * @param data current competitive information for the requested player
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HenrikMmrResponse(
 
-    Integer status,
     HenrikMmrData data
 ) {
 
@@ -30,14 +28,12 @@ public record HenrikMmrResponse(
      *
      * @param tier current Valorant competitive tier
      * @param rankRating current Rank Rating inside the tier
-     * @param elo global competitive ELO exposed by Henrik
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikCurrentMmr(
 
         HenrikTier tier,
-        @JsonProperty("rr") Integer rankRating,
-        Integer elo
+        @JsonProperty("rr") Integer rankRating
     ) {}
 
     /**
@@ -46,7 +42,6 @@ public record HenrikMmrResponse(
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record HenrikTier(
 
-        Integer id,
         String name
     ) {}
 }

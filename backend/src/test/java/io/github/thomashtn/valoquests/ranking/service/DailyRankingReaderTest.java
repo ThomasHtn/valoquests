@@ -11,13 +11,16 @@ import io.github.thomashtn.valoquests.ranking.RankingFixtures;
 import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse;
 import io.github.thomashtn.valoquests.ranking.dto.DailyRankingResponse.DailyRankingEntryResponse;
 import io.github.thomashtn.valoquests.scoring.service.DailyOutputReader;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -53,12 +56,20 @@ class DailyRankingReaderTest {
     @Mock
     private DailyOutputReader dailyOutputReader;
 
-    @InjectMocks
     private DailyRankingReader reader;
 
+    @BeforeEach
+    void setUp() {
+        reader = new DailyRankingReader(
+            playerRepository,
+            dailyOutputReader,
+            new WeekCalendar(Clock.systemUTC(), ZoneOffset.UTC)
+        );
+    }
+
     @Test
-    @DisplayName("Ranks the day and states each player's gap with the day before")
-    void shouldRankTheDayAgainstTheDayBefore() {
+    @DisplayName("Ranks the day by damage and reports each player's output and days played this week")
+    void shouldRankTheDayByDamage() {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(ALPHA, BRAVO));
         when(dailyOutputReader.read(any(), any(), any())).thenReturn(RankingFixtures.output(Map.of(
@@ -72,8 +83,6 @@ class DailyRankingReaderTest {
         DailyRankingResponse board = reader.read(DAY);
 
         assertThat(board.day()).isEqualTo(DAY);
-        assertThat(board.previousDay()).isEqualTo(DAY.minusDays(1));
-        assertThat(board.playedPlayerCount()).isEqualTo(2);
         assertThat(board.rosterPlayerCount()).isEqualTo(2);
         assertThat(board.ranking()).extracting(DailyRankingEntryResponse::playerId).containsExactly(2L, 1L);
 
@@ -82,10 +91,8 @@ class DailyRankingReaderTest {
         assertThat(alpha.damage()).isEqualTo(500);
         assertThat(alpha.food()).isEqualTo(150);
         assertThat(alpha.components()).isEqualTo(350);
-        assertThat(alpha.streakDays()).isEqualTo(4);
+        assertThat(alpha.playedDays()).isEqualTo(4);
         assertThat(alpha.weekPlayedDays()).containsExactly(DAY.minusDays(1), DAY);
-        assertThat(alpha.previousDamage()).isEqualTo(800);
-        assertThat(alpha.damageVariation()).isEqualTo(-300);
     }
 
     @Test
@@ -99,7 +106,6 @@ class DailyRankingReaderTest {
 
         DailyRankingResponse board = reader.read(DAY);
 
-        assertThat(board.playedPlayerCount()).isZero();
         assertThat(board.ranking()).hasSize(2);
 
         DailyRankingEntryResponse alpha = board.ranking().getFirst();
@@ -107,9 +113,8 @@ class DailyRankingReaderTest {
         assertThat(alpha.position()).as("no damage, no position").isNull();
         assertThat(alpha.damage()).isZero();
         assertThat(alpha.matchCount()).isZero();
-        assertThat(alpha.streakDays()).isZero();
+        assertThat(alpha.playedDays()).isZero();
         assertThat(alpha.weekPlayedDays()).containsExactly(DAY.minusDays(1));
-        assertThat(alpha.damageVariation()).isEqualTo(-300);
     }
 
     @Test
@@ -132,7 +137,7 @@ class DailyRankingReaderTest {
     }
 
     @Test
-    @DisplayName("Never lets a deactivated player take a slot or count in the turnout")
+    @DisplayName("Never lets a deactivated player take a slot or count in the roster")
     void shouldKeepADeactivatedPlayerOffTheSlots() {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED))
             .thenReturn(List.of(ALPHA, CHARLIE));
@@ -147,7 +152,6 @@ class DailyRankingReaderTest {
         assertThat(board.ranking()).extracting(DailyRankingEntryResponse::playerId).containsExactly(3L, 1L);
         assertThat(board.ranking().get(0).position()).isNull();
         assertThat(board.ranking().get(1).position()).isNull();
-        assertThat(board.playedPlayerCount()).isZero();
         assertThat(board.rosterPlayerCount()).isEqualTo(1);
     }
 

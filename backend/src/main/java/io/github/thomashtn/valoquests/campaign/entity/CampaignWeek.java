@@ -2,9 +2,11 @@ package io.github.thomashtn.valoquests.campaign.entity;
 
 import io.github.thomashtn.valoquests.campaign.model.ExtractionLimiter;
 import io.github.thomashtn.valoquests.campaign.model.GuardianCategory;
+import io.github.thomashtn.valoquests.campaign.model.GuardianProgress;
 import io.github.thomashtn.valoquests.match.entity.PlayerMatch;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.shared.entity.AuditableEntity;
+import io.github.thomashtn.valoquests.shared.time.WeekCalendar;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -127,7 +129,7 @@ public class CampaignWeek extends AuditableEntity {
     private Instant defeatedAt;
 
     /**
-     * Operator who landed the finishing blow.
+     * Player who landed the finishing blow.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "defeated_by_player_id")
@@ -189,7 +191,26 @@ public class CampaignWeek extends AuditableEntity {
      * @return the week's last day
      */
     public LocalDate settlementDay() {
-        return weekStart.plusDays(6);
+        return WeekCalendar.lastDayOf(weekStart);
+    }
+
+    /**
+     * Determines whether a calendar day falls inside this week, Monday to Sunday.
+     *
+     * @param day calendar day, must not be {@code null}
+     * @return {@code true} when the day belongs to the week
+     */
+    public boolean contains(LocalDate day) {
+        return !day.isBefore(weekStart) && !day.isAfter(settlementDay());
+    }
+
+    /**
+     * Returns how far the squad got on the guardian, as the Sunday settlement counts it.
+     *
+     * @return progress between zero and one
+     */
+    public double progress() {
+        return GuardianProgress.of(defeated, damageDealt, guardianHitPoints);
     }
 
     /**

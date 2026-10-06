@@ -39,7 +39,8 @@ class DefaultSeasonQueryServiceTest {
     }
 
     /**
-     * Verifies that seasons are returned most recent first, whatever order they were created in.
+     * Verifies that seasons are returned most recent first, whatever order they were created in,
+     * with only the most recent one flagged as in progress.
      *
      * <p>Insertion order is deliberately the reverse of the chronological one here: seasons are
      * created as matches are imported, so an older season can easily carry a greater
@@ -48,10 +49,10 @@ class DefaultSeasonQueryServiceTest {
     @Test
     void shouldOrderSeasonsByEpisodeAndActDescending() {
         when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
-            season(4L, "e9a1", false),
-            season(3L, "e10a3", false),
-            season(2L, "e10a1", false),
-            season(1L, "e11a2", true)
+            season(4L, "e9a1"),
+            season(3L, "e10a3"),
+            season(2L, "e10a1"),
+            season(1L, "e11a2")
         ));
 
         List<SeasonResponse> result = service.findAll();
@@ -71,8 +72,8 @@ class DefaultSeasonQueryServiceTest {
     @Test
     void shouldPlaceUndatableSeasonsLast() {
         when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
-            season(2L, "0df9ce4a-4d1e-1234-9ba5-a1b2c3d4e5f6", false),
-            season(1L, "e11a1", true)
+            season(2L, "0df9ce4a-4d1e-1234-9ba5-a1b2c3d4e5f6"),
+            season(1L, "e11a1")
         ));
 
         List<SeasonResponse> result = service.findAll();
@@ -100,10 +101,10 @@ class DefaultSeasonQueryServiceTest {
     @Test
     void shouldResolveCurrentSeasonAsTheMostRecentByEpisodeAndAct() {
         when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
-            season(4L, "e9a1", false),
-            season(3L, "e10a3", false),
-            season(2L, "e10a1", false),
-            season(1L, "e11a2", false)
+            season(4L, "e9a1"),
+            season(3L, "e10a3"),
+            season(2L, "e10a1"),
+            season(1L, "e11a2")
         ));
 
         assertThat(service.resolveCurrentSeasonId()).isEqualTo(1L);
@@ -119,16 +120,18 @@ class DefaultSeasonQueryServiceTest {
     @Test
     void shouldOrderYearEraSeasonsAfterEveryEpisodeEraSeason() {
         when(seasonRepository.findAllByOrderByIdDesc()).thenReturn(List.of(
-            season(4L, "V26A2", false),
-            season(3L, "e11a4", false),
-            season(2L, "v26a4", false),
-            season(1L, "e10a1", false)
+            season(4L, "V26A2"),
+            season(3L, "e11a4"),
+            season(2L, "v26a4"),
+            season(1L, "e10a1")
         ));
 
         List<SeasonResponse> result = service.findAll();
 
         assertThat(result).extracting(SeasonResponse::name)
             .containsExactly("v26a4", "V26A2", "e11a4", "e10a1");
+        assertThat(result).extracting(SeasonResponse::active)
+            .containsExactly(true, false, false, false);
         assertThat(service.resolveCurrentSeasonId()).isEqualTo(2L);
     }
 
@@ -142,12 +145,11 @@ class DefaultSeasonQueryServiceTest {
         assertThat(service.resolveCurrentSeasonId()).isNull();
     }
 
-    private Season season(Long id, String name, boolean active) {
+    private Season season(Long id, String name) {
         Season season = new Season();
         season.setId(id);
         season.setExternalId("ext-" + id);
         season.setName(name);
-        season.setActive(active);
         return season;
     }
 }

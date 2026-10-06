@@ -21,15 +21,15 @@ public class SynchronizationController {
     /**
      * Application service resolving synchronization executions.
      */
-    private final SynchronizationQueryService service;
+    private final SynchronizationQueryService synchronizationQueryService;
 
     /**
      * Creates the synchronization controller.
      *
-     * @param service synchronization query service
+     * @param synchronizationQueryService synchronization query service
      */
-    public SynchronizationController(SynchronizationQueryService service) {
-        this.service = service;
+    public SynchronizationController(SynchronizationQueryService synchronizationQueryService) {
+        this.synchronizationQueryService = synchronizationQueryService;
     }
 
     /**
@@ -48,6 +48,6 @@ public class SynchronizationController {
     )
     @ApiResponse(responseCode = "200", description = "Synchronization status returned successfully.")
     public SynchronizationStatusResponse getStatus() {
-        return service.findStatus();
+        return synchronizationQueryService.findStatus();
     }
 }

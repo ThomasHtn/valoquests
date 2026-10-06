@@ -1,14 +1,11 @@
 package io.github.thomashtn.valoquests.synchronization.model;
 
+import java.util.List;
+
 /**
  * Describes the lifecycle state of a synchronization execution.
  */
 public enum SynchronizationStatus {
-
-    /**
-     * Execution has been created but has not started yet.
-     */
-    PENDING,
 
     /**
      * Execution is currently processing data.
@@ -28,12 +25,12 @@ public enum SynchronizationStatus {
     /**
      * Execution did not complete successfully.
      */
-    FAILED,
+    FAILED;
 
     /**
-     * Execution was explicitly cancelled.
+     * Statuses of an execution that has not finished, and cannot legitimately survive a restart.
      */
-    CANCELLED;
+    public static final List<SynchronizationStatus> IN_PROGRESS = List.of(RUNNING);
 
     /**
      * Resolves the status of a batch from its player outcomes.

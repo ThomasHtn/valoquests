@@ -3,21 +3,21 @@ package io.github.thomashtn.valoquests.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.thomashtn.valoquests.challenge.entity.Challenge;
+import io.github.thomashtn.valoquests.challenge.entity.ChallengeSelection;
 import io.github.thomashtn.valoquests.challenge.entity.PlayerChallengeProgress;
-import io.github.thomashtn.valoquests.challenge.entity.WeeklyChallenge;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeCadence;
 import io.github.thomashtn.valoquests.challenge.model.ChallengeCategory;
-import io.github.thomashtn.valoquests.challenge.model.ChallengeDifficulty;
 import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 import io.github.thomashtn.valoquests.challenge.repository.ChallengeRepository;
+import io.github.thomashtn.valoquests.challenge.repository.ChallengeSelectionRepository;
 import io.github.thomashtn.valoquests.challenge.repository.PlayerChallengeProgressRepository;
-import io.github.thomashtn.valoquests.challenge.repository.WeeklyChallengeRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.model.PlayerStatus;
 import io.github.thomashtn.valoquests.player.repository.PlayerRepository;
 import io.github.thomashtn.valoquests.ranking.entity.WeeklyPlayerScore;
 import io.github.thomashtn.valoquests.ranking.repository.WeeklyPlayerScoreRepository;
 import io.github.thomashtn.valoquests.ranking.service.RankingRecalculationService;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeCadence;
+import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * priced and ordered, and who takes a slot.
  *
  * <p>No campaign is ever opened here, so every challenge pays at the 2 000 floor: 24 points for
- * the day's challenge, then 20 / 34 / 54 / 78 / 108 by difficulty. No match is stored either, so
+ * the day's challenge, then 20 / 34 / 54 / 78 / 108 by tier. No match is stored either, so
  * the guardian damage is zero throughout and the order is decided by the challenges alone.
  */
 @SpringBootTest(
@@ -69,7 +69,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
     private ChallengeRepository challengeRepository;
 
     @Autowired
-    private WeeklyChallengeRepository weeklyChallengeRepository;
+    private ChallengeSelectionRepository challengeSelectionRepository;
 
     @Autowired
     private PlayerChallengeProgressRepository progressRepository;
@@ -93,9 +93,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player bravo = createPlayer("ranking-bravo", "Bravo");
         Player charlie = createPlayer("ranking-charlie", "Charlie");
 
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_NOMINAL_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge normal = createWeeklyChallenge("RANKING_NOMINAL_NORMAL", ChallengeDifficulty.NORMAL);
-        WeeklyChallenge hard = createWeeklyChallenge("RANKING_NOMINAL_HARD", ChallengeDifficulty.HARD);
+        ChallengeSelection easy = createSelection("RANKING_NOMINAL_EASY", ChallengeTier.EASY);
+        ChallengeSelection normal = createSelection("RANKING_NOMINAL_NORMAL", ChallengeTier.NORMAL);
+        ChallengeSelection hard = createSelection("RANKING_NOMINAL_HARD", ChallengeTier.HARD);
 
         createProgress(alpha, easy, true);
         createProgress(alpha, normal, true);
@@ -124,8 +124,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player alpha = createPlayer("ranking-daily-alpha", "Alpha");
         Player bravo = createPlayer("ranking-daily-bravo", "Bravo");
 
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_DAILY_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge daily = createDailyChallenge("RANKING_DAILY_DAY", WEEK_START.plusDays(3));
+        ChallengeSelection easy = createSelection("RANKING_DAILY_EASY", ChallengeTier.EASY);
+        ChallengeSelection daily = createDailyChallenge("RANKING_DAILY_DAY", WEEK_START.plusDays(3));
 
         createProgress(alpha, daily, true);
         createProgress(bravo, easy, true);
@@ -151,9 +151,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player bravo = createPlayer("ranking-variation-bravo", "Bravo");
         Player charlie = createPlayer("ranking-variation-charlie", "Charlie");
 
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_VARIATION_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge normal = createWeeklyChallenge("RANKING_VARIATION_NORMAL", ChallengeDifficulty.NORMAL);
-        WeeklyChallenge medium = createWeeklyChallenge("RANKING_VARIATION_MEDIUM", ChallengeDifficulty.MEDIUM);
+        ChallengeSelection easy = createSelection("RANKING_VARIATION_EASY", ChallengeTier.EASY);
+        ChallengeSelection normal = createSelection("RANKING_VARIATION_NORMAL", ChallengeTier.NORMAL);
+        ChallengeSelection medium = createSelection("RANKING_VARIATION_MEDIUM", ChallengeTier.MEDIUM);
 
         PlayerChallengeProgress alphaProgress = createProgress(alpha, medium, true);
         createProgress(bravo, normal, true);
@@ -199,10 +199,10 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         // bravo reaches 14 through EASY 5 + NORMAL 9; alpha and charlie each reach 14 through one
         // MEDIUM. Nobody dealt damage, so the three share the first place; rows read back in
         // identifier order once positions tie.
-        WeeklyChallenge bravoEasy = createWeeklyChallenge("RANKING_TIE_BRAVO_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge bravoNormal = createWeeklyChallenge("RANKING_TIE_BRAVO_NORMAL", ChallengeDifficulty.NORMAL);
-        WeeklyChallenge alphaMedium = createWeeklyChallenge("RANKING_TIE_ALPHA_MEDIUM", ChallengeDifficulty.MEDIUM);
-        WeeklyChallenge charlieMedium = createWeeklyChallenge("RANKING_TIE_CHARLIE_MEDIUM", ChallengeDifficulty.MEDIUM);
+        ChallengeSelection bravoEasy = createSelection("RANKING_TIE_BRAVO_EASY", ChallengeTier.EASY);
+        ChallengeSelection bravoNormal = createSelection("RANKING_TIE_BRAVO_NORMAL", ChallengeTier.NORMAL);
+        ChallengeSelection alphaMedium = createSelection("RANKING_TIE_ALPHA_MEDIUM", ChallengeTier.MEDIUM);
+        ChallengeSelection charlieMedium = createSelection("RANKING_TIE_CHARLIE_MEDIUM", ChallengeTier.MEDIUM);
 
         createProgress(alpha, alphaMedium, true);
         createProgress(bravo, bravoEasy, true);
@@ -228,8 +228,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player alpha = createPlayer("ranking-idempotent-alpha", "Alpha");
         Player bravo = createPlayer("ranking-idempotent-bravo", "Bravo");
 
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_IDEMPOTENT_EASY", ChallengeDifficulty.EASY);
-        WeeklyChallenge normal = createWeeklyChallenge("RANKING_IDEMPOTENT_NORMAL", ChallengeDifficulty.NORMAL);
+        ChallengeSelection easy = createSelection("RANKING_IDEMPOTENT_EASY", ChallengeTier.EASY);
+        ChallengeSelection normal = createSelection("RANKING_IDEMPOTENT_NORMAL", ChallengeTier.NORMAL);
 
         createProgress(alpha, normal, true);
         createProgress(bravo, easy, true);
@@ -266,7 +266,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player activePlayer = createPlayer("ranking-active-player", "Active");
         Player futureInactivePlayer = createPlayer("ranking-inactive-player", "FutureInactive");
 
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_INACTIVE_EASY", ChallengeDifficulty.EASY);
+        ChallengeSelection easy = createSelection("RANKING_INACTIVE_EASY", ChallengeTier.EASY);
         createProgress(activePlayer, easy, true);
         createProgress(futureInactivePlayer, easy, true);
 
@@ -312,8 +312,8 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player pro = createNonCompetitivePlayer("ranking-pro", "Pro");
         Player regular = createPlayer("ranking-regular", "Regular");
 
-        WeeklyChallenge hard = createWeeklyChallenge("RANKING_NON_COMPETITIVE_HARD", ChallengeDifficulty.HARD);
-        WeeklyChallenge easy = createWeeklyChallenge("RANKING_NON_COMPETITIVE_EASY", ChallengeDifficulty.EASY);
+        ChallengeSelection hard = createSelection("RANKING_NON_COMPETITIVE_HARD", ChallengeTier.HARD);
+        ChallengeSelection easy = createSelection("RANKING_NON_COMPETITIVE_EASY", ChallengeTier.EASY);
         createProgress(pro, hard, true);
         createProgress(regular, easy, true);
 
@@ -362,42 +362,42 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return playerRepository.save(player);
     }
 
-    private WeeklyChallenge createWeeklyChallenge(String code, ChallengeDifficulty difficulty) {
-        Challenge challenge = challengeRepository.save(createChallenge(code, ChallengeCadence.WEEKLY, difficulty));
+    private ChallengeSelection createSelection(String code, ChallengeTier tier) {
+        Challenge challenge = challengeRepository.save(createChallenge(code, ChallengeCadence.WEEKLY, tier));
 
-        WeeklyChallenge weeklyChallenge = new WeeklyChallenge();
-        weeklyChallenge.setWeekStart(WEEK_START);
-        weeklyChallenge.setChallenge(challenge);
-        weeklyChallenge.setResolvedConditionsJson(challenge.getConditionsJson());
-        weeklyChallenge.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
+        ChallengeSelection selection = new ChallengeSelection();
+        selection.setWeekStart(WEEK_START);
+        selection.setChallenge(challenge);
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
+        selection.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
 
-        return weeklyChallengeRepository.save(weeklyChallenge);
+        return challengeSelectionRepository.save(selection);
     }
 
-    private WeeklyChallenge createDailyChallenge(String code, LocalDate day) {
+    private ChallengeSelection createDailyChallenge(String code, LocalDate day) {
         Challenge challenge = challengeRepository.save(createChallenge(code, ChallengeCadence.DAILY, null));
 
-        WeeklyChallenge selection = new WeeklyChallenge();
+        ChallengeSelection selection = new ChallengeSelection();
         selection.setWeekStart(WEEK_START);
         selection.setCadence(ChallengeCadence.DAILY);
         selection.setDay(day);
         selection.setChallenge(challenge);
-        selection.setResolvedConditionsJson(challenge.getConditionsJson());
+        selection.setResolvedConditionsJson(challenge.getAmateurConditionsJson());
         selection.setSelectedAt(CALCULATION_TIME.minusSeconds(3_600));
 
-        return weeklyChallengeRepository.save(selection);
+        return challengeSelectionRepository.save(selection);
     }
 
-    private Challenge createChallenge(String code, ChallengeCadence cadence, ChallengeDifficulty difficulty) {
+    private Challenge createChallenge(String code, ChallengeCadence cadence, ChallengeTier tier) {
         Challenge challenge = new Challenge();
         challenge.setCode(code);
         challenge.setName(code);
         challenge.setDescription("Ranking integration challenge " + code);
         challenge.setCadence(cadence);
-        challenge.setDifficulty(difficulty);
+        challenge.setTier(tier);
         challenge.setCategory(ChallengeCategory.OTHER);
         challenge.setProgressMode(ProgressMode.SUM);
-        challenge.setConditionsJson(
+        challenge.setAmateurConditionsJson(
             """
                 [
                   {
@@ -409,17 +409,17 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
                 ]
                 """
         );
-        challenge.setExpertConditionsJson(challenge.getConditionsJson());
+        challenge.setProConditionsJson(challenge.getAmateurConditionsJson());
         challenge.setEnabled(true);
         challenge.setSchemaVersion(3);
 
         return challenge;
     }
 
-    private PlayerChallengeProgress createProgress(Player player, WeeklyChallenge weeklyChallenge, boolean completed) {
+    private PlayerChallengeProgress createProgress(Player player, ChallengeSelection selection, boolean completed) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
-        progress.setWeeklyChallenge(weeklyChallenge);
+        progress.setSelection(selection);
         progress.setCurrentValue(completed ? BigDecimal.ONE : BigDecimal.ZERO);
         progress.setTargetValue(BigDecimal.ONE);
         progress.setCompleted(completed);

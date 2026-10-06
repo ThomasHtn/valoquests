@@ -12,8 +12,6 @@ describe('buildSquad', () => {
   it('excludes an inactive operator, who never consumes a ranking slot', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',
-      previousDay: '2026-01-05',
-      playedPlayerCount: 1,
       rosterPlayerCount: 2,
       ranking: [
         entry({ playerId: 1, position: 1 }),
@@ -30,8 +28,6 @@ describe('buildSquad', () => {
   it('resolves the title an operator holds today', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',
-      previousDay: '2026-01-05',
-      playedPlayerCount: 1,
       rosterPlayerCount: 1,
       ranking: [entry({ playerId: 1, position: 1 })],
     };
@@ -43,8 +39,8 @@ describe('buildSquad', () => {
       presenceCount: 0,
       rosterSize: 0,
       dailyUpkeep: 0,
-      carryGained: 0,
-      shelterGained: 0,
+      rescuesByComponentsGained: 0,
+      rescuesByFoodGained: 0,
       players: [],
       titles: { MECHANIC: 1 },
     };
@@ -57,8 +53,6 @@ describe('buildSquad', () => {
   it('crowns the reigning champion', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',
-      previousDay: '2026-01-05',
-      playedPlayerCount: 2,
       rosterPlayerCount: 2,
       ranking: [entry({ playerId: 1, position: 1 }), entry({ playerId: 2, position: 2 })],
     };
@@ -71,8 +65,6 @@ describe('buildSquad', () => {
   it('shows an unplayed operator the days already played and the bonus playing today would earn', () => {
     const daily: DailyRanking = {
       day: '2026-01-06',
-      previousDay: '2026-01-05',
-      playedPlayerCount: 0,
       rosterPlayerCount: 1,
       ranking: [entry({ playerId: 1, position: 1, matchCount: 0, weekPlayedDays: ['2026-01-05'] })],
     };
@@ -80,7 +72,7 @@ describe('buildSquad', () => {
     const [row] = buildSquad(daily, null);
 
     expect(row.played).toBe(false);
-    expect(row.streakDays).toBe(1);
+    expect(row.playedDays).toBe(1);
     expect(row.streakBonusPercent).toBe(2);
     expect(row.streakWeek).toEqual([
       'played',
@@ -96,8 +88,6 @@ describe('buildSquad', () => {
   it("shows a played operator's own streak and bonus, a skipped day left unlit", () => {
     const daily: DailyRanking = {
       day: '2026-01-08',
-      previousDay: '2026-01-07',
-      playedPlayerCount: 1,
       rosterPlayerCount: 1,
       ranking: [
         entry({
@@ -110,7 +100,7 @@ describe('buildSquad', () => {
 
     const [row] = buildSquad(daily, null);
 
-    expect(row.streakDays).toBe(3);
+    expect(row.playedDays).toBe(3);
     expect(row.streakBonusPercent).toBe(4);
     expect(row.streakWeek).toEqual([
       'played',
@@ -141,11 +131,9 @@ describe('buildSquad', () => {
       components: 10,
       matchCount: overrides.matchCount ?? 1,
       reducedMatchCount: 0,
-      streakDays: 3,
+      playedDays: 3,
       streakBonusPercent: 4,
       weekPlayedDays: overrides.weekPlayedDays ?? [],
-      previousDamage: 0,
-      damageVariation: 100,
     };
   }
 });
