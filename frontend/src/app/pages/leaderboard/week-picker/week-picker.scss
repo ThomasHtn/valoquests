@@ -184,7 +184,7 @@
   }
 
   .week-picker__option-label {
-    overflow: hidden;
+    overflow-x: clip;
     text-overflow: ellipsis;
   }
 

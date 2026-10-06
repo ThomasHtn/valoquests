@@ -52,7 +52,9 @@ $breakpoints: (
  * One line cut with an ellipsis, like Tailwind's `truncate`.
  */
 @mixin truncate {
-  overflow: hidden;
+  /* Clip only inline so tall display fonts (Oswald) keep their descenders. */
+  overflow-x: clip;
+  overflow-y: visible;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

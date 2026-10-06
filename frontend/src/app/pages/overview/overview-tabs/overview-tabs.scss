@@ -175,7 +175,7 @@
   }
 
   .overview-tabs__tab-label {
-    overflow: hidden;
+    overflow-x: clip;
     font-size: 0.9375rem;
     text-overflow: ellipsis;
   }
