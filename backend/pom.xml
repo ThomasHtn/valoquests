@@ -10,7 +10,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.6</version>
+    <version>4.1.1</version>
     <relativePath/>
   </parent>
 
@@ -31,8 +31,8 @@
     <java.version>25</java.version>
 
     <!-- Explicit versions for dependencies not managed by Spring Boot. -->
-    <springdoc.version>3.0.3</springdoc.version>
-    <mockwebserver.version>4.12.0</mockwebserver.version>
+    <springdoc.version>3.1.1</springdoc.version>
+    <mockwebserver.version>5.5.0</mockwebserver.version>
     <archunit.version>1.5.1</archunit.version>
 
     <!-- Version shared by all Testcontainers dependencies. -->
@@ -40,9 +40,9 @@
 
     <!-- Static analysis, formatting and coverage tooling. -->
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <spotbugs-maven-plugin.version>4.10.3.0</spotbugs-maven-plugin.version>
-    <spotbugs-annotations.version>4.9.8</spotbugs-annotations.version>
-    <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+    <spotbugs-maven-plugin.version>4.10.4.1</spotbugs-maven-plugin.version>
+    <spotbugs-annotations.version>4.10.4</spotbugs-annotations.version>
+    <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
     <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
 
     <!-- Coverage floor enforced by jacoco:check. -->
