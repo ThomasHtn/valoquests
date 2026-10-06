@@ -63,7 +63,7 @@
 .challenges__fold-rule {
   flex: 1 1 3rem;
   height: 1px;
-  background-image: linear-gradient(to right in oklab, tint(brand-500, 50%), transparent);
+  background-color: tint(brand-500, 30%);
 
   @include below(sm) {
     flex-basis: 1rem;

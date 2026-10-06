@@ -1,7 +1,7 @@
 @use 'tools' as *;
 
 /* Shared by the column header and the rows, so every figure sits under its label from `lg`. */
-$table-columns: minmax(0, 1fr) 13rem 13rem 6rem 6.5rem 6rem 4.5rem;
+$table-columns: minmax(0, 1fr) 10rem 12rem 6rem 6.5rem 6rem 4.5rem;
 $table-column-gap: clamp(0.875rem, 4vw - 2.325rem, 2rem);
 
 .players__skeleton-row {

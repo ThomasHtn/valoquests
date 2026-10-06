@@ -16,12 +16,12 @@
   }
 }
 
-/* Fading hairline from the title's end; the half-pixel centres it on the last line. */
+/* Flat hairline from the title's end; the half-pixel centres it on the last line. */
 .section-rule__line {
   display: block;
   flex: 1 1 3rem;
   height: 1px;
-  background-image: linear-gradient(to right in oklab, tint(brand-500, 50%) 0%, transparent 100%);
+  background-color: tint(brand-500, 30%);
 
   @include below(sm) {
     flex-basis: 1rem;

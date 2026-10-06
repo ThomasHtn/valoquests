@@ -186,6 +186,12 @@
   color: var(--color-brand-400);
 }
 
+/* A dash is no figure: it drops the column's colour. */
+.leaderboard__value--empty {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
 .leaderboard__value--matches,
 .leaderboard__count {
   color: var(--color-text-primary);

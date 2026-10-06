@@ -315,16 +315,10 @@
   color: var(--color-brand-500);
 }
 
-/* Divider fading at both ends. */
 .sidebar__divider {
   display: block;
   height: 1px;
-  background-image: linear-gradient(
-    to right in oklab,
-    transparent 0%,
-    tint(brand-500, 50%) 50%,
-    transparent 100%
-  );
+  background-color: tint(text-primary, 12%);
 }
 
 .sidebar__status-row {

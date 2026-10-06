@@ -38,24 +38,13 @@
   opacity: 0.7;
 }
 
-/* Diamond blinking each second; reduced motion only stops it. */
+/* Static diamond: the ticking seconds already show the clock is live. */
 .countdown__beat {
   align-self: center;
   width: 7px;
   height: 7px;
   rotate: 45deg;
   background: var(--color-brand-400);
-  animation: countdown-beat 1s steps(1, end) infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-@keyframes countdown-beat {
-  50% {
-    opacity: 0.2;
-  }
 }
 
 :host(.countdown--small) {

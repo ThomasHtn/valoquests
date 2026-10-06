@@ -166,19 +166,25 @@
             >
             @switch (column.key) {
               @case ('score') {
-                <span class="leaderboard__value leaderboard__value--score">{{
-                  ranked ? format(row.total) : '—'
-                }}</span>
+                <span
+                  [class.leaderboard__value--empty]="!ranked"
+                  class="leaderboard__value leaderboard__value--score"
+                  >{{ ranked ? format(row.total) : '—' }}</span
+                >
               }
               @case ('damage') {
-                <span class="leaderboard__value leaderboard__value--damage">{{
-                  ranked ? format(row.damage) : '—'
-                }}</span>
+                <span
+                  [class.leaderboard__value--empty]="!ranked"
+                  class="leaderboard__value leaderboard__value--damage"
+                  >{{ ranked ? format(row.damage) : '—' }}</span
+                >
               }
               @case ('points') {
-                <span class="leaderboard__value leaderboard__value--points">{{
-                  ranked ? format(row.challengePoints) : '—'
-                }}</span>
+                <span
+                  [class.leaderboard__value--empty]="!ranked"
+                  class="leaderboard__value leaderboard__value--points"
+                  >{{ ranked ? format(row.challengePoints) : '—' }}</span
+                >
               }
               @case ('challenges') {
                 <span class="leaderboard__value">
