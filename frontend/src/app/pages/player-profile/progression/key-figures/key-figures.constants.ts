@@ -11,6 +11,7 @@ import {
 } from '@lucide/angular';
 
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+
 import { KeyFigureIcon, KeyFigureTone } from './key-figures.model';
 
 /**

@@ -38,8 +38,7 @@ class SynchronizationAdminControllerTest {
     /**
      * Verifies that the batch route accepts the request and hands it to the launch service.
      *
-     * <p>202 rather than 200: the run outlives the request, so the response can only acknowledge
-     * that it started.
+     * <p>202 rather than 200: the run outlives the request, so the response only acknowledges its start.
      */
     @Test
     void shouldAcceptASynchronizationOfEveryPlayer() throws Exception {
@@ -85,12 +84,8 @@ class SynchronizationAdminControllerTest {
     /**
      * Verifies that the deep synchronization routes are gone.
      *
-     * <p>They duplicated the single flow with different season and stop rules. Asserting their
-     * absence makes the removal part of the API contract rather than an implementation detail.
-     *
-     * <p>The batch path answers 405 rather than 404: {@code /synchronizations/deep} now matches the
-     * synchronization-details route, which serves GET only. Either way the launch service is never
-     * reached, which is what actually matters.
+     * <p>Asserting their absence makes the removal part of the API contract.
+     * The batch path answers 405, as it now matches the GET-only details route.
      */
     @Test
     void shouldNoLongerExposeDeepSynchronizationRoutes() throws Exception {

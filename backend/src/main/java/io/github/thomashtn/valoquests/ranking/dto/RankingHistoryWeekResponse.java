@@ -24,8 +24,7 @@ public record RankingHistoryWeekResponse(
     /**
      * Exposes one player's frozen result for a finalized week.
      *
-     * <p>These values are a snapshot, not a live projection: a finalized week is immutable, so they
-     * never move again even if the matches behind them are recalculated.
+     * <p>A frozen snapshot: these values never move once the week is finalized.
      *
      * @param position                 final rank, starting at 1
      * @param playerId                 internal player identifier

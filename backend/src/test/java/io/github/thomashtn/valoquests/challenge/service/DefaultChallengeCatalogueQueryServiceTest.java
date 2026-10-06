@@ -108,8 +108,7 @@ class DefaultChallengeCatalogueQueryServiceTest {
         assertThat(daily.cadence()).isEqualTo(ChallengeCadence.DAILY);
         assertThat(daily.tier()).isNull();
         assertThat(daily.competitiveOnly()).isFalse();
-        // The progress target of a count-matches challenge is its number of occurrences; the bar
-        // itself is the expert one written in the catalogue.
+        // A count-matches target is its occurrence count; the bar itself is the catalogue's expert one.
         assertThat(daily.targetValue()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(daily.survivors()).isEqualTo(14);
     }

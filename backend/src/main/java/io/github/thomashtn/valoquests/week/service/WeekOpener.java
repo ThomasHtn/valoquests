@@ -15,8 +15,7 @@ import org.springframework.stereotype.Component;
 /**
  * Opens the current week: settles the campaign up to it, draws its challenges and ranks it at zero.
  *
- * <p>A campaign week is settled by the replay, which the rollover, the nightly tick and every
- * synchronization all run: nothing has to be closed once and only once, so nothing can be missed.
+ * <p>Weeks are settled by the replay, which every loop runs, so nothing has to be closed exactly once.
  */
 @Component
 public class WeekOpener {
@@ -89,16 +88,8 @@ public class WeekOpener {
     /**
      * Settles the week that has just ended, then opens the new one.
      *
-     * <p>The replay comes first: the Monday being opened is the day after a Sunday that has to be
-     * settled, and drawing the new pack before settling it would credit the new week's challenges
-     * to the old week's ship.
-     *
-     * <p>The close comes right after: a campaign whose tenth Sunday has just been settled is over,
-     * and closing it here rather than at the nightly tick means the Monday after it never shows a
-     * running campaign with nothing left to run.
-     *
-     * <p>Idempotent throughout, and it catches up on its own: a rollover firing after a long outage
-     * replays every week it missed in the one pass, because the replay never reads a stored total.
+     * <p>Replays before drawing, or the new challenges would be credited to the old week, then closes a
+     * campaign whose tenth Sunday is settled. Idempotent; one pass catches up on every missed week.
      *
      * @param weekStart Monday identifying the new week
      */

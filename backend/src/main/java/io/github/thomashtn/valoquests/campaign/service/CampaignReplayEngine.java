@@ -17,13 +17,8 @@ import org.springframework.stereotype.Component;
 /**
  * Plays a campaign forward, day by day, from nothing but its inputs.
  *
- * <p>Pure on purpose: no repository, no clock, no entity. Handed the same days it returns the same
- * base, which is what lets the replay run after every synchronization, every night and on every
- * admin click without any of them being able to disagree.
- *
- * <p>The order inside a day is the order the rules are written in: the base grows, the stocks fill,
- * the base eats, and on a Sunday the ship leaves. The rescued arrive after the guardian has struck,
- * because they were not there to be struck at.
+ * <p>Pure: no repository, no clock, no entity. Each day the base grows, the stocks fill, the base eats,
+ * then on Sunday the ship leaves and the rescued arrive after the guardian strikes.
  */
 @Component
 public class CampaignReplayEngine {
@@ -121,8 +116,7 @@ public class CampaignReplayEngine {
     /**
      * The base as it stands between two steps of a day, mutated as the day is played.
      *
-     * <p>Local to one replay and never shared: the engine itself stays stateless, which is what
-     * makes it safe to hold as a singleton bean.
+     * <p>Local to one replay, so the engine stays stateless and safe as a singleton bean.
      */
     private static final class Base {
 

@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
-import { REPLAY_QUERY_PARAM } from './landing-visit.constants';
 import { LandingVisit } from './landing-visit';
+import { REPLAY_QUERY_PARAM } from './landing-visit.constants';
 
 /**
  * Shows the landing on a first visit or with {@link REPLAY_QUERY_PARAM}, else the overview.

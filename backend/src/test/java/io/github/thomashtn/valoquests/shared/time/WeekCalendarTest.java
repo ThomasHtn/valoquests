@@ -76,8 +76,7 @@ class WeekCalendarTest {
     @Test
     @DisplayName("places a late Sunday match in the week the configured zone puts it in")
     void shouldPlaceALateSundayMatchAccordingToTheConfiguredZone() {
-        // 2026-07-19 is a Sunday. At 23:30 in Paris it is already 21:30 UTC the same day, but a
-        // match played at 23:30 UTC is Monday 01:30 in Paris and belongs to the following week.
+        // Sunday 2026-07-19 23:30 UTC is Monday 01:30 in Paris, so the zone decides the week.
         Instant sundayNight = Instant.parse("2026-07-19T23:30:00Z");
 
         WeekCalendar utc = calendarAt(MIDWEEK, ZoneOffset.UTC);

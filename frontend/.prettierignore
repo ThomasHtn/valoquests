@@ -1,0 +1,8 @@
+# Generated or vendored files.
+package-lock.json
+dist/
+.angular/
+node_modules/
+
+# Local agent notes, not part of the repository.
+CLAUDE.md

@@ -34,11 +34,7 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultPlayerAdminService.class);
 
     /**
-     * Days without a single match past which an active player is flagged as forgotten.
-     *
-     * <p>Worth flagging because it costs real points: the roster size scales the guardian and the
-     * wounded group, so a player left active and away raises the squad's targets without feeding the
-     * base. Nobody would guess that from the screen, which is why it is written on it.
+     * Days without a match past which an active player is flagged, as they still raise the squad's targets.
      */
     private static final int IDLE_THRESHOLD_DAYS = 14;
 
@@ -97,8 +93,7 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     /**
      * Returns every player, archived ones included.
      *
-     * <p>Unlike the public listing, archiving must stay visible here: it is the administration
-     * screen that has to offer restoring one.
+     * <p>Unlike the public listing, archived players stay visible so they can be restored.
      *
      * @return every tracked player, ordered by identifier
      */
@@ -111,9 +106,7 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     /**
      * Adds a player to the tracked roster.
      *
-     * <p>The Riot PUUID is left unresolved on purpose. It is resolved by the first synchronization
-     * of the player, so calling Henrik here would make adding a player fail whenever the upstream
-     * API is momentarily unavailable, for an identifier nothing needs yet.
+     * <p>The PUUID is left to the first synchronization, so adding a player never depends on Henrik.
      *
      * @param request player identity
      * @return the created player
@@ -144,9 +137,8 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     /**
      * Updates the identity of a tracked player.
      *
-     * <p>Changing the Riot identity clears the stored PUUID, so the next synchronization resolves
-     * the account the new identity designates. Keeping it would silently go on importing the
-     * previous account's matches under the new name.
+     * <p>Changing the Riot identity clears the stored PUUID, or the previous account's matches would
+     * keep being imported.
      *
      * @param playerId tracked player identifier
      * @param request  new identity
@@ -192,10 +184,8 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     /**
      * Removes a player from the roster, by deletion or by archiving.
      *
-     * <p>A player who was on any campaign roster is archived rather than deleted: finalized weeks
-     * hold their contribution and ranking position, and those weeks are immutable. Any other player
-     * is removed for good, along with the matches, scores and synchronization traces it left,
-     * which carry no historical value of their own.
+     * <p>A player who was on any campaign roster is archived, since finalized weeks are immutable; any
+     * other is deleted with all its rows.
      *
      * @param playerId tracked player identifier
      * @return what the request actually did
@@ -318,8 +308,7 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
     }
 
     /**
-     * Converts tracked players into their administration representation, in two queries whatever
-     * their number.
+     * Converts tracked players into their administration representation in two queries.
      *
      * @param players tracked players
      * @return administration representations, in the same order

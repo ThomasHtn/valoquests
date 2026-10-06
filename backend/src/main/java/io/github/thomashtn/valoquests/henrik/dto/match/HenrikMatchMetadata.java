@@ -30,9 +30,7 @@ public record HenrikMatchMetadata(
     /**
      * Identifies the queue a match was played in.
      *
-     * <p>Henrik populates {@code id} and {@code modeType} inconsistently across game modes, which
-     * is why {@code HenrikMatchMapper} resolves the game mode from several of these fields rather
-     * than trusting any single one.
+     * <p>Henrik fills these fields inconsistently, so the game mode is resolved from all of them.
      *
      * @param id       Henrik queue identifier, such as {@code competitive}
      * @param name     human-readable queue name
@@ -49,8 +47,7 @@ public record HenrikMatchMetadata(
     /**
      * Identifies the act a match belongs to.
      *
-     * <p>The identifier is what bounds a synchronization walk: the import stops when it leaves the
-     * current act, so a match whose season identifier is missing cannot be placed and is rejected.
+     * <p>The identifier bounds a synchronization walk, so a match without one is rejected.
      *
      * @param id        Henrik act identifier, such as {@code e11a4}
      * @param shortName abbreviated act name, such as {@code V26A4}

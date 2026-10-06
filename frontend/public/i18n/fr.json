@@ -952,7 +952,7 @@
     "matches": {
       "empty": {
         "title": "Aucun match aujourd'hui",
-        "text": "Les matchs des joueurs de la campagne apparaissent ici dès leur import, toutes les 30 minutes."
+        "text": "Les matchs des joueurs de la campagne apparaissent ici dès leur import, toutes les 5 minutes."
       }
     }
   },
@@ -1405,7 +1405,7 @@
         "steps": {
           "sync": {
             "title": "Les matchs remontent",
-            "when": "toutes les 30 min",
+            "when": "toutes les 5 min",
             "text": "Le boss encaisse, les réserves montent, et la base grandit : *28 dégâts font un habitant* {base}."
           },
           "midnight": {
@@ -1545,7 +1545,7 @@
         "items": {
           "syncInterval": {
             "label": "Lecture des matchs",
-            "value": "toutes les 30 min"
+            "value": "toutes les 5 min"
           },
           "growth": {
             "label": "Croissance de la base",
@@ -1606,7 +1606,7 @@
     },
     "lastSync": {
       "at": "Dernière synchronisation : {{date}}.",
-      "stale": "En retard : elle tourne normalement toutes les 30 minutes.",
+      "stale": "En retard : elle tourne normalement toutes les 5 minutes.",
       "error": "Indisponible",
       "inProgress": "En cours",
       "label": "Synchronisation",
@@ -1615,7 +1615,7 @@
         "offline": "API indisponible",
         "online": "API disponible"
       },
-      "tooltip": "Toutes les 30 minutes, les matchs terminés de l'escouade sont importés puis la campagne est recalculée : ressources, dégâts au boss et progression des défis.",
+      "tooltip": "Toutes les 5 minutes, les matchs terminés de l'escouade sont importés puis la campagne est recalculée : ressources, dégâts au boss et progression des défis.",
       "unknown": "Jamais synchronisé"
     },
     "nav": {

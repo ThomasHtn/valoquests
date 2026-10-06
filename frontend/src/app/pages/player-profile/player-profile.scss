@@ -215,10 +215,10 @@
   }
 }
 
-/* `currentColor` border: the tile's text colour is the win rate's tone. */
+/* `currentcolor` border: the tile's text colour is the win rate's tone. */
 .player-profile__win-rate {
   padding: 0.875rem 1rem;
-  border-top: 2px solid currentColor;
+  border-top: 2px solid currentcolor;
   background-color: tint(text-primary, 4%);
   color: var(--tone);
 }

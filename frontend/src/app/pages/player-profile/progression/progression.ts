@@ -10,6 +10,7 @@ import {
 import { PlayersApi } from '@core/players/players-api';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
+
 import { Consistency } from './consistency/consistency';
 import { EntityStats } from './entity-stats/entity-stats';
 import { EntityStatsRow } from './entity-stats/entity-stats.model';

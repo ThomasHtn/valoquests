@@ -1,4 +1,5 @@
 import { readStorage, removeStorage, writeStorage } from '@core/storage/safe-storage.utils';
+
 import { PINNED_PLAYER_KEY } from './player-pin.constants';
 
 /**

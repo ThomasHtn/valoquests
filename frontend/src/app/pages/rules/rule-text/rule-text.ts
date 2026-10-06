@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+
 import { RuleRun } from './rule-text.model';
 import { parseRuleText } from './rule-text.utils';
 

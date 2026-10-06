@@ -22,8 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Reads the campaign from what the replay stored, and nothing else.
  *
- * <p>Never computes a base of its own. Every figure here was written by a replay, so a page view
- * and the campaign it displays can never drift apart, however many times the page is refreshed.
+ * <p>Never computes a base of its own, so a page view can never drift from the replay.
  */
 @Service
 @Transactional(readOnly = true)
@@ -164,9 +163,7 @@ public class DefaultCampaignQueryService implements CampaignQueryService {
     /**
      * Forecasts the Sunday of the week in progress from the base as it stands.
      *
-     * <p>Only while a running campaign is inside one of its weeks and that week is not settled yet:
-     * before the first Monday there is nothing to extract from, and once Sunday is settled the week
-     * itself carries the real figures.
+     * <p>Only for a running campaign's unsettled current week; a settled week carries the real figures.
      *
      * @param campaign campaign shown
      * @param weeks    its ten weeks

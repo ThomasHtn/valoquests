@@ -11,8 +11,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 /**
- * Calculates challenges whose progress is the number of distinct values found
- * across eligible weekly matches.
+ * Calculates challenges whose progress is the number of distinct values among eligible matches.
  */
 @Component
 public class DistinctCountChallengeProgressCalculator
@@ -78,9 +77,8 @@ public class DistinctCountChallengeProgressCalculator
     /**
      * Determines whether one eligible match contributes to the distinct set.
      *
-     * <p>The play-day metric is represented by the grouping key itself. Other
-     * metrics must produce a strictly positive value, which notably excludes
-     * losses from challenges based on {@code MATCHES_WON}.</p>
+     * <p>Play days count through the grouping key; other metrics need a strictly positive value, which
+     * excludes losses for {@code MATCHES_WON}.
      *
      * @param playerMatch persisted player-match data
      * @param condition   parsed challenge condition

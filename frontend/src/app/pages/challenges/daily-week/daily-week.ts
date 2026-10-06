@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { DayCell } from '../challenges.model';
 
 /**

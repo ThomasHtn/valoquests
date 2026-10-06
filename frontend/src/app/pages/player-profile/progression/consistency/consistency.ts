@@ -10,6 +10,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+
 import { LucideCalendar, LucideDynamicIcon, LucideMap, LucideUser } from '@lucide/angular';
 import { Chart, ScriptableContext } from 'chart.js';
 
@@ -17,8 +18,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TranslateFn } from '@core/i18n/translation.model';
 import { ConsistencySummary } from '@core/players/progression/player-progression.model';
-import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
-import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
+import { ChartTooltipAnchor } from '@shared/chart/chart.model';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import {
   axisTitleOptions,
@@ -28,8 +28,10 @@ import {
   resolveChartTheme,
   resolveSeriesColor,
 } from '@shared/chart/chart-theme.utils';
-import { ChartTooltipAnchor } from '@shared/chart/chart.model';
+import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
+import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { KeyFigures } from '../key-figures/key-figures';
 import {
   CONSISTENCY_AXIS_STEP,

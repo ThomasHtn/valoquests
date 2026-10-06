@@ -41,13 +41,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 /**
  * Verifies season-scoped synchronization end to end against PostgreSQL.
  *
- * <p>Deliberately <strong>not</strong> {@code @Transactional}. The per-season completion flag is
- * only trustworthy because each step commits on its own: a test transaction wrapping the whole walk
- * would hide exactly the property being verified, and would make the interrupted-run case
- * unobservable.
- *
- * <p>Only the Henrik clients are mocked. Match import, season resolution, completion tracking and
- * synchronization persistence run against the real migrated schema.
+ * <p>Not {@code @Transactional}: each step must commit on its own for the completion flag to be observable.
+ * Only the Henrik clients are mocked.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -163,11 +158,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     /**
      * Verifies the first walk of the two seasons in scope, then that a second run stops immediately.
      *
-     * <p>The season below them was never targeted and must be left without a state row, otherwise
-     * the next run would walk the player's whole history one season at a time.
-     *
-     * <p>Also pins the mode filter: an ignored queue never reaches the match tables, while a queue
-     * the application cannot classify is stored with its raw slug so nothing is lost.
+     * <p>The older season gets no state row; ignored queues are skipped and unclassified ones keep their raw slug.
      */
     @Test
     void shouldWalkTheCurrentAndPreviousSeasonsThenStopAtKnownHistory() {
@@ -226,8 +217,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     /**
      * Verifies that a season left unfinished is walked again in full.
      *
-     * <p>The guarantee behind the whole design: an interrupted run must never leave a permanent
-     * hole, so the next run may not stop at the first already-stored match.
+     * <p>An interrupted run must never leave a permanent hole, so the next run cannot stop at a stored match.
      */
     @Test
     void shouldRewalkASeasonLeftUnfinished() {
@@ -251,9 +241,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     /**
      * Verifies that a failure mid-walk commits the retrieved pages and leaves the season unfinished.
      *
-     * <p>This is the regression guard against wrapping the walk in a transaction: doing so would
-     * roll back the imported matches together with the state row, and the run would look as if it
-     * had never happened.
+     * <p>Guards against wrapping the walk in a transaction, which would roll back the matches with the state row.
      */
     @Test
     void shouldKeepTheSeasonUnfinishedWhenTheWalkFails() {
@@ -271,16 +259,9 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     }
 
     /**
-     * Regression test for a heavy Deathmatch account whose season-history walk spans dozens of
-     * pages, reproducing what live Henrik data showed for the player this pipeline was rebuilt for:
-     * hundreds of Deathmatch matches within a single act, discovered through direct API pagination
-     * during the investigation of missing match history.
+     * Verifies that a heavy Deathmatch history spanning dozens of pages survives an interruption and resumes.
      *
-     * <p>Verifies both halves of the fix: an interruption mid-walk leaves every already-imported page
-     * committed and the season correctly unfinished, and the next run resumes from the persisted
-     * checkpoint instead of re-fetching the pages a previous run already confirmed. Without the
-     * checkpoint, resuming a heavy account like this would cost the full rate-limited pagination again
-     * on every retry, making it statistically less likely to ever finish.
+     * <p>Imported pages stay committed and the next run resumes from the checkpoint instead of refetching them.
      */
     @Test
     void shouldResumeAHeavyDeathmatchAccountAfterAnInterruptionWithoutRewalkingConfirmedPages() {
@@ -360,12 +341,9 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     }
 
     /**
-     * Verifies that a match Henrik returns again on the following page, because a new match pushed
-     * the whole window forward between the two requests, is imported exactly once.
+     * Verifies that a match Henrik repeats on the next page, after the window shifted, is imported once.
      *
-     * <p>Offset-based pagination is not stable under concurrent writes: two matches played while the
-     * walk was already in progress shift every later page by two positions, so the newest two entries
-     * of the next page are ones the previous page already delivered.
+     * <p>Offset pagination shifts when matches are played mid-walk, so a page can repeat the previous page's tail.
      */
     @Test
     void shouldDedupAMatchReturnedAgainOnAnOverlappingPage() {
@@ -396,12 +374,10 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     }
 
     /**
-     * Verifies that two tracked players who both took part in the same match end up sharing one
-     * {@link ValorantMatch} row when synchronized one after the other.
+     * Verifies that two players sharing a match, synchronized one after the other, share one
+     * {@link ValorantMatch} row.
      *
-     * <p>Complements {@code MatchImportConcurrencyIntegrationTest}, which covers the same guarantee
-     * under genuine concurrent execution: this is the far more common sequential case, where the
-     * second player's synchronization simply finds the row the first one already created.
+     * <p>The sequential counterpart of {@code MatchImportConcurrencyIntegrationTest}.
      */
     @Test
     void shouldShareOneMatchRowWhenTwoPlayersAreSynchronizedSequentially() {
@@ -716,9 +692,7 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
     /**
      * Removes every row this test may have committed.
      *
-     * <p>Includes the challenge and ranking rows: synchronization recalculates the current week
-     * whenever it imports a match, so a walk leaves progress behind even though this test never
-     * asserts on it.
+     * <p>Includes challenge and ranking rows, which synchronization recalculates whenever it imports a match.
      */
     private void cleanDerivedData() {
         jdbcTemplate.update("DELETE FROM player_challenge_progress");

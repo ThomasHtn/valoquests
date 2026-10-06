@@ -1,7 +1,9 @@
 import { httpResource } from '@angular/common/http';
 import { Service } from '@angular/core';
+
 import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 import { PageResponse } from '@core/http/page-response.model';
+
 import { CurrentRanking, DailyRanking, RankingHistoryWeek } from './ranking.model';
 import { RANKING_HISTORY_MAX_WEEKS } from './ranking-api.constants';
 

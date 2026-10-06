@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+
 import { LucideLoaderCircle } from '@lucide/angular';
 
 import { SpinnerSize } from './spinner.model';

@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 
-import { Shell } from '@layout/shell/shell';
 import { adminGuard } from '@core/admin/session/admin.guard';
 import { landingEntryGuard } from '@core/landing/landing-entry.guard';
 import { tourEntryGuard } from '@core/tour/tour-entry.guard';
+import { Shell } from '@layout/shell/shell';
 import { Challenges } from '@pages/challenges/challenges';
 import { Landing } from '@pages/landing/landing';
 import { Leaderboard } from '@pages/leaderboard/leaderboard';

@@ -1,7 +1,8 @@
 import { Service } from '@angular/core';
 
-import { LANDING_ENTERED_STORAGE_KEY } from './landing-visit.constants';
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
+
+import { LANDING_ENTERED_STORAGE_KEY } from './landing-visit.constants';
 
 /**
  * Sole owner of the flag recording that the visitor crossed the one-time landing page.

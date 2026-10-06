@@ -12,22 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Closes the day just past and opens the new one.
  *
- * <p>Four things, in order: the day's challenge is drawn so the squad wakes up with one, the week's
- * challenge progress and ranking are rebuilt, a campaign whose first Monday has come starts, and the
- * whole campaign is replayed so the evening's meal and yesterday's Sunday settlement are written down.
- * A finished campaign is not closed here: on a Monday the tick fires before the rollover has imported
- * the last Sunday matches, and a campaign closed at 00:10 would freeze its final score without them.
- *
- * <p>Scheduled in {@code app.calendar-zone}, the zone {@code WeekCalendar} splits
- * days on. That is not cosmetic: the calendar decides which day a match counts towards, so a tick
- * firing in another zone would close a day whose boundaries are not the ones that produced its
- * gains.
- *
- * <p>Every step is idempotent, and the synchronization replays the campaign too. This is the safety
- * net that makes the midnight boundary real even on a night nobody plays.
- *
- * <p>Waits for the {@link MatchHistoryLock} like the weekly rollover, so the tick never rebuilds
- * progress while a synchronization or a reset is rewriting the history it reads.
+ * <p>Fires in {@code app.calendar-zone} (the {@code WeekCalendar} zone) once {@link MatchHistoryLock} is
+ * free. Never closes a finished campaign: Monday's tick runs before the rollover imports Sunday's matches.
  */
 @Component
 @ConditionalOnProperty(
@@ -72,8 +58,7 @@ public class CampaignDailyTickScheduler {
     }
 
     /**
-     * Runs the tick once the lock is free, swallowing any failure so a bad night never kills the
-     * schedule.
+     * Runs the tick once the lock is free, swallowing failures so the schedule survives.
      */
     @Scheduled(
         cron = "${app.scheduling.campaign-tick-cron}",

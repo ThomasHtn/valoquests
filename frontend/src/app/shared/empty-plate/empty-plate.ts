@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { EmptyIllustration } from './empty-illustration/empty-illustration';
-import { EmptyPlate as EmptyPlateContent } from './empty-plate.model';
 import { READOUT_DOT_CLASSES } from './empty-plate.constants';
+import { EmptyPlate as EmptyPlateContent } from './empty-plate.model';
 
 /**
  * Empty state as a mission plate: drawing, eyebrow, title, sentence and a readout strip.

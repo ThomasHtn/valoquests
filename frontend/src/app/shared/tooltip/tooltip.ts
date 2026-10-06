@@ -3,16 +3,17 @@ import {
   Directive,
   ElementRef,
   EmbeddedViewRef,
+  inject,
   Injector,
+  input,
   OnDestroy,
   Renderer2,
-  TemplateRef,
-  inject,
-  input,
   signal,
+  TemplateRef,
 } from '@angular/core';
 
 import { nextInstanceId } from '@core/dom/instance-id.utils';
+
 import { TOOLTIP_FALLBACK_ICON, TOOLTIP_OFFSET } from './tooltip.constants';
 import { TooltipLayout, TooltipPosition, TooltipTrigger } from './tooltip.model';
 

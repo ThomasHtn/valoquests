@@ -167,8 +167,7 @@
 .tour-capacity__modes {
   display: flex;
   flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
+  place-content: center center;
   gap: 4px;
 }
 

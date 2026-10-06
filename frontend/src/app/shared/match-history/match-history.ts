@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { LucideArrowDown, LucideDynamicIcon } from '@lucide/angular';
 
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
@@ -30,6 +31,7 @@ import { ResourceState } from '@shared/resource-state/resource-state';
 import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
 import { Spinner } from '@shared/spinner/spinner';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { STAT_TONE_CLASSES } from './match-history.constants';
 import { buildMatchHistoryDays } from './match-history.utils';
 

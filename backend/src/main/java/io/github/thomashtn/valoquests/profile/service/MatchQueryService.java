@@ -28,8 +28,7 @@ public interface MatchQueryService {
     );
 
     /**
-     * Returns a page of the squad's matches of the day: those of the shown campaign's roster, newest
-     * first, each named after its player. Empty without a campaign.
+     * Returns a page of the shown campaign roster's matches of the day, newest first, empty without one.
      *
      * @param page zero-based page index
      * @param size requested page size
@@ -38,8 +37,7 @@ public interface MatchQueryService {
     PageResponse<SquadMatchResponse> findSquad(int page, int size);
 
     /**
-     * Returns full detail for one of a tracked player's matches, including every other tracked
-     * player found in the same match.
+     * Returns full detail for one of a player's matches, with the other tracked players in it.
      *
      * @param playerId      internal player identifier
      * @param playerMatchId internal player-match identifier

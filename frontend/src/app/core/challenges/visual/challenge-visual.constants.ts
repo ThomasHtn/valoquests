@@ -1,5 +1,5 @@
-import { ChallengeVisual } from './challenge-visual.model';
 import { ChallengeTier } from '../challenge.model';
+import { ChallengeVisual } from './challenge-visual.model';
 
 /**
  * Tier treatment per difficulty, a heat ramp from green to red so the slots read as a ladder.

@@ -4,9 +4,7 @@ package io.github.thomashtn.valoquests.match.model;
  * Records how a match's {@link GameMode} was determined.
  *
  * <p>Priority, highest first: {@link #MANUALLY_CORRECTED}, {@link #PROVIDED}, {@link #INFERRED},
- * {@link #UNKNOWN}. A later synchronization may enrich a stored match, but only with a value from a
- * source of equal or higher priority: a manual correction is never replaced by a synchronization, and
- * an inferred value never downgrades one Henrik already provided outright.
+ * {@link #UNKNOWN}. A stored value is only replaced by a source of equal or higher priority.
  */
 public enum GameModeSource {
 
@@ -16,8 +14,7 @@ public enum GameModeSource {
     PROVIDED(2),
 
     /**
-     * Resolved from a fallback identifier, such as the queue display name or mode type, because the
-     * canonical one was missing or blank.
+     * Resolved from a fallback identifier, such as the queue display name or mode type.
      */
     INFERRED(1),
 

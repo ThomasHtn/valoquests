@@ -27,9 +27,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Unit tests for {@link HenrikMatchMapper}, focused on game mode resolution.
  *
- * <p>Riot regularly ships new queues without Henrik changing its contract, so an unrecognized queue
- * silently degrades every downstream statistic. These tests pin the identifiers currently observed
- * in production data as well as the fallback order used when the canonical slug is missing.
+ * <p>An unrecognized queue silently degrades every statistic, so these tests pin the observed slugs and fallbacks.
  */
 class HenrikMatchMapperTest {
 
@@ -156,8 +154,7 @@ class HenrikMatchMapperTest {
     /**
      * Verifies that Skirmish and Escalation are treated as distinct modes.
      *
-     * <p>Riot ships them as two separate game mode assets. They were previously merged, which made
-     * every 2v2 match count towards Escalation challenges.
+     * <p>Merging them once made every 2v2 match count towards Escalation challenges.
      */
     @Test
     void shouldNotConfuseSkirmishWithEscalation() {
@@ -186,9 +183,8 @@ class HenrikMatchMapperTest {
     /**
      * Verifies that a custom game is classified by its queue, not by the ruleset it uses.
      *
-     * <p>Henrik returns {@code {"id": "", "name": "Custom Game", "mode_type": "Skirmish"}} for a
-     * custom match played with the Skirmish ruleset. Reading the mode type would file it under
-     * Skirmish and inflate that mode's history with matches that were never queued for it.
+     * <p>Henrik reports a Skirmish-ruleset custom game with mode type {@code Skirmish}; reading it would
+     * inflate that mode's history.
      */
     @Test
     void shouldClassifyCustomGameByQueueRatherThanRuleset() {
@@ -243,8 +239,7 @@ class HenrikMatchMapperTest {
     /**
      * Verifies that an unknown Skirmish variant still resolves to Skirmish.
      *
-     * <p>Riot declines the mode into limited variants such as Skirmish: Ascension, whose exact slug
-     * is not known in advance.
+     * <p>Riot ships limited variants such as Skirmish: Ascension whose slug is not known in advance.
      */
     @Test
     void shouldResolveUnknownSkirmishVariant() {
@@ -306,8 +301,7 @@ class HenrikMatchMapperTest {
     /**
      * Verifies that the ambiguous {@code Standard} mode type is never resolved.
      *
-     * <p>Competitive, Unrated, Premier, Custom and New Map all report it, so guessing would
-     * misattribute matches to a mode challenges filter on.
+     * <p>Competitive, Unrated, Premier, Custom and New Map all report it, so guessing would misattribute matches.
      */
     @Test
     void shouldNotResolveAmbiguousStandardModeType() {
@@ -406,9 +400,7 @@ class HenrikMatchMapperTest {
     /**
      * Verifies that ADR stays absent when Henrik does not report the damage breakdown.
      *
-     * <p>Henrik omits it for Skirmish. The persisted total falls back to zero because the column is
-     * not nullable, so deriving an average would record a zero that silently drags down the
-     * player's statistics instead of being excluded from them.
+     * <p>Henrik omits it for Skirmish and the stored total falls back to zero, which would drag the average down.
      */
     @Test
     void shouldNotComputeAdrWhenDamageIsNotReported() {

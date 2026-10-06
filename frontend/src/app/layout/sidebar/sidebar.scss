@@ -19,6 +19,7 @@
   background-color: var(--color-surface-sunken);
   visibility: hidden;
   translate: -100%;
+
   /* `visibility` flips only after the slide on close, and at once on open to take focus. */
   transition:
     translate 240ms var(--ease-in-quick),
@@ -70,6 +71,7 @@
   background-color: tint(surface-950, 70%);
   visibility: hidden;
   opacity: 0;
+
   /* Tailwind's `ease-out` curve, whose variable only exists while a template uses it. */
   transition:
     opacity 300ms cubic-bezier(0, 0, 0.2, 1),

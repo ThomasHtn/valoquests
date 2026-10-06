@@ -1,7 +1,8 @@
 import { ParamMap } from '@angular/router';
 
 import { resolveTierOrdinal } from '@core/players/competitive-tier/player-competitive-tier.utils';
-import { PLAYER_SORT_PARAMS, PLAYER_SORT_COLUMNS } from './players.constants';
+
+import { PLAYER_SORT_COLUMNS, PLAYER_SORT_PARAMS } from './players.constants';
 import { PlayerRow, PlayerSortKey, PlayerSortOrder } from './players.model';
 
 /**

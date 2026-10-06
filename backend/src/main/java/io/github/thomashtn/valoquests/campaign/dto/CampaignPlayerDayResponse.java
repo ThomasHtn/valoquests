@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * What one player produced on the day being shown.
  *
- * <p>Both multipliers are reported, not just applied. A rule that discourages marathon sessions
- * only discourages one if the player can see it coming, and a bonus for the days played this week
- * only rewards regularity if the counter is on screen.
+ * <p>Both multipliers are reported, not just applied, so players can see them coming.
  *
  * @param playerId           internal player identifier
  * @param gameName           player's Riot name

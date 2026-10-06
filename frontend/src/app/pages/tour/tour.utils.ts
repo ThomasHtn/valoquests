@@ -1,11 +1,11 @@
-import { Language, TranslateFn } from '@core/i18n/translation.model';
-import { ChallengeProgress } from '@core/challenges/challenge.model';
-import { WEEK_DAYS } from '@core/date/date.constants';
 import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
 import { BoardRow, ChallengeOperator } from '@core/challenges/card/challenge-card.model';
-import { DayCell, DayState } from '@pages/challenges/challenges.model';
 import { buildChallengeCard, toBoardRow } from '@core/challenges/card/challenge-card.utils';
+import { ChallengeProgress } from '@core/challenges/challenge.model';
+import { WEEK_DAYS } from '@core/date/date.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { Language, TranslateFn } from '@core/i18n/translation.model';
+import { DayCell, DayState } from '@pages/challenges/challenges.model';
 
 import { TOUR_EMPHASIS_MARKER } from './tour.constants';
 import { ClaimRun, TourSampleDaily } from './tour.model';

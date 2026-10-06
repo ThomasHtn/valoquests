@@ -1,8 +1,9 @@
 import { Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { formatCampaignDayMonth } from '@core/date/date-format.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
@@ -20,6 +21,7 @@ import {
 } from '@core/players/progression/player-progression.model';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { RECORD_ICONS } from './personal-records.constants';
 import { RecordKey, RecordTile } from './personal-records.model';
 

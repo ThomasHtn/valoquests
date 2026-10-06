@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+
 import { LucideLayoutDashboard } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';

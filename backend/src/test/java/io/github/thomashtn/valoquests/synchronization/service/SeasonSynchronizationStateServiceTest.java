@@ -139,8 +139,7 @@ class SeasonSynchronizationStateServiceTest {
     /**
      * Verifies that re-marking a complete season keeps its original instant.
      *
-     * <p>Every run of a completed season crosses its boundary again, so the completion instant must
-     * keep reporting when the history was actually secured rather than the last run.
+     * <p>Every run crosses the boundary again, so the instant must report when history was first secured.
      */
     @Test
     void shouldNotRewriteAnAlreadyCompleteSeason() {
@@ -197,8 +196,7 @@ class SeasonSynchronizationStateServiceTest {
     /**
      * Verifies that a season the player never targeted is left alone.
      *
-     * <p>This is what bounds a first run on an empty database to the current season instead of
-     * walking the player's whole Valorant history.
+     * <p>This keeps a first run from walking the player's whole Valorant history.
      */
     @Test
     void shouldNotResumeANeverTargetedSeason() {

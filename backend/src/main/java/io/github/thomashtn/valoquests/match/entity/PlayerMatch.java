@@ -25,8 +25,7 @@ import lombok.Setter;
 /**
  * Stores the statistics of one tracked player for one Valorant match.
  *
- * <p>The match-level metadata is stored by {@link ValorantMatch}. This entity only contains data
- * that depends on the tracked player, such as the selected agent, combat statistics and result.</p>
+ * <p>Shared match metadata lives in {@link ValorantMatch}.
  */
 @Getter
 @Setter

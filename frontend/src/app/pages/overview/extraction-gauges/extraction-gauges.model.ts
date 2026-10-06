@@ -1,4 +1,5 @@
 import type { LucideIcon } from '@lucide/angular';
+
 import { ExtractionLimiter } from '@core/campaign/campaign-week.model';
 
 /**

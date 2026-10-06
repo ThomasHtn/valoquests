@@ -16,8 +16,7 @@ class ChallengeGameModeTest {
     /**
      * Verifies that every filter lets at least one game mode through.
      *
-     * <p>A filter matching nothing would define challenges that can never progress, quietly
-     * freezing them at zero for every player.
+     * <p>A filter matching nothing would freeze its challenges at zero for every player.
      *
      * @param filter challenge filter under test
      */

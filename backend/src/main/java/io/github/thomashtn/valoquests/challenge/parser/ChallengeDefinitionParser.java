@@ -24,8 +24,7 @@ public interface ChallengeDefinitionParser {
     /**
      * Parses and validates the definition a selection was resolved to at draw time.
      *
-     * <p>This is the definition calculators evaluate and the interface displays; the catalogue's
-     * own definition is only ever an input to the draw.
+     * <p>Calculators and the interface read this one; the catalogue's definition only feeds the draw.
      *
      * @param selection weekly or daily selection to parse
      * @return typed resolved definition

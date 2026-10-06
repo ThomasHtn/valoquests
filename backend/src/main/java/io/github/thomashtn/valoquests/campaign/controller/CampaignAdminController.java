@@ -24,9 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Exposes the protected campaign lifecycle: open, stop, tick, delete.
- *
- * <p>Nothing here happens on its own. A campaign is opened by a person who picks its difficulty,
- * and the ten weeks that follow are decided in that single moment.
  */
 @RestController
 @RequestMapping("/api/admin/campaigns")

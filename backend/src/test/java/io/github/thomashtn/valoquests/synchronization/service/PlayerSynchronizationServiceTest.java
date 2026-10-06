@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.github.thomashtn.valoquests.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valoquests.henrik.dto.mmr.HenrikMmrResponse;
+import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.mapper.HenrikMmrMapper;
@@ -52,6 +53,12 @@ class PlayerSynchronizationServiceTest {
      */
     private static final String PUUID = "puuid-1";
 
+    /**
+     * End of the player's previous successful synchronization.
+     */
+    private static final Instant PREVIOUS_SYNCHRONIZATION_AT =
+        Instant.parse("2026-07-18T09:55:00Z");
+
     @Mock
     private PlayerRepository playerRepository;
 
@@ -66,6 +73,9 @@ class PlayerSynchronizationServiceTest {
 
     @Mock
     private SeasonMatchHistoryWalker matchHistoryWalker;
+
+    @Mock
+    private PlayerMatchRepository playerMatchRepository;
 
     /**
      * Service under test.
@@ -83,6 +93,7 @@ class PlayerSynchronizationServiceTest {
             mmrClient,
             mmrMapper,
             matchHistoryWalker,
+            playerMatchRepository,
             Clock.fixed(SYNCHRONIZED_AT, ZoneOffset.UTC)
         );
     }
@@ -91,7 +102,7 @@ class PlayerSynchronizationServiceTest {
      * Verifies the full successful orchestration, in order.
      */
     @Test
-    void shouldResolveAccountRefreshRankThenWalkMatchHistory() {
+    void shouldResolveAccountWalkMatchHistoryThenRefreshRank() {
         Player player = player();
         HenrikMmrResponse mmrResponse = new HenrikMmrResponse(null);
 
@@ -110,10 +121,60 @@ class PlayerSynchronizationServiceTest {
         assertThat(result.stopReason())
             .isEqualTo(SynchronizationStopReason.SEASON_BOUNDARY);
 
-        InOrder ordered = inOrder(accountResolutionService, mmrMapper, matchHistoryWalker);
+        InOrder ordered = inOrder(accountResolutionService, matchHistoryWalker, mmrMapper);
         ordered.verify(accountResolutionService).resolvePuuid(player);
-        ordered.verify(mmrMapper).updatePlayer(mmrResponse, player);
         ordered.verify(matchHistoryWalker).walk(player);
+        ordered.verify(mmrMapper).updatePlayer(mmrResponse, player);
+    }
+
+    /**
+     * Verifies that a quiet pass spares the Henrik rank call.
+     */
+    @Test
+    void shouldKeepTheStoredRankWhenNoMatchArrived() {
+        Player player = player();
+        player.setLastSuccessfulSynchronizationAt(PREVIOUS_SYNCHRONIZATION_AT);
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
+        when(matchHistoryWalker.walk(player)).thenReturn(
+            new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.KNOWN_HISTORY_REACHED)
+        );
+        when(playerMatchRepository.existsByPlayerIdAndCreatedAtAfter(1L, PREVIOUS_SYNCHRONIZATION_AT))
+            .thenReturn(false);
+
+        service.synchronize(1L);
+
+        verifyNoInteractions(mmrClient, mmrMapper);
+        verify(playerRepository).recordSuccessfulSynchronization(
+            1L,
+            CompetitiveTier.UNRANKED,
+            null,
+            SYNCHRONIZED_AT
+        );
+    }
+
+    /**
+     * Verifies that matches left by a failed pass still trigger the rank refresh.
+     */
+    @Test
+    void shouldRefreshTheRankWhenAFailedPassImportedMatches() {
+        Player player = player();
+        player.setLastSuccessfulSynchronizationAt(PREVIOUS_SYNCHRONIZATION_AT);
+        HenrikMmrResponse mmrResponse = new HenrikMmrResponse(null);
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(accountResolutionService.resolvePuuid(player)).thenReturn(player);
+        when(matchHistoryWalker.walk(player)).thenReturn(
+            new MatchHistoryWalkResult(1, 0, SynchronizationStopReason.KNOWN_HISTORY_REACHED)
+        );
+        when(playerMatchRepository.existsByPlayerIdAndCreatedAtAfter(1L, PREVIOUS_SYNCHRONIZATION_AT))
+            .thenReturn(true);
+        when(mmrClient.getCurrentMmr(PUUID)).thenReturn(mmrResponse);
+
+        service.synchronize(1L);
+
+        verify(mmrMapper).updatePlayer(mmrResponse, player);
     }
 
     /**

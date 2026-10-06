@@ -30,9 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Stores what one replay produced, replacing everything the campaign held.
  *
- * <p>Deleted and written again rather than updated in place. A day the roster no longer has any
- * match on must disappear, not keep the figures of the run before, and the whole promise of the
- * replay is that its rows depend on nothing but the inputs it just read.
+ * <p>Deletes and rewrites rather than updating, so rows depend only on the inputs just read.
  */
 @Service
 public class CampaignReplayWriter {
@@ -40,8 +38,7 @@ public class CampaignReplayWriter {
     /**
      * Decimals the {@code NUMERIC} columns keep.
      *
-     * <p>Display precision only: the replay always restarts from an empty base and never reads a
-     * stored value back, so rounding here can never compound from one day into the next.
+     * <p>Display precision only: the replay never reads a stored value back, so rounding never compounds.
      */
     private static final int STORED_SCALE = 3;
 
@@ -162,9 +159,7 @@ public class CampaignReplayWriter {
     /**
      * Writes one week's Sunday, clearing it when that Sunday has not been reached.
      *
-     * <p>A week still ahead of its Sunday keeps what its challenges have already brought home: those
-     * wounded are acquired whatever the guardian does, and the forecast of the week in progress
-     * reads them from here.
+     * <p>An unsettled week still keeps its challenge rescues, which the forecast reads from here.
      *
      * @param week       week to write
      * @param settlement settlement of that week, {@code null} while its Sunday is still ahead

@@ -1,5 +1,5 @@
-import { AGENT_IMAGE_IDS, MAP_IMAGE_FILES, UNKNOWN_AGENT_INITIAL } from './match-format.constants';
 import { MatchScore } from '../match.model';
+import { AGENT_IMAGE_IDS, MAP_IMAGE_FILES, UNKNOWN_AGENT_INITIAL } from './match-format.constants';
 
 /**
  * Uppercased agent initial for agents missing from the bundled portraits, `?` when empty.

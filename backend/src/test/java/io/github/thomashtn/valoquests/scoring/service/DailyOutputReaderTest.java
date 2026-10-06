@@ -37,35 +37,49 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests the reader everything prices a day through.
  *
- * <p>The whole point of it living in {@code scoring/} is that one evening is worth the same figure to
- * the campaign, to the ranking and to the match history, so the real calculator and ruleset are
- * wired in rather than stubbed.
+ * <p>One evening must be worth the same figure everywhere, so the real calculator and ruleset are wired in.
  */
 @DisplayName("Daily output")
 class DailyOutputReaderTest {
 
-    /** Monday the fixture week starts on. */
+    /**
+     * Monday the fixture week starts on.
+     */
     private static final LocalDate MONDAY = LocalDate.of(2026, 6, 1);
 
-    /** Value of a competitive win before any multiplier. */
+    /**
+     * Value of a competitive win before any multiplier.
+     */
     private static final int COMPETITIVE_WIN = 500;
 
-    /** Value of a deathmatch win before any multiplier. */
+    /**
+     * Value of a deathmatch win before any multiplier.
+     */
     private static final int DEATHMATCH_WIN = 150;
 
-    /** Every fixture match, whoever played it, as the range query would return them. */
+    /**
+     * Every fixture match, whoever played it, as the range query would return them.
+     */
     private List<PlayerMatch> storedMatches;
 
-    /** Faked range query. */
+    /**
+     * Faked range query.
+     */
     private PlayerMatchRepository playerMatchRepository;
 
-    /** Next identifier handed to a fixture match. */
+    /**
+     * Next identifier handed to a fixture match.
+     */
     private long nextMatchId = 1L;
 
-    /** Reader under test. */
+    /**
+     * Reader under test.
+     */
     private DailyOutputReader reader;
 
-    /** Wires the real scoring pipeline behind a faked range query. */
+    /**
+     * Wires the real scoring pipeline behind a faked range query.
+     */
     @BeforeEach
     void setUp() {
         playerMatchRepository = mock(PlayerMatchRepository.class);
@@ -136,8 +150,7 @@ class DailyOutputReaderTest {
 
         DailyOutput output = reader.read(everyone(), MONDAY, MONDAY);
 
-        // The five competitive games keep full value whatever order they were played in; the tenth
-        // game is 150 × 0.25 = 37.5, rounded half up.
+        // Competitive games keep full value in any order; the tenth is 150 × 0.25 = 37.5, rounded half up.
         int reduced = 5 * COMPETITIVE_WIN + 4 * (DEATHMATCH_WIN / 2) + 38;
         assertThat(output.of(1L, MONDAY).damage()).isEqualTo(reduced);
         assertThat(output.of(1L, MONDAY).reducedMatchCount()).isEqualTo(5);

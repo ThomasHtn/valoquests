@@ -1,8 +1,9 @@
 package io.github.thomashtn.valoquests.campaign.model;
 
 /**
- * How far the squad got on a week's guardian, shared by the Sunday settlement and every reading of
- * the week so the forecast never promises what the settlement does not deliver.
+ * How far the squad got on a week's guardian.
+ *
+ * <p>Shared by the Sunday settlement and every reading, so the forecast matches the settlement.
  */
 public final class GuardianProgress {
 

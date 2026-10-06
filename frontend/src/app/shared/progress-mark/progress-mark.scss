@@ -32,6 +32,7 @@
 }
 
 /* Sweep starts at noon. */
+
 /* A check is a closed ring. */
 .progress-mark__dial--done {
   --level: 1;
@@ -55,6 +56,7 @@
 /* 131.95 = 2 pi r (r = 21); clamped so an overshoot closes without wrapping. */
 .progress-mark__arc {
   --arc-empty: 131.95;
+
   fill: none;
   stroke: var(--tone);
   stroke-width: 3;
@@ -140,10 +142,12 @@
     opacity: 0;
     transform: rotate(var(--angle)) translateX(0.5rem) rotate(0deg) scale(1);
   }
+
   8%,
   60% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
     transform: rotate(var(--angle)) translateX(var(--reach)) rotate(var(--spin)) scale(0.6);
@@ -155,6 +159,7 @@
   from {
     translate: 0 0;
   }
+
   to {
     translate: 0 0.75rem;
   }

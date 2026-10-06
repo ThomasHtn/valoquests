@@ -64,9 +64,7 @@ public class Challenge extends AuditableEntity {
     private ChallengeCadence cadence = ChallengeCadence.WEEKLY;
 
     /**
-     * Tier controlling weekly selection and reward size.
-     *
-     * <p>{@code null} for a daily challenge: the daily pool is its own tier, priced by its cadence.
+     * Tier controlling weekly selection and reward size, {@code null} for a daily challenge.
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "difficulty", length = 20)
@@ -87,10 +85,7 @@ public class Challenge extends AuditableEntity {
     private ProgressMode progressMode;
 
     /**
-     * Versioned JSON rule grid played by an amateur campaign.
-     *
-     * <p>Its numbers are written by hand and never computed. A draw copies the grid matching the
-     * campaign's level onto the selection; calculators only ever read that copy.
+     * Hand-written JSON rule grid of an amateur campaign, copied onto the selection at draw time.
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(
@@ -101,10 +96,7 @@ public class Challenge extends AuditableEntity {
     private String amateurConditionsJson;
 
     /**
-     * Same rule, with the numbers written for a pro campaign.
-     *
-     * <p>Same conditions in the same order as {@link #amateurConditionsJson}, so a description written
-     * for one grid reads correctly against the other.
+     * Same rule with pro numbers, keeping the conditions in {@link #amateurConditionsJson}'s order.
      */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(
@@ -135,8 +127,7 @@ public class Challenge extends AuditableEntity {
     /**
      * Returns the rule grid one campaign difficulty plays against.
      *
-     * <p>Named apart from this challenge's own {@code tier}, which grades the challenge inside
-     * a week and has nothing to do with the campaign's setting.
+     * <p>Unrelated to this challenge's own {@code tier}, which grades it inside a week.
      *
      * @param campaignDifficulty difficulty of the campaign in force
      * @return the matching JSON definition

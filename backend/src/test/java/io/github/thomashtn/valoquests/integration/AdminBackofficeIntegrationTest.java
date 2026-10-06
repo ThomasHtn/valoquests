@@ -54,9 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Verifies the administration operations that touch the whole database against a real PostgreSQL.
  *
- * <p>These two behaviours cannot be trusted from unit tests. The campaign reset is a Postgres
- * multi-table {@code TRUNCATE} whose table list is only validated by Postgres itself, and archiving
- * a player is a single status value that four different queries have to agree on.
+ * <p>Only Postgres validates the reset's {@code TRUNCATE} list, and four queries must agree on the archive status.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -133,10 +131,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that the reset empties every derived table while keeping the roster and catalogues.
      *
-     * <p>The {@code TRUNCATE} deliberately omits {@code CASCADE} and lists every referencing table
-     * instead, so Postgres rejects it outright if the list is incomplete. That is what this test
-     * actually exercises: a future table referencing one of these would make it fail here rather
-     * than silently leave orphaned campaign data behind in production.
+     * <p>The {@code TRUNCATE} lists every referencing table without {@code CASCADE}, so a new table fails here.
      */
     @Test
     void shouldClearEveryDerivedTableOnCampaignReset() {
@@ -175,9 +170,7 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that archiving a player takes it out of the roster without deleting it.
      *
-     * <p>The public listing and the synchronization scope must both drop it, while the
-     * administration listing keeps it — that is the whole point of the status, and the three
-     * queries reading it are separate.
+     * <p>The public listing and synchronization scope drop it while the admin listing keeps it, via separate queries.
      */
     @Test
     void shouldKeepAnArchivedPlayerOutOfTheRosterButStillStored() {

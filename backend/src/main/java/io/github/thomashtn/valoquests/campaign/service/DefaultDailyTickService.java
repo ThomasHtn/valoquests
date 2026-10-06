@@ -69,8 +69,7 @@ public class DefaultDailyTickService implements DailyTickService {
     /**
      * Draws, recalculates, starts and replays, in that order.
      *
-     * <p>The recalculation sits between the draw and the replay: the challenge drawn a second ago
-     * has no progress row until it runs, and the replay reads those rows for the week's rescues.
+     * <p>The recalculation must precede the replay, which reads its progress rows for the rescues.
      */
     @Override
     public void run() {

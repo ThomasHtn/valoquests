@@ -19,13 +19,8 @@ import org.springframework.stereotype.Component;
 /**
  * Catches up, at startup, on the scheduled jobs a stopped application missed.
  *
- * <p>A cron firing that falls while the process is down is lost: the day's challenge is never drawn
- * and the past week never finalized. Once the application is ready, this runs the overdue rollover,
- * then the day's tick, in the order the calendar runs them. Both jobs are idempotent, so running the
- * tick again on a day it already ran changes nothing.
- *
- * <p>Handed to the scheduler's own thread rather than run inline: the rollover synchronizes every
- * player first, which must neither hold up startup nor overlap a cron job firing meanwhile.
+ * <p>Runs the overdue rollover then the day's tick, both idempotent, on the scheduler's thread so the
+ * rollover's synchronization neither delays startup nor overlaps a cron job.
  */
 @Component
 public class MissedScheduleCatchUp {
@@ -125,8 +120,7 @@ public class MissedScheduleCatchUp {
     /**
      * Tells whether a past week awaits finalization although this week's rollover time has passed.
      *
-     * <p>Before that time on a Monday, the scheduled rollover is still to come and must keep its
-     * margin for Sunday's last matches.
+     * <p>Before that time on a Monday, the scheduled rollover keeps its margin for Sunday's last matches.
      *
      * @return {@code true} when the rollover should have run already
      */

@@ -18,9 +18,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Verifies the campaign engine against the rules written in {@code docs/GAMEPLAY.md}.
  *
- * <p>Every scenario is built on round numbers so an expectation can be read as arithmetic rather
- * than trusted: 2 800 damage is exactly a hundred inhabitants, and a hundred inhabitants eat exactly
- * 0.8 food an evening.
+ * <p>Round numbers keep expectations checkable: 2 800 damage is 100 inhabitants, who eat 0.8 food an evening.
  */
 class CampaignReplayEngineTest {
 
@@ -136,9 +134,7 @@ class CampaignReplayEngineTest {
     @Test
     @DisplayName("Leaves the seven next evenings of food untouched")
     void shouldProtectSevenEveningsOfFood() {
-        // 100 inhabitants eat 0.8 an evening, so 5.6 of the 200 in store may never pay a berth:
-        // 194.4 buys sixteen, where the whole 200 would have bought sixteen as well but left the
-        // base with nothing to eat on Monday.
+        // Seven evenings at 0.8 reserve 5.6 food that berths may never spend.
         CampaignReplayResult result = engine.replay(week(200, 2_000), List.of(defeatedWeek(0)));
 
         assertThat(result.days().getLast().foodStock()).isCloseTo(7.2, within(TOLERANCE));

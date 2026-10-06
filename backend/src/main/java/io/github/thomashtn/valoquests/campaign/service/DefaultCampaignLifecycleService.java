@@ -22,12 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Default campaign lifecycle, driven by the calendar rather than by a scheduler firing on time.
  *
- * <p>A campaign never opens on its own: a squad that stopped playing must not come back to a
- * campaign already half lost.
- *
- * <p>Opening freezes two things: the roster and the difficulty. Both are decided on the day the
- * button is pressed and neither is ever read again, so a deactivation or an archive during the ten
- * weeks cannot resize a guardian that has already been fought.
+ * <p>A campaign never opens on its own. Opening freezes the roster and the difficulty, so later
+ * changes cannot resize a guardian already fought.
  */
 @Service
 public class DefaultCampaignLifecycleService implements CampaignLifecycleService {
@@ -104,9 +100,8 @@ public class DefaultCampaignLifecycleService implements CampaignLifecycleService
     /**
      * Opens a campaign on the chosen Monday.
      *
-     * <p>{@link CampaignStartWeek#CURRENT_WEEK} is retroactive: the campaign is opened on a Monday
-     * that has already passed, so it starts {@link CampaignStatus#RUNNING} and is replayed here to
-     * rebuild the days that are already over.
+     * <p>{@link CampaignStartWeek#CURRENT_WEEK} starts {@link CampaignStatus#RUNNING} and is replayed
+     * here to rebuild the days already over.
      *
      * @param difficulty difficulty the campaign is played at
      * @param startWeek  week the campaign starts on
@@ -157,8 +152,7 @@ public class DefaultCampaignLifecycleService implements CampaignLifecycleService
     /**
      * Starts the opened campaign once its first Monday has come.
      *
-     * <p>Idempotent, and driven by the calendar rather than by the rollover firing on time: a
-     * rollover that missed its Monday still finds the campaign waiting on the next one.
+     * <p>Idempotent and calendar-driven, so a missed Monday is caught up on the next run.
      *
      * @return the campaign that just started, empty when none was waiting
      */
@@ -181,8 +175,7 @@ public class DefaultCampaignLifecycleService implements CampaignLifecycleService
     /**
      * Closes the running campaign once its tenth Sunday has been settled.
      *
-     * <p>Closed the day after its final day, never on it: the tenth Sunday is settled by the replay
-     * of that very evening, and closing before it ran would freeze a score one week short.
+     * <p>Closed the day after its final day, never on it, so the tenth Sunday is settled first.
      *
      * @return the campaign that just closed, empty when none was due
      */
@@ -206,8 +199,7 @@ public class DefaultCampaignLifecycleService implements CampaignLifecycleService
     /**
      * Stops the live campaign now, freezing it at yesterday's base.
      *
-     * <p>Stopped on the day before today, not on today: today is still being played, and freezing a
-     * campaign on a day that is not over would credit half a day and call it final.
+     * <p>Stopped on yesterday, since today is still being played.
      *
      * @return the campaign that was stopped
      * @throws CampaignLifecycleException when no campaign is live

@@ -75,8 +75,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
     private final CampaignRepository campaignRepository;
 
     /**
-     * Prices each match with both multipliers, so the history can say what a game was worth to the
-     * squad and not only how it went.
+     * Prices each match so the history shows what a game was worth to the squad.
      */
     private final DailyOutputReader dailyOutputReader;
 
@@ -191,10 +190,8 @@ public class DefaultMatchQueryService implements MatchQueryService {
     /**
      * Prices every match on the page.
      *
-     * <p>A match's amount depends on how the rest of <em>that day</em> went and on the days played
-     * before it, so the page alone cannot price itself: a page boundary routinely cuts a day in half.
-     * The whole span of days the page touches is therefore read through the same reader the ranking
-     * and the campaign use, which is what keeps them from disagreeing. One extra query per page.
+     * <p>A match's value depends on its whole day and the earlier days of the week, so every day the
+     * page touches is read in full by the shared reader.
      *
      * @param pageMatches the matches the page is about to return
      * @param reader      reads the output of an inclusive range of days
@@ -223,8 +220,7 @@ public class DefaultMatchQueryService implements MatchQueryService {
     }
 
     /**
-     * Loads full detail for one of a tracked player's matches, priced like every
-     * other history entry and joined with every other tracked player found in the same match.
+     * Loads full detail for one of a player's matches, priced and joined with the other tracked players.
      *
      * @param playerId      internal player identifier
      * @param playerMatchId internal player-match identifier

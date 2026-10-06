@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -7,7 +8,6 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -16,6 +16,7 @@ import { svgElement } from '@core/svg/svg-element.utils';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { TitleBadge } from '@shared/title-badge/title-badge';
+
 import { BoardRow } from '../leaderboard.model';
 import {
   EMBER_COLOR,

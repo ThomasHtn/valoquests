@@ -15,7 +15,9 @@ import org.junit.jupiter.params.provider.EnumSource;
  */
 class MatchEligibilityTest {
 
-    /** Rule under test. */
+    /**
+     * Rule under test.
+     */
     private final MatchEligibility eligibility = new MatchEligibility();
 
     /**
@@ -30,8 +32,7 @@ class MatchEligibilityTest {
     /**
      * Verifies that every mode the scoring table prices is counted.
      *
-     * <p>Pins the two lists together: a mode priced by {@code DefaultScoringRuleset#matchDamage} but
-     * rejected here would be worth damage while counting as no day played.
+     * <p>A mode priced by {@code DefaultScoringRuleset#matchDamage} but rejected here would count as no day played.
      *
      * @param gameMode mode under test
      */
@@ -47,9 +48,8 @@ class MatchEligibilityTest {
     /**
      * Verifies that an unrecognized queue never counts, however real the match looks.
      *
-     * <p>{@link GameMode#OTHER} is imported on purpose so a later reclassification stays a data
-     * migration, but the scoring table cannot price it. It used to be worth no damage while still counting
-     * as a day played and still progressing any challenge filtered on no particular mode.
+     * <p>{@link GameMode#OTHER} is imported for later reclassification but has no price, so it must not count as
+     * a day played or progress mode-free challenges.
      */
     @Test
     void shouldNotCountAnUnrecognizedQueue() {

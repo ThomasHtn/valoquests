@@ -10,9 +10,7 @@ import java.util.List;
 /**
  * One week of the campaign's map: its planet, its guardian and how its Sunday went.
  *
- * <p>A week the campaign has not reached yet is present with its target figures and zeroes for
- * everything else. The map is meant to be read ahead — a week ten with the biggest group behind the
- * biggest guardian is only a plan if it can be seen from week one.
+ * <p>Weeks not reached yet are present with their target figures and zeroes, so the map reads ahead.
  *
  * @param weekIndex          one-based position in the campaign
  * @param weekStart          Monday identifying the week

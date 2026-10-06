@@ -30,14 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Rebuilds a week's ranking from the stored matches and challenge progress.
  *
- * <p>Two things are added: the guardian damage of the week, priced by {@link DailyOutputReader}
- * exactly as the campaign prices it, and the points of the challenges validated that week. Nothing
- * else: a challenge damages nothing, regularity is already paid inside every match by the bonus for days played,
- * and there is no team bonus.
- *
- * <p>Who counts is decided here and nowhere else. An inactive player is still given a row, so their
- * progress stays visible, but the row carries no damage, no points and no position: they measure
- * themselves against the squad without adding to it or taking a slot from it.
+ * <p>Score = guardian damage priced by {@link DailyOutputReader} plus challenge points, nothing else. Who
+ * counts is decided here: an inactive player gets a row with no damage, points or position.
  */
 @Service
 public class DefaultRankingRecalculationService implements RankingRecalculationService {
@@ -48,8 +42,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultRankingRecalculationService.class);
 
     /**
-     * Orders a week: most points first, then whoever hit the guardian hardest, then whoever validated
-     * the most, then the earliest player so two identical weeks always read in the same order.
+     * Orders a week by points, then damage, validated challenges, played days and player id for stability.
      */
     private static final Comparator<WeeklyPlayerScore> RANKING_ORDER = Comparator
         .comparingInt(WeeklyPlayerScore::getTotalPoints).reversed()
@@ -149,8 +142,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
             .stream()
             .collect(Collectors.toMap(score -> score.getPlayer().getId(), Function.identity()));
 
-        // Only the competing squad's matches are priced: an inactive player's evening is worth
-        // nothing to the ranking, so there is no point loading it.
+        // Only the competing squad is priced: an inactive player's matches are worth nothing here.
         DailyOutput output = dailyOutputReader.read(
             EnumSet.of(Player.COMPETITIVE_STATUS),
             weekStart,
@@ -176,8 +168,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
     }
 
     /**
-     * Assigns standing-competition positions to an ordered week: equal points share a position
-     * and the next one skips ahead (1, 1, 3). No points, no position; an inactive player neither.
+     * Assigns competition positions (1, 1, 3), none to a player without points or not competing.
      *
      * @param scores rows already in ranking order
      */
@@ -196,8 +187,7 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
     /**
      * Writes one player's week into their row.
      *
-     * <p>An inactive player keeps their validation counts and nothing else: the counts are what
-     * lets them see how fast they would go, the rest is what they are not taking part in.
+     * <p>An inactive player keeps only their validation counts, so they can still see their pace.
      *
      * @param score     row to fill
      * @param player    player the row belongs to

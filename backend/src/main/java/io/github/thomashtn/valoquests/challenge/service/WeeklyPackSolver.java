@@ -11,9 +11,8 @@ import java.util.Optional;
 /**
  * Completes a weekly pack out of candidates grouped by tier.
  *
- * <p>Pure: no repository, no clock. Category diversity is preferred, exclusion groups are always
- * enforced, and the search is a bounded backtracking whose depth is the number of
- * tiers.</p>
+ * <p>Pure. Category diversity is preferred, exclusion groups are always enforced, and the backtracking
+ * depth is the number of tiers.
  */
 final class WeeklyPackSolver {
 
@@ -56,8 +55,7 @@ final class WeeklyPackSolver {
     /**
      * Selects one compatible challenge for every remaining tier using bounded backtracking.
      *
-     * <p>Immutable copies are used for each branch so failed attempts cannot leak state into later
-     * attempts.</p>
+     * <p>Each branch uses immutable copies so a failed attempt never leaks state.
      *
      * @param candidatesByTier  eligible challenges grouped by tier
      * @param tiers            missing tiers

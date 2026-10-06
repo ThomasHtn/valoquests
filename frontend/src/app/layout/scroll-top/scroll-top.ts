@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+
 import { LucideArrowUp } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';

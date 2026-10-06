@@ -9,14 +9,8 @@ import org.springframework.stereotype.Service;
 /**
  * Hands synchronization requests to the background executor.
  *
- * <p>A synchronization walks the Henrik match history under a rate limit of a few dozen requests
- * per minute, so a full run over the tracked squad routinely outlives an HTTP request. Rather than
- * hold the caller's connection open for minutes and leave it unable to tell a slow run from a
- * dropped one, the request is acknowledged immediately and the run is observed through the
- * synchronization history.
- *
- * <p>The {@link MatchHistoryLock} is taken here, on the request thread, so a concurrent request is
- * refused with a 409 before anything is dispatched; the background run releases it.
+ * <p>The {@link MatchHistoryLock} is taken on the request thread, so a concurrent request gets a 409
+ * before dispatch; the background run releases it.
  */
 @Service
 public class DefaultSynchronizationLaunchService implements SynchronizationLaunchService {
@@ -61,9 +55,7 @@ public class DefaultSynchronizationLaunchService implements SynchronizationLaunc
     /**
      * Accepts a synchronization of one tracked player.
      *
-     * <p>The player is resolved before the request is acknowledged. Accepting a run for an unknown
-     * identifier would answer 202 and report the mistake only as a failed execution, several
-     * minutes later, in a history the caller has no reason to open.
+     * <p>The player is checked before acknowledging, so an unknown id gets a 404, not a later failure.
      *
      * @param playerId tracked player identifier
      * @throws ResourceNotFoundException when no tracked player owns the identifier

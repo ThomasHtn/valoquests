@@ -11,13 +11,8 @@ import java.util.List;
 /**
  * Exposes everything the player profile's "progression" view renders.
  *
- * <p>One payload rather than six endpoints: every section reads the same filtered set of matches,
- * so splitting them would make the frontend fetch and the backend re-aggregate the same history
- * several times over for a single screen.
- *
- * <p>Every figure here is scoped to competitive matches, the only queue whose combat score, damage
- * per round and win rate are comparable across matches. The one deliberate exception is
- * {@link PersonalRecords#longestActiveDayStreak()}, which counts days a player showed up at all.
+ * <p>One payload, since every section reads the same filtered matches. Every figure covers competitive
+ * matches only, except {@link PersonalRecords#longestActiveDayStreak()}.
  *
  * @param evolution per-season match-by-match series, one entry per selected season
  * @param aim       where the player's hits land, over the whole filtered set
@@ -110,8 +105,7 @@ public record PlayerProgressionResponse(
     /**
      * Exposes where a player's hits land.
      *
-     * <p>Riot reports these as per-match totals, never per round, so this is a share of registered
-     * hits and not an accuracy figure: it says nothing about the shots that missed entirely.
+     * <p>A share of registered hits, not accuracy: Riot reports nothing about missed shots.
      *
      * @param headPercentage share of hits on the head
      * @param bodyPercentage share of hits on the body
@@ -153,9 +147,7 @@ public record PlayerProgressionResponse(
      * @param matchesPlayed matches started within that slot
      * @param wins          matches won within that slot
      * @param winRate       share of matches won, as a percentage
-     * @param best          whether this is the player's strongest slot. Only a slot with enough
-     *     matches behind it can be flagged, so a lone lucky win never crowns a time of day; at most
-     *     one slot carries the flag, and none does when no slot clears the sample threshold
+     * @param best          whether this is the strongest slot, at most one and only above the sample floor
      */
     public record HourSlotPerformance(
 
@@ -170,8 +162,7 @@ public record PlayerProgressionResponse(
     /**
      * Exposes a player's personal bests.
      *
-     * <p>Deliberately all-time highs and never lows: this section is read by the player it
-     * describes, and a "worst match" tile would only be a place to feel bad about.
+     * <p>All-time highs only: a "worst match" tile would only be a place to feel bad about.
      *
      * @param mostKills                best kill count in a single match
      * @param bestAcs                  best average combat score in a single match
@@ -256,9 +247,8 @@ public record PlayerProgressionResponse(
     /**
      * Exposes how steady the combat score was over the selected seasons.
      *
-     * <p>The floor and the ceiling bound the middle half of the matches, so their gap is a spread a
-     * single freak match cannot stretch. Pooling several seasons widens it as a rule: lobbies change
-     * with the rank, and the combat score moves with them from one act to the next.
+     * <p>Floor and ceiling bound the middle half of the matches, so one freak match cannot stretch the
+     * spread. Pooling seasons widens it, as lobbies change with rank.
      *
      * @param floor              first quartile of the combat scores
      * @param median             median combat score

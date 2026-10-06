@@ -7,10 +7,6 @@ import java.math.BigDecimal;
 /**
  * Exposes another tracked player's line in a match both of them played.
  *
- * <p>The squad is small enough that two tracked players routinely queue into the same lobby; a
- * match's detail surfaces every one of them found on either side, rather than only the requesting
- * player's own statistics.
- *
  * @param playerId    internal identifier of the other tracked player
  * @param displayName the other player's display name
  * @param portrait    agent name backing the other player's bundled avatar, {@code null} when unset

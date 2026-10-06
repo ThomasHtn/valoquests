@@ -73,14 +73,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 /**
  * Verifies the standard synchronization pipeline against PostgreSQL.
  *
- * <p>Only Henrik clients are mocked. Account resolution, rank mapping, match
- * import, season resolution, challenge calculation, ranking calculation and
- * synchronization persistence use production components and the real migrated
- * PostgreSQL schema.</p>
- *
- * <p>Deliberately <strong>not</strong> {@code @Transactional}: the synchronization commits row by
- * row and refuses to run inside a transaction (see {@code MatchImportService}). Fixture rows are
- * committed for real and removed in {@link #tearDown()} instead.
+ * <p>Only Henrik clients are mocked. Not {@code @Transactional} because the synchronization refuses to run in a
+ * transaction, so {@link #tearDown()} removes the committed fixtures.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -265,8 +259,7 @@ class SynchronizationPipelineIntegrationTest
         synchronizationCommandService.synchronizePlayer(player.getId());
         SynchronizationResponse firstSynchronization = synchronizationQueryService.findLatest();
 
-        // No explicit recalculation: importing matches is what triggers it. Calling it here as well
-        // would rebuild the ranking twice and shift the previous position on the very first run.
+        // Importing triggers the recalculation; a second call would shift the previous position.
         flushAndClear();
 
         assertFirstSynchronization(firstSynchronization, player);
@@ -298,9 +291,7 @@ class SynchronizationPipelineIntegrationTest
         synchronizationCommandService.synchronizePlayer(player.getId());
         SynchronizationResponse secondSynchronization = synchronizationQueryService.findLatest();
 
-        // The second synchronization imports nothing, so it deliberately skips the recalculation.
-        // This call stands in for the administrative repair route and proves the calculation is
-        // idempotent: it rewrites the same values in place and only shifts the previous position.
+        // The second sync skips recalculation; this call stands in for the admin repair and proves idempotence.
         challengeRecalculationService
             .drawAndRecalculateCurrentWeek();
 
@@ -332,7 +323,8 @@ class SynchronizationPipelineIntegrationTest
         verify(accountClient, never())
             .getAccount(anyString(), anyString());
 
-        verify(mmrClient, org.mockito.Mockito.times(2))
+        // The quiet second pass keeps the stored rank instead of asking Henrik again.
+        verify(mmrClient, org.mockito.Mockito.times(1))
             .getCurrentMmr(PLAYER_PUUID);
 
         verify(matchClient, org.mockito.Mockito.times(2))
@@ -342,8 +334,7 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Verifies that the final write of a synchronization does not undo an admin edit.
      *
-     * <p>The player is loaded before the Henrik calls and written after them; a full save of that
-     * copy would bring back the name and portrait the administrator just replaced.
+     * <p>A full save of the copy loaded before the Henrik calls would restore the replaced name and portrait.
      */
     @Test
     @DisplayName("Keeps an admin edit made during the synchronization while storing the new rank")
@@ -608,10 +599,8 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Verifies the single-player ranking produced from the imported matches and calculated progress.
      *
-     * <p>The two imported matches fall on two consecutive days, so the second carries the 2 % streak
-     * bonus: WIN 500 + LOSS 350 × 1.02 = 357, for 857 of guardian damage. The five weekly challenges
-     * pay 2 + 3 + 5 + 8 + 11 = 29 points at the 2 000 floor, plus the day's challenge when the
-     * player validated it.
+     * <p>The second day carries the 2 % streak bonus: 500 + 350 × 1.02 = 857 damage. The five weekly
+     * challenges pay 29 points at the 2 000 floor, plus the day's challenge if validated.
      */
     private void assertCalculatedRanking(
         Player player,
@@ -648,9 +637,7 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Prices the daily challenges this player validated this week.
      *
-     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
-     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
-     * at the 2 000 floor.
+     * <p>The daily is drawn from the pool, so its validation is read back. Outside a campaign it pays 24 points.
      *
      * @param player player whose dailies are priced
      * @return the points those dailies add
@@ -1025,8 +1012,7 @@ class SynchronizationPipelineIntegrationTest
     /**
      * Clears managed entity state so the next read hits PostgreSQL.
      *
-     * <p>No explicit flush: every write already commits on its own, through the repository call or
-     * service transaction that issued it, since this test is deliberately not wrapped in one.
+     * <p>No flush needed: this test is not transactional, so every write is already committed.
      */
     private void flushAndClear() {
         entityManager.clear();

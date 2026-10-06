@@ -11,8 +11,7 @@ import java.util.List;
 public interface PlayerQueryService {
 
     /**
-     * Returns all tracked players with their summary statistics, scoped to the season currently in
-     * progress and to competitive matches.
+     * Returns every tracked player with statistics for the current season's competitive matches.
      *
      * @return tracked player summaries
      */

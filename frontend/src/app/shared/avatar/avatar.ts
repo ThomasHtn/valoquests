@@ -1,5 +1,6 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
+
 import { LucideUser } from '@lucide/angular';
 
 import { AVATAR_PIXELS } from './avatar.constants';

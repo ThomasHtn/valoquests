@@ -4,6 +4,7 @@ import {
   ConsistencyMatch,
   ConsistencySummary,
 } from '@core/players/progression/player-progression.model';
+
 import {
   buildConsistencyAxis,
   buildConsistencyFigures,

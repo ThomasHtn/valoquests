@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, inject, Service, signal } from '@angular/core';
+
 import { firstValueFrom } from 'rxjs';
+
+import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 import {
   DEFAULT_LANGUAGE,
@@ -8,7 +11,6 @@ import {
   SUPPORTED_LANGUAGES,
 } from './translation.constants';
 import { Language, TranslationDictionary } from './translation.model';
-import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
 
 /**
  * Active language, its persisted choice and its loaded dictionary.

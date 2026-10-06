@@ -8,14 +8,8 @@ import java.util.Map;
 /**
  * What a set of players produced over a range of days, priced once for everything that reads a day.
  *
- * <p>Read one day at a time through {@link #on(LocalDate)} and {@link #of(long, LocalDate)}, or
- * match by match through {@link #valuedMatches()}. A day, or a player inside a day, absent from a
- * reading played nothing.
- *
- * <p>Days played this week are kept on their own, per player and per played day, over a window
- * that starts before the range: {@link #playedDaysUpTo(long, LocalDate)} therefore answers for the
- * day before the range too, which is what a screen needs to say how far a player who has not
- * played yet today stands.
+ * <p>A day, or a player within a day, absent from a reading played nothing. Played days cover the lookback,
+ * so {@link #playedDaysUpTo(long, LocalDate)} also answers for the day before the range.
  */
 public final class DailyOutput {
 

@@ -1,6 +1,7 @@
+import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
 import { GuardianCategory } from '@core/campaign/campaign-week.model';
 import { TitleKey } from '@core/campaign/titles/campaign-title.model';
-import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
+
 import {
   CampaignWeekShape,
   ChallengeWorth,

@@ -3,6 +3,7 @@ const eslint = require('@eslint/js');
 const { defineConfig } = require('eslint/config');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
+const simpleImportSort = require('eslint-plugin-simple-import-sort');
 
 module.exports = defineConfig([
   {
@@ -14,7 +15,23 @@ module.exports = defineConfig([
       angular.configs.tsRecommended,
     ],
     processor: angular.processInlineTemplates,
+    plugins: { 'simple-import-sort': simpleImportSort },
     rules: {
+      // One stable import order, fixed by `npm run lint -- --fix`: Angular, libraries, aliases, relatives.
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            ['^\\u0000'],
+            ['^@angular/'],
+            ['^@?\\w'],
+            ['^@(core|shared|layout|pages|env)/'],
+            ['^\\.'],
+          ],
+        },
+      ],
+      'simple-import-sort/exports': 'error',
+
       '@angular-eslint/directive-selector': [
         'error',
         {

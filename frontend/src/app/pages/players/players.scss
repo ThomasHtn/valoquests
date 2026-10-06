@@ -123,8 +123,7 @@ $table-column-gap: clamp(0.875rem, 4vw - 2.325rem, 2rem);
 
   @include from(lg) {
     grid-template-columns: $table-columns;
-    column-gap: $table-column-gap;
-    row-gap: 0;
+    gap: 0 $table-column-gap;
   }
 }
 

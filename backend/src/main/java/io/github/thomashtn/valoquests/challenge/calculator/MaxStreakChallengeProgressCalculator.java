@@ -9,11 +9,9 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * Calculates the longest consecutive sequence of eligible matches satisfying
- * a per-match challenge condition.
+ * Calculates the longest streak of eligible matches satisfying a per-match condition.
  *
- * <p>Matches are evaluated chronologically. Matches outside the configured
- * game mode are ignored and therefore do not interrupt the sequence.</p>
+ * <p>Matches are read chronologically; matches outside the game mode are skipped and never break it.
  */
 @Component
 public class MaxStreakChallengeProgressCalculator

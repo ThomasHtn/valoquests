@@ -15,8 +15,7 @@ import java.time.LocalDate;
 /**
  * Builds the campaign objects the unit tests of this package share.
  *
- * <p>Kept in one place because a campaign is only ever meaningful whole: a week without its
- * campaign has no reference, and a campaign without its roster has no denominator.
+ * <p>A week needs its campaign and a campaign its roster, so they are built together here.
  */
 public final class CampaignFixtures {
 

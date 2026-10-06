@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LowerCasePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { LineChart } from '@shared/chart/line-chart/line-chart';
+
 import { HistoryCurve, HistoryRow } from '../campaign-panel.model';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { ICON_COLUMNS } from './campaign-history.constants';
 
 /**

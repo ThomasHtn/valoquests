@@ -124,9 +124,8 @@ public class WeekFinalizer {
     /**
      * Refuses to finalize a pack that is only partly frozen.
      *
-     * <p>A pending week owns at least one active challenge by construction, so a single finalized
-     * one is enough to prove the pack was left half-frozen. Repairing it silently would freeze the
-     * remainder against a ranking the finalized half never saw.</p>
+     * <p>One finalized challenge in a pending week proves a half-frozen pack; repairing it silently would
+     * freeze the rest against a ranking the finalized half never saw.
      *
      * @param weekStart        Monday identifying the week being finalized
      * @param selections challenges belonging to that week

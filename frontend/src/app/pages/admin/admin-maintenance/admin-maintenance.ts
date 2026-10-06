@@ -1,18 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { AdminActionState } from '@core/admin/commands/admin-action.model';
-import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
+
 import { AdminApi } from '@core/admin/admin-api';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
 import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
 import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/synchronization/admin-synchronization.constants';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
 import { InlineMessage } from '@shared/inline-message/inline-message';
-import { PageHeader } from '@layout/page-header/page-header';
 import { SectionLabel } from '@shared/section-label/section-label';
+
 import { RESET_DATA_GROUPS } from './admin-maintenance.constants';
 
 /**

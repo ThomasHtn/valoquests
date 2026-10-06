@@ -18,9 +18,9 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import reactor.core.publisher.Mono;
 
 /**
- * Verifies that {@link HenrikRequestExecutor} wraps every transport-level failure into a retryable
- * exception, and specifically that both distinct {@code TimeoutException} classes it may receive
- * from {@code WebClient} are recognized as timeouts despite sharing an identical simple name.
+ * Verifies that {@link HenrikRequestExecutor} wraps every transport failure into a retryable exception.
+ *
+ * <p>Both {@code TimeoutException} classes from {@code WebClient} share a simple name; each must be caught.
  */
 class HenrikRequestExecutorTest {
 
@@ -36,10 +36,9 @@ class HenrikRequestExecutorTest {
     }
 
     /**
-     * Verifies that a Netty timeout is wrapped as a Henrik timeout exception. This is the exact
-     * regression this test guards against: {@code io.netty.handler.timeout.TimeoutException} and
-     * {@code java.util.concurrent.TimeoutException} are distinct, unrelated classes, and dropping
-     * either check from {@link HenrikRequestExecutor} would silently stop retrying real timeouts.
+     * Verifies that a Netty timeout is wrapped as a Henrik timeout exception.
+     *
+     * <p>The Netty and {@code java.util.concurrent} timeouts are unrelated; dropping either check stops retries.
      */
     @Test
     void shouldWrapNettyTimeoutAsHenrikTimeout() {
@@ -63,8 +62,7 @@ class HenrikRequestExecutorTest {
     }
 
     /**
-     * Executes a request whose {@code WebClient} call fails at the transport level with the given
-     * cause, using a single-attempt budget so the mapped exception surfaces immediately.
+     * Executes a request failing at the transport level, with one attempt so the error surfaces at once.
      *
      * @param transportCause cause wrapped by the simulated {@link WebClientRequestException}
      */

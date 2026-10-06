@@ -3,8 +3,7 @@ package io.github.thomashtn.valoquests.synchronization.service;
 /**
  * Shapes error messages before they are stored on a synchronization row.
  *
- * <p>The column is bounded, and an exception may carry no message at all, so every message goes
- * through here: never blank, never longer than the column.</p>
+ * <p>Every stored message goes through here: never blank, never longer than the column.
  */
 final class SynchronizationErrorMessage {
 
@@ -36,8 +35,7 @@ final class SynchronizationErrorMessage {
     }
 
     /**
-     * Truncates a message, keeping a blank one as {@code null}: a batch without failure stores no
-     * message at all.
+     * Truncates a message, turning a blank one into {@code null} so a clean batch stores no message.
      *
      * @param message message to store, possibly blank
      * @return a storable message, or {@code null}

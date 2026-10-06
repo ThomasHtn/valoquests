@@ -1,3 +1,4 @@
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,53 +9,58 @@ import {
   untracked,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
-import { LucideFileText, LucideDynamicIcon } from '@lucide/angular';
-import { CampaignApi } from '@core/campaign/campaign-api';
+
+import { LucideDynamicIcon, LucideFileText } from '@lucide/angular';
+
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { ChallengesApi } from '@core/challenges/challenges-api';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { CountUp } from '@shared/count-up/count-up';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { SectionRule } from '@shared/section-rule/section-rule';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
-import { formatFigure } from '@core/i18n/format/number-format.utils';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
+
 import { BaseScene } from './base-scene/base-scene';
+import { readSeenPopulation } from './base-scene/base-scene.utils';
 import { CampaignPanel } from './campaign-panel/campaign-panel';
 import { DayOrders } from './day-orders/day-orders';
-import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
-import { MissionReadings } from './mission-readings/mission-readings';
-import { MissionReport } from './mission-report/mission-report';
-import { OverviewTabs } from './overview-tabs/overview-tabs';
-import { Capacity } from './extraction-gauges/extraction-gauges.model';
-import { Contribution, Mission, SundayStakes } from './mission-readings/mission-readings.model';
 import { DayTally } from './day-orders/day-orders.model';
-import { FriezeWeek } from './overview.model';
-import { MissionReport as MissionReportView } from './mission-report/mission-report.model';
-import { OverviewTab, OverviewTabKey } from './overview-tabs/overview-tabs.model';
-import { SquadRow } from './squad-sheet/squad-sheet.model';
+import { buildDailyRow, buildTally } from './day-orders/day-orders.utils';
+import { ExtractionGauges } from './extraction-gauges/extraction-gauges';
+import { Capacity } from './extraction-gauges/extraction-gauges.model';
 import { buildCapacity } from './extraction-gauges/extraction-gauges.utils';
+import { GuardianFall } from './mission-readings/fall-forecast/fall-forecast.model';
+import { buildGuardianFall } from './mission-readings/fall-forecast/fall-forecast.utils';
+import { MissionReadings } from './mission-readings/mission-readings';
+import { Contribution, Mission, SundayStakes } from './mission-readings/mission-readings.model';
 import {
   buildContribution,
-  buildSundayStakes,
   buildMission,
+  buildSundayStakes,
 } from './mission-readings/mission-readings.utils';
-import { buildDailyRow, buildTally } from './day-orders/day-orders.utils';
-import { buildFrieze, formatSigned } from './overview.utils';
+import { MissionReport } from './mission-report/mission-report';
+import { MissionReport as MissionReportView } from './mission-report/mission-report.model';
 import {
   buildMissionReport,
   readSeenReport,
   writeSeenReport,
 } from './mission-report/mission-report.utils';
-import { buildSquad } from './squad-sheet/squad-sheet.utils';
+import { FULL_CAMPAIGN_POPULATION, OVERVIEW_TAB_PARAM } from './overview.constants';
+import { FriezeWeek } from './overview.model';
+import { buildFrieze, formatSigned } from './overview.utils';
+import { OverviewTabs } from './overview-tabs/overview-tabs';
+import { OverviewTab, OverviewTabKey } from './overview-tabs/overview-tabs.model';
 import {
   buildTabs,
   parseOverviewTab,
@@ -65,11 +71,8 @@ import { PlanetFigure } from './planet-figure/planet-figure';
 import { ScanWires } from './scan-wires/scan-wires';
 import { SquadMatches } from './squad-matches/squad-matches';
 import { SquadSheet } from './squad-sheet/squad-sheet';
-import { GuardianFall } from './mission-readings/fall-forecast/fall-forecast.model';
-import { buildGuardianFall } from './mission-readings/fall-forecast/fall-forecast.utils';
-import { FULL_CAMPAIGN_POPULATION, OVERVIEW_TAB_PARAM } from './overview.constants';
-import { readSeenPopulation } from './base-scene/base-scene.utils';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { SquadRow } from './squad-sheet/squad-sheet.model';
+import { buildSquad } from './squad-sheet/squad-sheet.utils';
 
 /**
  * Campaign at a glance: base, frieze, mission, day orders and squad. States, never advice.

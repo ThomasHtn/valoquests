@@ -1,13 +1,16 @@
-import { httpResource, HttpClient, HttpResourceRef } from '@angular/common/http';
+import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Service, Signal } from '@angular/core';
+
 import { firstValueFrom, Observable } from 'rxjs';
+
 import { CampaignDifficulty, CampaignStartWeek } from '@core/campaign/campaign.model';
-import { PageResponse } from '@core/http/page-response.model';
 import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
+import { PageResponse } from '@core/http/page-response.model';
 import { PublicResources } from '@core/http/public-resources';
 import { reloadAll } from '@core/http/resource-state.utils';
-import { ADMIN_KEY_HEADER } from './session/admin-session.constants';
-import { AdminSession } from './session/admin-session';
+
+import { SYNCHRONIZATION_HISTORY_PAGE_SIZE } from './admin-api.constants';
+import { CampaignAdmin } from './campaigns/admin-campaign.model';
 import {
   AdminPlayer,
   AdminPlayerCreateRequest,
@@ -15,12 +18,12 @@ import {
   AdminPlayerStatus,
   AdminPlayerUpdateRequest,
 } from './players/admin-player.model';
-import { CampaignAdmin } from './campaigns/admin-campaign.model';
+import { AdminSession } from './session/admin-session';
+import { ADMIN_KEY_HEADER } from './session/admin-session.constants';
 import {
   SynchronizationDetails,
   SynchronizationExecution,
 } from './synchronization/admin-synchronization.model';
-import { SYNCHRONIZATION_HISTORY_PAGE_SIZE } from './admin-api.constants';
 
 /**
  * Administration API: reads through `httpResource`, one-shot commands through `HttpClient`.

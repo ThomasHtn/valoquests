@@ -48,10 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Verifies the complete weekly challenge-progress pipeline against PostgreSQL.
- *
- * <p>The test persists real players, matches, challenge definitions and
- * weekly selections. It then executes the production recalculation service
- * and verifies progress persistence and ranking generation.</p>
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -205,9 +201,7 @@ class ChallengeProgressIntegrationTest
             40
         );
 
-        // Clearly before the week's start under the Europe/Paris zone (Monday 00:00 Paris =
-        // 2026-07-19T22:00:00Z): a timestamp equal to that boundary would fall inside the week instead
-        // of before it, since the period start is inclusive.
+        // Strictly before the Paris week start (2026-07-19T22:00:00Z), which is inclusive.
         createExcludedMatch(
             player,
             season,
@@ -286,14 +280,8 @@ class ChallengeProgressIntegrationTest
     /**
      * Verifies the ranking generated from the stored matches and the completed challenge progress.
      *
-     * <p>Guardian damage sums the five valued matches this player played this week, priced by the v2
-     * scoring table with both multipliers. The competitive match of the day before the week counts for
-     * nothing on Monday, where every streak restarts, so the daily bonus climbs from 0 % on Monday
-     * to 8 % on Friday: WIN 500 = 500, LOSS 350 × 1.02 = 357, WIN 500 × 1.04 = 520, LOSS
-     * 350 × 1.06 = 371, then the 40-kill Deathmatch victory, WIN 150 × 1.08 = 162, for 1910. None of
-     * these reaches the sixth match of its day. The five weekly challenges pay 4 + 6 + 9 + 14 +
-     * 29 = 78 points at the amateur reference no campaign has raised, plus the day's challenge when this
-     * player validated it.
+     * <p>Damage is 500 + 357 + 520 + 371 + 162 = 1910 (v2 table, daily bonus 0 % Monday to 8 % Friday).
+     * The five weeklies pay 78 points at the amateur reference, plus the day's challenge if validated.
      *
      * @param player expected ranked player
      */
@@ -347,9 +335,7 @@ class ChallengeProgressIntegrationTest
     /**
      * Prices the daily challenges this player validated this week.
      *
-     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
-     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
-     * at the 2 000 floor.
+     * <p>The daily is drawn from the pool, so its validation is read back; outside a campaign it pays 24.
      *
      * @param player player whose dailies are priced
      * @return the points those dailies add
@@ -375,9 +361,9 @@ class ChallengeProgressIntegrationTest
     }
 
     /**
-     * Removes Flyway-seeded players so only the test player is ranked. Marking them inactive is
-     * not enough: an inactive player still gets a weekly score built for display, so they would
-     * still show up in the ranking assertions below.
+     * Removes Flyway-seeded players so only the test player is ranked.
+     *
+     * <p>Deactivating them is not enough: inactive players still get a weekly score for display.
      */
     private void deactivateSeededPlayers() {
         playerRepository.deleteAll();

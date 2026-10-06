@@ -1,4 +1,3 @@
-import { SkyBody, SkyState } from './town-scene.model';
 import {
   HORIZON,
   MOON_HOURS,
@@ -7,6 +6,7 @@ import {
   SUN_HOURS,
   TOWN_WIDTH,
 } from './town-scene.constants';
+import { SkyBody, SkyState } from './town-scene.model';
 
 /**
  * Viewer's local time of day in fractional hours, from epoch ms.

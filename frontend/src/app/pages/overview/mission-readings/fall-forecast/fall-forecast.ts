@@ -9,10 +9,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
 import { LucideChevronDown, LucideHourglass } from '@lucide/angular';
 
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
+
 import {
   FallChart,
   FallHover,

@@ -13,18 +13,8 @@ import org.springframework.stereotype.Component;
 /**
  * Owns the calendar every weekly calculation is anchored on.
  *
- * <p>A week runs from Monday 00:00 to the following Monday 00:00 in the configured zone, and is
- * identified throughout the application by that Monday's {@link LocalDate}.
- *
- * <p>This exists because the zone has to be one decision, made once. Challenge selection, challenge
- * progress, active-day counting, ranking and rollover all have to agree on where a week starts and
- * which day a match falls on; when each computed it separately, a single divergence would silently
- * move a Sunday-night match into the wrong week and change a ranking nobody could then explain.
- *
- * <p>Instants remain stored in UTC. Only their calendar interpretation uses this zone.
- *
- * <p>Final because the constructor validates its arguments: leaving the class extensible would let
- * a subclass observe a partially initialized instance.
+ * <p>A week runs Monday to Monday 00:00 in the configured zone and is identified by that Monday. Instants
+ * stay in UTC; every day and week boundary must come from here so all features agree.
  */
 @Component
 public final class WeekCalendar {
@@ -84,10 +74,6 @@ public final class WeekCalendar {
     /**
      * Returns the calendar day currently in progress, in the calendar's own zone.
      *
-     * <p>The day the daily diminishing returns are counted over, which is not the caller's day: a
-     * player finishing a match at one in the morning is still on the previous day as far as the
-     * ladder is concerned, and only this calendar knows where that boundary sits.
-     *
      * @return current day
      */
     public LocalDate today() {
@@ -133,9 +119,6 @@ public final class WeekCalendar {
     /**
      * Returns the calendar day an instant falls on.
      *
-     * <p>This is what makes a match count towards one active day rather than another, so it has to
-     * use the same zone as the week it is counted in.
-     *
      * @param instant instant to place, must not be {@code null}
      * @return the local day containing that instant
      */
@@ -160,8 +143,7 @@ public final class WeekCalendar {
     /**
      * Returns the exclusive instant a week ends at.
      *
-     * <p>Exclusive on purpose: it is the following week's start, so consecutive weeks tile the
-     * timeline without a gap or an overlap that would drop or double-count a match.
+     * <p>Exclusive so consecutive weeks tile the timeline with no gap or overlap.
      *
      * @param weekStart Monday identifying the week, must not be {@code null}
      * @return first instant no longer belonging to the week

@@ -5,9 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * The base at the close of one week, and what the week added to its stocks.
  *
- * <p>The ledger of the campaign page is read from this: what a week brought in, what its Sunday
- * spent (carried by the week itself) and what was left over for the next one. For the week in
- * progress the figures stop at the last replayed day.
+ * <p>For the week in progress the figures stop at the last replayed day.
  *
  * @param population       inhabitants on the week's last replayed day
  * @param populationChange inhabitants gained or lost since the previous week's close

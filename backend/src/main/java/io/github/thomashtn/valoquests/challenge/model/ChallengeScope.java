@@ -3,16 +3,12 @@ package io.github.thomashtn.valoquests.challenge.model;
 /**
  * Defines the level at which a challenge condition must be evaluated.
  *
- * <p>Aggregating over the period is what every calculator does when no scope is given, so that
- * default has no constant of its own.
+ * <p>Aggregating over the period is the default when no scope is given, so it has no constant.
  */
 public enum ChallengeScope {
 
     /**
-     * Evaluates the condition independently for every eligible match.
-     *
-     * <p>This scope is suitable for occurrence and streak challenges where
-     * each match must satisfy a specific threshold.</p>
+     * Evaluates the condition independently for every eligible match, as occurrences and streaks need.
      */
     PER_MATCH
 }

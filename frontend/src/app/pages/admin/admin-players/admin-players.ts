@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import {
   LucideChevronDown,
   LucidePlus,
@@ -10,28 +11,29 @@ import {
   LucideTriangleAlert,
 } from '@lucide/angular';
 
-import { AdminActionState } from '@core/admin/commands/admin-action.model';
-import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminApi } from '@core/admin/admin-api';
+import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
+import { AdminActionState } from '@core/admin/commands/admin-action.model';
 import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
+import { formatCampaignDateTime } from '@core/date/date-format.utils';
+import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { resourceValue } from '@core/http/resource-state.utils';
-import { formatCampaignDateTime } from '@core/date/date-format.utils';
+import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Button } from '@shared/button/button';
 import { ConfirmDialog } from '@shared/confirm-dialog/confirm-dialog';
-import { PageHeader } from '@layout/page-header/page-header';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { SectionLabel } from '@shared/section-label/section-label';
 import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
+import { SectionLabel } from '@shared/section-label/section-label';
 import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
+
+import { GUIDE_STEPS } from './admin-players.constants';
 import { PlayerFormPanel } from './player-form-panel/player-form-panel';
 import { PlayerFormResult } from './player-form-panel/player-form-panel.model';
-import { GUIDE_STEPS } from './admin-players.constants';
 
 /**
  * Backoffice roster: add, edit, (de)activate and remove players.

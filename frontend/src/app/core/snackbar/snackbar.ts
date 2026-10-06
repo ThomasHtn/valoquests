@@ -1,6 +1,7 @@
 import { Service, signal } from '@angular/core';
-import { SnackbarMessage } from './snackbar.model';
+
 import { SNACKBAR_DURATION_MS, SNACKBAR_ERROR_DURATION_MS } from './snackbar.constants';
+import { SnackbarMessage } from './snackbar.model';
 
 /**
  * Global snackbar queue: one slot on screen, so back-to-back messages each get their turn.

@@ -16,10 +16,8 @@ import java.util.stream.Collectors;
 /**
  * Aggregates a set of player matches into the performance indicators every profile screen reads.
  *
- * <p>Shared by {@link DefaultPlayerQueryService} and
- * {@link DefaultPlayerProgressionQueryService}: both reduce arbitrary groupings of matches - a
- * whole season, one agent, one map, one weekday - with exactly these formulas, and a second
- * implementation would let the two screens disagree on what a win rate is.
+ * <p>Shared by {@link DefaultPlayerQueryService} and {@link DefaultPlayerProgressionQueryService} so the
+ * two screens never disagree on what a win rate is.
  *
  * @param matchesPlayed      number of matches in the group
  * @param wins               matches whose result is {@link MatchResult#WIN}
@@ -52,8 +50,7 @@ record MatchStatistics(
     /**
      * Reduces a group of matches into its aggregate indicators.
      *
-     * <p>An empty group yields zeroes rather than nulls, so a caller never has to special-case a
-     * player who has not played the agent, map or period being summarized.
+     * <p>An empty group yields zeroes rather than nulls.
      *
      * @param matches matches to aggregate; never {@code null}
      * @return the group's aggregate indicators
@@ -81,9 +78,7 @@ record MatchStatistics(
     /**
      * Averages the non-null values of a list, ignoring the missing ones.
      *
-     * <p>{@code acs} and {@code adr} are nullable on {@link PlayerMatch}: some game modes report no
-     * round count, so counting those matches in the denominator would drag the average toward zero
-     * for a player who simply has no figure to report.
+     * <p>Some modes report no {@code acs} or {@code adr}; counting them would drag the average toward zero.
      *
      * @param values values to average, possibly containing nulls
      * @return the average of the non-null values, or zero when none remain

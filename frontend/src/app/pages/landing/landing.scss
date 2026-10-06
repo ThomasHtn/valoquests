@@ -62,9 +62,11 @@ $stars-narrow: (
  */
 @function star-shadows($stars) {
   $shadows: ();
+
   @each $x, $y, $alpha in $stars {
     $shadows: list.append($shadows, $x $y tint(text-primary, $alpha), comma);
   }
+
   @return $shadows;
 }
 
@@ -238,6 +240,7 @@ $stars-narrow: (
 
   .landing__poster {
     gap: 2rem;
+
     /* Gives the room under the compass back to the composition. */
     min-height: 100%;
   }

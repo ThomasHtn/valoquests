@@ -59,8 +59,7 @@ class AsyncSynchronizationRunnerTest {
     /**
      * Verifies that a background batch failure never escapes the runner.
      *
-     * <p>Nothing is waiting on this thread: an exception thrown here would only be reported by the
-     * executor's default handler, while the failed execution row already carries the diagnosis.
+     * <p>Nothing waits on this thread, and the failed execution row already carries the diagnosis.
      */
     @Test
     void shouldSwallowABatchFailure() {

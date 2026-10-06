@@ -1,5 +1,5 @@
-import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { StreakPip } from '@shared/streak-gauge/streak-gauge.model';
 
 /**

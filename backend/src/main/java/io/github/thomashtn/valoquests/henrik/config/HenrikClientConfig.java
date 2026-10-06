@@ -22,12 +22,7 @@ public class HenrikClientConfig {
     private static final String USER_AGENT = "valo-quests/1.0";
 
     /**
-     * Maximum Henrik response size buffered in memory.
-     *
-     * <p>Henrik v4 match-history responses contain detailed round, player and
-     * damage data. A page of ten matches can exceed four megabytes, especially
-     * for long competitive matches. A bounded sixteen-megabyte limit supports
-     * these payloads while preventing unlimited buffering.</p>
+     * Maximum Henrik response size buffered in memory, since a page of v4 matches can exceed four megabytes.
      */
     private static final int MAX_RESPONSE_SIZE_BYTES =
         16 * 1024 * 1024;
@@ -50,10 +45,6 @@ public class HenrikClientConfig {
 
     /**
      * Creates the dedicated HTTP client used for Henrik API calls.
-     *
-     * <p>The bean contains only technical HTTP configuration. Endpoint paths,
-     * request parameters and response mappings remain in the Henrik client
-     * implementation.</p>
      *
      * @param properties validated Henrik API configuration
      * @return configured Henrik API {@link WebClient}

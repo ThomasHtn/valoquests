@@ -1,5 +1,5 @@
-import { WeeklyTitle } from './titles/campaign-title.model';
 import { CampaignDifficulty, CampaignStartWeek } from './campaign.model';
+import { WeeklyTitle } from './titles/campaign-title.model';
 
 /**
  * Difficulties, easiest first.

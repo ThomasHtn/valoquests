@@ -1,4 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
+
 import { LucideHourglass } from '@lucide/angular';
 
 import { RemainingTime } from '@core/date/date.model';

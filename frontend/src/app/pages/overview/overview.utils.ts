@@ -1,8 +1,9 @@
-import { Campaign } from '@core/campaign/campaign.model';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { resolvePlanetArtUrl } from '@core/campaign/planets/campaign-planet-art.utils';
 import { TranslateFn } from '@core/i18n/translation.model';
+
 import { FriezeWeek } from './overview.model';
 
 /**

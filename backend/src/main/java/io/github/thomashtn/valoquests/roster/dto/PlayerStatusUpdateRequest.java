@@ -7,8 +7,7 @@ import jakarta.validation.constraints.NotNull;
 /**
  * Carries the lifecycle status a tracked player must move to.
  *
- * <p>Also how an archived player is restored: moving it back to {@code ACTIVE} or {@code INACTIVE}
- * returns it to the roster with the history it kept while archived.
+ * <p>Moving an archived player back to {@code ACTIVE} or {@code INACTIVE} restores it with its history.
  *
  * @param status status to apply
  */

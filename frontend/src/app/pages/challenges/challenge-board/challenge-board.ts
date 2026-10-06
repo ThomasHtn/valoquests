@@ -11,6 +11,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+
 import {
   LucideChevronLeft,
   LucideChevronRight,
@@ -25,6 +26,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { ProgressMark } from '@shared/progress-mark/progress-mark';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { BoardHead } from '../board-head/board-head';
 import {
   BOARD_COLUMN_REM,

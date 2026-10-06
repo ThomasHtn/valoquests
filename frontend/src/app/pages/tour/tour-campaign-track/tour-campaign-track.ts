@@ -1,5 +1,6 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import { LucideRocket } from '@lucide/angular';
 
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';

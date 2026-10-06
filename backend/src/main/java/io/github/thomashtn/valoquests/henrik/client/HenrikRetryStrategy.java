@@ -13,11 +13,8 @@ import reactor.util.retry.Retry;
 /**
  * Creates retry policies for Henrik API operations.
  *
- * <p>Only temporary external failures are retried. Functional failures such as
- * an unknown player or an invalid request fail immediately.</p>
- *
- * <p>Rate-limit responses use Henrik's {@code Retry-After} value when it is
- * available. Other temporary failures use the configured default delay.</p>
+ * <p>Only temporary failures are retried; a rate limit waits for Henrik's {@code Retry-After} when longer
+ * than the configured delay.
  */
 @Component
 public class HenrikRetryStrategy {
@@ -45,8 +42,7 @@ public class HenrikRetryStrategy {
     /**
      * Creates a retry policy for one Henrik API operation.
      *
-     * <p>The first HTTP request is included in {@code maxAttempts}. Therefore,
-     * three configured attempts allow at most two retries.</p>
+     * <p>{@code maxAttempts} includes the first request, so three attempts allow two retries.
      *
      * @param operationName operation description used in logs
      * @return configured Reactor retry policy
@@ -86,10 +82,7 @@ public class HenrikRetryStrategy {
     /**
      * Determines the attempt budget for a failure.
      *
-     * <p>A rate-limit response is Henrik's own advertised, expected condition during a long
-     * pagination walk, not a genuine failure: it gets a far more generous budget than a real error
-     * such as a timeout or an upstream outage, so a burst of 429 responses does not abort a walk that
-     * would otherwise have completed.
+     * <p>A rate limit is expected during long walks, so it gets a far larger budget than a real error.
      *
      * @param failure retryable Henrik failure
      * @return maximum number of HTTP attempts, including the first
@@ -102,9 +95,6 @@ public class HenrikRetryStrategy {
 
     /**
      * Determines the waiting duration before retrying a request.
-     *
-     * <p>For a rate-limit response, the duration requested by Henrik takes
-     * precedence when it is greater than the configured fallback delay.</p>
      *
      * @param failure retryable Henrik failure
      * @return waiting duration

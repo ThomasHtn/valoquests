@@ -12,16 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Awards the four weekly honours from a week's ranking rows.
  *
- * <p>A player holds one title at most. Titles are awarded in declaration order, the week's
- * champion taking none of them, and a title whose best figure already holds one passes to the next
- * player on that figure.
- *
- * <p>A tie awards nothing. Two players who both did the most are not both the most, and a title
- * that can be shared stops meaning anything the first time it is.
- *
- * <p>Reads the ranking rather than the campaign: the rows already carry what each player's week
- * was worth, and they exist between two campaigns too, so a squad keeps its honours while it waits
- * for the next one. Only ranked rows compete: an inactive player's counts are for their own eyes.
+ * <p>Awarded in declaration order, one per player, champions excluded; a tie awards nothing. Only ranked
+ * rows compete, and reading them rather than the campaign keeps honours between campaigns.
  */
 @Component
 public class WeeklyTitleResolver {

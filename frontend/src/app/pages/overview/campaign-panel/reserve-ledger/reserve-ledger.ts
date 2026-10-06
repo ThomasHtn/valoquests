@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { LucideChevronDown, LucideTrendingUp, LucideDynamicIcon } from '@lucide/angular';
 
+import { LucideChevronDown, LucideDynamicIcon, LucideTrendingUp } from '@lucide/angular';
+
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { Translation } from '@core/i18n/translation';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign-panel.model';
 import { LedgerCellView } from './ledger-cell/ledger-cell';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 
 /**
  * Reserves per week: gained above the ground, spent below, carry-over dashed.

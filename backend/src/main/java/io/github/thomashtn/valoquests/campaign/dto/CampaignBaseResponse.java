@@ -5,10 +5,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * The base as it stands right now: its size, its two stocks and what they can pay for.
  *
- * <p>The capacities are the point. A stock only means something next to what it buys, and the whole
- * arbitrage of a week is reading "components reach 84, food settles 61" and knowing which one to go
- * and get.
- *
  * @param population           inhabitants
  * @param foodStock            food in reserve
  * @param componentsStock      components in reserve

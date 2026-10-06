@@ -24,11 +24,7 @@ public class AdminSessionController {
     /**
      * Answers successfully whenever the request carried a valid administrator key.
      *
-     * <p>Deliberately empty and free of any collaborator. The whole point of this route is to be
-     * reached, or not: a request without the header never gets here because
-     * {@code AdminApiKeyFilter} rejects it with a 401, and an invalid key gets a 403. That makes it
-     * the one endpoint a client can call to check a key before running a real operation, without
-     * risking a side effect if the key turns out to be valid.
+     * <p>Deliberately empty: {@code AdminApiKeyFilter} answers 401 or 403 before a bad key gets here.
      */
     @GetMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)

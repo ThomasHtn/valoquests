@@ -9,8 +9,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Provides a shared PostgreSQL Testcontainer for integration tests.
  *
- * <p>The container replaces the H2 database normally used by unit tests.
- * Flyway migrations are enabled and Hibernate validates the migrated schema.</p>
+ * <p>It replaces the unit tests' H2 database; Flyway migrates it and Hibernate validates the schema.
  */
 @Tag("integration")
 @Testcontainers(disabledWithoutDocker = true)
@@ -19,14 +18,8 @@ public abstract class PostgreSqlIntegrationTest {
     /**
      * PostgreSQL container shared by every integration test class.
      *
-     * <p>Deliberately <em>not</em> annotated {@code @Container}: that annotation ties the
-     * container's lifecycle to the JUnit 5 {@code Testcontainers} extension, which stops it once
-     * the class currently using it finishes - including this static field shared across every
-     * subclass. Whichever integration test class happens to run last would then find the container
-     * already stopped and fail with a connection refused error. This is the "singleton container"
-     * pattern Testcontainers itself documents for this exact case: started once, in a static
-     * initializer, and left to the JVM shutdown hook (Ryuk) to reap (see "singleton containers" in
-     * the Testcontainers manual lifecycle control documentation).
+     * <p>Not {@code @Container} on purpose: the extension would stop it after the first class, breaking the next.
+     * Started once and reaped by Ryuk at JVM exit (Testcontainers "singleton container" pattern).
      */
     protected static final PostgreSQLContainer<?> POSTGRESQL =
         new PostgreSQLContainer<>("postgres:17-alpine")
@@ -39,8 +32,7 @@ public abstract class PostgreSqlIntegrationTest {
     }
 
     /**
-     * Overrides the standard test database configuration with the values
-     * provided by the PostgreSQL container.
+     * Overrides the test database configuration with the container's values.
      *
      * @param registry Spring dynamic property registry
      */

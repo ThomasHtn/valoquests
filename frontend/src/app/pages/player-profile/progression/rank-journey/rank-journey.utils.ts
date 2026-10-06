@@ -1,7 +1,6 @@
 import { Plugin } from 'chart.js';
 
 import { Language, TranslateFn } from '@core/i18n/translation.model';
-import { formatSeasonName, splitSeasonName } from '@core/seasons/season-name.utils';
 import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
 import {
   resolveCompetitiveTierColorVariable,
@@ -11,9 +10,11 @@ import {
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { formatWinRate } from '@core/players/player-format.utils';
 import { SeasonRank } from '@core/players/progression/player-progression.model';
+import { formatSeasonName, splitSeasonName } from '@core/seasons/season-name.utils';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import { ChartTheme } from '@shared/chart/chart-theme.model';
 import { token } from '@shared/chart/chart-theme.utils';
+
 import { KeyFigure } from '../key-figures/key-figures.model';
 import {
   RANK_JOURNEY_I18N as KEYS,

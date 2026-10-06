@@ -11,8 +11,7 @@ import io.github.thomashtn.valoquests.challenge.model.ProgressMode;
 /**
  * Structural rules a parsed challenge definition must satisfy, per progress mode.
  *
- * <p>Kept apart from the JSON parsing so the rules read as a list: each progress mode has one
- * method naming what it requires of its single condition.</p>
+ * <p>Kept apart from JSON parsing so each progress mode reads as one method.
  */
 final class ChallengeDefinitionValidator {
 

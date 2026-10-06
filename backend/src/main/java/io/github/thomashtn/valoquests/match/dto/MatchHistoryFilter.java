@@ -6,12 +6,8 @@ import java.time.LocalDate;
 /**
  * Groups the optional filters a caller may apply to a player's match history.
  *
- * <p>Values arrive exactly as the caller wrote them, so this carries raw request text rather than
- * parsed types: rejecting an unknown result or game mode is {@code MatchFilterParser}'s job, while a
- * map or an agent is free text that is never rejected. Keeping the parsing there is what lets an
- * invalid value answer 400 instead of surfacing as a binding failure the API cannot describe.
- *
- * <p>A {@code null} component means "no filter on this field", never "match nothing".
+ * <p>Carries raw text so {@code MatchFilterParser} can answer 400 on an invalid value; {@code null}
+ * means no filter on that field.
  *
  * @param seasonId internal season identifier, or {@code null} for every season
  * @param map      map name, or {@code null} for every map

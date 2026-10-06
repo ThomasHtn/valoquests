@@ -2,6 +2,7 @@ import { toCampaignDayKey } from '@core/campaign/calendar/campaign-calendar.util
 import { formatCampaignDayMonth } from '@core/date/date-format.utils';
 import { Language } from '@core/i18n/translation.model';
 import { Match } from '@core/matches/match.model';
+
 import { MatchDay, MatchDayGroup } from './match-day.model';
 
 /**

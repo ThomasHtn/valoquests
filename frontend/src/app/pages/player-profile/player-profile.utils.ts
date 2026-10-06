@@ -12,6 +12,7 @@ import {
 import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { Season } from '@core/seasons/season.model';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
+
 import {
   ALL_SEASONS_PARAM,
   PROFILE_QUERY_KEYS,

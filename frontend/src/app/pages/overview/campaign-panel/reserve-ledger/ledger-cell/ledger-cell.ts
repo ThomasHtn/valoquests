@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+
 import { LedgerCell, LedgerRow } from '../../campaign-panel.model';
 
 /**

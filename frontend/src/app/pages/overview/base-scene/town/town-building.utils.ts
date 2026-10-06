@@ -1,7 +1,7 @@
-import { svgElement } from '@core/svg/svg-element.utils';
 import { hashUnit } from '@core/random/hash-unit.utils';
+import { svgElement } from '@core/svg/svg-element.utils';
 import { animate } from '@shared/rocket/rocket-drawing.utils';
-import { BuildingShape, BuildingVolume, Lot, SkyState, WindowGrid } from './town-scene.model';
+
 import {
   BLOCK_TIER,
   CABIN_TIER,
@@ -15,6 +15,7 @@ import {
   TOWER_TIER,
   TOWN_PALETTE,
 } from './town-scene.constants';
+import { BuildingShape, BuildingVolume, Lot, SkyState, WindowGrid } from './town-scene.model';
 import { mixColor } from './town-sky-cycle.utils';
 
 /**

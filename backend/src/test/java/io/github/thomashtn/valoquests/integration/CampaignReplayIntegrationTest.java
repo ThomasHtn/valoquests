@@ -49,13 +49,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Verifies the campaign replay against a real PostgreSQL, end to end.
  *
- * <p>What cannot be trusted from unit tests: that the whole campaign is deleted and written again
- * without leaving an orphan behind, that two replays of the same inputs produce the same rows, and
- * that every {@code NUMERIC} and {@code JSONB} column the schema declares accepts what the engine
- * computes.
- *
- * <p>The campaign is placed entirely in the past so the replay reads a fixed range whatever day the
- * suite runs on.
+ * <p>Checks no orphan survives a rewrite, replays are identical and {@code NUMERIC}/{@code JSONB} columns fit.
+ * The campaign lies in the past so the replay range is fixed whatever day the suite runs.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,

@@ -4,11 +4,8 @@
   "cli": {
     "packageManager": "npm",
     "analytics": false,
-    "schematicCollections": [
-      "angular-eslint"
-    ]
+    "schematicCollections": ["angular-eslint"]
   },
-  "newProjectRoot": "projects",
   "projects": {
     "frontend": {
       "projectType": "application",
@@ -32,13 +29,9 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ],
+            "styles": ["src/styles.css"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "src/styles/scss"
-              ]
+              "includePaths": ["src/styles/scss"]
             }
           },
           "configurations": {
@@ -92,10 +85,7 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
-            ]
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         }
       }

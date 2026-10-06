@@ -97,8 +97,7 @@ class DefaultPlayerQueryServiceTest {
             dailyOutputReader
         );
 
-        // The profile carries today's standing on the diminishing-returns ladder, which every
-        // `findById` therefore resolves. Lenient because the list-facing tests never reach it.
+        // Every findById resolves today's ladder standing; lenient because list tests never reach it.
         lenient().when(weekCalendar.today()).thenReturn(LocalDate.of(2026, 8, 31));
         lenient().when(dailyOutputReader.dailyYield(anyLong(), any()))
             .thenReturn(new DailyYield(0, 100, 6, 50));

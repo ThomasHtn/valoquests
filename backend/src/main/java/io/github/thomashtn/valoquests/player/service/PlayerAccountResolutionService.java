@@ -57,15 +57,13 @@ public class PlayerAccountResolutionService {
     /**
      * Resolves and stores the player's Riot PUUID when it is not already known.
      *
-     * <p>No external request is performed when the player already has a PUUID.
-     * This makes the operation idempotent and avoids unnecessary Henrik calls.</p>
+     * <p>Idempotent: no Henrik call is made when the PUUID is already known.
      *
      * @param player tracked player to resolve
      * @return player containing a Riot PUUID
      * @throws IllegalArgumentException when the player is null
-     * @throws PlayerAccountConflictException when the resolved PUUID already
-     *                                        belongs to another player
-     * @throws IllegalStateException when the player's Riot identity changed during the resolution
+     * @throws PlayerAccountConflictException when another player owns the PUUID
+     * @throws IllegalStateException when the Riot identity changed meanwhile
      */
     public Player resolvePuuid(Player player) {
         if (player == null) {

@@ -1,4 +1,5 @@
 import { routePath } from '@core/navigation/navigation-history.utils';
+
 import { SYNC_STALE_AFTER_MS } from './sidebar.constants';
 import { NavItem } from './sidebar.model';
 

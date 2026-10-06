@@ -184,8 +184,7 @@ public class DefaultRankingQueryService implements RankingQueryService {
     /**
      * Maps one finalized week to its immutable history representation.
      *
-     * <p>Inactive players never consume a ranking slot; they are left out of the history entirely,
-     * unlike the current-week view where they still appear.
+     * <p>Unranked players, inactive ones included, are left out, unlike the current-week view.
      *
      * @param weekStart Monday identifying the week
      * @param scores    the week's rows

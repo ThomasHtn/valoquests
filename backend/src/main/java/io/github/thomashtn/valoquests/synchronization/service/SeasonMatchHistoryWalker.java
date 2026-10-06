@@ -24,34 +24,10 @@ import org.springframework.stereotype.Service;
 /**
  * Walks one player's Henrik match history backwards, season by season.
  *
- * <p>Henrik returns matches newest first, so the walk starts at offset zero and moves back in time.
- * Its scope is the season of the newest match plus the one preceding it: everything those two
- * seasons hold is imported, and the walk stops when it crosses below them.
- *
- * <p>Two rules make the result trustworthy across interruptions and season changes:
- *
- * <ul>
- *   <li>A season is only marked complete once the walk has proved it reached its oldest match, by
- *       crossing into an older season or by exhausting the available history. Until then the stored
- *       history may have holes, so the next run re-walks the season in full rather than stopping at
- *       the first already-stored match.</li>
- *   <li>Below that two-season scope, an older season is only walked when the player already has an
- *       unfinished state for it. That finishes what a previous run started, whether it was
- *       interrupted or overtaken by a season change, without widening the scope any further: on an
- *       empty database no older state exists, so the walk is bounded by those two seasons.</li>
- * </ul>
- *
- * <p>Stop conditions are evaluated on the raw Henrik page, never on the subset actually imported.
- * A page holding nothing but ignored game modes proves nothing about the history behind it and must
- * not read as a boundary.
- *
- * <p><strong>Known limitation.</strong> Seasons interleaved across a page boundary are not detected:
- * if the last match of a page belongs to an older season and the first match of the next page
- * belongs to the current one again, the walk stops early. This would require Riot to have tagged an
- * older match with a newer act, while Henrik orders matches strictly by descending start instant.
- *
- * <p><strong>This walk must not run inside a transaction</strong>: see
- * {@link SeasonSynchronizationStateService}.
+ * <p>Scope: the newest match's season and the previous one; an older season only if it has an unfinished
+ * state. A season is marked complete only once its oldest match is proved reached, else it is re-walked
+ * in full. Stops are judged on the raw page, never the imported subset. Must not run in a transaction.
+ * Known limitation: seasons interleaved across a page boundary stop the walk early.
  */
 @Service
 public class SeasonMatchHistoryWalker {
@@ -65,25 +41,15 @@ public class SeasonMatchHistoryWalker {
     /**
      * Safety guard against a walk that never advances, for instance if Henrik repeats a page.
      *
-     * <p>Sized well beyond a normal run: live Henrik data for one of this application's tracked
-     * players showed over 400 matches, mostly Deathmatch, within the first sixteen days of an act
-     * alone, meaning a heavy player can approach a much lower limit well before the act ends. Reaching
-     * this limit signals an anomaly, not a busy player, which is why it stops the walk instead of
-     * raising the limit further. It is not the only thing keeping a truncated run cheap to finish:
-     * {@link SeasonSynchronizationStateService#recordProgress} persists a checkpoint after every page
-     * of the starting season, so a run stopped here resumes near this point next time rather than
-     * from the season's start.
+     * <p>Far above a heavy player's act, so reaching it signals an anomaly; the per-page checkpoint
+     * lets the next run resume near this point.
      */
     private static final int MAXIMUM_PAGE_COUNT = 1_000;
 
     /**
      * Number of seasons the walk may open on its own behind the season of the newest match.
      *
-     * <p>One, so the scope is the current season plus the previous one. It only bounds the seasons
-     * the walk starts: a season the player already has an unfinished state for is always resumed,
-     * whatever is left of the budget, since that state proves an earlier run targeted it. Every
-     * boundary crossed consumes the budget, including a repair, so a repair never lets the walk
-     * start a season this application never targeted.
+     * <p>An unfinished season is resumed regardless of the budget, but every crossing consumes it.
      */
     private static final int TRAILING_SEASON_BUDGET = 1;
 
@@ -136,8 +102,7 @@ public class SeasonMatchHistoryWalker {
     }
 
     /**
-     * Imports every match of the player's current and previous seasons, resuming unfinished seasons
-     * on the way.
+     * Imports the player's current and previous seasons, resuming unfinished seasons on the way.
      *
      * @param player tracked player whose Riot identifier is already resolved
      * @return the pages retrieved, matches imported and the condition that ended the walk
@@ -172,8 +137,7 @@ public class SeasonMatchHistoryWalker {
     ) {
         Season season = seasonResolutionService.resolve(targetSeason);
         SeasonScope scope = startScope(player, season, targetSeason.id());
-        // Only this season's checkpoint is ever read back: a season entered by crossing a boundary
-        // is older than the newest match, so it never becomes the starting season again.
+        // Only this season's checkpoint is read back: a crossed season never becomes the starting one.
         Long startingSeasonId = scope.seasonId();
         // Read before the first page is imported, so its new matches never pass for known history.
         Optional<Instant> newestStoredStart = newestStoredStart(player, scope);
@@ -194,11 +158,7 @@ public class SeasonMatchHistoryWalker {
                     return stop(player, SynchronizationStopReason.SEASON_BOUNDARY, page,
                         matchesImported, scope.externalId());
                 }
-                // The same page is replayed from the boundary for the admitted season: its matches
-                // sit on this page and would otherwise be the hole at that season's most recent end.
-                // Resuming at the boundary index rather than at zero keeps the already-walked newer
-                // matches out of scope, which would otherwise read as a boundary again and stop the
-                // walk immediately.
+                // Replay this page from the boundary index, not zero, so newer matches don't stop it.
                 scope = crossedScope.get();
                 fromIndex = olderSeasonIndex;
                 continue;
@@ -217,15 +177,13 @@ public class SeasonMatchHistoryWalker {
 
             int nextOffset = nextPageOffset(player, scope, page, pageImport, newestStoredStart);
 
-            // Only reached once this page's matches are durably imported, so the checkpoint never
-            // advances past what a crash right after this line would actually leave committed.
+            // The page is already committed, so the checkpoint never passes what is stored.
             if (scope.seasonId().equals(startingSeasonId)) {
                 stateService.recordProgress(player.getId(), scope.seasonId(), nextOffset);
             }
 
             if (page.pagesFetched() >= MAXIMUM_PAGE_COUNT) {
-                // Deliberately not marked complete: the season is truncated, and freezing it here
-                // would turn the truncation into a permanent hole.
+                // Not marked complete: freezing a truncated season would leave a permanent hole.
                 LOGGER.warn(
                     "Match history walk reached the safety page limit for player {}: "
                         + "maximumPages={} start={} season={}",
@@ -248,19 +206,9 @@ public class SeasonMatchHistoryWalker {
     /**
      * Decides where the walk continues after a page.
      *
-     * <p>Usually right after it. The exception is the first page of a season holding a checkpoint
-     * further ahead. Henrik offsets count from the newest match, so every match played since the
-     * checkpoint was written pushes the stored history further back. The jump skips nothing once the
-     * first page reaches back to already stored history: it holds an already-stored match, or its
-     * oldest match started no later than the newest one stored for the season. The second proof
-     * matters because ignored game modes are never stored, so a first page of nothing but custom
-     * games holds no stored match yet may still reach back. Otherwise the new matches may run
-     * past this page and a jump would skip them for good: the walk goes on page by page, and the
-     * stale checkpoint is discarded so a later run cannot jump on it either.
-     *
-     * <p>The checkpoint is only considered on the mandatory first page: a season crossed into later
-     * is already positioned correctly in the continuous Henrik offset stream, and its scope carries
-     * no checkpoint anyway.
+     * <p>Only the first page may jump to a further checkpoint, and only once it reaches stored history
+     * (a stored match, or an oldest start no later than the newest stored); else the checkpoint is
+     * discarded, as newer matches may have shifted it.
      *
      * @param player     tracked player being walked
      * @param scope      season being walked
@@ -328,12 +276,8 @@ public class SeasonMatchHistoryWalker {
     /**
      * Closes the season the walk just left and decides whether it continues into the older one.
      *
-     * <p>The left season is marked complete first: the page that proved the boundary is already
-     * imported. Two reasons then admit the older season, in this order: the player has an unfinished
-     * state for it, so finishing it repairs a run that was interrupted or overtaken by a season
-     * change; or the trailing budget still allows opening one, which is what puts the previous
-     * season in scope on a database that never saw it. Every admission consumes the budget. An empty
-     * result leaves that season alone and ends the walk.
+     * <p>The left season is marked complete first. The older one is admitted if it has an unfinished
+     * state, else if the trailing budget allows; every admission consumes the budget.
      *
      * @param player        tracked player being walked
      * @param leaving       season the walk just walked past the oldest match of
@@ -368,9 +312,7 @@ public class SeasonMatchHistoryWalker {
         }
 
         Season season = seasonResolutionService.resolve(boundaryMatch.metadata().season());
-        // The checkpoint of that season is deliberately not applied: the walk is already positioned
-        // at its newest match in the continuous Henrik offset stream, and jumping ahead from here
-        // would skip the pages between this boundary and the checkpoint.
+        // Its checkpoint is not applied: the walk already sits at its newest match, a jump would skip pages.
         boolean alreadyComplete = stateService.startSeason(player, season).complete();
         LOGGER.info(
             "Extending the walk into the previous season for player {}: season={} externalId={}",
@@ -410,9 +352,7 @@ public class SeasonMatchHistoryWalker {
     /**
      * Imports the matches of a page segment that belong to the season being walked.
      *
-     * <p>Matches of another season are withheld on purpose: importing them without declaring their
-     * season would leave that season holding a handful of matches with no state to say it is
-     * unfinished, permanently skewing the statistics and challenges filtered on it.
+     * <p>Other seasons' matches are withheld: stored without a season state, they would skew it for good.
      */
     private PageImport importInScopeMatches(
         Player player,
@@ -450,8 +390,7 @@ public class SeasonMatchHistoryWalker {
     /**
      * Determines whether a match belongs to the season being walked.
      *
-     * <p>A match with no usable season identifier stays in scope so the import service classifies
-     * it, and rejects it, rather than having it silently disappear from the counters.
+     * <p>A match without a season stays in scope so the import service rejects it in the counters.
      */
     private boolean isInScope(HenrikMatchData match, String seasonExternalId) {
         String matchSeasonId = seasonId(match);
@@ -544,11 +483,9 @@ public class SeasonMatchHistoryWalker {
      *
      * @param seasonId local season identifier
      * @param externalId Henrik season identifier
-     * @param alreadyComplete whether the season was fully walked before, so its stored history is
-     *     contiguous and reaching known matches may stop the walk
+     * @param alreadyComplete whether reaching known matches may stop the walk
      * @param resumeOffset checkpoint offset to apply once, right after the mandatory first page
-     * @param trailingSeasonBudget seasons the walk may still open on its own behind this one;
-     *     unfinished seasons are resumed regardless
+     * @param trailingSeasonBudget seasons the walk may still open on its own behind this one
      */
     private record SeasonScope(
         Long seasonId,

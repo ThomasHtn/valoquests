@@ -15,10 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Closes synchronization executions that a shutdown interrupted.
  *
- * <p>Only the run itself moves an execution out of {@code RUNNING}, so a process killed mid-run
- * would leave a row the public status reports as in progress forever. The application runs as a
- * single instance and no run survives the process that started it, so any such row found at
- * startup is by definition dead; a second instance would break that assumption.
+ * <p>Single instance only: a {@code RUNNING} row found at startup is dead, else it would show as
+ * in progress forever.
  */
 @Component
 public class StaleSynchronizationReconciler implements ApplicationRunner {

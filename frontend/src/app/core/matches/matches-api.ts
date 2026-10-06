@@ -1,11 +1,13 @@
 import { httpResource, HttpResourceRef } from '@angular/common/http';
 import { Service, Signal } from '@angular/core';
+
 import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 import { PageResponse } from '@core/http/page-response.model';
+
 import { GameMode } from './game-mode/match-game-mode.model';
 import { Match, MatchDetail } from './match.model';
-import { MATCH_HISTORY_PAGE_SIZE, SQUAD_MATCH_PAGE_SIZE } from './matches-api.constants';
 import { SquadMatch } from './match-squad.model';
+import { MATCH_HISTORY_PAGE_SIZE, SQUAD_MATCH_PAGE_SIZE } from './matches-api.constants';
 
 /**
  * Data access for tracked players' match history.

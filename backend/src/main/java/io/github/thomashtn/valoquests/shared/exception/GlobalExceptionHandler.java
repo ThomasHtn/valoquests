@@ -79,10 +79,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * Handles a request value the API rejects.
      *
-     * <p>Only this exception yields a 400 carrying its own message. A bare
-     * {@link IllegalArgumentException} means an internal expectation broke, not that the caller
-     * erred, so it falls through to the catch-all below and is reported as a server fault instead
-     * of blaming the caller and echoing an internal message back.
+     * <p>Only this exception yields a 400 with its message; a bare {@link IllegalArgumentException} stays a 500.
      *
      * @param exception invalid-request exception
      * @param request current HTTP request
@@ -126,8 +123,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /**
      * Handles a background task refused because the administrative executor is already full.
      *
-     * <p>Same meaning for the caller as a {@link ConflictException}: another run is in the way, and
-     * the same request later may succeed.
+     * <p>Answered like a {@link ConflictException}: another run is in the way.
      *
      * @param exception rejection raised by the executor
      * @param request current HTTP request

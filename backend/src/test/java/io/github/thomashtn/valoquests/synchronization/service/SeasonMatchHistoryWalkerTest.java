@@ -49,9 +49,7 @@ import org.mockito.quality.Strictness;
 /**
  * Unit tests for {@link SeasonMatchHistoryWalker}.
  *
- * <p>These cover the rules that make the walk safe across interruptions and season changes: what is
- * imported, when a season may be declared complete, and when stopping at already-stored matches is
- * trustworthy. Getting any of them wrong leaves a silent hole in a player's history.
+ * <p>A wrong rule on import, season completion or early stop leaves a silent hole in a player's history.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -160,11 +158,9 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
-     * Verifies the nominal first walk on an empty database: the current season, then the previous
-     * one, then a stop.
+     * Verifies the nominal first walk: the current season, then the previous one, then a stop.
      *
-     * <p>The scope is deliberately two seasons deep. Anything older was never targeted and must be
-     * left untouched, otherwise the next run walks the player's whole history one season at a time.
+     * <p>Older seasons were never targeted; walking them would crawl the whole history one season per run.
      */
     @Test
     void shouldWalkTheCurrentAndPreviousSeasonsThenStop() {
@@ -193,8 +189,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that a repair of an unfinished season still consumes the trailing budget.
      *
-     * <p>Otherwise a chain of unfinished seasons would let the walk reach a season this application
-     * never targeted, one boundary at a time.
+     * <p>Otherwise a chain of unfinished seasons would widen the walk past its target, one boundary at a time.
      */
     @Test
     void shouldNotWidenTheScopeBeyondASeasonItResumed() {
@@ -216,9 +211,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that a straddling page only hands the walked seasons' matches to the import.
      *
-     * <p>Importing an out-of-scope season's matches without declaring that season would leave it
-     * holding a handful of matches and no state saying it is unfinished, skewing every statistic
-     * filtered on it, forever.
+     * <p>An out-of-scope season with imported matches but no state would skew every statistic filtered on it.
      */
     @Test
     void shouldNotImportMatchesOfASeasonItDoesNotWalk() {
@@ -252,8 +245,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that an unclassifiable first page ends the walk without an exception.
      *
-     * <p>The season cannot be determined, so nothing can be imported safely. Failing here would mark
-     * the player failed on every single run, and reporting an empty page would hide a full one.
+     * <p>Throwing would fail the player on every run; reporting an empty page would hide a full one.
      */
     @Test
     @DisplayName("Reports an unresolved season, not an empty page, when no match carries a season")
@@ -339,8 +331,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that an unfinished season is walked in full despite already-stored matches.
      *
-     * <p>The guarantee that an interrupted run never leaves a permanent hole: stopping at the first
-     * known match would leave everything behind the interruption point missing forever.
+     * <p>Stopping at the first known match would leave everything behind the interruption missing forever.
      */
     @Test
     void shouldIgnoreKnownHistoryWhileTheSeasonIsIncomplete() {
@@ -366,9 +357,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that an unfinished previous season is caught up after a season change.
      *
-     * <p>Riot rolling the act over must not abandon a season the player was still catching up. The
-     * older season's matches sitting on the straddling page have to be imported too, otherwise that
-     * season starts with a hole at its newest end and is then declared complete.
+     * <p>The older season's matches on the straddling page must be imported too, or it is closed with a hole.
      */
     @Test
     void shouldResumeAnUnfinishedPreviousSeasonAfterASeasonChange() {
@@ -395,8 +384,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that resuming an older season replays the boundary page without a new Henrik call.
      *
-     * <p>Refetching it would burn a rate-limited request; skipping it would drop the older season's
-     * matches that page carries.
+     * <p>Refetching wastes a rate-limited call; skipping drops the older season's matches on that page.
      */
     @Test
     void shouldReplayTheBoundaryPageWithoutRefetchingIt() {
@@ -414,8 +402,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that a page holding only ignored game modes does not stop the walk.
      *
-     * <p>Such a page proves nothing about the history behind it: the matches that matter may all be
-     * on the next one.
+     * <p>The matches that matter may all be on the next page.
      */
     @Test
     void shouldContinueThroughAPageOfIgnoredGameModes() {
@@ -437,8 +424,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that null entries count towards the raw page size.
      *
-     * <p>Henrik does return them. Letting them shorten the page would read as the end of the
-     * history and truncate the season.
+     * <p>Henrik does return them; a shorter page would read as the end of history and truncate the season.
      */
     @Test
     void shouldCountNullEntriesTowardsThePageSize() {
@@ -455,11 +441,9 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
-     * Verifies that the safety limit stops the walk without declaring the season complete, but still
-     * leaves a checkpoint so the next run resumes near this point instead of from the season's start.
+     * Verifies that the safety limit stops the walk without completing the season, but leaves a checkpoint.
      *
-     * <p>The season is truncated: marking it complete would freeze the truncation into a permanent
-     * hole that no later run would ever repair.
+     * <p>Marking the truncated season complete would freeze a permanent hole.
      */
     @Test
     void shouldStopOnTheSafetyLimitWithoutCompletingTheSeason() {
@@ -492,12 +476,9 @@ class SeasonMatchHistoryWalkerTest {
     }
 
     /**
-     * Verifies that a fresh execution resuming an incomplete season skips straight to the persisted
-     * checkpoint instead of re-walking every page a previous execution already confirmed.
+     * Verifies that a fresh execution resuming an incomplete season jumps straight to the persisted checkpoint.
      *
-     * <p>This is what keeps a heavy player's season from perpetually restarting at offset zero on
-     * every retry: only the mandatory first page and the pages beyond the checkpoint cost a Henrik
-     * call.
+     * <p>Only the mandatory first page and the pages beyond the checkpoint cost a Henrik call.
      */
     @Test
     void shouldResumeFromThePersistedCheckpointInsteadOfOffsetZero() {
@@ -523,9 +504,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that matches played since an interrupted run are not skipped by the checkpoint jump.
      *
-     * <p>Henrik offsets count from the newest match: with more than a page of new matches, jumping
-     * from the first page straight to the checkpoint would skip the new matches beyond that page,
-     * then mark the season complete with that hole.
+     * <p>Offsets count from the newest match, so jumping past more than a page of new matches leaves a hole.
      */
     @Test
     @DisplayName("Walks on page by page and discards the checkpoint when the first page is all new")
@@ -551,8 +530,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that a first page of ignored game modes does not cost a valid checkpoint.
      *
-     * <p>Custom games are never stored, so such a page holds no stored match; reaching back to the
-     * newest stored match is what proves no new match lies beyond it.
+     * <p>Custom games are never stored; only reaching the newest stored match proves nothing new lies beyond.
      */
     @Test
     @DisplayName("Jumps to the checkpoint when a first page of ignored modes reaches back to stored history")
@@ -605,8 +583,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that only the starting season gets a checkpoint.
      *
-     * <p>A season entered by crossing a boundary never becomes the starting season again, so its
-     * checkpoint would never be read.
+     * <p>A season entered by crossing a boundary never starts a walk, so its checkpoint would never be read.
      */
     @Test
     @DisplayName("Records checkpoints for the starting season only")
@@ -627,8 +604,7 @@ class SeasonMatchHistoryWalkerTest {
     /**
      * Verifies that unfinished seasons are resumed even once the trailing budget is spent.
      *
-     * <p>Their state proves an earlier run targeted them; the budget only bounds the seasons the
-     * walk starts on its own.
+     * <p>Their state proves an earlier run targeted them; the budget only bounds seasons the walk starts itself.
      */
     @Test
     @DisplayName("Resumes an unfinished older season even after the trailing budget is spent")

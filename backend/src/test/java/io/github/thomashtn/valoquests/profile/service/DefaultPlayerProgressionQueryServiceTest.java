@@ -89,8 +89,7 @@ class DefaultPlayerProgressionQueryServiceTest {
     /**
      * Creates the service under test before each test.
      *
-     * <p>The zone is stubbed leniently: a test working on an empty history never reads a match's
-     * calendar day, so the stub legitimately goes unused there.
+     * <p>The zone is stubbed leniently because an empty-history test never reads it.
      */
     @BeforeEach
     void setUp() {
@@ -355,10 +354,8 @@ class DefaultPlayerProgressionQueryServiceTest {
     /**
      * Declares the player's stored history, as both repository calls would answer it.
      *
-     * <p>The service picks one of the two depending on whether the caller selected seasons, so a
-     * given test only ever exercises one — hence {@code lenient()}. The season-scoped stub applies
-     * the filter itself rather than returning everything: narrowing is the database's job now, and
-     * a stub that ignored the selection would let a service that forgot to pass it still pass.
+     * <p>Each test uses only one call, hence {@code lenient()}. The season stub filters itself so a service that
+     * forgets to pass the selection fails.
      *
      * @param matches the player's whole stored history, most recent first
      */

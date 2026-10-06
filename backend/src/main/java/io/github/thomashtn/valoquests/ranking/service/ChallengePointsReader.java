@@ -16,10 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Prices what each player's validated challenges are worth in the weekly ranking.
  *
- * <p>Every player is priced, whatever their status: deciding who keeps their points belongs to the
- * ranking, which is the one place that knows who takes part. The reference is the one in force for
- * the week, so a challenge validated between two campaigns pays at the last campaign's reference
- * rather than at nothing.
+ * <p>Every player is priced whatever their status; the ranking decides who keeps the points. The week's
+ * reference in force is used, so a challenge validated between campaigns still pays.
  */
 @Service
 @Transactional(readOnly = true)

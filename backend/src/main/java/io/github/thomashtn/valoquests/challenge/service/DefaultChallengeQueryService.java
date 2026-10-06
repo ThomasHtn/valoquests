@@ -28,9 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Provides the progress exposed by the current challenges endpoint, collective and per player.
  *
- * <p>Read-only: the weekly pack and the day's challenge are drawn by the recalculation that
- * follows every synchronization and by the daily tick, never by a read. A day whose challenge is
- * not drawn yet is simply absent from the response.
+ * <p>Read-only: draws happen in the recalculation and the daily tick, so an undrawn day is absent.
  */
 @Service
 @Transactional(readOnly = true)
@@ -214,8 +212,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     /**
      * Lays out every active player's progress on one selection, in roster order.
      *
-     * <p>A player without a row has not been evaluated on it yet: they stand at zero on it rather
-     * than being absent, so a reader never has to guess who is missing.
+     * <p>A player without a row stands at zero rather than being absent.
      *
      * @param progressRows progress rows of the selection
      * @param rosterIds    active players, in roster order
@@ -246,8 +243,7 @@ public class DefaultChallengeQueryService implements ChallengeQueryService {
     /**
      * Lists the active players whose progress row is completed.
      *
-     * <p>An inactive player can still complete a challenge, but it must never inflate the
-     * collective completion reported here, which is read against the active roster.
+     * <p>Inactive players are left out so they never inflate the collective completion.
      *
      * @param progressRows progress rows to inspect
      * @return identifiers of the active players who completed the challenge, ascending

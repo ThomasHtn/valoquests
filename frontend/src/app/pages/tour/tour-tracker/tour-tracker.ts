@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideArrowDown } from '@lucide/angular';
 
 import { formatFigure } from '@core/i18n/format/number-format.utils';
@@ -12,6 +13,7 @@ import {
 } from '@core/matches/display/match-format.utils';
 import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { TourSampleMatch } from '../tour.model';
 
 /**

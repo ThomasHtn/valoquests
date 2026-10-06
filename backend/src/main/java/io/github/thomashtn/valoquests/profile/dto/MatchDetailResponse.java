@@ -11,11 +11,6 @@ import java.util.List;
 /**
  * Exposes everything stored about one of a tracked player's matches.
  *
- * <p>A superset of {@link MatchResponse}: same identifier and figures the history page already
- * shows, plus the breakdown a single match is worth opening for — the shot-type split behind the
- * headshot rate, the raw damage and round count, the match's duration, and every other tracked
- * player found in the same lobby.
- *
  * @param id                       internal player-match identifier, matching {@link MatchResponse#id}
  * @param startedAt                instant the match started
  * @param durationSeconds          match duration, {@code null} when Henrik did not report it
@@ -39,11 +34,8 @@ import java.util.List;
  * @param roundsPlayed             rounds used to normalize per-round statistics
  * @param mvp                      whether the player earned the match MVP designation
  * @param competitiveTier          tier the player held for this match
- * @param valoquestsDamage         damage this match dealt to the guardian, after both multipliers;
- *     {@code 0} for a match the ruleset does not value
- * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
- *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
- *     match, which never enters that ladder
+ * @param valoquestsDamage         guardian damage after both multipliers, {@code 0} when not valued
+ * @param damageCoefficientPercent share of base damage kept after the day's ladder, {@code 0} when not valued
  * @param streakBonusPercent       bonus the player's days played this week added to this match
  * @param food                     food share of the damage
  * @param components               components share of the damage

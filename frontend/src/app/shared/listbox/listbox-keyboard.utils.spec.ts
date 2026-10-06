@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import { ListboxKeyboardControls } from './listbox-keyboard.model';

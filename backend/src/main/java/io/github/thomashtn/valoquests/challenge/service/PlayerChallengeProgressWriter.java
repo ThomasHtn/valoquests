@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Persists calculated progress for the challenge selections of one player.
  *
- * <p>This writer does not perform challenge calculations. It creates or
- * updates entities from already calculated results and supports batch
- * persistence to avoid one lookup and one write per challenge.</p>
+ * <p>Calculates nothing; it batches reads and writes to avoid one round trip per challenge.
  */
 @Service
 @Transactional
@@ -52,8 +50,7 @@ public class PlayerChallengeProgressWriter {
     /**
      * Creates or updates all challenge selection progress rows for one player.
      *
-     * <p>Existing rows are loaded with one query and all modified rows are
-     * written with one {@code saveAll} operation.</p>
+     * <p>One query loads the existing rows and one {@code saveAll} writes them.
      *
      * @param player     player whose progress was calculated
      * @param calculated each evaluated selection with its calculated result
@@ -200,11 +197,8 @@ public class PlayerChallengeProgressWriter {
     /**
      * Latches completion and stamps the moment it was first reached.
      *
-     * <p>Completion is never taken back. Only the kill-to-death ratio challenge could regress, and
-     * letting it do so meant a player who kept playing after validating could lose the challenge's
-     * damage and drop a team-bonus tier for everyone else — the exact opposite of what regularity and
-     * squad play are meant to be worth here. The measured value below it keeps moving either way, so
-     * the progress bar still tells the truth about the current ratio.
+     * <p>Never taken back, so a falling ratio cannot cost a validated challenge; the measured value still
+     * moves.
      *
      * @param progress        progress being updated
      * @param completed       completion state produced by this calculation

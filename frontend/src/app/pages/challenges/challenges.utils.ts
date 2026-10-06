@@ -1,7 +1,8 @@
-import { ChallengeProgress } from '@core/challenges/challenge.model';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
 import { progressFraction } from '@core/challenges/card/challenge-card.utils';
+import { ChallengeProgress } from '@core/challenges/challenge.model';
 import { localMidnight } from '@core/date/date.utils';
+
 import { RULE_NUMBER } from './challenges.constants';
 import { DayCell, DayPickSource, RulePart } from './challenges.model';
 

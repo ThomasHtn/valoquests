@@ -1,5 +1,5 @@
-import { Component, computed, input } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
 
 import { RANK_ICON_PIXELS } from './rank-icon-view.constants';
 import { RankIconSize } from './rank-icon-view.model';

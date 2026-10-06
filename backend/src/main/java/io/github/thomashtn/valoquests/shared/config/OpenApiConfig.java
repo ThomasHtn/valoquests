@@ -11,8 +11,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Centralizes the OpenAPI metadata displayed by Swagger UI.
  *
- * <p>The configuration also declares the reusable API-key authentication scheme
- * used by every endpoint located under {@code /api/admin}.</p>
+ * <p>Also declares the API-key scheme used by every {@code /api/admin} endpoint.
  */
 @Configuration
 public class OpenApiConfig {

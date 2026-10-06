@@ -14,9 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Deletes a player for good, together with every row that references it.
  *
- * <p>Only meant for a player no campaign froze into its roster: campaign rows reference roster
- * members only, so the rows deleted here are all that point at such a player. A new table
- * referencing {@code player} must be purged here too, or the deletion fails on its foreign key.
+ * <p>Only for a player no campaign roster froze. A new table referencing {@code player} must be purged
+ * here too, or the deletion fails on its foreign key.
  */
 @Service
 public class PlayerRemovalService {
@@ -84,9 +83,8 @@ public class PlayerRemovalService {
     /**
      * Deletes a player that never sat on a campaign roster, and every row referencing it.
      *
-     * <p>Rows are loaded then deleted rather than removed with bulk statements: such a player has
-     * few of them, and going through the persistence context keeps it from handing back entities
-     * the database no longer holds.
+     * <p>Rows are loaded then deleted, not bulk-deleted, so the persistence context never hands back
+     * deleted entities.
      *
      * @param player player to delete
      */

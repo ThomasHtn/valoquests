@@ -6,9 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * What Sunday would bring home if the week ended on the base as it stands.
  *
- * <p>A forecast, not a promise: the base still eats every evening, the guardian may fall, and the
- * challenges may bring more home. What it states is the composition of the rescue as of now, so a
- * squad can see which of the three limits is the one to push.
+ * <p>A forecast, not a promise: meals, the guardian and challenges can still change the outcome.
  *
  * @param weekIndex         one-based week the forecast is about
  * @param woundedCount      wounded stranded on the planet

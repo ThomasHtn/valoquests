@@ -1,6 +1,7 @@
 import { effect, inject, Service, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
+
 import { Translation } from '../translation';
 import { APPLICATION_NAME } from './translated-title-strategy.constants';
 

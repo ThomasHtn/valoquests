@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
+
 import {
   LucideDynamicIcon,
   LucideLanguages,
@@ -30,6 +31,7 @@ import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { ADMIN_NAV_GROUPS, NAV_GROUPS, SIDEBAR_CLOCK_MS } from './sidebar.constants';
 import { NavItem, SyncHealth } from './sidebar.model';
 import { isNavItemActive, isSynchronizationStale } from './sidebar.utils';

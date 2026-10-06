@@ -1,6 +1,7 @@
 import { TranslateFn } from '@core/i18n/translation.model';
 import { Season } from '@core/seasons/season.model';
 import { formatSeasonName, splitSeasonName } from '@core/seasons/season-name.utils';
+
 import { SeasonPickerOption } from './season-picker.model';
 
 /**

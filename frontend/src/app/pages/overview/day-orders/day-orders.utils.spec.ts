@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
+
 import { base, campaign, player, translate, week } from '../overview.fixtures';
 import { DayTally } from './day-orders.model';
 import { buildDailyRow, buildTally, buildTallyTiles } from './day-orders.utils';

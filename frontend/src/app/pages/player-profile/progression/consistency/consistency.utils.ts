@@ -2,20 +2,21 @@ import { Plugin } from 'chart.js';
 
 import { formatCampaignDayMonth } from '@core/date/date-format.utils';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
-import { formatSeasonName } from '@core/seasons/season-name.utils';
 import { resolveMatchScore } from '@core/matches/display/match-format.utils';
 import { formatScore } from '@core/players/player-format.utils';
 import { ConsistencySummary } from '@core/players/progression/player-progression.model';
+import { formatSeasonName } from '@core/seasons/season-name.utils';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
+
 import { KeyFigure } from '../key-figures/key-figures.model';
 import {
   CONSISTENCY_AXIS_STEP,
   CONSISTENCY_BIN_WIDTH,
   CONSISTENCY_I18N as KEYS,
   CONSISTENCY_MIN_STACK,
-  CONSISTENCY_SMALL_STACK,
   CONSISTENCY_RESULT_MODIFIERS,
   CONSISTENCY_RULE_COLOR,
+  CONSISTENCY_SMALL_STACK,
   CONSISTENCY_STEADY_MARGIN,
   CONSISTENCY_TREND_ICONS,
   CONSISTENCY_TREND_TONES,

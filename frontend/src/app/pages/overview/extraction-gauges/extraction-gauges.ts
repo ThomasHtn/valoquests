@@ -1,13 +1,16 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon, LucideInfo } from '@lucide/angular';
+
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { HULL_MASK, HULL_PATH, HULL_VIEWBOX } from './extraction-gauges.constants';
 import { Capacity, LimitDial } from './extraction-gauges.model';
 import { buildLimitDials, hullFigureSize } from './extraction-gauges.utils';

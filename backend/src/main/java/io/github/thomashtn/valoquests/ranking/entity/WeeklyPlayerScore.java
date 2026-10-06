@@ -21,8 +21,7 @@ import lombok.Setter;
 /**
  * Stores one player's week: what their matches and challenges were worth, and where that put them.
  *
- * <p>Current rows are rebuilt from the stored matches and challenge progress after every import.
- * Finalized rows are immutable snapshots the ranking history and the weekly titles read.</p>
+ * <p>Current rows are rebuilt after every import; finalized rows are immutable snapshots.
  */
 @Getter
 @Setter
@@ -112,8 +111,7 @@ public class WeeklyPlayerScore extends AuditableEntity {
     private int totalPoints;
 
     /**
-     * Current or final one-based ranking position, {@code null} when the player is not
-     * competitive and therefore never occupies a ranking slot.
+     * Current or final one-based position, {@code null} when the player holds no ranking slot.
      */
     @Column
     private Integer position;

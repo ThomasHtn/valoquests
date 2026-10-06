@@ -1,19 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideCheck, LucideDynamicIcon } from '@lucide/angular';
 
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { CONFETTI } from '@shared/progress-mark/progress-mark.constants';
-import { Countdown } from '@shared/countdown/countdown';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { CountUp } from '@shared/count-up/count-up';
+import { Countdown } from '@shared/countdown/countdown';
 import { InView } from '@shared/in-view/in-view';
-import { Contribution, Mission, SundayStakes, Strike } from './mission-readings.model';
+import { CONFETTI } from '@shared/progress-mark/progress-mark.constants';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { ContributionTip } from './contribution-tip/contribution-tip';
 import { FallForecast } from './fall-forecast/fall-forecast';
 import { GuardianFall } from './fall-forecast/fall-forecast.model';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { Contribution, Mission, Strike, SundayStakes } from './mission-readings.model';
 
 /**
  * The week's mission: clock, squad-versus-guardian duel, Sunday stakes and the guardian's fall.

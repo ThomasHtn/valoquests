@@ -41,9 +41,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 /**
  * Unit tests for {@link MatchImportService}, focused on the game-mode filter.
  *
- * <p>The filter decides what ever reaches the match tables, and therefore what challenges can count.
- * A mode wrongly let through pollutes the statistics; a mode wrongly rejected is lost until a full
- * season is re-imported.
+ * <p>A mode wrongly let through pollutes the statistics; one wrongly rejected is lost until a re-import.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -125,8 +123,7 @@ class MatchImportServiceTest {
     /**
      * Verifies that an ignored mode never creates a match row.
      *
-     * <p>Rejecting it before the lookup matters: a stored match would still be counted by the
-     * "matches played" challenges filtered on {@code ANY}.
+     * <p>A stored match would still count for "matches played" challenges filtered on {@code ANY}.
      *
      * @param queueId raw Henrik queue slug of an ignored mode
      */
@@ -148,8 +145,7 @@ class MatchImportServiceTest {
     /**
      * Verifies that a queue this application cannot classify is stored with its raw slug.
      *
-     * <p>Henrik lags behind Riot releases, so dropping an unknown queue would lose matches that a
-     * later reclassification could have recovered from the persisted slug.
+     * <p>Henrik lags behind Riot releases; the stored slug lets a later reclassification recover it.
      */
     @Test
     void shouldImportAnUnclassifiedQueueAndPreserveItsRawSlug() {
@@ -188,12 +184,9 @@ class MatchImportServiceTest {
     }
 
     /**
-     * Verifies that a match under-classified by an earlier synchronization is enriched once a more
-     * confident resolution becomes available.
+     * Verifies that a match stored with a weak mode guess is upgraded by a more confident resolution.
      *
-     * <p>Henrik's queue slug is not always populated; a run that only had the display name to work
-     * with stores {@link GameModeSource#INFERRED}. A later run that gets the canonical slug must
-     * upgrade the stored value rather than leaving it at its first, weaker guess.
+     * <p>Without a queue slug, a run only infers the mode ({@link GameModeSource#INFERRED}).
      */
     @Test
     void shouldEnrichAnExistingMatchWhenAMoreConfidentSourceResolves() {
@@ -293,9 +286,7 @@ class MatchImportServiceTest {
     /**
      * Verifies that a match carrying no season identifier is rejected.
      *
-     * <p>The season is what scopes the walk, so a match without one cannot be placed in the history.
-     * This precondition is locked in because a mode Henrik systematically returns without a season
-     * would disappear from the tracker entirely, looking exactly like a mode never played.
+     * <p>The season scopes the walk; a mode Henrik always returns without one would silently vanish.
      */
     @Test
     void shouldRejectAMatchWithoutASeasonIdentifier() {
@@ -321,13 +312,9 @@ class MatchImportServiceTest {
     }
 
     /**
-     * Verifies that losing the race to create a shared match reuses the winner's row instead of
-     * failing the whole page.
+     * Verifies that losing the race to create a shared match reuses the winner's row.
      *
-     * <p>Two tracked players who both took part in the same match can be synchronized concurrently,
-     * or the same player can be caught up manually while a scheduled run is still in progress. Either
-     * way, the loser must recover by reusing the row the winner committed, not by propagating the
-     * database's unique-constraint violation.
+     * <p>Two concurrent runs can import the same match; the loser must not fail on the unique constraint.
      */
     @Test
     void shouldReuseAMatchCreatedConcurrently() {
@@ -375,8 +362,7 @@ class MatchImportServiceTest {
     void shouldCountEveryOutcomeOfAMixedPage() {
         MatchImportResult result = service.importPage(
             player,
-            // Arrays.asList rather than List.of: Henrik does return null entries, and the page keeps
-            // them so they are counted as rejected instead of vanishing.
+            // Arrays.asList keeps Henrik's null entries so they are counted as rejected.
             Arrays.asList(
                 match("match-1", "competitive"),
                 match("match-2", "newmap"),

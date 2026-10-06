@@ -404,9 +404,7 @@ class DefaultSynchronizationCommandServiceTest {
     /**
      * Verifies that each persisted player result records why its match-history walk stopped.
      *
-     * <p>This is what makes a short import self-explanatory: without it, a run that simply reached
-     * the end of the player's current season is indistinguishable from one that was truncated. A
-     * failed player never completed a walk, so it reports no stop reason at all.
+     * <p>It tells a season end from a truncation; a failed player completed no walk, so it has no reason.
      */
     @Test
     void shouldRecordWhyEachPlayerWalkStopped() {
@@ -453,8 +451,7 @@ class DefaultSynchronizationCommandServiceTest {
     /**
      * Verifies that importing matches rebuilds the current week's challenge progress.
      *
-     * <p>Progress and the weekly ranking are derived from the stored matches, so without this step
-     * a scheduled run would import matches the challenges never count.
+     * <p>Without this step a scheduled run would import matches the challenges never count.
      */
     @Test
     void shouldRecalculateChallengeProgressAfterImportingMatches() {
@@ -474,8 +471,7 @@ class DefaultSynchronizationCommandServiceTest {
     /**
      * Verifies that an execution is only marked finished once the campaign has been replayed.
      *
-     * <p>The public status reads a finished execution as up-to-date screens, so completing it
-     * before the replay would announce challenges that are not rebuilt yet.
+     * <p>A finished execution reads as up-to-date screens, so finishing before the replay would lie.
      */
     @Test
     void shouldCompleteTheExecutionAfterTheCampaignReplay() {
@@ -516,8 +512,7 @@ class DefaultSynchronizationCommandServiceTest {
     /**
      * Verifies that a run importing nothing leaves challenge progress untouched.
      *
-     * <p>Progress depends only on stored matches, so recalculating without a new one would burn a
-     * full pass over every player and challenge to rewrite identical values.
+     * <p>Without a new match, recalculating would rewrite identical values for every player and challenge.
      */
     @Test
     void shouldNotRecalculateChallengeProgressWhenNothingWasImported() {
@@ -537,8 +532,7 @@ class DefaultSynchronizationCommandServiceTest {
     /**
      * Verifies that a failed recalculation does not fail an otherwise successful import.
      *
-     * <p>The matches are already committed when recalculation runs. Propagating its failure would
-     * report a successful import as failed and discard the summary of every processed player.
+     * <p>The matches are already committed; failing would report the import as failed and drop its summary.
      */
     @Test
     void shouldReportSuccessWhenChallengeRecalculationFails() {

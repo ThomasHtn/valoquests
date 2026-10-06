@@ -235,6 +235,7 @@
   .leaderboard__head,
   .leaderboard__row-link {
     display: grid;
+
     /* Fixed tracks: header and rows are separate grids that must align. */
     grid-template-columns: 3rem minmax(8rem, 1fr) 5rem 4.5rem 5rem 4rem 4.5rem 10rem;
     column-gap: clamp(1.25rem, 4vw - 1.5rem, 2.75rem);

@@ -62,8 +62,7 @@ final class PlayerRecordsCalculator {
     /**
      * Finds the match holding the highest value of one metric.
      *
-     * <p>Zero and negative values never qualify: a personal best of nothing is not a record, and
-     * reporting one would fill the section with empty boasts on a freshly synchronized player.
+     * <p>Zero and negative values never qualify: a best of nothing is not a record.
      *
      * @param matches   matches to search
      * @param extractor reads the metric off one match, possibly returning {@code null}
@@ -115,8 +114,7 @@ final class PlayerRecordsCalculator {
     /**
      * Measures the longest run of consecutive calendar days holding at least one match.
      *
-     * <p>Counted over every game mode, deliberately: this records showing up, not competing, so a
-     * night of deathmatch keeps the run alive.
+     * <p>Counts every game mode on purpose: it records showing up, not competing.
      *
      * @param matches every match in scope, in any order
      * @param zone    calendar zone the days are counted in

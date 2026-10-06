@@ -9,8 +9,7 @@ import jakarta.validation.constraints.Size;
 /**
  * Carries the identity of a player being added to the roster.
  *
- * <p>Sizes mirror the {@code player} table so an over-long value is rejected as a validation error
- * naming the field, rather than as a constraint violation from the database.
+ * <p>Sizes mirror the {@code player} table so an over-long value fails validation, not in the database.
  *
  * @param gameName    Riot game name
  * @param tagLine     Riot tag line

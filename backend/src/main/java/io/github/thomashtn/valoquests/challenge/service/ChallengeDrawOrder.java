@@ -7,10 +7,8 @@ import java.util.Objects;
 /**
  * Deterministic ordering of challenge candidates for one draw day.
  *
- * <p>The order only depends on the day, the challenge and an optional salt, so the same week
- * produces the same candidate order across application restarts. The salt separates a manual
- * redraw from the scheduled draw: it goes into the same seed rather than beside it, because it is
- * shared by every candidate and only the avalanche turns it into a different order.</p>
+ * <p>Depends only on the day, the challenge and a salt, so it survives restarts. The salt goes into
+ * the seed, since only the avalanche turns it into a different order for a manual redraw.
  */
 final class ChallengeDrawOrder {
 
@@ -72,7 +70,7 @@ final class ChallengeDrawOrder {
     /**
      * Spreads a seed over the whole {@code long} range so neighbouring seeds order unrelatedly.
      *
-     * <p>SplitMix64 finalizer: a bijection, so two distinct seeds keep distinct ordering values.</p>
+     * <p>SplitMix64 finalizer: a bijection, so distinct seeds keep distinct values.
      *
      * @param seed ordering seed
      * @return diffused ordering value

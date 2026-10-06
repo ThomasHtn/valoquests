@@ -1,18 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+
 import { LucideChevronLeft, LucideEye, LucideEyeOff, LucideLockKeyhole } from '@lucide/angular';
 
 import { AdminApi } from '@core/admin/admin-api';
 import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
-import { ADMIN_HOME_ROUTE } from '@core/admin/session/admin-session.constants';
 import { AdminSession } from '@core/admin/session/admin-session';
+import { ADMIN_HOME_ROUTE } from '@core/admin/session/admin-session.constants';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { Button } from '@shared/button/button';
+import { Spinner } from '@shared/spinner/spinner';
 import { TextField } from '@shared/text-field/text-field';
 import { TextFieldInput } from '@shared/text-field/text-field-input';
-import { Spinner } from '@shared/spinner/spinner';
 
 /**
  * Chrome-free backoffice sign-in, reached by URL only.

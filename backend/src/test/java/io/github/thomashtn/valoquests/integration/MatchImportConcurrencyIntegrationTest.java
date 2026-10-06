@@ -29,12 +29,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Verifies that {@link MatchImportService} stays idempotent under real concurrent execution against
- * PostgreSQL, where two synchronizations can genuinely race on the same database row.
+ * Verifies that {@link MatchImportService} stays idempotent when two threads race on the same PostgreSQL row.
  *
- * <p>Deliberately not wrapped in a per-test transaction: the whole point is that two separate threads
- * commit through two separate connections, exactly as two overlapping synchronizations would in
- * production. Each test cleans up the rows it created instead of relying on rollback.
+ * <p>No per-test transaction: two threads commit through two connections, so each test cleans up its rows.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -72,8 +69,7 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Removes every row this test class may have created, since nothing here rolls back.
      *
-     * <p>Matched by identifier rather than by navigating {@code playerMatch.getMatch()}: that
-     * association is lazy, and dereferencing it outside a Hibernate session would fail.
+     * <p>Matched by identifier because the lazy {@code playerMatch.getMatch()} fails outside a session.
      */
     @AfterEach
     void tearDown() {

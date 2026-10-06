@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+
 import {
   LucideChevronDown,
   LucideChevronRight,
@@ -9,35 +10,38 @@ import {
 } from '@lucide/angular';
 
 import { buildTitlesByPlayer } from '@core/campaign/titles/campaign-title.utils';
+import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
   extractRiotTag,
   formatHeadshotPercentage,
   formatKda,
   formatWinRate,
 } from '@core/players/player-format.utils';
-import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
-import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { PlayersApi } from '@core/players/players-api';
+import { resolveKdaVisual, resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
+import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { PageHeader } from '@layout/page-header/page-header';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
-import { Select } from '@shared/select/select';
-import { Tooltip } from '@shared/tooltip/tooltip';
-import { SelectOption } from '@shared/select/select.model';
 import { SKELETON_ROWS } from '@shared/resource-state/resource-state-skeleton.constants';
+import { Select } from '@shared/select/select';
+import { SelectOption } from '@shared/select/select.model';
+import { TitleBadge } from '@shared/title-badge/title-badge';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { PLAYER_SORT_COLUMNS, PLAYER_SORT_ORDER_ICONS } from './players.constants';
 import { PlayerRow, PlayerSortKey } from './players.model';
 import {
@@ -47,8 +51,6 @@ import {
   toPlayerSortOrder,
   writePlayerSort,
 } from './players.utils';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
-import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * "Escouade" page: every tracked player, in-campaign roster and out-of-campaign group apart.

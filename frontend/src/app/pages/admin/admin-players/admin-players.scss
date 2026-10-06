@@ -164,8 +164,7 @@
   @include from(lg) {
     grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1.5fr) 20rem;
     align-items: center;
-    column-gap: 1.5rem;
-    row-gap: 0;
+    gap: 0 1.5rem;
     padding-inline: 1.25rem;
   }
 }

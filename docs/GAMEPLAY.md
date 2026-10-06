@@ -10,12 +10,12 @@ n'a pas percé ses lignes.
 Tout ce que les joueurs jouent dans Valorant alimente la base. Le score de la campagne est la
 **taille de la base**. Le nombre de gardiens vaincus décide de l'état final de la fusée.
 
-| Boucle | Rythme | Ce qui se passe |
-|---|---|---|
-| Synchronisation | toutes les 30 minutes | Les parties arrivent, les stocks montent, le gardien encaisse |
-| Quotidienne | à minuit | La base mange, la journée se ferme |
-| Hebdomadaire | lundi au dimanche | On abat le gardien et on sauve les survivants |
-| Campagne | dix semaines | La fusée se construit, le score final se fige |
+| Boucle          | Rythme               | Ce qui se passe                                               |
+| --------------- | -------------------- | ------------------------------------------------------------- |
+| Synchronisation | toutes les 5 minutes | Les parties arrivent, les stocks montent, le gardien encaisse |
+| Quotidienne     | à minuit             | La base mange, la journée se ferme                            |
+| Hebdomadaire    | lundi au dimanche    | On abat le gardien et on sauve les survivants                 |
+| Campagne        | dix semaines         | La fusée se construit, le score final se fige                 |
 
 ---
 
@@ -23,22 +23,22 @@ Tout ce que les joueurs jouent dans Valorant alimente la base. Le score de la ca
 
 Chaque partie produit les deux en même temps, réparties selon le mode joué.
 
-| Mode | Nourriture | Composants |
-|---|---|---|
-| Compétitif, Premier, Non classé (même en solo) | 30 % | **70 %** |
-| Deathmatch, Team Deathmatch, Spike Rush, Skirmish, Swiftplay, Escalade | **70 %** | 30 % |
+| Mode                                                                   | Nourriture | Composants |
+| ---------------------------------------------------------------------- | ---------- | ---------- |
+| Compétitif, Premier, Non classé (même en solo)                         | 30 %       | **70 %**   |
+| Deathmatch, Team Deathmatch, Spike Rush, Skirmish, Swiftplay, Escalade | **70 %**   | 30 %       |
 
 Le montant réparti est la valeur de dégâts de la partie :
 
-| Mode | Défaite | Nul | Victoire | Durée moyenne |
-|---|---|---|---|---|
-| Compétitif, Premier | 350 | 425 | 500 | 35 min |
-| Non classé | 320 | 390 | 460 | 33 min |
-| Team Deathmatch | 110 | 135 | 160 | 10 min |
-| Swiftplay | 160 | — | 230 | 15 min |
-| Spike Rush, Escalade | 110 | — | 150 | 9 min |
-| Deathmatch | 100 | — | 150 | 9 min |
-| Skirmish | 90 | 110 | 130 | 6 min |
+| Mode                 | Défaite | Nul | Victoire | Durée moyenne |
+| -------------------- | ------- | --- | -------- | ------------- |
+| Compétitif, Premier  | 350     | 425 | 500      | 35 min        |
+| Non classé           | 320     | 390 | 460      | 33 min        |
+| Team Deathmatch      | 110     | 135 | 160      | 10 min        |
+| Swiftplay            | 160     | —   | 230      | 15 min        |
+| Spike Rush, Escalade | 110     | —   | 150      | 9 min         |
+| Deathmatch           | 100     | —   | 150      | 9 min         |
+| Skirmish             | 90      | 110 | 130      | 6 min         |
 
 Les valeurs sont calées pour que **l'heure de jeu rapporte à peu près la même chose quel que soit le
 mode**, rendements décroissants compris : entre 680 et 780 dégâts par heure pour une session d'une
@@ -77,14 +77,14 @@ Ils s'appliquent à toute partie et doivent être **affichés explicitement** au
 **Rendements décroissants**, contre le farm, déjà présents dans le projet :
 
 | Partie du jour | 1 à 5 | 6 à 9 | 10 et + |
-|---|---|---|---|
-| Valeur | 100 % | 50 % | 25 % |
+| -------------- | ----- | ----- | ------- |
+| Valeur         | 100 % | 50 %  | 25 %    |
 
 **Série de jours joués dans la semaine**, pour récompenser la régularité :
 
-| Jours joués dans la semaine | 1 | 2 | 3 | 4 | 5 | 6+ |
-|---|---|---|---|---|---|---|
-| Bonus | 0 % | +2 % | +4 % | +6 % | +8 % | **+10 %** |
+| Jours joués dans la semaine | 1   | 2    | 3    | 4    | 5    | 6+        |
+| --------------------------- | --- | ---- | ---- | ---- | ---- | --------- |
+| Bonus                       | 0 % | +2 % | +4 % | +6 % | +8 % | **+10 %** |
 
 Le premier jour ne donne rien : un bonus que tout le monde a n'est pas un bonus. Une journée
 sautée ne fait rien perdre, elle retarde seulement le palier suivant, et le plafond est volontairement
@@ -122,7 +122,7 @@ décroissants sous les dégâts du jour de chaque opérateur dès qu'ils s'appli
 
 ## Le rythme de mise à jour
 
-L'application interroge Riot **toutes les 30 minutes**. Chaque synchronisation importe les parties
+L'application interroge Riot **toutes les 5 minutes**. Chaque synchronisation importe les parties
 terminées depuis la précédente, puis **rejoue la campagne entière** depuis ses données d'origine. Rien
 n'est incrémenté, tout est recalculé : une synchronisation peut être rejouée sans jamais fausser un
 total.
@@ -179,8 +179,8 @@ arrive**, et comptés pour le dimanche : ils partent avec le vaisseau.
 
 L'entretien monte avec la population, doucement et volontairement :
 
-| Semaine | 1 | 3 | 5 | 7 | 9 | 10 |
-|---|---|---|---|---|---|---|
+| Semaine                                           | 1     | 3     | 5     | 7     | 9     | 10       |
+| ------------------------------------------------- | ----- | ----- | ----- | ----- | ----- | -------- |
 | Part de votre nourriture absorbée par l'entretien | 0,7 % | 2,6 % | 5,1 % | 7,2 % | 9,6 % | **11 %** |
 
 Une base de dix mille habitants demande plus d'attention qu'un campement de mille, sans que
@@ -191,8 +191,8 @@ habitant mange, et le vaisseau laisse toujours sept repas de côté le dimanche.
 que lorsque **la réserve est vide**, donc après plus d'une semaine sans aucune partie. Chaque soir
 sans nourriture, **5 % des habitants non nourris** meurent :
 
-| Soirs de famine | 1 | 3 | 5 | 7 |
-|---|---|---|---|---|
+| Soirs de famine  | 1   | 3    | 5    | 7        |
+| ---------------- | --- | ---- | ---- | -------- |
 | Habitants perdus | 5 % | 14 % | 23 % | **30 %** |
 
 Le vrai prix de l'arrêt, c'est le gardien : une semaine sans jouer le laisse debout à 0 %, et il
@@ -206,7 +206,7 @@ la réserve est vide.
 ### Le gardien, en direct
 
 Le gardien a des points de vie fixés au lundi. **Toute partie jouée par n'importe quel joueur actif
-lui inflige ses dégâts**, dès la synchronisation suivante, donc à trente minutes près. Il peut tomber le
+lui inflige ses dégâts**, dès la synchronisation suivante, donc à cinq minutes près. Il peut tomber le
 mardi à midi comme le dimanche soir, et sa barre descend pendant qu'on joue.
 
 Le combat est **strictement insensible au mix de modes** : c'est le total joué qui compte.
@@ -266,9 +266,9 @@ Il attaque la base. Les pertes sont **continues et quadratiques**, sans aucun se
 pertes = base x (1 - avancement)² x 35 %
 ```
 
-| Avancement | 99 % | 93 % | 84 % | 70 % | 20 % |
-|---|---|---|---|---|---|
-| Pertes | 0,004 % | 0,2 % | 0,9 % | 3,2 % | 22 % |
+| Avancement | 99 %    | 93 %  | 84 %  | 70 %  | 20 % |
+| ---------- | ------- | ----- | ----- | ----- | ---- |
+| Pertes     | 0,004 % | 0,2 % | 0,9 % | 3,2 % | 22 % |
 
 Rater de peu ne coûte quasiment rien. Ne rien faire coûte cher.
 
@@ -295,11 +295,11 @@ purement indicatif : il mesure à quelle vitesse il irait, sans rien apporter ni
 Dix semaines, chacune avec sa forme propre, décrite par deux nombres exprimés en part de la référence
 de l'escouade.
 
-| Semaine | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Catégorie | MINEUR | STD | STD | STD | **ELITE** | MINEUR | STD | STD | STD | **ELITE** |
-| Gardien | 0,60 | 0,80 | 0,95 | 0,85 | 1,30 | 0,60 | 1,00 | 0,90 | 0,95 | 1,35 |
-| Groupe | 1,00 | 1,30 | 0,90 | 1,10 | 1,50 | 1,20 | 0,80 | 1,10 | 1,00 | **2,00** |
+| Semaine   | 1      | 2    | 3    | 4    | 5         | 6      | 7    | 8    | 9    | 10        |
+| --------- | ------ | ---- | ---- | ---- | --------- | ------ | ---- | ---- | ---- | --------- |
+| Catégorie | MINEUR | STD  | STD  | STD  | **ELITE** | MINEUR | STD  | STD  | STD  | **ELITE** |
+| Gardien   | 0,60   | 0,80 | 0,95 | 0,85 | 1,30      | 0,60   | 1,00 | 0,90 | 0,95 | 1,35      |
+| Groupe    | 1,00   | 1,30 | 0,90 | 1,10 | 1,50      | 1,20   | 0,80 | 1,10 | 1,00 | **2,00**  |
 
 Cela produit des semaines qui se vivent différemment sans qu'aucune règle ne change :
 
@@ -337,9 +337,9 @@ La difficulté est **choisie par l'administrateur à l'ouverture** et figée pou
 Deux valeurs, et rien d'autre :
 
 | Difficulté | Référence hebdomadaire par joueur |
-|---|---|
-| Amateur | 5 300 |
-| Pro | 10 600 |
+| ---------- | --------------------------------- |
+| Amateur    | 5 300                             |
+| Pro        | 10 600                            |
 
 La référence est le nombre dont **tout le reste est un multiple** : taille des gardiens, taille des
 groupes de blessés, rescapés et points d'un défi. Elle vaut **par joueur actif**, ce qui rend le jeu
@@ -388,14 +388,14 @@ escouade d'amateurs comme pour des pros.
 survivants = référence x poids / 1000
 ```
 
-| Défi | Poids | Survivants par joueur (référence 5 300) |
-|---|---|---|
-| Défi du jour | 1,2 | 6 |
-| Hebdomadaire EASY | 1,0 | 5 |
-| Hebdomadaire NORMAL | 1,7 | 9 |
-| Hebdomadaire MEDIUM | 2,7 | 14 |
-| Hebdomadaire HARD | 3,9 | 21 |
-| Hebdomadaire VERY_HARD | 5,4 | 29 |
+| Défi                   | Poids | Survivants par joueur (référence 5 300) |
+| ---------------------- | ----- | --------------------------------------- |
+| Défi du jour           | 1,2   | 6                                       |
+| Hebdomadaire EASY      | 1,0   | 5                                       |
+| Hebdomadaire NORMAL    | 1,7   | 9                                       |
+| Hebdomadaire MEDIUM    | 2,7   | 14                                      |
+| Hebdomadaire HARD      | 3,9   | 21                                      |
+| Hebdomadaire VERY_HARD | 5,4   | 29                                      |
 
 Une semaine parfaite, sept défis du jour et les cinq hebdomadaires, vaut **120 survivants par
 joueur**. Les valeurs progressent comme le reste des récompenses, de +4 % par semaine.
@@ -438,12 +438,12 @@ puis des défis validés, puis des jours actifs.
 Quatre titres décernés chaque semaine, pour que la reconnaissance ne se concentre pas sur un seul
 joueur :
 
-| Titre | Revient à |
-|---|---|
-| Assidu | le plus de **jours joués** dans la semaine |
-| Éclaireur | le plus de **défis** validés |
-| Intendant | le plus de **nourriture** |
-| Mécano | le plus de **composants** |
+| Titre     | Revient à                                  |
+| --------- | ------------------------------------------ |
+| Assidu    | le plus de **jours joués** dans la semaine |
+| Éclaireur | le plus de **défis** validés               |
+| Intendant | le plus de **nourriture**                  |
+| Mécano    | le plus de **composants**                  |
 
 Purement honorifiques. Un opérateur n'en porte qu'un seul à la fois : les titres sont décernés dans
 l'ordre du tableau, et quand le meilleur sur un critère en porte déjà un, le titre revient au suivant
@@ -465,26 +465,26 @@ donne le visuel maximal. Aucun effet sur les règles : c'est le trophée de la c
 
 ## Récapitulatif des constantes
 
-| Constante | Valeur |
-|---|---|
-| Dégâts totaux pour 1 habitant (croissance quotidienne) | 28 |
-| Nourriture mangée par habitant et par jour | 0,008 |
-| Perte quotidienne en cas de famine | 5 % de la part non nourrie, uniquement si la réserve est vide |
-| Taille du gardien | référence × poids de la semaine × **1,10** × joueurs actifs |
-| Taille du groupe | référence × poids de la semaine × 0,050 × joueurs actifs × progression |
-| Progression des récompenses | +4 % par semaine de campagne, linéaire |
-| Points d'un défi au classement | 1 par blessé ramené (référence × poids / 1000 × progression) |
-| Composants pour atteindre 1 survivant | 14, dépensés seulement pour les blessés extraits |
-| Nourriture pour installer 1 survivant | 12, dépensée seulement pour les blessés extraits |
-| Réserve de nourriture protégée à l'extraction | 7 soirs de repas |
-| Blessés des défis | pris dans le groupe de la semaine, partent les premiers, sans ressources ni avancement |
-| Dégâts d'un défi au gardien | aucun |
-| Pertes de base si le gardien survit | base × (1 − avancement)² × 35 % |
-| Rescapés d'un défi | référence × poids du défi / 1000, par joueur qui le valide, versés le dimanche |
-| Fréquence de synchronisation | 30 minutes |
-| Difficulté | choisie à l'ouverture, figée : Amateur ou Pro |
-| Référence | 5 300 par joueur actif en Amateur, 10 600 en Pro |
-| Durée de la campagne | 10 semaines |
+| Constante                                              | Valeur                                                                                 |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Dégâts totaux pour 1 habitant (croissance quotidienne) | 28                                                                                     |
+| Nourriture mangée par habitant et par jour             | 0,008                                                                                  |
+| Perte quotidienne en cas de famine                     | 5 % de la part non nourrie, uniquement si la réserve est vide                          |
+| Taille du gardien                                      | référence × poids de la semaine × **1,10** × joueurs actifs                            |
+| Taille du groupe                                       | référence × poids de la semaine × 0,050 × joueurs actifs × progression                 |
+| Progression des récompenses                            | +4 % par semaine de campagne, linéaire                                                 |
+| Points d'un défi au classement                         | 1 par blessé ramené (référence × poids / 1000 × progression)                           |
+| Composants pour atteindre 1 survivant                  | 14, dépensés seulement pour les blessés extraits                                       |
+| Nourriture pour installer 1 survivant                  | 12, dépensée seulement pour les blessés extraits                                       |
+| Réserve de nourriture protégée à l'extraction          | 7 soirs de repas                                                                       |
+| Blessés des défis                                      | pris dans le groupe de la semaine, partent les premiers, sans ressources ni avancement |
+| Dégâts d'un défi au gardien                            | aucun                                                                                  |
+| Pertes de base si le gardien survit                    | base × (1 − avancement)² × 35 %                                                        |
+| Rescapés d'un défi                                     | référence × poids du défi / 1000, par joueur qui le valide, versés le dimanche         |
+| Fréquence de synchronisation                           | 5 minutes                                                                              |
+| Difficulté                                             | choisie à l'ouverture, figée : Amateur ou Pro                                          |
+| Référence                                              | 5 300 par joueur actif en Amateur, 10 600 en Pro                                       |
+| Durée de la campagne                                   | 10 semaines                                                                            |
 
 ---
 

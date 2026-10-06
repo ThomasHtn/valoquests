@@ -26,9 +26,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 /**
  * HTTP integration tests for {@link DefaultHenrikAccountClient}.
  *
- * <p>The tests use a local HTTP server and therefore exercise the real
- * WebClient request, JSON deserialization, response handling, retry policy and
- * account mapping without contacting HenrikDev.</p>
+ * <p>A local HTTP server exercises the real WebClient, JSON mapping and retries without HenrikDev.</p>
  */
 class DefaultHenrikAccountClientTest {
 
@@ -281,8 +279,7 @@ class DefaultHenrikAccountClientTest {
     }
 
     /**
-     * Creates a fully configured account client targeting the local server, using the same attempt
-     * budget for genuine failures and rate-limit responses.
+     * Creates an account client on the local server, sharing one attempt budget for failures and rate limits.
      *
      * @param maxAttempts maximum request attempts including the first request
      * @return Henrik account client under test
@@ -297,8 +294,7 @@ class DefaultHenrikAccountClientTest {
      * Creates a fully configured account client targeting the local server.
      *
      * @param maxAttempts          maximum request attempts for a genuine failure, including the first
-     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
-     *                             first
+     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the first
      * @return Henrik account client under test
      */
     private DefaultHenrikAccountClient createClient(

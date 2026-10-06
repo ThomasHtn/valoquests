@@ -7,12 +7,13 @@ import java.time.Instant;
  * Exposes whether the public data is being rebuilt and when it last was.
  *
  * @param inProgress      whether a synchronization is running, recalculation included
- * @param lastCompletedAt end of the last synchronization that completed or partially succeeded,
- *                        {@code null} when none ever did
+ * @param lastCompletedAt end of the last completed or partial synchronization, {@code null} if none
+ * @param lastImportedAt  end of the last such one that imported matches, {@code null} if none
  */
 @Schema(description = "Public synchronization status.")
 public record SynchronizationStatusResponse(
     boolean inProgress,
-    Instant lastCompletedAt
+    Instant lastCompletedAt,
+    Instant lastImportedAt
 ) {
 }

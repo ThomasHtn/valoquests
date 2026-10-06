@@ -2,6 +2,7 @@ import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { svgElement } from '@core/svg/svg-element.utils';
 import { SHIP } from '@shared/rocket/rocket-drawing.constants';
 import { animate, drawShip } from '@shared/rocket/rocket-drawing.utils';
+
 import { drawBuilding } from './town-building.utils';
 import { buildingAt, CITY_LOTS, growthOf, tierAt } from './town-plan.utils';
 import {
@@ -27,8 +28,8 @@ import {
   TOWN_WIDTH,
 } from './town-scene.constants';
 import { SceneIdMaker, SkyBody, SkyState, TownSceneInputs } from './town-scene.model';
-import { hourOf, mixColor, moonAt, skyAt, sunAt } from './town-sky-cycle.utils';
 import { drawClouds, drawMoon, drawRidge, drawStars, drawSun } from './town-sky.utils';
+import { hourOf, mixColor, moonAt, skyAt, sunAt } from './town-sky-cycle.utils';
 
 /**
  * Plain SVG nodes built outside Angular.

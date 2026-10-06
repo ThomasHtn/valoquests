@@ -20,7 +20,7 @@ public interface SynchronizationQueryService {
     SynchronizationResponse findLatest();
 
     /**
-     * Returns whether a synchronization is running and when the last successful one finished.
+     * Returns whether a synchronization is running and when the last successful and importing ones ended.
      *
      * @return the public synchronization status
      */

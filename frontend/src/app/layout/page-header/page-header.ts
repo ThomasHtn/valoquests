@@ -1,6 +1,7 @@
 import { Location, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { LucideChevronLeft, LucideMenu } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -8,6 +9,7 @@ import { Translation } from '@core/i18n/translation';
 import { NavigationHistory } from '@core/navigation/navigation-history';
 import { resolveBackLabelKey } from '@core/navigation/navigation-history.utils';
 import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
+
 import { BackTarget } from './page-header.model';
 
 /**

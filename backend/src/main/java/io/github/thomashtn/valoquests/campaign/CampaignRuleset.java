@@ -3,29 +3,20 @@ package io.github.thomashtn.valoquests.campaign;
 /**
  * The constants the rescue campaign is played on, in one place.
  *
- * <p>Separate from {@code ScoringRuleset}, which prices what a player does: this prices what the
- * base does with it. The figures were verified by simulation on 04/09/2026 against the invariants in
- * {@code docs/GAMEPLAY.md}; the guardian factor has changed since (0.78 to 1.10 on 09/09/2026), so
- * that simulation is due again. Moving any figure means running it again.
- *
- * <p>A single class rather than an interface and an implementation: nothing here varies, and a
- * second implementation would only ever be a way to write a different game.
+ * <p>Figures are checked by simulation against the invariants in {@code docs/GAMEPLAY.md}; moving any
+ * figure means running that simulation again.
  */
 public final class CampaignRuleset {
 
     /**
      * Damage one new inhabitant costs.
      *
-     * <p>The only source of daily growth, and deliberately blind to the mode played: no mode may be
-     * a bad choice for the campaign's score.
+     * <p>The only source of daily growth, deliberately blind to the mode played.
      */
     public static final double DAMAGE_PER_INHABITANT = 28;
 
     /**
      * Food one inhabitant eats each evening.
-     *
-     * <p>Small enough that upkeep goes from 0.7 % of a week's food in week one to 11 % in week ten:
-     * a big base costs more attention than a camp without ever becoming the subject.
      */
     public static final double FOOD_PER_INHABITANT_PER_DAY = 0.008;
 
@@ -37,8 +28,7 @@ public final class CampaignRuleset {
     /**
      * Evenings of food the ship never touches when it extracts.
      *
-     * <p>Without it a squad that plays at the weekend emptied its larder on Sunday and starved from
-     * Monday to Friday, which punished exactly the rhythm the game is played at.
+     * <p>Keeps a squad that plays at the weekend from starving the rest of the week.
      */
     public static final int PROTECTED_FOOD_DAYS = 7;
 
@@ -65,8 +55,7 @@ public final class CampaignRuleset {
     /**
      * Share of the base a guardian left completely untouched would kill.
      *
-     * <p>Applied against the square of what is left to do, so missing by a hair costs almost
-     * nothing and doing nothing costs a third of the base. There is no threshold anywhere in it.
+     * <p>Applied to the square of what is left to do, so a near miss costs almost nothing.
      */
     public static final double GUARDIAN_LOSS_RATE = 0.35;
 

@@ -15,8 +15,7 @@ public class HenrikAccountMapper {
      *
      * @param response external Henrik account response
      * @return resolved internal Riot account
-     * @throws IllegalArgumentException when the response does not contain
-     *                                  usable account data
+     * @throws IllegalArgumentException when the response holds no usable account data
      */
     public HenrikAccount toModel(HenrikAccountResponse response) {
         if (response == null || response.data() == null) {

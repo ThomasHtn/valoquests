@@ -5,14 +5,10 @@ import io.github.thomashtn.valoquests.match.model.MatchResult;
 import java.time.Instant;
 
 /**
- * Bundles {@link PlayerMatchRepository#findHistory} filter criteria into one parameter, keeping the
- * method under the project's parameter-count limit. {@code seasonId}, {@code map}, {@code agent},
- * {@code result} and {@code gameMode} are optional and ignored when {@code null}.
+ * Bundles {@link PlayerMatchRepository#findHistory} filter criteria into one parameter.
  *
- * <p>{@code periodStart}/{@code periodEnd} form a half-open range, inclusive beginning and exclusive
- * end, but - unlike the other fields - must never be {@code null}: callers with no week filter pass
- * {@link #UNBOUNDED_PERIOD_START}/{@link #UNBOUNDED_PERIOD_END} instead. PostgreSQL cannot type a
- * null temporal parameter used only in {@code :param IS NULL}, and casting it fails too.
+ * <p>The period bounds must never be {@code null}, since PostgreSQL cannot type a null temporal
+ * parameter: pass {@link #UNBOUNDED_PERIOD_START}/{@link #UNBOUNDED_PERIOD_END} instead.
  *
  * @param seasonId    internal season identifier, or {@code null} for every season
  * @param map         map name, matched case-insensitively, or {@code null} for every map
@@ -33,14 +29,12 @@ public record PlayerMatchHistoryCriteria(
 ) {
 
     /**
-     * Stand-in {@code periodStart} for callers with no week filter, well before any Valorant match
-     * could have been played.
+     * Stand-in {@code periodStart} for callers with no week filter, before any Valorant match.
      */
     public static final Instant UNBOUNDED_PERIOD_START = Instant.parse("2000-01-01T00:00:00Z");
 
     /**
-     * Stand-in {@code periodEnd} for callers with no week filter, comfortably beyond any match this
-     * application will ever record.
+     * Stand-in {@code periodEnd} for callers with no week filter, beyond any recorded match.
      */
     public static final Instant UNBOUNDED_PERIOD_END = Instant.parse("2100-01-01T00:00:00Z");
 }

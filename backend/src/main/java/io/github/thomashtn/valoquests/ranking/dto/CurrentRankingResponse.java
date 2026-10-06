@@ -32,8 +32,7 @@ public record CurrentRankingResponse(
     /**
      * Exposes one player's live standing in the current week.
      *
-     * <p>An inactive player is listed with their validation counts, and nothing else: they measure
-     * themselves against the squad without adding to it or taking a slot.
+     * <p>An inactive player is listed with their validation counts only and takes no slot.
      *
      * @param position                 current rank, starting at 1, shared on equal points,
      *     {@code null} when the player has no points yet or is not competitive

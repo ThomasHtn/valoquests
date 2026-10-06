@@ -8,7 +8,7 @@ public interface WeeklyRolloverService {
     /**
      * Performs the weekly rollover when required.
      *
-     * <p>The operation is idempotent and can safely be called several times.</p>
+     * <p>Idempotent: safe to call several times.
      */
     void rolloverIfNeeded();
 }

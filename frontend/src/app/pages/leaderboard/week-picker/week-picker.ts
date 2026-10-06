@@ -11,12 +11,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 import { nextInstanceId } from '@core/dom/instance-id.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
 import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
+
 import { WeekOption } from '../leaderboard.model';
 
 /**

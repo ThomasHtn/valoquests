@@ -17,6 +17,7 @@ import {
 } from '@core/campaign/planets/campaign-planet-art.utils';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { svgElement } from '@core/svg/svg-element.utils';
+
 import {
   PLANET_ART_SIDE,
   PLANET_COLORS,

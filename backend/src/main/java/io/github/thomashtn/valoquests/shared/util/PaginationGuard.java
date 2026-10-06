@@ -5,12 +5,8 @@ import io.github.thomashtn.valoquests.shared.exception.InvalidRequestException;
 /**
  * Validates the pagination parameters of a paged query before a page request is built.
  *
- * <p>{@code PageRequest.of} would reject a bad index or size with an {@link IllegalArgumentException},
- * reported as a 500, and accepts any positive size, so an unbounded {@code ?size=} would fetch a
- * whole table. Both are caller errors, reported here as {@link InvalidRequestException} (HTTP 400).</p>
- *
- * <p>Every paged query shares {@link #MAXIMUM_PAGE_SIZE} on purpose: the cap is a limit on what one
- * request may cost the server, not a per-endpoint preference.</p>
+ * <p>Reports bad values as a 400 instead of the 500 {@code PageRequest.of} would raise, and caps the size
+ * so one request cannot fetch a whole table.
  */
 public final class PaginationGuard {
 

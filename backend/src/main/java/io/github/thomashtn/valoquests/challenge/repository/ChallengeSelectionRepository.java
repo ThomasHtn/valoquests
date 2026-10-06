@@ -73,8 +73,6 @@ public interface ChallengeSelectionRepository
     /**
      * Retrieves the daily selections covering a range of days, oldest first.
      *
-     * <p>Used by the daily draw's no-repeat window, and by the interface's week strip.
-     *
      * @param cadence  the daily cadence
      * @param firstDay first day of the range, inclusive
      * @param lastDay  last day of the range, inclusive
@@ -90,9 +88,8 @@ public interface ChallengeSelectionRepository
     /**
      * Retrieves every weekly selection made before one week, oldest week first.
      *
-     * <p>Used to replay the selection history: which challenges were already drawn in the current
-     * no-repeat cycle of their tier. The week being drawn is excluded, so a pack being
-     * completed one tier at a time never counts against itself.
+     * <p>The week being drawn is excluded, so a pack completed one tier at a time never counts against
+     * itself.
      *
      * @param cadence   the weekly cadence
      * @param weekStart Monday identifying the week being drawn, excluded from the result
@@ -107,8 +104,7 @@ public interface ChallengeSelectionRepository
     /**
      * Retrieves every past week still holding an active challenge pack.
      *
-     * <p>A week appears here until its whole pack is finalized, so a rollover that never ran keeps
-     * its week pending instead of losing it: the next rollover finds it and catches it up.</p>
+     * <p>A week stays here until its whole pack is finalized, so the next rollover catches up a missed one.
      *
      * @param currentWeekStart Monday identifying the week in progress, excluded from the result
      * @return pending week identifiers, oldest first

@@ -3,10 +3,7 @@ package io.github.thomashtn.valoquests.campaign.model;
 /**
  * Where a campaign stands in its own lifecycle.
  *
- * <p>Three states rather than an open/closed flag, because a campaign exists before it counts: the
- * backoffice opens it any day of the week, freezing its roster and difficulty, and it starts the
- * Monday after. That gap needs a name of its own so the site can say "opened, starting Monday"
- * instead of showing a base nobody has played for yet.
+ * <p>Three states because a campaign can be opened before its first Monday starts.
  */
 public enum CampaignStatus {
 

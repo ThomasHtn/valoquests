@@ -12,10 +12,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Builds challenge-calculation contexts from matches already persisted in the
- * application database.
+ * Builds challenge-calculation contexts from persisted matches.
  *
- * <p>Loads the week only. A day's context is carved out of the week's with
+ * <p>Loads the week only; a day's context is carved out with
  * {@link PlayerChallengeContext#restrictedTo(Instant, Instant)}.
  */
 @Component
@@ -48,9 +47,7 @@ public class PlayerChallengeContextFactory {
     /**
      * Creates the challenge context for one player and one week.
      *
-     * <p>The supplied date must represent the Monday beginning the week. It is resolved to the
-     * half-open instant range the week spans, because match timestamps are persisted as
-     * {@link Instant} values.</p>
+     * <p>Matches are read over the half-open instant range the week spans.
      *
      * @param player    player whose challenges must be evaluated
      * @param weekStart Monday beginning the evaluated week

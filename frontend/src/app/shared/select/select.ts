@@ -9,12 +9,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
 import { LucideChevronDown, LucideEllipsisVertical } from '@lucide/angular';
 
-import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown.utils';
-import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
-import { SelectOption } from './select.model';
 import { nextInstanceId } from '@core/dom/instance-id.utils';
+import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
+import { createPositionedDropdown } from '@shared/positioned-dropdown/positioned-dropdown.utils';
+
+import { SelectOption } from './select.model';
 
 /**
  * Single-select dropdown following the ARIA select-only combobox pattern.

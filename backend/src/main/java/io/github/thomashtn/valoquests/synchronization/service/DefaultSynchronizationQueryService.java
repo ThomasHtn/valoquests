@@ -81,8 +81,7 @@ public class DefaultSynchronizationQueryService implements SynchronizationQueryS
     /**
      * Returns whether a synchronization is in progress and when the last one finished.
      *
-     * <p>Read from the executions rather than from the players: a player's own timestamp moves
-     * mid-batch, well before the challenges and the campaign are rebuilt.
+     * <p>Read from executions, not players, whose timestamp moves before the rebuild ends.
      *
      * @return the public synchronization status
      */
@@ -93,9 +92,14 @@ public class DefaultSynchronizationQueryService implements SynchronizationQueryS
             .map(Synchronization::getFinishedAt)
             .orElse(null);
 
+        Instant lastImportedAt = synchronizationRepository
+            .findLastImportFinishedAt(SUCCEEDED_STATUSES)
+            .orElse(null);
+
         return new SynchronizationStatusResponse(
             synchronizationRepository.existsByStatusIn(SynchronizationStatus.IN_PROGRESS),
-            lastCompletedAt
+            lastCompletedAt,
+            lastImportedAt
         );
     }
 

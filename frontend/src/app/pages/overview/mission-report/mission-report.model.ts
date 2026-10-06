@@ -1,8 +1,8 @@
 import type { LucideIcon } from '@lucide/angular';
 
-import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 import { ExtractionLimiter } from '@core/campaign/campaign-week.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
+import { TitleVisual } from '@core/campaign/titles/campaign-title-visual.model';
 
 /**
  * Weekly title in the report, with its holder or nobody.

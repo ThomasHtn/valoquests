@@ -1,5 +1,6 @@
-import { DestroyRef, Service, inject, signal, Signal } from '@angular/core';
-import { MD_BREAKPOINT_PX, LG_BREAKPOINT_PX } from './breakpoint.constants';
+import { DestroyRef, inject, Service, Signal, signal } from '@angular/core';
+
+import { LG_BREAKPOINT_PX, MD_BREAKPOINT_PX } from './breakpoint.constants';
 
 /**
  * Viewport breakpoints as signals, so `@if` keeps one layout in the DOM instead of hiding one.

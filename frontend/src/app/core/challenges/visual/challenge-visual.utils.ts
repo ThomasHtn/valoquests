@@ -1,6 +1,6 @@
+import { ChallengeTier } from '../challenge.model';
 import { CHALLENGE_DIFFICULTY_COLORS, DAILY_CHALLENGE_VISUAL } from './challenge-visual.constants';
 import { ChallengeVisual } from './challenge-visual.model';
-import { ChallengeTier } from '../challenge.model';
 
 /**
  * Tier treatment of a difficulty, `null` for the daily challenge.

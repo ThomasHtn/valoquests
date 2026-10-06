@@ -7,16 +7,10 @@ import io.github.thomashtn.valoquests.scoring.model.ChallengeCalibration;
 import io.github.thomashtn.valoquests.scoring.model.ChallengeTier;
 
 /**
- * Prices what a match and a challenge are worth: the single scoring table both the weekly ranking and the
- * campaign read.
+ * Prices matches and challenges: the single scoring table the ranking and the campaign read.
  *
- * <p>Deliberately not versioned and implemented as a Java bean rather than database rows: a scoring table
- * adjustment is a plain edit, and recalculating any week applies the current one. This mirrors how
- * {@link GameMode} is already a fixed enum rather than editable data.
- *
- * <p>The campaign's own economy (guardian size, groups of survivors, extraction costs, base growth)
- * lives with the campaign, not here. This interface only knows the value of one match and of one
- * validated challenge, plus the two multipliers every match goes through.
+ * <p>A plain bean, not versioned: recalculating any week applies the current table. The campaign's own
+ * economy (guardian, survivors, costs) lives with the campaign.
  */
 public interface ScoringRuleset {
 
@@ -37,10 +31,8 @@ public interface ScoringRuleset {
     /**
      * Returns the percentage of its base damage a match keeps, given its rank within its own day.
      *
-     * <p>Diminishing returns on daily volume: this is what turns "play more" into "play more often".
-     * Ranks are 1-based and assigned over a single calendar day, by decreasing base damage rather
-     * than chronologically, so a player's best matches of the day always keep full value and warming
-     * up in a cheap mode can never devalue the ranked games that follow.
+     * <p>Ranks are 1-based within a calendar day and assigned by decreasing base damage, not play order,
+     * so a player's best matches always keep full value.
      *
      * @param rankInDay 1-based rank of the match within its own calendar day
      * @return percentage of the base damage kept, from 0 to 100
@@ -50,10 +42,8 @@ public interface ScoringRuleset {
     /**
      * Returns the bonus a match earns from the days its player has played so far this week.
      *
-     * <p>"Streak" is the game's word for days played since Monday, consecutive or not.
-     *
-     * <p>The first day gives nothing: a bonus everyone has is not a bonus. A skipped day only delays
-     * the bonus, and the cap is deliberately low so a player who plays less can still catch up.
+     * <p>"Streak" counts days played since Monday, consecutive or not. The first day gives nothing and the
+     * cap stays low so a player who plays less can catch up.
      *
      * @param playedDays number of days of the week with at least one valued match, the day of the
      *                   match included; zero or one means no bonus
@@ -84,13 +74,10 @@ public interface ScoringRuleset {
     int rewardProgressionPercent(int weekIndex);
 
     /**
-     * Returns what one validated challenge is worth: the wounded it brings back for the player who
-     * validated it, which are also the points it adds to that player's weekly ranking.
+     * Returns the wounded one validated challenge brings back, which are also its ranking points.
      *
-     * <p>Proportional to the reference so a challenge weighs the same for a squad of amateurs and for
-     * a squad of professionals, and priced at the calibration in force so a challenge validated
-     * between two campaigns still pays. One point per wounded keeps the ranking readable as guardian
-     * damage plus wounded.
+     * <p>Proportional to the reference so it weighs the same at every difficulty, and priced at the
+     * calibration in force so a challenge validated between two campaigns still pays.
      *
      * @param cadence     whether the challenge was drawn as a daily or a weekly one
      * @param tier        weekly tier, ignored for a daily challenge

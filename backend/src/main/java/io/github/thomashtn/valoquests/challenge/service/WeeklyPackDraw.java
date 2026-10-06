@@ -14,9 +14,8 @@ import java.util.Optional;
 /**
  * Draws the challenges a weekly pack is missing, out of the weekly pool.
  *
- * <p>Pure: no repository, no clock. Challenges left in their tier's no-repeat cycle are tried first,
- * the whole tier only as a fallback: no-repeat is a preference, never a reason to hand out an
- * incomplete pack.</p>
+ * <p>Pure. Challenges left in their tier's no-repeat cycle are tried first, the whole tier only as a
+ * fallback, so no-repeat never leaves a pack incomplete.
  */
 final class WeeklyPackDraw {
 
@@ -57,8 +56,6 @@ final class WeeklyPackDraw {
 
     /**
      * Groups the pool by tier, each group in a deterministic week-dependent order.
-     *
-     * <p>The same week therefore produces the same candidate order across application restarts.</p>
      *
      * @param pool      enabled weekly challenges
      * @param weekStart week being drawn

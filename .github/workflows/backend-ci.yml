@@ -53,8 +53,7 @@ jobs:
       - name: Grant execute permission to Maven Wrapper
         run: chmod +x mvnw
 
-      # Runs Checkstyle, the unit and Testcontainers suites, SpotBugs and the
-      # JaCoCo coverage gate. Docker is preinstalled on the runner image.
+      # Spotless, Checkstyle, unit and Testcontainers suites, SpotBugs, JaCoCo gate.
       - name: Build, test and analyze
         run: ./mvnw --batch-mode --no-transfer-progress clean verify
 

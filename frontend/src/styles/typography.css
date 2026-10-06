@@ -1,7 +1,7 @@
 /* Self-hosted Latin-1 subsets; other scripts fall back to the system stack. */
 
 @font-face {
-  font-family: 'Oswald';
+  font-family: Oswald;
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;

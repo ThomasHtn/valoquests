@@ -17,11 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implements the progression analytics from persisted match data.
  *
- * <p>Loads the selected seasons once and narrows them in memory rather than issuing one query per
- * section, plus the whole career when a selection is set, for the consistency comparison with the
- * season before the selected one. The history of a tracked player is a few thousand rows at most -
- * this application follows a fixed group of seven - and a single load is what lets the day-streak
- * record span every game mode while every other figure stays scoped to competitive play.
+ * <p>Loads the selected seasons once (a few thousand rows at most) and narrows them in memory, plus the
+ * whole career for the previous-season comparison.
  */
 @Service
 @Transactional(readOnly = true)

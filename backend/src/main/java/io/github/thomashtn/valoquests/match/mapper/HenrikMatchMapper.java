@@ -126,8 +126,7 @@ public class HenrikMatchMapper {
     /**
      * Copies the scoreboard counters reported for one player.
      *
-     * <p>Henrik omits the whole block for some payloads. The counters then keep the zero every
-     * column already defaults to, which is what an absent scoreboard means here.
+     * <p>When Henrik omits the block, the counters keep their zero defaults.
      */
     private void applyScoreboard(
         PlayerMatch target,
@@ -166,9 +165,7 @@ public class HenrikMatchMapper {
         int rounds = target.getRoundsPlayed();
         target.setAcs(average(target.getScore(), rounds));
 
-        // Henrik omits the damage breakdown for some modes and sends a zero total for Skirmish. The
-        // persisted total then reads zero because the column is not nullable, so ADR must stay unset
-        // rather than report a zero average that would drag the player's statistics down.
+        // Damage can be missing or zero (Skirmish): leave ADR unset rather than drag averages down.
         boolean damageReported = stats != null
             && stats.damage() != null
             && stats.damage().dealt() != null
@@ -203,21 +200,10 @@ public class HenrikMatchMapper {
     }
 
     /**
-     * Resolves the game mode from the identifiers Henrik exposes, most specific first, along with the
-     * source that classifies how confidently it was resolved.
+     * Resolves the game mode from queue slug, then display name, then mode type, with its source.
      *
-     * <p>The queue slug is authoritative and yields {@link GameModeSource#PROVIDED}. The display name
-     * and mode type are fallbacks covering matches where Henrik returns a blank slug, as it does for
-     * some custom games, or renames a queue; both yield {@link GameModeSource#INFERRED}. The mode type
-     * is also ambiguous for bomb-based queues, which all report {@code Standard}, so it is tried last.
-     *
-     * <p>Neither fallback is reliable on its own: Henrik returns no display name for the Skirmish
-     * queue, and it returns the map name rather than a mode label for the new-map queue. Only their
-     * combination classifies every queue observed so far.
-     *
-     * <p>Deliberately silent, so the import layer can classify a match to decide whether to store it,
-     * and enrichment can compare sources, without emitting a diagnostic for every page. The warning
-     * belongs to {@link #toGameModeResolution}, which runs once per persisted match.
+     * <p>Only the slug yields {@link GameModeSource#PROVIDED}. Deliberately silent: the warning is
+     * logged by {@link #toGameModeResolution}, once per persisted match.
      *
      * @param metadata Henrik match metadata
      * @return the resolved mode and the source that classified it
@@ -241,10 +227,7 @@ public class HenrikMatchMapper {
     /**
      * Resolves the game mode and reports the queues this application cannot classify.
      *
-     * <p>An unresolved queue is logged rather than silently bucketed into {@link GameMode#OTHER}, so
-     * a newly released Valorant mode surfaces in the synchronization logs. Called only from
-     * {@link #toValorantMatch}, which runs on the creation path alone: the warning is therefore
-     * emitted exactly once per persisted match, never per page and never for a match already stored.
+     * <p>Called only on the creation path, so the warning fires once per persisted match.
      */
     private GameModeResolution toGameModeResolution(
         HenrikMatchMetadata metadata

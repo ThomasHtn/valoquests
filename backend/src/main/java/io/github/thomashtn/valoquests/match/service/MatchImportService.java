@@ -27,13 +27,8 @@ import org.springframework.stereotype.Service;
 /**
  * Imports completed Henrik matches idempotently for one tracked player.
  *
- * <p><strong>Not transactional.</strong> Each repository call commits on its own, so every match of
- * a page is stored as soon as it is imported and a failure halfway keeps what came before it.
- *
- * <p><strong>Concurrency.</strong> {@code MatchHistoryLock} keeps synchronizations apart, but the
- * import does not rely on it: {@code external_match_id} and {@code (player_id, match_id)} are unique
- * constraints, and the loser of a race reuses the winner's row instead of failing. Catching that
- * violation is only safe outside a transaction, which is why the entry point is guarded.
+ * <p>Deliberately not transactional: each match commits on its own, and a lost unique-constraint race
+ * reuses the winner's row, which is only safe outside a transaction.
  */
 @Service
 public class MatchImportService {
@@ -145,8 +140,7 @@ public class MatchImportService {
 
         HenrikMatchMetadata metadata = source.metadata();
 
-        // Checked before any lookup so an ignored mode never creates a match row. An unresolved
-        // queue is eligible on purpose: see GameMode.OTHER.
+        // Checked first so an ignored mode never creates a row; an unresolved queue is eligible (GameMode.OTHER).
         GameModeResolution resolution = mapper.resolveGameModeWithSource(metadata);
         if (!resolution.gameMode().isImportEligible()) {
             LOGGER.debug(
@@ -181,9 +175,7 @@ public class MatchImportService {
     /**
      * Validates the minimum payload required to persist a match.
      *
-     * <p>Names the failed precondition rather than returning a bare boolean: a whole game mode
-     * disappearing because Henrik systematically omits one field is otherwise indistinguishable from
-     * the player simply not having played it.
+     * <p>Returns a reason rather than a boolean, so a field Henrik always omits shows up in the logs.
      *
      * @param source Henrik match payload
      * @return the unmet precondition, or {@code null} when the match can be persisted
@@ -255,14 +247,10 @@ public class MatchImportService {
     }
 
     /**
-     * Enriches an already-stored match's game mode when this synchronization resolved it more
-     * confidently than whatever produced the stored value.
+     * Updates a stored match's game mode when this synchronization's source ranks at least as high.
      *
-     * <p>Priority is what makes this safe to call on every import, including a freshly created match:
-     * a value from a source of equal priority to the stored one still refreshes to the latest Henrik
-     * data, but a lower-priority source, or {@link GameModeSource#MANUALLY_CORRECTED} already stored,
-     * is left untouched. A synchronization can therefore fill in a match Henrik under-classified the
-     * first time it was seen, without ever undoing an administrator's correction.
+     * <p>Safe on every import: a lower source never overwrites, so a
+     * {@link GameModeSource#MANUALLY_CORRECTED} value is never undone.
      *
      * @param match      persisted match, possibly stale
      * @param resolution mode this synchronization resolved for the match
@@ -288,15 +276,13 @@ public class MatchImportService {
     }
 
     /**
-     * Saves a new player-match association, tolerating the race of two concurrent synchronizations of
-     * the same player both importing it for the first time.
+     * Saves a new player-match association, tolerating a concurrent synchronization creating it first.
      *
      * @param source       Henrik match payload
      * @param sourcePlayer the tracked player's entry in that payload
      * @param player       tracked player the association belongs to
      * @param match        persisted match the association attaches to
-     * @return {@code true} when this call created the association, {@code false} when a concurrent
-     *         call already had
+     * @return {@code false} when a concurrent call created it first
      */
     private boolean saveNewPlayerMatch(
         HenrikMatchData source,

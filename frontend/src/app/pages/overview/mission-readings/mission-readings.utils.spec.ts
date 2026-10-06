@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CurrentRanking, RankingEntry } from '@core/ranking/ranking.model';
+
 import { base, campaign, player, week } from '../overview.fixtures';
 import { buildContribution, buildMission, buildSundayStakes } from './mission-readings.utils';
 

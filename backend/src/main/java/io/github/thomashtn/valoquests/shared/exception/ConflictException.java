@@ -3,9 +3,7 @@ package io.github.thomashtn.valoquests.shared.exception;
 /**
  * Signals that a request is well-formed but conflicts with the application's current state.
  *
- * <p>Distinct from {@link InvalidRequestException}: nothing is wrong with what the caller sent, and
- * repeating the very same request later may well succeed. Typical cases are an operation refused
- * because another one is already running, and a creation refused because the entity already exists.
+ * <p>Unlike {@link InvalidRequestException}, the request itself is valid and may succeed if repeated later.
  */
 public class ConflictException extends RuntimeException {
 

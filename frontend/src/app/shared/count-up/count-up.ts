@@ -1,6 +1,8 @@
 import { DestroyRef, Directive, effect, ElementRef, inject, input } from '@angular/core';
+
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
+
 import { COUNT_UP_DURATION_MS, COUNT_UP_VISIBILITY_THRESHOLD } from './count-up.constants';
 import { easeInOutQuad } from './count-up.utils';
 

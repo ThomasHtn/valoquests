@@ -8,11 +8,8 @@ import org.springframework.stereotype.Component;
 /**
  * Decides how one played match ended, from the tracked player's point of view.
  *
- * <p>The single answer to "did they win this". The damage scoring table and challenge progress both
- * ask here, so a mode whose result needs interpreting is interpreted once.
- *
- * <p>Deathmatch is that mode. It has no team result to read in {@link PlayerMatch#getResult()}: it
- * ends when someone reaches the kill target, which is by definition first place.
+ * <p>Shared by damage scoring and challenge progress. Deathmatch has no team result, so reaching the
+ * kill target counts as the win.
  */
 @Component
 public final class MatchOutcomeResolver {

@@ -11,11 +11,8 @@ import org.springframework.stereotype.Component;
 /**
  * The scoring table in force.
  *
- * <p>Match values are tuned so an hour of play brings roughly the same amount whatever the mode,
- * diminishing returns included: between 680 and 780 damage per hour over a one-hour session. The
- * two multipliers pull in opposite directions on purpose: past the fifth match of a day a game is
- * worth half, so the week is not won by whoever had the most free time, while every day played in
- * the week adds a small bonus, so turning up often is what wins it.
+ * <p>Values are tuned so an hour of play brings 680 to 780 damage whatever the mode. Diminishing returns
+ * curb long sessions while the streak bonus rewards playing often.
  */
 @Component
 public final class DefaultScoringRuleset implements ScoringRuleset {
@@ -112,9 +109,8 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
     /**
      * Resolves damage for the modes that cannot end on a draw.
      *
-     * <p>Henrik is not expected to ever report {@link ScoredOutcome#DRAW} for these modes, but a draw is
-     * folded into the defeat tier rather than rejected, so a future upstream surprise degrades quietly
-     * instead of breaking the weekly calculation.
+     * <p>An unexpected {@link ScoredOutcome#DRAW} falls into the defeat tier rather than breaking the
+     * calculation.
      *
      * @param outcome    match outcome
      * @param lossDamage damage on defeat

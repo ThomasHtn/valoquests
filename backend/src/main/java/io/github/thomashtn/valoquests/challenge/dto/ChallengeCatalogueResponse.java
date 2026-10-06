@@ -30,8 +30,7 @@ public record ChallengeCatalogueResponse(
      * @param competitiveOnly whether only ranked matches count
      * @param metric          metric the challenge measures
      * @param targetValue     progress target of the grid the calibration in force selects
-     * @param survivors       survivors one player brings back by completing it this week, also
-     *                        the points it earns in the weekly ranking
+     * @param survivors       survivors one player brings back this week, also its ranking points
      */
     public record ChallengeCatalogueEntry(
 

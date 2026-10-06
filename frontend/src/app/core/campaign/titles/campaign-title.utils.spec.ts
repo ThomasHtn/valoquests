@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RankingEntry } from '@core/ranking/ranking.model';
+
 import { WeeklyTitle } from './campaign-title.model';
 import { buildTitlesByPlayer, primaryTitleOf } from './campaign-title.utils';
 

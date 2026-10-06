@@ -17,8 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Recalculates challenge progress, weekly pack and daily draws alike, from persisted matches.
  *
- * <p>Every daily draw of the week is recalculated, not just today's: a match played late in the
- * evening reaches the database after midnight, and the day it belongs to must still take it.
+ * <p>Every daily draw of the week is recalculated, since a late match can be stored after midnight.
  */
 @Service
 public class DefaultChallengeRecalculationService
@@ -97,11 +96,9 @@ public class DefaultChallengeRecalculationService
     }
 
     /**
-     * Draws what the current week still lacks, then recalculates every tracked player's progress
-     * for that calendar week.
+     * Draws what the current week still lacks, then recalculates every tracked player's progress.
      *
-     * <p>Only matches already stored in PostgreSQL are used. The Henrik API is
-     * never called by this operation.</p>
+     * <p>Uses stored matches only, never the Henrik API.
      */
     @Override
     @Transactional
@@ -109,8 +106,7 @@ public class DefaultChallengeRecalculationService
         LocalDate weekStart = weekCalendar.currentWeekStart();
         LocalDate today = weekCalendar.today();
 
-        // Selected rather than loaded: the current pack and today's challenge are created when they
-        // do not exist yet. Earlier days of the week are only loaded, never drawn after the fact.
+        // Selected so missing current draws get created; earlier days are only loaded, never drawn late.
         List<ChallengeSelection> selections = new ArrayList<>(
             weeklyDrawService.selectWeekChallenges(weekStart)
         );
@@ -125,9 +121,7 @@ public class DefaultChallengeRecalculationService
     /**
      * Recalculates one week's progress from the challenge pack it already owns.
      *
-     * <p>The pack is loaded rather than selected, so a week that never had one keeps none. The
-     * ranking is deliberately left to the caller: the closing week's ranking is rebuilt by the
-     * rollover, inside the transaction that also freezes it.
+     * <p>Loaded rather than selected, so a week without a pack keeps none; the rollover rebuilds the ranking.
      */
     @Override
     @Transactional

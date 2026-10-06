@@ -7,8 +7,7 @@ import jakarta.validation.constraints.Size;
 /**
  * Carries the editable identity of an already tracked player.
  *
- * <p>The status is deliberately absent: it is changed through its own route, so an identity
- * correction can never move a player in or out of the competition as a side effect.
+ * <p>The status has its own route, so an identity fix never moves a player in or out of the competition.
  *
  * @param gameName    Riot game name
  * @param tagLine     Riot tag line

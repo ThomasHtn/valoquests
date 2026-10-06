@@ -3,12 +3,15 @@
 :root {
   /* Arrivals decelerate hard. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Departures stay short. */
   --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+
   /* Ease-in-out: an ease-out curve lunges then trails. */
   --ease-gauge: cubic-bezier(0.45, 0, 0.55, 1);
   --duration-gauge: 800ms;
   --duration-gauge-long: 900ms;
+
   /* Lets folds animate to `auto` height. */
   interpolate-size: allow-keywords;
 }

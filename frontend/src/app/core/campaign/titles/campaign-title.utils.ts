@@ -1,4 +1,5 @@
 import { RankingEntry } from '@core/ranking/ranking.model';
+
 import { WEEKLY_TITLES } from '../campaign.constants';
 import { WeeklyTitle } from './campaign-title.model';
 

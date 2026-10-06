@@ -9,10 +9,6 @@ import java.util.List;
 /**
  * Represents the root response returned by the Henrik match-history endpoint.
  *
- * <p>The Henrik API wraps the retrieved matches inside a {@code data} array.
- * Unknown properties are ignored so that additional fields introduced by
- * Henrik do not break deserialization.</p>
- *
  * @param data matches returned for the requested player
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,13 +18,9 @@ public record HenrikMatchHistoryResponse(
 ) {
 
     /**
-     * Normalizes the match collection while preserving possible null entries
-     * returned by the remote API.
+     * Normalizes the match collection, keeping null entries.
      *
-     * <p>{@link List#copyOf(java.util.Collection)} cannot be used here because
-     * it rejects null elements. Null match entries are intentionally preserved
-     * so that the import layer can count and log them as rejected data instead
-     * of failing during DTO construction.</p>
+     * <p>Nulls are kept so the import counts them as rejected instead of failing here.
      */
     public HenrikMatchHistoryResponse {
         data = immutableNullableElementList(data);
@@ -64,8 +56,7 @@ public record HenrikMatchHistoryResponse(
     ) {
 
         /**
-         * Normalizes nested collections while preserving possible null
-         * entries returned by the remote API.
+         * Normalizes nested collections, keeping null entries.
          */
         public HenrikMatchData {
             players = immutableNullableElementList(players);
@@ -119,8 +110,7 @@ public record HenrikMatchHistoryResponse(
      *
      * @param values source collection, possibly {@code null}
      * @param <T> element type
-     * @return an immutable empty list when the source is null, otherwise an
-     *         immutable defensive copy preserving every element
+     * @return an immutable copy, empty when the source is null
      */
     private static <T> List<T> immutableNullableElementList(List<T> values) {
         if (values == null) {

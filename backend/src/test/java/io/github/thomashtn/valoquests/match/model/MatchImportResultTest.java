@@ -7,10 +7,14 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** Unit tests for {@link MatchImportResult}. */
+/**
+ * Unit tests for {@link MatchImportResult}.
+ */
 class MatchImportResultTest {
 
-    /** Existing valid matches form a safe incremental-history boundary. */
+    /**
+     * Existing valid matches form a safe incremental-history boundary.
+     */
     @Test
     void shouldDetectKnownHistoryBoundary() {
         MatchImportResult result = new MatchImportResult(10, 0, 8, 2, 0);
@@ -18,7 +22,9 @@ class MatchImportResultTest {
         assertThat(result.knownHistoryReached()).isTrue();
     }
 
-    /** Rejected-only pages must not stop pagination. */
+    /**
+     * Rejected-only pages must not stop pagination.
+     */
     @Test
     void shouldNotTreatRejectedPageAsKnownHistory() {
         MatchImportResult result = new MatchImportResult(10, 0, 0, 10, 0);
@@ -27,10 +33,9 @@ class MatchImportResultTest {
     }
 
     /**
-     * A page holding nothing but ignored game modes must not stop pagination.
+     * Verifies that a page holding only ignored game modes does not stop pagination.
      *
-     * <p>It says nothing about the history behind it: the matches that matter may all sit on the
-     * next page, so reading it as a boundary would truncate the season.
+     * <p>The matches that matter may sit on the next page, so a boundary here would truncate the season.
      */
     @Test
     void shouldNotTreatSkippedPageAsKnownHistory() {
@@ -39,7 +44,9 @@ class MatchImportResultTest {
         assertThat(result.knownHistoryReached()).isFalse();
     }
 
-    /** Skipped matches never mask an existing-history boundary. */
+    /**
+     * Skipped matches never mask an existing-history boundary.
+     */
     @Test
     void shouldDetectKnownHistoryBoundaryDespiteSkippedMatches() {
         MatchImportResult result = new MatchImportResult(10, 0, 3, 0, 7);
@@ -47,7 +54,9 @@ class MatchImportResultTest {
         assertThat(result.knownHistoryReached()).isTrue();
     }
 
-    /** Newly imported matches always require pagination to continue. */
+    /**
+     * Newly imported matches always require pagination to continue.
+     */
     @Test
     void shouldNotStopWhenPageContainsNewMatches() {
         MatchImportResult result = new MatchImportResult(10, 1, 8, 1, 0);
@@ -55,7 +64,9 @@ class MatchImportResultTest {
         assertThat(result.knownHistoryReached()).isFalse();
     }
 
-    /** Inconsistent counters are rejected immediately. */
+    /**
+     * Inconsistent counters are rejected immediately.
+     */
     @Test
     void shouldRejectInconsistentCounters() {
         assertThatThrownBy(() -> new MatchImportResult(10, 3, 3, 3, 3))
@@ -63,7 +74,9 @@ class MatchImportResultTest {
             .hasMessageContaining("received count");
     }
 
-    /** Negative counters are rejected immediately. */
+    /**
+     * Negative counters are rejected immediately.
+     */
     @Test
     void shouldRejectNegativeCounters() {
         assertThatThrownBy(() -> new MatchImportResult(10, 10, 0, 0, -1))

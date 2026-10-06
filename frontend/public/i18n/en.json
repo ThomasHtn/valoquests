@@ -952,7 +952,7 @@
     "matches": {
       "empty": {
         "title": "No match today",
-        "text": "Matches from the campaign's players appear here as soon as they are imported, every 30 minutes."
+        "text": "Matches from the campaign's players appear here as soon as they are imported, every 5 minutes."
       }
     }
   },
@@ -1405,7 +1405,7 @@
         "steps": {
           "sync": {
             "title": "Matches come in",
-            "when": "every 30 min",
+            "when": "every 5 min",
             "text": "The boss takes the hit, the reserves rise, and the base grows: *28 damage make one inhabitant* {base}."
           },
           "midnight": {
@@ -1545,7 +1545,7 @@
         "items": {
           "syncInterval": {
             "label": "Matches read",
-            "value": "every 30 min"
+            "value": "every 5 min"
           },
           "growth": {
             "label": "Base growth",
@@ -1606,7 +1606,7 @@
     },
     "lastSync": {
       "at": "Last synchronization: {{date}}.",
-      "stale": "Late: it normally runs every 30 minutes.",
+      "stale": "Late: it normally runs every 5 minutes.",
       "error": "Unavailable",
       "inProgress": "In progress",
       "label": "Synchronization",
@@ -1615,7 +1615,7 @@
         "offline": "API unavailable",
         "online": "API available"
       },
-      "tooltip": "Every 30 minutes, the squad's finished matches are imported and the campaign is recalculated: resources, damage to the boss and challenge progress.",
+      "tooltip": "Every 5 minutes, the squad's finished matches are imported and the campaign is recalculated: resources, damage to the boss and challenge progress.",
       "unknown": "Never synchronized"
     },
     "nav": {

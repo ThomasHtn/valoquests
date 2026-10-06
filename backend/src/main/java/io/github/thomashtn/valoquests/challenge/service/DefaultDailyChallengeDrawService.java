@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DefaultDailyChallengeDrawService implements DailyChallengeDrawService {
 
     /**
-     * Days before a draw during which a daily challenge is not drawn again.
-     *
-     * <p>Twenty-seven, so that a challenge comes back at the earliest twenty-eight days after its
-     * last draw: exactly the size of the daily pool.
+     * Days before a draw during which a challenge is not drawn again, one less than the daily pool size.
      */
     private static final int DAILY_NO_REPEAT_WINDOW_DAYS = 27;
 
@@ -94,8 +91,7 @@ public class DefaultDailyChallengeDrawService implements DailyChallengeDrawServi
     /**
      * Returns the daily challenge of one day, drawing it when needed.
      *
-     * <p>Deterministic like the weekly draw: the same day always orders the pool the same way, so a
-     * restart between the draw and its commit cannot hand the day two different challenges.
+     * <p>Deterministic, so a restart between the draw and its commit cannot give the day two challenges.
      *
      * @param day day to draw for
      * @return the day's challenge
@@ -145,9 +141,8 @@ public class DefaultDailyChallengeDrawService implements DailyChallengeDrawServi
     /**
      * Picks the challenge of one day from the daily pool.
      *
-     * <p>Challenges drawn inside the no-repeat window are set aside first. When the whole pool sits
-     * inside it, because the pool shrank below the window, the least recently drawn one comes back:
-     * a day without a challenge would be a worse outcome than an early repeat.
+     * <p>Challenges inside the no-repeat window are set aside; when none is left, the least recently
+     * drawn one comes back.
      *
      * @param day day being drawn
      * @return drawn challenge

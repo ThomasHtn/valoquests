@@ -9,13 +9,17 @@ import {
   input,
   viewChild,
 } from '@angular/core';
+
 import { Chart, ChartConfiguration, Plugin } from 'chart.js';
 
 import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { formatNumber } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 
+import { ChartSeries, ChartValueFormatter } from '../chart.model';
+import { createCrosshairPlugin } from '../chart-plugins.utils';
 import { AXIS_TICK_FONT } from '../chart-theme.constants';
+import { ChartTheme } from '../chart-theme.model';
 import {
   axisTitleOptions,
   chartPixelRatio,
@@ -25,9 +29,6 @@ import {
   resolveChartTheme,
   resolveCssColor,
 } from '../chart-theme.utils';
-import { ChartTheme } from '../chart-theme.model';
-import { createCrosshairPlugin } from '../chart-plugins.utils';
-import { ChartSeries, ChartValueFormatter } from '../chart.model';
 
 /**
  * Series on a shared index axis, on raw Chart.js (wrappers pull in `@angular/cdk`).

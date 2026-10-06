@@ -12,44 +12,47 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+
 import { LucideChevronLeft } from '@lucide/angular';
 
 import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
-import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
+import { MatchDay } from '@core/matches/day/match-day.model';
+import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
 import { FILTERABLE_GAME_MODES } from '@core/matches/game-mode/match-game-mode.constants';
 import { GameMode } from '@core/matches/game-mode/match-game-mode.model';
 import { Match } from '@core/matches/match.model';
 import { MatchesApi } from '@core/matches/matches-api';
-import { Season } from '@core/seasons/season.model';
-import { SeasonsApi } from '@core/seasons/seasons-api';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
-import { Translation } from '@core/i18n/translation';
+import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import {
   resolveCompetitiveTierIconUrl,
   resolveCompetitiveTierVisual,
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
-import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { extractRiotTag } from '@core/players/player-format.utils';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { resolveChampionPlayerId } from '@core/ranking/ranking-champion.utils';
+import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
+import { Season } from '@core/seasons/season.model';
+import { SeasonsApi } from '@core/seasons/seasons-api';
+import { PageHeader } from '@layout/page-header/page-header';
+import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
-import { PageHeader } from '@layout/page-header/page-header';
+import { MatchHistory } from '@shared/match-history/match-history';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { RankIconView } from '@shared/rank-icon-view/rank-icon-view';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { Select } from '@shared/select/select';
 import { SelectOption } from '@shared/select/select.model';
 import { StatTile } from '@shared/stat-tile/stat-tile';
+import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
-import { MatchDay } from '@core/matches/day/match-day.model';
-import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
-import { MatchHistory } from '@shared/match-history/match-history';
+
 import {
   GAME_MODE_BUTTON_COUNTS,
   MAX_PROGRESSION_SEASONS,
@@ -67,7 +70,6 @@ import {
 } from './player-profile.utils';
 import { Progression } from './progression/progression';
 import { SeasonPicker } from './season-picker/season-picker';
-import { TitleBadge } from '@shared/title-badge/title-badge';
 
 /**
  * Player profile: identity, rank, filtered stats and a match history loaded on scroll.

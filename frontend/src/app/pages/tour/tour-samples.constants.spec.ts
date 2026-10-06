@@ -8,6 +8,7 @@ import {
   GUARDIAN_FACTOR,
   PROGRESSION_PER_WEEK,
 } from '@pages/rules/rules.constants';
+
 import {
   TOUR_SAMPLE_CAPACITY,
   TOUR_SAMPLE_CONTRIBUTION,

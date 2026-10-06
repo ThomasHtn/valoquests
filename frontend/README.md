@@ -4,14 +4,14 @@ Angular single-page application for ValoQuests: the base and its rocket, the ten
 challenges, the leaderboard, the player profiles and the backoffice. It reads everything from the
 [backend API](../backend/README.md).
 
-| | |
-|---|---|
-| Framework | Angular 22, standalone components, signals, zoneless, no NgModules |
-| Language | TypeScript 6, strict |
-| Styling | Tailwind 4 plus the "Expédition" design system in `src/styles/` |
-| Icons and charts | `@lucide/angular`, `chart.js` (lazy, profile screens only) |
-| Tests | Vitest with jsdom |
-| Gates | Prettier, ESLint (`angular-eslint`), `ng build` |
+|                  |                                                                    |
+| ---------------- | ------------------------------------------------------------------ |
+| Framework        | Angular 22, standalone components, signals, zoneless, no NgModules |
+| Language         | TypeScript 6, strict                                               |
+| Styling          | Tailwind 4 plus the "Expédition" design system in `src/styles/`    |
+| Icons and charts | `@lucide/angular`, `chart.js` (lazy, profile screens only)         |
+| Tests            | Vitest with jsdom                                                  |
+| Gates            | Prettier, ESLint (`angular-eslint`), Stylelint, `ng build`         |
 
 ## Getting started
 
@@ -31,7 +31,8 @@ npm start        # dev server on :4200, proxies /api to localhost:8080
 npm start                                                        # dev server
 npm test -- --watch=false                                        # the suite CI runs
 npm test -- --include=src/app/core/admin/session/admin-session.spec.ts   # a single spec
-npm run lint
+npm run lint                                                     # ESLint, then Stylelint
+npm run lint -- --fix                                            # sort imports and other fixable rules
 npm run format                                                   # format:check is the CI gate
 npm run build                                                    # production bundle in dist/
 ```
@@ -40,12 +41,12 @@ npm run build                                                    # production bu
 
 Path aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
 
-| Folder | What lives there |
-|---|---|
-| `core/` | Data access (`*-api.ts`), models and pure `*.utils.ts` helpers, grouped by domain: admin, campaign, challenges, matches, players, ranking, i18n, http, viewport |
-| `pages/` | Routed screens with their own sub-components |
-| `layout/` | The `Shell` (sidebar) and the page header |
-| `shared/` | Presentational primitives: gauges, tiles, drawers, empty states, the rocket, the charts |
+| Folder    | What lives there                                                                                                                                                                                |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core/`   | Data access (`*-api.ts`), models and pure `*.utils.ts` helpers, grouped by domain: admin, campaign, challenges, matches, players, ranking, i18n, http, viewport                                 |
+| `pages/`  | Routed screens with their own sub-components                                                                                                                                                    |
+| `layout/` | The `Shell` (sidebar) and the page header                                                                                                                                                       |
+| `shared/` | Presentational primitives: gauges, tiles, drawers, empty states, the rocket, the charts                                                                                                         |
 | `styles/` | design tokens (`colors.css`, `typography.css`, `elevation.css`), one file per theme of shared utilities, `motion/` for animations, `components/` for plain classes shared by several components |
 
 A screen is `x.ts` + `x.html` + `x.css`, plus `x.model.ts` for its view models.
@@ -102,7 +103,11 @@ theme by design.
 TypeScript is strict (`noUnusedLocals`, `noPropertyAccessFromIndexSignature`, `strictTemplates`).
 ESLint adds explicit member accessibility, member ordering (fields, constructor, methods), no
 `console.log`, `app` selector prefixes, native control flow only (`@if` / `@for`), `NgOptimizedImage`
-for static images, and an explicit `type` on every button.
+for static images, an explicit `type` on every button, and one import order (Angular, libraries,
+`@core`/`@shared`/`@layout`/`@pages` aliases, relatives). Stylelint (`stylelint.config.mjs`) enforces
+the stylesheet rules below: BEM class names, no `&__`/`&--`, no hex or `rgb()` color in a component.
+Prettier (`.prettierrc.json`, at the repository root) formats the code, the i18n JSON, the docs and
+the workflows.
 
 ## Docker
 

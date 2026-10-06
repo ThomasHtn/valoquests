@@ -30,7 +30,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-/** Unit tests for {@link DefaultSynchronizationQueryService}. */
+/**
+ * Unit tests for {@link DefaultSynchronizationQueryService}.
+ */
 @ExtendWith(MockitoExtension.class)
 class DefaultSynchronizationQueryServiceTest {
 
@@ -39,6 +41,9 @@ class DefaultSynchronizationQueryServiceTest {
 
     private static final Instant FINISHED_AT =
         Instant.parse("2026-07-20T08:00:05Z");
+
+    private static final Instant LAST_IMPORT_AT =
+        Instant.parse("2026-07-20T07:30:05Z");
 
     private static final Instant LAST_SUCCESSFUL_AT =
         Instant.parse("2026-07-20T08:00:04Z");
@@ -54,7 +59,9 @@ class DefaultSynchronizationQueryServiceTest {
 
     private SynchronizationQueryService service;
 
-    /** Creates the service under test before each test. */
+    /**
+     * Creates the service under test before each test.
+     */
     @BeforeEach
     void setUp() {
         service = new DefaultSynchronizationQueryService(
@@ -64,7 +71,9 @@ class DefaultSynchronizationQueryServiceTest {
         );
     }
 
-    /** Returns the most recent synchronization and latest player success time. */
+    /**
+     * Returns the most recent synchronization and latest player success time.
+     */
     @Test
     void shouldReturnLatestSynchronization() {
         Synchronization synchronization = synchronization(12L);
@@ -82,7 +91,9 @@ class DefaultSynchronizationQueryServiceTest {
             .isEqualTo(LAST_SUCCESSFUL_AT);
     }
 
-    /** Rejects history pagination values outside the public contract. */
+    /**
+     * Rejects history pagination values outside the public contract.
+     */
     @Test
     void shouldRejectInvalidPagination() {
         assertThatThrownBy(() -> service.findHistory(-1, 20))
@@ -94,7 +105,9 @@ class DefaultSynchronizationQueryServiceTest {
             .hasMessageContaining("size");
     }
 
-    /** Maps persisted synchronization history to the shared page response. */
+    /**
+     * Maps persisted synchronization history to the shared page response.
+     */
     @Test
     void shouldReturnSynchronizationHistory() {
         Synchronization synchronization = synchronization(13L);
@@ -110,7 +123,9 @@ class DefaultSynchronizationQueryServiceTest {
         assertThat(response.totalElements()).isEqualTo(1);
     }
 
-    /** Returns one synchronization with its persisted player-level results. */
+    /**
+     * Returns one synchronization with its persisted player-level results.
+     */
     @Test
     void shouldReturnSynchronizationDetails() {
         Synchronization synchronization = synchronization(14L);
@@ -136,7 +151,9 @@ class DefaultSynchronizationQueryServiceTest {
         assertThat(response.players().getFirst().pagesFetched()).isEqualTo(3);
     }
 
-    /** Returns a domain-level 404 exception for an unknown execution. */
+    /**
+     * Returns a domain-level 404 exception for an unknown execution.
+     */
     @Test
     void shouldRejectUnknownSynchronization() {
         when(synchronizationRepository.findById(99L))
@@ -147,7 +164,9 @@ class DefaultSynchronizationQueryServiceTest {
             .hasMessage("Synchronization not found: 99");
     }
 
-    /** Reports a running execution and the end of the last successful one. */
+    /**
+     * Reports a running execution and the end of the last successful one.
+     */
     @Test
     void shouldReturnStatusFromTheExecutions() {
         when(synchronizationRepository
@@ -155,6 +174,10 @@ class DefaultSynchronizationQueryServiceTest {
                 List.of(SynchronizationStatus.COMPLETED, SynchronizationStatus.PARTIAL)
             ))
             .thenReturn(Optional.of(synchronization(12L)));
+        when(synchronizationRepository.findLastImportFinishedAt(
+            List.of(SynchronizationStatus.COMPLETED, SynchronizationStatus.PARTIAL)
+        ))
+            .thenReturn(Optional.of(LAST_IMPORT_AT));
         when(synchronizationRepository.existsByStatusIn(
             List.of(SynchronizationStatus.RUNNING)
         ))
@@ -164,22 +187,30 @@ class DefaultSynchronizationQueryServiceTest {
 
         assertThat(response.inProgress()).isTrue();
         assertThat(response.lastCompletedAt()).isEqualTo(FINISHED_AT);
+        assertThat(response.lastImportedAt()).isEqualTo(LAST_IMPORT_AT);
     }
 
-    /** Reports no completion instant when no execution ever succeeded. */
+    /**
+     * Reports no completion instant when no execution ever succeeded.
+     */
     @Test
     void shouldReturnNoCompletionWhenNoExecutionSucceeded() {
         when(synchronizationRepository
             .findFirstByStatusInAndFinishedAtNotNullOrderByFinishedAtDescIdDesc(any()))
+            .thenReturn(Optional.empty());
+        when(synchronizationRepository.findLastImportFinishedAt(any()))
             .thenReturn(Optional.empty());
 
         SynchronizationStatusResponse response = service.findStatus();
 
         assertThat(response.inProgress()).isFalse();
         assertThat(response.lastCompletedAt()).isNull();
+        assertThat(response.lastImportedAt()).isNull();
     }
 
-    /** Creates a complete synchronization entity for query tests. */
+    /**
+     * Creates a complete synchronization entity for query tests.
+     */
     private Synchronization synchronization(long id) {
         Synchronization synchronization = new Synchronization();
         synchronization.setId(id);
@@ -194,7 +225,9 @@ class DefaultSynchronizationQueryServiceTest {
         return synchronization;
     }
 
-    /** Creates a player used by query tests. */
+    /**
+     * Creates a player used by query tests.
+     */
     private Player player(long id, String displayName) {
         Player player = new Player();
         player.setId(id);

@@ -24,13 +24,16 @@
     position: absolute;
     top: calc(-1 * var(--notch-border-width, 1px));
     right: calc(-1 * var(--notch-border-width, 1px));
+
     /* √2 times `--notch`. */
     width: calc(var(--notch, 1.5rem) * 1.4142);
     border-top: var(--notch-border-width, 1px) solid;
     border-color: inherit;
     border-top-style: inherit;
+
     /* The inherited color already follows the border; a transition would lag. */
     transition: none;
+
     /* Pivot on the corner and lay along the diagonal, inside the clip. */
     transform-origin: 100% 0;
     transform: translateY(var(--notch, 1.5rem)) rotate(45deg);

@@ -1,4 +1,5 @@
 import { TranslateFn } from '@core/i18n/translation.model';
+
 import { FAVORITE_TAB_KEY, OVERVIEW_TABS } from './overview-tabs.constants';
 import { OverviewTab, OverviewTabKey } from './overview-tabs.model';
 

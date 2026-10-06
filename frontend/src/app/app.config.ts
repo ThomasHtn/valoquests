@@ -15,6 +15,7 @@ import {
 import { adminKeyInterceptor } from '@core/admin/session/admin-key.interceptor';
 import { TranslatedTitleStrategy } from '@core/i18n/title-strategy/translated-title-strategy';
 import { Translation } from '@core/i18n/translation';
+
 import { routes } from './app.routes';
 
 /**

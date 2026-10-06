@@ -12,10 +12,7 @@ import java.util.Set;
 /**
  * No-repeat cycle of the weekly draw, replayed from past selections.
  *
- * <p>Cycles run per tier rather than over the catalogue as a whole: a pack draws exactly one
- * challenge per tier, so tiers empty at their own pace and a shared cycle would let the largest
- * one hold the smallest hostage. A tier holding a single enabled challenge clears on every draw,
- * which is what keeps it drawable at all.</p>
+ * <p>Cycles run per tier, since tiers empty at their own pace; a single-challenge tier clears on every draw.
  */
 final class WeeklyChallengeCycle {
 
@@ -56,8 +53,7 @@ final class WeeklyChallengeCycle {
     }
 
     /**
-     * Replays every past selection to determine which challenges were already used in the cycle
-     * still in progress, per tier, resetting whenever a tier's cycle completes.
+     * Replays past selections to find, per tier, the challenges used since its last completed cycle.
      *
      * @param candidatesByTier eligible candidates grouped by tier
      * @param pastSelections         weekly selections strictly before the week being drawn, oldest first

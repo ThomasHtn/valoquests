@@ -9,14 +9,8 @@ import org.springframework.stereotype.Component;
 /**
  * Globally regulates calls sent through the Henrik API clients.
  *
- * <p>The Henrik API rate limit applies to the API key rather than to an
- * individual player or endpoint. Consequently, every account, MMR, season and
- * match-history request must share the same limiter.</p>
- *
- * <p>Requests are evenly distributed over time instead of allowing a burst of
- * thirty immediate requests followed by a long pause. This behaviour is safer
- * for scheduled synchronization jobs and avoids exhausting the quota at the
- * beginning of an execution.</p>
+ * <p>Henrik limits the API key, so every request shares this limiter. Requests are spaced evenly rather
+ * than sent in bursts.
  */
 @Component
 public class HenrikRequestLimiter {
@@ -76,10 +70,7 @@ public class HenrikRequestLimiter {
     }
 
     /**
-     * Waits until the next Henrik request is allowed to start.
-     *
-     * <p>This method is called before every physical HTTP attempt, including
-     * retries generated after a temporary external failure.</p>
+     * Waits until the next Henrik request is allowed to start, retries included.
      *
      * @throws IllegalStateException when the waiting thread is interrupted
      */

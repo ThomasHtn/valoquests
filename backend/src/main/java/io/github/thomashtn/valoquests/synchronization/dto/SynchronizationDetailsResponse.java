@@ -47,8 +47,7 @@ public record SynchronizationDetailsResponse(
      * @param pagesFetched    Henrik match-history pages read
      * @param matchesImported matches imported for this player
      * @param errorMessage    failure description, {@code null} when the player succeeded
-     * @param stopReason      condition that ended the match-history walk, {@code null} when the player
-     *                        failed before completing one; explains a short import without the logs
+     * @param stopReason      why the walk ended, {@code null} when the player failed before
      */
     public record PlayerResultResponse(
 

@@ -5,6 +5,7 @@ import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { daysBetween, localMidnight } from '@core/date/date.utils';
 import { RankingEntry } from '@core/ranking/ranking.model';
+
 import { BoardColumn, WeekOption } from './leaderboard.model';
 
 /**

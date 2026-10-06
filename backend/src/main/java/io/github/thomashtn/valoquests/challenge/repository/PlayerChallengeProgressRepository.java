@@ -14,12 +14,9 @@ public interface PlayerChallengeProgressRepository
     extends JpaRepository<PlayerChallengeProgress, Long> {
 
     /**
-     * Retrieves the existing progress rows for one player and a group of
-     * challenge selections.
+     * Retrieves the existing progress rows for one player and a group of selections.
      *
-     * <p>The selection association is fetched with the same query so
-     * {@code PlayerChallengeProgressWriter} can index results without additional lazy-load
-     * queries.</p>
+     * <p>Fetches the selection eagerly so {@code PlayerChallengeProgressWriter} indexes without lazy loads.
      *
      * @param playerId     internal player identifier
      * @param selectionIds challenge selection identifiers
@@ -34,8 +31,7 @@ public interface PlayerChallengeProgressRepository
     /**
      * Retrieves every persisted progress row for one calendar week.
      *
-     * <p>The player, weekly challenge and catalogue challenge associations are
-     * fetched eagerly to support ranking aggregation without N+1 queries.</p>
+     * <p>Associations are fetched eagerly to avoid N+1 queries in the ranking.
      *
      * @param weekStart Monday identifying the requested week
      * @return progress rows for the week
@@ -55,8 +51,7 @@ public interface PlayerChallengeProgressRepository
     /**
      * Returns every completed progress row whose week falls inside a range.
      *
-     * <p>The campaign replay's only reading of the challenges: what each player validated, over
-     * the whole campaign, in one query. Incomplete rows are left out because they pay nothing.
+     * <p>The campaign replay's only read of challenges; incomplete rows are left out as they pay nothing.
      *
      * @param firstWeekStart first Monday of the range, inclusive
      * @param lastWeekStart  last Monday of the range, inclusive

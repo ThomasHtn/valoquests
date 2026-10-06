@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+
 import { StreakPip } from './streak-gauge.model';
 import { weekdayInitials } from './streak-gauge.utils';
 

@@ -19,9 +19,8 @@ import lombok.Setter;
 /**
  * The base at the close of one day of a campaign.
  *
- * <p>Output of the replay, never its input: every row of a campaign is deleted and written again on
- * each run, so a value here can never compound into the next day's. Reading a stored stock back
- * would make a rerun depend on the run before it, which is exactly what the replay exists to avoid.
+ * <p>Output of the replay, never its input: rows are rewritten on each run, so a rerun never depends
+ * on the previous one.
  */
 @Getter
 @Setter

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
+
 import { campaign, player, translate, week } from '../overview.fixtures';
 import { buildMissionReport } from './mission-report.utils';
 

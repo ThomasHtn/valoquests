@@ -11,12 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 /**
- * Calculates challenges whose progress corresponds to the highest accumulated
- * metric value found within a single group of eligible matches.
- *
- * <p>For example, a challenge requiring several competitive matches with the
- * same agent groups matches by agent and returns the size of the largest
- * group.</p>
+ * Calculates challenges whose progress is the highest metric total within one group of matches.
  */
 @Component
 public class MaxGroupChallengeProgressCalculator

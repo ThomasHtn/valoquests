@@ -20,8 +20,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * Converts unsuccessful Henrik HTTP responses into application-specific
- * exceptions.
+ * Converts unsuccessful Henrik HTTP responses into typed exceptions.
  */
 @Component
 public class HenrikResponseHandler {
@@ -33,19 +32,12 @@ public class HenrikResponseHandler {
         "X-RateLimit-Remaining";
 
     /**
-     * Standard HTTP header indicating how long the client should wait before
-     * retrying a request.
-     *
-     * <p>A local constant is used because the Spring version used by the
-     * project does not expose a dedicated {@link HttpHeaders} constant.</p>
+     * Standard HTTP header telling how long to wait before retrying.
      */
     private static final String RETRY_AFTER_HEADER = "Retry-After";
 
     /**
-     * Thread-safe JSON mapper dedicated to external Henrik error payloads.
-     *
-     * <p>The mapper is created locally because this component does not require
-     * the complete application-wide Jackson configuration.</p>
+     * Thread-safe JSON mapper dedicated to Henrik error payloads.
      */
     private static final ObjectMapper ERROR_OBJECT_MAPPER =
         JsonMapper.builder()
@@ -101,8 +93,7 @@ public class HenrikResponseHandler {
     }
 
     /**
-     * Creates the fallback exception for an HTTP status that does not require a
-     * dedicated exception type.
+     * Creates the fallback exception for an HTTP status without a dedicated type.
      *
      * @param statusCode external HTTP status
      * @param message external error description
@@ -169,10 +160,7 @@ public class HenrikResponseHandler {
                 ? Optional.empty()
                 : Optional.of(message);
         } catch (IOException _) {
-            /*
-             * Some reverse-proxy and upstream failures return plain text or
-             * HTML instead of the documented JSON structure.
-             */
+            // Proxies and upstream failures may answer with plain text or HTML.
             return Optional.empty();
         }
     }
@@ -202,10 +190,7 @@ public class HenrikResponseHandler {
     }
 
     /**
-     * Reads a numeric {@code Retry-After} header expressed in seconds.
-     *
-     * <p>HTTP date values are intentionally ignored for the first version
-     * because Henrik normally exposes the delay as a number of seconds.</p>
+     * Reads a numeric {@code Retry-After} header expressed in seconds; HTTP dates are ignored.
      *
      * @param headers external HTTP response headers
      * @return waiting duration when a valid numeric header is present

@@ -10,15 +10,8 @@ import org.springframework.stereotype.Component;
 /**
  * Lets one job at a time write the match history or the data derived from it.
  *
- * <p>Guarded jobs: every synchronization (scheduled, manual, before a rollover), the weekly rollover
- * (scheduled or admin), the daily tick (scheduled or admin), the challenge redraw, the ranking
- * recalculation, the player deletion and the campaign reset. Two of them overlapping would race on
- * the same rows, for instance a reset truncating the tables a synchronization is filling.
- *
- * <p>The application runs as a single instance, so an in-process lock is enough. Entry points
- * (schedulers, admin endpoints) take it outside any transaction, so it is only released once the
- * guarded work has committed. A semaphore rather than a lock because a manual synchronization is
- * accepted on the request thread and released by the background thread that runs it.
+ * <p>In-process is enough for a single instance. Entry points take it outside any transaction so it is
+ * released only after commit; a semaphore because a manual sync is released by another thread.
  */
 @Component
 public class MatchHistoryLock {
@@ -95,8 +88,7 @@ public class MatchHistoryLock {
     }
 
     /**
-     * Takes the lock for a job that will run on another thread, which must then call
-     * {@link #release()} once it is done.
+     * Takes the lock for a job running on another thread, which must call {@link #release()}.
      *
      * @throws ConflictException when the lock is taken
      */

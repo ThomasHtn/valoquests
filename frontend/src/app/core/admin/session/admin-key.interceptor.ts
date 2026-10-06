@@ -1,10 +1,11 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+
 import { catchError, throwError } from 'rxjs';
 
-import { ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
 import { AdminSession } from './admin-session';
+import { ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
 import { isAdminApiUrl } from './admin-session.utils';
 
 /**

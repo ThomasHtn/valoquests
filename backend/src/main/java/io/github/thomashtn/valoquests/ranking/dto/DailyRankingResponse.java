@@ -7,13 +7,8 @@ import java.util.List;
 /**
  * Exposes one day's board: what every player of the roster brought in and how the day was priced.
  *
- * <p>A day is not a short week. Only match output exists at this scale, the challenge points are
- * settled on the week, so a day's figure is the damage its matches dealt, split into the two
- * resources.
- *
- * <p>The roster count is measured on the competing squad alone, the same players the positions below
- * are handed to. A deactivated player is still listed and still priced, but counting them here would
- * put a presence over a board holding no slot for them.
+ * <p>Only match output exists at this scale, challenge points being settled on the week. The roster
+ * count covers the competing squad only, the players positions go to.
  *
  * @param day               the day on the board, as an ISO-8601 date
  * @param rosterPlayerCount competing players, deactivated and archived ones excluded
@@ -29,11 +24,8 @@ public record DailyRankingResponse(
     /**
      * Exposes one player's day.
      *
-     * <p>Nothing here is persisted: the figures are read back off the stored matches through the same
-     * reader the weekly ranking and the campaign use, both multipliers included, so one evening is
-     * priced identically wherever it is shown. Both multipliers are reported, not just applied: a rule
-     * that discourages marathon sessions only discourages one if the player can see it coming, and a
-     * bonus for the days played this week only rewards regularity if the counter is on screen.
+     * <p>Both multipliers are reported, not just applied, so players see the diminishing returns and the
+     * streak bonus coming.
      *
      * @param position           rank on the day, starting at 1, shared on equal damage, {@code null}
      *     when the player dealt none or is not competitive

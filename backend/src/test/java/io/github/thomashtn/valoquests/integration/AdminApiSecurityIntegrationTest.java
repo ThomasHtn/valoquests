@@ -20,10 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
     properties = {
         "app.admin-api-key=test-admin-key-0123456789abcdef0",
-        // Reproduces the documentation wiring of the real application.properties, which
-        // src/test/resources/application.properties shadows entirely. Without the path, springdoc
-        // answers on its own default (/v3/api-docs) and the assertion below would be checking a
-        // route production never serves.
+        // Mirrors the springdoc path of the main application.properties, which the test one shadows.
         "springdoc.api-docs.path=/api-docs",
         "springdoc.api-docs.enabled=${app.api-docs-enabled}",
         "springdoc.swagger-ui.enabled=${app.api-docs-enabled}"
@@ -52,8 +49,7 @@ class AdminApiSecurityIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies that an administrative request with an invalid API key
-     * is rejected.
+     * Verifies that an administrative request with an invalid API key is rejected.
      *
      * @throws Exception when MockMvc cannot execute the request
      */
@@ -67,13 +63,9 @@ class AdminApiSecurityIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies that percent-encoding a character of the {@code /api/admin} prefix does not slip
-     * past the administrative key check.
+     * Verifies that percent-encoding the {@code /api/admin} prefix does not bypass the key check.
      *
-     * <p>Spring MVC matches handler mappings on the <em>decoded</em> path, so
-     * {@code /api/%61dmin/...} reaches the very same controller as {@code /api/admin/...}. A guard
-     * comparing the raw request URI would not recognise it as administrative and would let the
-     * request through unauthenticated.</p>
+     * <p>Spring MVC matches the decoded path, so a guard on the raw URI would let {@code /api/%61dmin/...} through.
      *
      * @throws Exception when MockMvc cannot execute the request
      */
@@ -100,13 +92,9 @@ class AdminApiSecurityIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies that the API documentation is unreachable while {@code app.api-docs-enabled} is off,
-     * which is the default this application ships with.
+     * Verifies that the API documentation is unreachable while {@code app.api-docs-enabled} is off, the default.
      *
-     * <p>The document names every administrative route, its request body and its error codes. It
-     * never leaks the key, but it hands over the map, so it must not be readable on a deployment
-     * anyone can reach. Asserting it here rather than trusting the property means a future rule
-     * re-opening these paths fails the build instead of shipping quietly.</p>
+     * <p>The document maps every administrative route, so a rule re-opening these paths must fail the build.
      *
      * @param path documentation route expected to stay closed
      * @throws Exception when MockMvc cannot execute the request
@@ -117,8 +105,7 @@ class AdminApiSecurityIntegrationTest extends PostgreSqlIntegrationTest {
         mockMvc.perform(get(path))
             .andExpect(result -> {
                 int status = result.getResponse().getStatus();
-                // Any 4xx is correct — springdoc unregisters the handler (404) and the chain denies
-                // the path (403) — but a success or a redirect towards the UI is not.
+                // Any 4xx is fine (404 or 403), but never a success or a redirect to the UI.
                 if (status < 400) {
                     throw new AssertionError(
                         "API documentation answered " + status + " at " + path

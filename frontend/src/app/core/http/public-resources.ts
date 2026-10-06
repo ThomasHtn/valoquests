@@ -1,9 +1,11 @@
 import { inject, Service } from '@angular/core';
+
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
+
 import { reloadAll } from './resource-state.utils';
 
 /**

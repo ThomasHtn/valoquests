@@ -1,5 +1,6 @@
-import { ChallengeProgress } from '@core/challenges/challenge.model';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
+import { ChallengeProgress } from '@core/challenges/challenge.model';
+
 import {
   formatDayMonth,
   formatDayOfMonth,

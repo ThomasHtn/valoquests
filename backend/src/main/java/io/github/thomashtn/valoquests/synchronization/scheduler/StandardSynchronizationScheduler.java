@@ -12,13 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Periodically synchronizes recent Valorant data for every active player.
  *
- * <p>The scheduler delegates the complete workflow to the same command service
- * used by administrative routes. Scheduled executions are therefore persisted
- * with the {@link SynchronizationTrigger#SCHEDULED} trigger and benefit from
- * the existing per-player failure isolation.</p>
- *
- * <p>A run is skipped, not queued, while another guarded job holds the {@link MatchHistoryLock}:
- * the next one comes thirty minutes later anyway.</p>
+ * <p>Skipped, not queued, while another job holds the {@link MatchHistoryLock}: the next run comes
+ * five minutes later anyway.
  */
 @Component
 @ConditionalOnProperty(
@@ -62,8 +57,7 @@ public class StandardSynchronizationScheduler {
     /**
      * Runs the configured standard synchronization job.
      *
-     * <p>Unexpected runtime failures are logged instead of escaping the scheduled
-     * method so a temporary failure does not disable later executions.</p>
+     * <p>Failures are logged, not thrown, so later executions still run.
      */
     @Scheduled(
         cron = "${app.scheduling.standard-synchronization-cron}",

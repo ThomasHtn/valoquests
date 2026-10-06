@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { LucideUserCheck, LucideDynamicIcon } from '@lucide/angular';
 
+import { LucideDynamicIcon, LucideUserCheck } from '@lucide/angular';
+
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Countdown } from '@shared/countdown/countdown';
-import { Tooltip } from '@shared/tooltip/tooltip';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DeckCard } from '@shared/deck-card/deck-card';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { DayTally, TallyTile } from './day-orders.model';
 import { buildTallyTiles } from './day-orders.utils';
 

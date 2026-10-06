@@ -9,11 +9,14 @@
 
   /* Its bounce must not chain to the shell and drag the header. */
   overscroll-behavior-y: contain;
+
   /* Clears the home indicator on notched phones; `pb-6` stays the floor. */
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   scroll-padding-top: 1.5rem;
+
   /* Route transitions animate this column only; one `page-body` is mounted at a time. */
   view-transition-name: page-body;
+
   /* `scrollbar-color` for Chrome and Firefox, the track rule for Safari. */
   scrollbar-color: var(--color-surface-600) var(--color-surface-sunken);
 

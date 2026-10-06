@@ -15,9 +15,7 @@ public interface RankingRecalculationService {
     /**
      * Recalculates scores, positions and position variations for one week.
      *
-     * <p>This operation is primarily used when finalizing the previous week.
-     * It only uses challenge progress already stored in PostgreSQL and does
-     * not contact the Henrik API.</p>
+     * <p>Mainly used when finalizing a week; reads stored progress only, never Henrik.
      *
      * @param weekStart Monday identifying the week to recalculate
      */

@@ -11,11 +11,8 @@ import org.springframework.stereotype.Service;
 /**
  * Runs a synchronization on the administrative executor instead of the request thread.
  *
- * <p>Separate from {@link SynchronizationLaunchService} on purpose: {@code @Async} is applied by a
- * proxy, so a self-call inside a single class would run inline and defeat the whole point. The
- * caller keeps the guard, this class keeps the dispatch.
- *
- * <p>Each run releases the {@link MatchHistoryLock} its caller took before dispatching it.
+ * <p>A separate bean because {@code @Async} works through a proxy, so a self-call would run inline.
+ * Each run releases the {@link MatchHistoryLock} its caller took.
  */
 @Service
 public class AsyncSynchronizationRunner {
@@ -52,9 +49,7 @@ public class AsyncSynchronizationRunner {
     /**
      * Synchronizes every tracked player in the background.
      *
-     * <p>Failures are logged rather than propagated: there is no caller left to receive them, and
-     * the execution row already carries the failed status and its message for the administration
-     * screen to read.
+     * <p>Failures are logged, not thrown: no caller is left and the execution row records them.
      */
     @Async(AsyncConfig.ADMIN_TASK_EXECUTOR)
     public void runAllPlayers() {

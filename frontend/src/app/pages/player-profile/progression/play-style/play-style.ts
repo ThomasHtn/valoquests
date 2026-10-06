@@ -1,11 +1,13 @@
 import { Component, computed, inject, input } from '@angular/core';
+
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { formatHeadshotPercentage } from '@core/players/player-format.utils';
 import { AimBreakdown } from '@core/players/progression/player-progression.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { AimZone } from './play-style.model';
+
 import { MINIMUM_OPACITY } from './play-style.constants';
+import { AimZone } from './play-style.model';
 
 /**
  * Where shots land, drawn on a range-target dummy.

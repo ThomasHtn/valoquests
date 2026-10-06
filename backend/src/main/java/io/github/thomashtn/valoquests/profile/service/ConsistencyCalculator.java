@@ -15,9 +15,7 @@ import java.util.Map;
 final class ConsistencyCalculator {
 
     /**
-     * Matches with a combat score a set must hold before its spread means anything.
-     *
-     * <p>Below it, a quartile is one or two matches and the floor and ceiling move with each game.
+     * Scored matches a set needs before its spread means anything, as smaller quartiles move with each game.
      */
     private static final int MINIMUM_SAMPLE = 8;
 
@@ -30,8 +28,7 @@ final class ConsistencyCalculator {
     /**
      * Summarizes the combat-score spread of the selection.
      *
-     * <p>A single-season selection is also compared with the season before it, read from the whole
-     * career since that season sits outside the selection.
+     * <p>A single-season selection is also compared with the previous season, read from the career.
      *
      * @param selected competitive matches of the selected seasons, oldest first
      * @param career   competitive matches of the player's whole career, oldest first

@@ -9,8 +9,7 @@ import java.util.List;
 /**
  * Base of the calculators whose challenge holds one condition, measured over the matches it accepts.
  *
- * <p>Fixes the steps every such calculator shares: read the single condition, keep the matches its
- * filters accept, and compare what the subclass measures on them with the challenge's target.
+ * <p>Subclasses only measure; filtering and the comparison with the target happen here.
  */
 public abstract class SingleConditionChallengeProgressCalculator implements ChallengeProgressCalculator {
 

@@ -7,12 +7,9 @@ import java.math.BigDecimal;
 import org.springframework.stereotype.Component;
 
 /**
- * Calculates composite challenges requiring every configured condition to be
- * completed.
+ * Calculates composite challenges requiring every condition to be completed.
  *
- * <p>Each condition is calculated independently and capped at its own target.
- * This prevents excessive progress on one condition from compensating for an
- * incomplete condition.</p>
+ * <p>Each condition is capped at its own target, so surplus on one never makes up for another.
  */
 @Component
 public class AllChallengeProgressCalculator
@@ -53,12 +50,7 @@ public class AllChallengeProgressCalculator
     }
 
     /**
-     * Calculates every condition independently and combines their normalized
-     * progress.
-     *
-     * <p>The current value of each condition is capped at its target before
-     * being added to the global result. Consequently, the global target can
-     * only be reached when every condition is complete.</p>
+     * Sums every condition's progress, each capped at its own target.
      *
      * @param definition parsed challenge definition
      * @param context    weekly player context

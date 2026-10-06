@@ -20,13 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Rebuilds the campaign in progress from its first day, every time.
  *
- * <p>Nothing is ever incremented. The campaign is replayed whole from the matches and challenges it
- * is made of, which is what makes this safe to call from the end of every synchronization, from the
- * nightly tick and from the backoffice, in any order and any number of times.
- *
- * <p>Only a running campaign is replayed. One that has closed is frozen: it was settled one last
- * time on its way out, and a later change to the rules must not rewrite a score that has already
- * been read as final.
+ * <p>Idempotent, so safe to call in any order and any number of times. Only a running campaign is
+ * replayed: a closed one is frozen.
  */
 @Service
 public class CampaignReplayService {
@@ -118,10 +113,8 @@ public class CampaignReplayService {
     /**
      * Replays one campaign up to today, or up to its final day once it is past.
      *
-     * <p>Today's matches are played but today's Sunday is not settled: a settlement written while
-     * the Sunday is still being played would strike the base, spend the stocks and open the mission
-     * report on figures that the evening's matches are about to change. A week is settled from the
-     * day after its Sunday, which is when its matches are all in.
+     * <p>Today's matches count, but a week is only settled from the day after its Sunday, once all
+     * its matches are in.
      *
      * @param campaign campaign to replay
      * @return what the replay produced

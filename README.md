@@ -21,7 +21,7 @@ turns it into a rescue campaign the whole roster shares. Nothing to declare. Not
 Nothing to chase on a Sunday night.
 
 <p align="center">
-  <img src="docs/media/flow.svg" alt="A match is imported within thirty minutes, split into food and components, and the base grows." width="900">
+  <img src="docs/media/flow.svg" alt="A match is imported within five minutes, split into food and components, and the base grows." width="900">
 </p>
 
 ---
@@ -34,12 +34,12 @@ mostly brings back **food**, what feeds the base tonight and settles the rescued
 These are real stocks. Nothing is wiped on Monday. What you do not spend, you keep for the week that
 will need it.
 
-| A match | Value | <img src="docs/media/icons/food.svg" width="15" alt=""> Food | <img src="docs/media/icons/components.svg" width="15" alt=""> Components |
-|---|---|---|---|
-| Competitive win | 500 | 150 | 350 |
-| Competitive loss | 350 | 105 | 245 |
-| Deathmatch win | 150 | 105 | 45 |
-| Deathmatch loss | 100 | 70 | 30 |
+| A match          | Value | <img src="docs/media/icons/food.svg" width="15" alt=""> Food | <img src="docs/media/icons/components.svg" width="15" alt=""> Components |
+| ---------------- | ----- | ------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Competitive win  | 500   | 150                                                          | 350                                                                      |
+| Competitive loss | 350   | 105                                                          | 245                                                                      |
+| Deathmatch win   | 150   | 105                                                          | 45                                                                       |
+| Deathmatch loss  | 100   | 70                                                           | 30                                                                       |
 
 ---
 
@@ -61,10 +61,10 @@ match, by every operator, takes hit points off it. Its bar falls while you play.
 
 ## <img src="docs/media/icons/target.svg" width="22" alt=""> Every mode counts. Even the ten minute one.
 
-| Mode | <img src="docs/media/icons/food.svg" width="15" alt=""> Food | <img src="docs/media/icons/components.svg" width="15" alt=""> Components |
-|---|---|---|
-| Competitive, Premier, Unrated | 30% | **70%** |
-| Deathmatch, Team Deathmatch, Spike Rush, Skirmish | **70%** | 30% |
+| Mode                                              | <img src="docs/media/icons/food.svg" width="15" alt=""> Food | <img src="docs/media/icons/components.svg" width="15" alt=""> Components |
+| ------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Competitive, Premier, Unrated                     | 30%                                                          | **70%**                                                                  |
+| Deathmatch, Team Deathmatch, Spike Rush, Skirmish | **70%**                                                      | 30%                                                                      |
 
 Ranked pays more per match. It also takes 35 minutes. Every value is tuned so that an hour of play is
 worth about the same wherever you spend it, which means nobody in the squad is ever told what to queue.
@@ -74,12 +74,12 @@ worth about the same wherever you spend it, which means nobody in the squad is e
 ## <img src="docs/media/icons/streak.svg" width="22" alt=""> Showing up beats grinding.
 
 | Match of the day | 1 to 5 | 6 to 9 | 10 and beyond |
-|---|---|---|---|
-| Worth | 100% | 50% | 25% |
+| ---------------- | ------ | ------ | ------------- |
+| Worth            | 100%   | 50%    | 25%           |
 
-| Days in a row | 1 | 2 | 3 | 4 | 5 | 6+ |
-|---|---|---|---|---|---|---|
-| Bonus | 0% | +2% | +4% | +6% | +8% | **+10%** |
+| Days in a row | 1   | 2   | 3   | 4   | 5   | 6+       |
+| ------------- | --- | --- | --- | --- | --- | -------- |
+| Bonus         | 0%  | +2% | +4% | +6% | +8% | **+10%** |
 
 The sixth match of the night is worth half. The tenth, a quarter. And the streak bonus stops at 10% on
 purpose: miss a day, and first place is still within reach.
@@ -92,10 +92,10 @@ You pick the difficulty when you open a campaign, and it is frozen for the ten w
 **reference** everything else is a multiple of: guardians, groups of wounded, challenge rewards, all
 of it, per active player. Two operators or twenty, the campaign plays the same.
 
-| Difficulty | Weekly reference per player | What it asks for |
-|---|---|---|
-| Amateur | 5,300 | A squad that plays regularly |
-| Pro | 10,600 | Twice the guardian, and the harder written targets |
+| Difficulty | Weekly reference per player | What it asks for                                   |
+| ---------- | --------------------------- | -------------------------------------------------- |
+| Amateur    | 5,300                       | A squad that plays regularly                       |
+| Pro        | 10,600                      | Twice the guardian, and the harder written targets |
 
 The difficulty also decides which of a challenge's two hand-written targets you play against, so a
 Pro squad chases harder objectives against a bigger guardian for the same relative reward.
@@ -104,12 +104,12 @@ Pro squad chases harder objectives against a bigger guardian for the same relati
 
 ## <img src="docs/media/icons/trophy.svg" width="22" alt=""> Four titles. Every week. Rarely the same player.
 
-| Title | Goes to |
-|---|---|
+| Title                                                                      | Goes to                           |
+| -------------------------------------------------------------------------- | --------------------------------- |
 | <img src="docs/media/icons/components.svg" width="16" alt=""> **Mechanic** | The most components over the week |
-| <img src="docs/media/icons/food.svg" width="16" alt=""> **Quartermaster** | The most food |
-| <img src="docs/media/icons/streak.svg" width="16" alt=""> **Regular** | The longest streak of days played |
-| <img src="docs/media/icons/target.svg" width="16" alt=""> **Scout** | The most challenges validated |
+| <img src="docs/media/icons/food.svg" width="16" alt=""> **Quartermaster**  | The most food                     |
+| <img src="docs/media/icons/streak.svg" width="16" alt=""> **Regular**      | The longest streak of days played |
+| <img src="docs/media/icons/target.svg" width="16" alt=""> **Scout**        | The most challenges validated     |
 
 The weekly leaderboard counts guardian damage and wounded brought home, and resets every Monday.
 Nobody is ever out of the campaign because of one bad week.
@@ -119,24 +119,24 @@ Nobody is ever out of the campaign because of one bad week.
 ## For the squad. And for the club.
 
 | <img src="docs/media/icons/squad.svg" width="16" alt=""> Players | <img src="docs/media/icons/base.svg" width="16" alt=""> Clubs and coaches |
-|---|---|
-| A goal that survives a losing streak | Who is actually playing, week by week |
-| A leaderboard that starts over every Monday | One objective the whole roster shares for ten weeks |
-| Titles, streaks, profiles, match by match detail | Dashboards a non player reads in thirty seconds |
-| Solo queue still counts toward the team goal | A closed campaign, archived, its score frozen |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| A goal that survives a losing streak                             | Who is actually playing, week by week                                     |
+| A leaderboard that starts over every Monday                      | One objective the whole roster shares for ten weeks                       |
+| Titles, streaks, profiles, match by match detail                 | Dashboards a non player reads in thirty seconds                           |
+| Solo queue still counts toward the team goal                     | A closed campaign, archived, its score frozen                             |
 
 ---
 
 ## <img src="docs/media/icons/planet.svg" width="22" alt=""> Inside
 
-| Screen | What it shows |
-|---|---|
-| **Overview** | The base at night, the rocket under construction, this week's situation report |
-| **Campaign** | The road of ten planets, each with its guardian, its group and its outcome |
-| **Challenges** | One drawn every morning, five drawn every Monday, one per difficulty |
-| **Leaderboard** | Guardian damage, wounded brought home, and the week's four titles |
-| **Squad** | Profiles, streaks, agents, and every match in detail |
-| **Rules** | The whole game explained in the app, plus a guided tour |
+| Screen          | What it shows                                                                  |
+| --------------- | ------------------------------------------------------------------------------ |
+| **Overview**    | The base at night, the rocket under construction, this week's situation report |
+| **Campaign**    | The road of ten planets, each with its guardian, its group and its outcome     |
+| **Challenges**  | One drawn every morning, five drawn every Monday, one per difficulty           |
+| **Leaderboard** | Guardian damage, wounded brought home, and the week's four titles              |
+| **Squad**       | Profiles, streaks, agents, and every match in detail                           |
+| **Rules**       | The whole game explained in the app, plus a guided tour                        |
 
 ---
 

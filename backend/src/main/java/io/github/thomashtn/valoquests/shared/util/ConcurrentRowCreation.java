@@ -7,9 +7,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 /**
  * Finds a row by its unique key or creates it, tolerating a concurrent creation of the same row.
  *
- * <p>The database unique constraint settles the race: the losing insert fails and the loser
- * reloads the row the winner committed. This only works when each repository call commits on its
- * own: inside a transaction, the failed insert would mark the whole transaction rollback-only.
+ * <p>The unique constraint settles the race and the loser reloads the winner's row. Must run outside a
+ * transaction, which the failed insert would mark rollback-only.
  */
 public final class ConcurrentRowCreation {
 

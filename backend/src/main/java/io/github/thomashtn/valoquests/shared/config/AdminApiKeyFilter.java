@@ -26,16 +26,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Protects administrative routes with a static API key supplied through an
- * HTTP header.
+ * Protects administrative routes with a static API key supplied through an HTTP header.
  *
- * <p>This filter only <em>authenticates</em>: a valid key grants
- * {@link #ADMIN_ROLE} in the security context, and the actual access decision is left to
- * {@link SecurityConfig}, which requires that role on {@link #ADMIN_PATH_PATTERN}. Keeping the two
- * concerns apart is what lets the filter answer with the precise problem responses this API
- * documents (401 for a missing header, 403 for a wrong key, 429 once an address is locked out)
- * while Spring Security still refuses anything that reaches an administrative handler without
- * having passed here.</p>
+ * <p>Only authenticates, granting {@link #ADMIN_ROLE} and answering 401, 403 or 429 itself;
+ * {@link SecurityConfig} makes the access decision.
  */
 public class AdminApiKeyFilter extends OncePerRequestFilter {
 
@@ -47,9 +41,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /**
      * Path pattern covering every administrative route.
      *
-     * <p>Shared with {@link SecurityConfig} on purpose: the filter and the authorization rules must
-     * agree on what "administrative" means, or one of them ends up guarding a different set of
-     * routes than the other.</p>
+     * <p>Shared with {@link SecurityConfig} so both guard the same routes.
      */
     public static final String ADMIN_PATH_PATTERN = "/api/admin/**";
 
@@ -61,10 +53,8 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /**
      * Matches administrative routes the way Spring MVC resolves handler mappings.
      *
-     * <p>Deliberately not a {@code getRequestURI().startsWith(...)} test. The request URI is the
-     * raw, still percent-encoded target, while both Spring MVC and Spring Security match on the
-     * decoded path — so {@code /api/%61dmin/players} reaches the administrative controller yet
-     * fails a raw prefix comparison, which would skip this filter entirely.</p>
+     * <p>Not a raw URI prefix test: {@code /api/%61dmin/players} reaches the admin controller but would
+     * skip the filter.
      */
     private static final RequestMatcher ADMIN_ROUTES =
         PathPatternRequestMatcher.withDefaults().matcher(ADMIN_PATH_PATTERN);
@@ -127,11 +117,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /**
      * Prevents the filter from executing again during an ERROR dispatch.
      *
-     * <p>
-     * Once the request has been authenticated, the filter must not run again
-     * while Spring renders an error response. Otherwise the original HTTP
-     * status (for example 404) may be replaced by a new authentication error.
-     * </p>
+     * <p>Otherwise the original status, such as a 404, could be replaced by an authentication error.
      *
      * @return always {@code true}
      */
@@ -202,9 +188,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /**
      * Marks the current request as coming from the administrator.
      *
-     * <p>The key itself is never stored as credentials: the security context is exposed to
-     * downstream components and to error reporting, and the administrator key is the single secret
-     * protecting every write operation in this API.</p>
+     * <p>The key is never stored as credentials, since the security context reaches error reporting.
      */
     private void authenticateAsAdministrator() {
         Authentication authentication = UsernamePasswordAuthenticationToken.authenticated(
@@ -221,8 +205,7 @@ public class AdminApiKeyFilter extends OncePerRequestFilter {
     /**
      * Compares the supplied key against the configured one in constant time.
      *
-     * <p>A plain {@code equals} would return as soon as two bytes differ, letting a caller time
-     * repeated requests to recover the key one character at a time.
+     * <p>A plain {@code equals} would leak the key through response timing.
      *
      * @param providedApiKey key supplied by the caller
      * @return {@code true} when both keys are equal

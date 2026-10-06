@@ -6,10 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represents the response returned by the Henrik account endpoint.
  *
- * <p>Only fields required by the application are declared. Unknown properties
- * are deliberately ignored so that additional Henrik fields do not break
- * deserialization.</p>
- *
  * @param data resolved Riot account information
  */
 @JsonIgnoreProperties(ignoreUnknown = true)

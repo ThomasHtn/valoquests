@@ -28,9 +28,8 @@ public class ChallengeMatchFilter {
     /**
      * Determines whether a player match belongs to the condition scope.
      *
-     * <p>Eligibility is checked before the game mode, and deliberately not left to the individual
-     * calculators, so a remake worth no damage never progresses a volume target and "play on four
-     * different days" agrees with the regularity bonus on what a day is.
+     * <p>Eligibility is checked here, not in each calculator, so a remake never progresses a challenge
+     * and a play day means the same as for the regularity bonus.
      *
      * @param playerMatch persisted player-match data
      * @param condition   parsed challenge condition

@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
 import { LucideX } from '@lucide/angular';
 
 import { DRAWER_EXIT_FALLBACK_MS } from './drawer.constants';

@@ -2,10 +2,6 @@ package io.github.thomashtn.valoquests.campaign.model;
 
 /**
  * What capped Sunday's extraction, so the week can say why it did not bring everyone home.
- *
- * <p>Reported instead of left to be inferred from three numbers on screen: the answer decides what
- * the squad should do differently next week, and "the ship ran out of components" is an instruction
- * where "1 240 components, 980 food, 42 wounded" is a puzzle.
  */
 public enum ExtractionLimiter {
 

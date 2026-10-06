@@ -1,8 +1,9 @@
-import { CampaignWeek } from '@core/campaign/campaign-week.model';
-import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
 import { CAMPAIGN_TIME_ZONE } from '@core/campaign/calendar/campaign-calendar.constants';
+import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { Language } from '@core/i18n/translation.model';
+
 import {
   DAY_MS,
   FALL_FLOOR_ROOM,

@@ -1,6 +1,6 @@
-import { svgElement } from '@core/svg/svg-element.utils';
 import { createSeededRandom } from '@core/random/seeded-random.utils';
-import { SkyBody, SkyState } from './town-scene.model';
+import { svgElement } from '@core/svg/svg-element.utils';
+
 import {
   CLOUD_CROSSING_S,
   CLOUD_RANGE,
@@ -9,6 +9,7 @@ import {
   TOWN_SEED,
   TOWN_WIDTH,
 } from './town-scene.constants';
+import { SkyBody, SkyState } from './town-scene.model';
 import { mixColor } from './town-sky-cycle.utils';
 
 /**

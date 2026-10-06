@@ -1,6 +1,6 @@
-import { createSeededRandom } from '@core/random/seeded-random.utils';
 import { hashUnit } from '@core/random/hash-unit.utils';
-import { BuildingShape, Lot, LotRow, LotSite } from './town-scene.model';
+import { createSeededRandom } from '@core/random/seeded-random.utils';
+
 import {
   BLOCK_TIER,
   CABIN_TIER,
@@ -20,6 +20,7 @@ import {
   TOWN_SEED,
   TOWN_WIDTH,
 } from './town-scene.constants';
+import { BuildingShape, Lot, LotRow, LotSite } from './town-scene.model';
 
 /**
  * Plan independent of population: tomorrow's city is today's plus a building, never a reshuffle.

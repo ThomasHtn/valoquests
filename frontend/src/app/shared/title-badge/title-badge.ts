@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
 import { TitleKey } from '@core/campaign/titles/campaign-title.model';
@@ -6,6 +7,7 @@ import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { TITLE_BADGE_ICONS } from './title-badge.constants';
 
 /**

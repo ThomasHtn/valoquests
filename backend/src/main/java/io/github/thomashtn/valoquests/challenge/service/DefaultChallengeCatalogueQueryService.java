@@ -71,9 +71,7 @@ public class DefaultChallengeCatalogueQueryService implements ChallengeCatalogue
     /**
      * Returns every enabled challenge, as it would be drawn this week.
      *
-     * <p>Targets are resolved against the calibration in force the same way a draw resolves them,
-     * so a catalogue entry and that same challenge once drawn this week agree. A challenge drawn
-     * in a past campaign keeps the targets it was drawn with; only the catalogue moves.
+     * <p>Targets resolve as a draw would, so an entry agrees with the same challenge drawn this week.
      *
      * @return the enabled challenge catalogue, ordered by identifier
      */

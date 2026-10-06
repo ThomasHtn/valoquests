@@ -58,8 +58,8 @@ final class EvolutionCalculator {
     /**
      * Turns one season's matches into its plotted series and its legend averages.
      *
-     * <p>The averages are the season's aggregate indicators, not the mean of the plotted points:
-     * that is the same definition the profile's summary tiles use, and the two must agree.
+     * <p>Averages are the season's aggregate indicators, not the mean of the points, to match the summary
+     * tiles.
      *
      * @param matches         one season's competitive matches, oldest first
      * @param currentSeasonId season in progress, or {@code null} when none is known

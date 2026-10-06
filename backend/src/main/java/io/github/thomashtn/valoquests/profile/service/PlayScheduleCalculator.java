@@ -19,11 +19,7 @@ import java.util.stream.IntStream;
 final class PlayScheduleCalculator {
 
     /**
-     * Matches a weekday or time slot must hold before it can be called a player's best.
-     *
-     * <p>Without a floor, the strongest slot would almost always be one the player barely played:
-     * a single win on a Tuesday morning reads as a 100% win rate and would outrank a hundred
-     * evening matches at 58%.
+     * Matches a weekday or time slot needs before it can be called best, so one lucky win never crowns a slot.
      */
     private static final int MINIMUM_SLOT_SAMPLE = 5;
 

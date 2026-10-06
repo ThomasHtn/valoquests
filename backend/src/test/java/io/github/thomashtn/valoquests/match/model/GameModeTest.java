@@ -32,9 +32,7 @@ class GameModeTest {
     /**
      * Verifies the exact set of modes synchronization stores.
      *
-     * <p>Pinned rather than derived, so a mode added for a new Riot queue fails this test until
-     * someone decides whether it belongs in the tracker. Silently importing it would change what
-     * challenges count, and silently ignoring it would lose the matches for good.
+     * <p>Pinned on purpose: a new mode fails here until someone decides whether challenges should count it.
      */
     @Test
     void shouldImportOnlyTheFollowedGameModes() {
@@ -59,8 +57,7 @@ class GameModeTest {
     /**
      * Verifies that an unclassified queue is stored rather than dropped.
      *
-     * <p>Henrik lags behind Riot releases, so a mode that matters may surface as an unknown queue
-     * first. Importing it keeps the raw slug available for a later reclassification.
+     * <p>Henrik lags behind Riot, so keeping the raw slug allows a later reclassification.
      */
     @Test
     void shouldImportAnUnclassifiedQueue() {
@@ -95,8 +92,7 @@ class GameModeTest {
     /**
      * Verifies that an unknown or blank identifier stays unresolved.
      *
-     * <p>Empty rather than {@link GameMode#OTHER}, so the caller can try the next identifier Henrik
-     * exposes before giving up.
+     * <p>Empty rather than {@link GameMode#OTHER}, so the caller can try the next Henrik identifier.
      */
     @Test
     void shouldNotResolveAnUnknownIdentifier() {

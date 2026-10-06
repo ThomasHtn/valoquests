@@ -1,9 +1,10 @@
-import { resolveLocale } from '@core/i18n/format/locale.utils';
-import { Language } from '@core/i18n/translation.model';
 import {
   CAMPAIGN_CLOCK,
   CAMPAIGN_TIME_ZONE,
 } from '@core/campaign/calendar/campaign-calendar.constants';
+import { resolveLocale } from '@core/i18n/format/locale.utils';
+import { Language } from '@core/i18n/translation.model';
+
 import { MILLISECONDS_PER_MINUTE } from './date.constants';
 
 /**

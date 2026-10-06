@@ -23,17 +23,12 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
     private static final Pattern EPISODE_ACT_NAME = Pattern.compile("^e(\\d+)a(\\d+)$", Pattern.CASE_INSENSITIVE);
 
     /**
-     * Year-era season short name, as {@code v<yy>a<act>}, for example {@code v26a4}.
-     *
-     * <p>Riot renamed its seasons once: episodes ran until 2025, years took over from 2026. Both
-     * spellings coexist in a database built from imported matches and must order against each other,
-     * or the "current" season would resolve to a stale episode-era act.
+     * Year-era season short name, as {@code v<yy>a<act>}, which replaced episodes in 2026.
      */
     private static final Pattern YEAR_ACT_NAME = Pattern.compile("^v(\\d{2})a(\\d+)$", Pattern.CASE_INSENSITIVE);
 
     /**
-     * Offset turning a two-digit year into its full form, so a year-era key always outranks an
-     * episode-era one: episodes stop in the tens, years start at 2026.
+     * Offset turning a two-digit year into its full form, so year-era keys outrank episode-era ones.
      */
     private static final long YEAR_ERA_BASE = 2_000L;
 
@@ -43,8 +38,7 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
     private static final long ERA_SCALE = 1_000L;
 
     /**
-     * Sort key given to a season whose name follows neither supported spelling, placing it after
-     * every datable season rather than at an arbitrary point in the middle of them.
+     * Sort key placing a season whose name follows neither spelling after every datable season.
      */
     private static final long UNDATABLE_SEASON_KEY = -1L;
 
@@ -65,10 +59,7 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
     /**
      * Returns every known season, most recent first.
      *
-     * <p>Ordered by the episode and act encoded in the season name rather than by identifier:
-     * seasons are created on demand as matches are imported, so their insertion order follows the
-     * order Henrik happens to return matches in and is not chronological. Seasons whose name
-     * cannot be read that way keep the repository's order and come last.</p>
+     * <p>Ordered by the act encoded in the name, since insertion order follows Henrik, not time.
      *
      * @return known seasons
      */
@@ -87,8 +78,7 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
     }
 
     /**
-     * Resolves the season currently in progress as the most recent one known - seasons are created
-     * on demand from imported matches, so the most recent one is always the one still being played.
+     * Resolves the season currently in progress as the most recent one known.
      *
      * @return the current season's identifier, or {@code null} if no season is known yet
      */
@@ -109,10 +99,6 @@ public class DefaultSeasonQueryService implements SeasonQueryService {
 
     /**
      * Builds the sort key ranking a season against the others, greater being more recent.
-     *
-     * <p>Acts are numbered from one within an episode or a year, so scaling that leading number
-     * past any act count makes a single number order the pair. A year is expanded to its full form
-     * first, which is what places the whole year era after the whole episode era.</p>
      */
     private static long chronologicalKey(Season season) {
         Matcher episode = EPISODE_ACT_NAME.matcher(season.getName());

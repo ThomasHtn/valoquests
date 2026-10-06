@@ -28,8 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Verifies what a week's validated challenges are worth in wounded, at the documented scoring table.
  *
- * <p>At a reference of 5 300 a first-week EASY brings back 5 and a VERY_HARD 29, and the daily
- * challenge 6.
+ * <p>At a reference of 5 300 a first-week EASY brings back 5, a VERY_HARD 29 and the daily challenge 6.
  */
 @ExtendWith(MockitoExtension.class)
 class CampaignChallengeReaderTest {

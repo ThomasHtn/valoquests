@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { LucideCheck } from '@lucide/angular';
 
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { ChallengeHead } from '@shared/challenge-head/challenge-head';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { ProgressTip } from '@shared/progress-tip/progress-tip';
+import { Tooltip } from '@shared/tooltip/tooltip';
 
 /**
  * Challenge card: compact head, one progress line per operator, projected content below.

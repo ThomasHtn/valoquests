@@ -1,8 +1,7 @@
 package io.github.thomashtn.valoquests.challenge.exception;
 
 /**
- * Raised when a persisted challenge contains an invalid or unsupported rule
- * definition.
+ * Raised when a persisted challenge contains an invalid or unsupported rule definition.
  */
 public class InvalidChallengeDefinitionException extends RuntimeException {
 

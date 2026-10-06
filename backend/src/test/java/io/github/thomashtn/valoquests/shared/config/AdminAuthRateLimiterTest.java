@@ -135,8 +135,7 @@ class AdminAuthRateLimiterTest {
     /**
      * Verifies that expired windows are reclaimed once enough addresses are tracked.
      *
-     * <p>Without the sweep, an address that fails once and never comes back is never revisited, so
-     * its window stays forever and the map grows with every new source address an attacker uses.</p>
+     * <p>Without the sweep, one-off addresses keep their window forever and the map grows per attacker address.</p>
      */
     @Test
     void shouldSweepExpiredWindowsOnceEnoughAddressesAreTracked() {

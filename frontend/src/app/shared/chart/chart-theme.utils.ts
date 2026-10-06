@@ -12,10 +12,11 @@ import {
   Tooltip,
   TooltipOptions,
 } from 'chart.js';
+
 import {
+  AXIS_TITLE_FONT,
   SERIES_COLOR_COUNT,
   SERIES_COLOR_VARIABLES,
-  AXIS_TITLE_FONT,
 } from './chart-theme.constants';
 import { ChartTheme } from './chart-theme.model';
 

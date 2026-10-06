@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SeasonRank } from '@core/players/progression/player-progression.model';
+
 import {
   buildRankJourneyAxisLabels,
   buildRankJourneyFigures,

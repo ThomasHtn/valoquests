@@ -7,6 +7,7 @@ import { resolveWinRateVisual } from '@core/players/stats/player-stats.utils';
 import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { ProgressBar } from '@shared/progress-bar/progress-bar';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { EntityStatsDisplayRow, EntityStatsRow } from './entity-stats.model';
 
 /**

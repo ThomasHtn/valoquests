@@ -19,8 +19,7 @@ class HenrikMatchHistoryResponseTest {
         new ObjectMapper().findAndRegisterModules();
 
     /**
-     * Verifies the deserialization of match metadata, including the queue and
-     * Valorant season.
+     * Verifies the deserialization of match metadata, including the queue and Valorant season.
      *
      * @throws Exception when JSON deserialization fails
      */
@@ -101,8 +100,7 @@ class HenrikMatchHistoryResponseTest {
     }
 
     /**
-     * Verifies that a missing root data property results in an empty match
-     * list.
+     * Verifies that a missing root data property results in an empty match list.
      *
      * @throws Exception when JSON deserialization fails
      */

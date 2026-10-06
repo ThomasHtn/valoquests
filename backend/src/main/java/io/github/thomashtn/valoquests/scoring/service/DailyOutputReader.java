@@ -24,42 +24,27 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Prices matches day by day, once, for everything that reads a day.
  *
- * <p>The only place a match's value is resolved. The weekly ranking, the campaign replay and the
- * match history all read the same figure for one game, so they cannot drift
- * apart: value = base × daily coefficient × (1 + streak bonus), rounded once, then split into food and
- * components by the mode's share.
- *
- * <p>Both multipliers need more than the requested range. The daily coefficient ranks a match inside
- * its own calendar day, so every day the range touches is loaded whole; the streak bonus counts the
- * days of the week played before the range, so the rest of that week is loaded ahead of it. One query for
- * the whole roster and the whole window, then grouped in memory: asking per player and per day cost
- * {@code players × days} round trips on a call the campaign replay makes after every synchronization.
+ * <p>The only place a match's value is resolved (see docs/GAMEPLAY.md), so ranking, replay and history
+ * never drift. Whole days plus the earlier days of the week are loaded in one query, as both multipliers
+ * need them.
  */
 @Service
 @Transactional(readOnly = true)
 public class DailyOutputReader {
 
     /**
-     * Days loaded ahead of the requested range so the played days are known on its first day: the
-     * rest of a week, since the count restarts every Monday.
+     * Days loaded ahead of the range so the week's played days are known on its first day.
      */
     static final int PLAYED_DAYS_LOOKBACK = WeekCalendar.DAYS_PER_WEEK - 1;
 
     /**
-     * How far past the next match {@link #dailyYield} looks for the ladder's next step down.
-     *
-     * <p>Finite on purpose: past its floor the ladder never pays less again, so an unbounded scan
-     * would not terminate.
+     * How far past the next match {@link #dailyYield} looks for a step down, finite since the floor never drops.
      */
     private static final int LADDER_LOOKAHEAD = 64;
 
     /**
-     * Orders the matches of one day from the most to the least valuable, so a player's best games
-     * always land in the highest-paying ranks.
-     *
-     * <p>Deliberately not chronological. Ranking by play order would tax warming up: five cheap
-     * deathmatch games opening a session would push the ranked games that follow into a reduced
-     * tier. Ties fall back on chronological order, so the result stays deterministic.
+     * Orders a day's matches from most to least valuable, ties chronological, so warm-up games never
+     * push better ones into a reduced tier.
      */
     private static final Comparator<PricedMatch> MOST_VALUABLE_FIRST = Comparator
         .comparingInt(PricedMatch::baseDamage).reversed()
@@ -160,9 +145,8 @@ public class DailyOutputReader {
     /**
      * Reports where one player stands on a day's diminishing-returns ladder, before their next match.
      *
-     * <p>Probes the ruleset rather than reading its thresholds: the ladder's shape belongs to
-     * {@link ScoringRuleset#matchDamageCoefficientPercent(int)} and a second copy of it here would
-     * be a second thing to keep in step.
+     * <p>Probes {@link ScoringRuleset#matchDamageCoefficientPercent(int)} rather than copying its
+     * thresholds, so the ladder's shape lives in one place.
      *
      * @param playerId internal player identifier
      * @param day      calendar day to report on
@@ -277,8 +261,7 @@ public class DailyOutputReader {
     /**
      * Keeps the eligible matches and groups them by player, then by day in ascending order.
      *
-     * <p>An ineligible match never consumes a rank and never makes a day: a remake must not push a
-     * real game of the same day into a reduced tier, nor count as a played day.
+     * <p>Ineligible matches are dropped first, so a remake never consumes a rank nor counts as a played day.
      *
      * @param matches every match of the window
      * @return eligible matches grouped by player and sorted by day

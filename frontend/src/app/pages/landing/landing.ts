@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { LandingVisit } from '@core/landing/landing-visit';
+
 import { Compass } from './compass/compass';
 import { LANDING_MARKS } from './landing.constants';
 

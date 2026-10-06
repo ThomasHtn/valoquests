@@ -5,12 +5,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 /**
  * Guards workflows that must run outside a database transaction.
  *
- * <p>Some workflows persist their own progress incrementally on purpose - a checkpoint, a
- * completion flag - so that a crash partway through leaves only what was actually committed
- * instead of losing an entire run to a rollback. Wrapping such a workflow in a transaction defers
- * every one of its commits to the end and silently defeats that guarantee. {@link
- * #assertNoActiveTransaction} turns the invariant into a runtime check instead of a comment a
- * future change can miss.
+ * <p>Such workflows commit their progress step by step so a crash keeps what was done; an enclosing
+ * transaction would defer every commit to the end and silently defeat that.
  */
 public final class NonTransactionalGuard {
 

@@ -6,6 +6,7 @@ import {
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { RemainingTime } from '@core/date/date.model';
 import { daysBetween, parseIsoDate } from '@core/date/date.utils';
+
 import { CAMPAIGN_WALL_CLOCK } from './campaign-calendar.constants';
 import { WallClock } from './campaign-calendar.model';
 

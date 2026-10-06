@@ -1,5 +1,6 @@
 import { Chart, ChartType, TooltipModel } from 'chart.js';
 
+import { ChartTooltipAnchor, ChartTooltipPlacement } from '../chart.model';
 import {
   CHART_TOOLTIP_COMPACT_WIDTH,
   CHART_TOOLTIP_GAP,
@@ -7,7 +8,6 @@ import {
   CHART_TOOLTIP_HALF_WIDTH,
   CHART_TOOLTIP_SIDE_ROOM,
 } from './chart-tooltip.constants';
-import { ChartTooltipAnchor, ChartTooltipPlacement } from '../chart.model';
 
 /**
  * `plugins.tooltip.external` handler reporting the hovered mark (`null` on leave) for HTML.

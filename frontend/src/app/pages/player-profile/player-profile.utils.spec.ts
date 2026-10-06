@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { PlayerStatistics } from '@core/players/player-details.model';
+
 import { buildStatStrip, resolveCurrentSeasonId } from './player-profile.utils';
 
 describe('resolveCurrentSeasonId', () => {

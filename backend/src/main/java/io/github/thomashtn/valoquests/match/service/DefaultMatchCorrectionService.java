@@ -14,9 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Persists administrator-issued corrections to a stored match.
  *
- * <p>A correction is recorded as {@link GameModeSource#MANUALLY_CORRECTED}, the highest-priority
- * source: {@link MatchImportService} never overwrites it, however confidently a later synchronization
- * resolves the mode Henrik reports for the same match.
+ * <p>Recorded as {@link GameModeSource#MANUALLY_CORRECTED}, which {@link MatchImportService} never overwrites.
  */
 @Service
 public class DefaultMatchCorrectionService implements MatchCorrectionService {

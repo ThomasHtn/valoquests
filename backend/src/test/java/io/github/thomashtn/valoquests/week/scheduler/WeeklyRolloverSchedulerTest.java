@@ -24,9 +24,7 @@ class WeeklyRolloverSchedulerTest {
     /**
      * Verifies that the closing week is synchronized before it is finalized.
      *
-     * <p>The last scheduled synchronization of the week ends hours before the rollover. Finalizing
-     * first would freeze the week without the matches played in that gap, and no later run ever
-     * revisits a finalized week.
+     * <p>Otherwise matches played after the last scheduled sync are lost, since a finalized week is never revisited.
      */
     @Test
     void shouldSynchronizeBeforeFinalizingTheWeek() {
@@ -59,8 +57,7 @@ class WeeklyRolloverSchedulerTest {
     /**
      * Verifies that a failed pre-rollover synchronization still finalizes the week.
      *
-     * <p>Skipping the rollover would leave the week open forever, since the next execution only
-     * ever looks at the week that just ended.
+     * <p>Skipping it would leave the week open forever, since the next run only looks at the week just ended.
      */
     @Test
     void shouldFinalizeWeekWhenPreRolloverSynchronizationFails() {

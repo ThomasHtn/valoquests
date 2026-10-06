@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
+
 import { LucideStar } from '@lucide/angular';
 
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Avatar } from '@shared/avatar/avatar';
-import { Tooltip } from '@shared/tooltip/tooltip';
-import { BoardOperator, DayCell } from '../challenges.model';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
-import { DailyWeek } from '../daily-week/daily-week';
 import { DeckCard } from '@shared/deck-card/deck-card';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
+import { BoardOperator, DayCell } from '../challenges.model';
+import { DailyWeek } from '../daily-week/daily-week';
 
 /**
  * The board where a table would not fit: a squad bar to pin with, then one card per challenge.

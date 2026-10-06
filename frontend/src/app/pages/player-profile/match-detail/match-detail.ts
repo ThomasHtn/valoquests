@@ -1,12 +1,14 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+
 import { LucideChevronLeft } from '@lucide/angular';
 
 import { buildTitlesByPlayer } from '@core/campaign/titles/campaign-title.utils';
-import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { formatCampaignDayMonth, formatCampaignTime } from '@core/date/date-format.utils';
 import { isNotFound, resourceValue } from '@core/http/resource-state.utils';
-import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
+import { Translation } from '@core/i18n/translation';
 import {
   resolveAgentImageUrl,
   resolveAgentInitial,
@@ -16,8 +18,7 @@ import {
 } from '@core/matches/display/match-format.utils';
 import { resolveResultTone } from '@core/matches/display/match-visual.utils';
 import { MatchesApi } from '@core/matches/matches-api';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
-import { Translation } from '@core/i18n/translation';
+import { parseRouteId } from '@core/navigation/navigation-route-id.utils';
 import { resolveCompetitiveTierVisual } from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { formatHeadshotPercentage } from '@core/players/player-format.utils';
 import { RankingApi } from '@core/ranking/ranking-api';
@@ -27,10 +28,11 @@ import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
+import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { MediaThumbnail } from '@shared/media-thumbnail/media-thumbnail';
+
 import { buildNotFoundPlate } from '../player-profile.utils';
 import {
   buildMatchFigures,

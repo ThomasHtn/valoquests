@@ -12,9 +12,9 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Verifies the invalid-key lockout enforced by {@link AdminAuthRateLimiter} through the HTTP filter
- * chain. Runs against its own low failure budget, in a dedicated Spring context, so it does not
- * interfere with the shared-context assertions in {@link AdminApiKeyFilterTest}.
+ * Verifies the invalid-key lockout of {@link AdminAuthRateLimiter} through the HTTP filter chain.
+ *
+ * <p>Uses its own low failure budget in a dedicated context so it does not disturb {@link AdminApiKeyFilterTest}.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,8 +28,7 @@ class AdminApiKeyFilterRateLimitTest {
     private MockMvc mockMvc;
 
     /**
-     * Confirms that a remote address is locked out with HTTP 429 once it crosses the configured
-     * invalid-key failure budget, even when it then supplies the correct key.
+     * Confirms that an address crossing the invalid-key budget gets HTTP 429, even with the correct key.
      *
      * @throws Exception when MockMvc cannot execute a request
      */

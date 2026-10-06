@@ -1,5 +1,6 @@
 import { SeasonEvolution } from '@core/players/progression/player-progression.model';
 import { ChartSeries } from '@shared/chart/chart.model';
+
 import { EvolutionMetric } from './evolution-chart.model';
 
 /**

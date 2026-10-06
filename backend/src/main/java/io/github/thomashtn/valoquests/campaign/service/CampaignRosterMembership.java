@@ -7,16 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Answers whether a player sits on a campaign's frozen roster, and therefore whether deleting them
- * would rewrite history.
+ * Answers whether a player sits on a campaign's frozen roster, so deleting them would rewrite history.
  *
- * <p>One question, and it is exact: is this player on a campaign's frozen roster. A roster is
- * copied at opening and never changes, so membership is the whole of what a campaign owes a player
- * — its guardians were sized on their presence, and its base was fed by their matches.
- *
- * <p>Deliberately not "did they play a match during a campaign". A roster member who never played a
- * single game still counted: they were a denominator. Archiving is reversible; deleting a player a
- * settled week was sized on is not.
+ * <p>Membership, not matches played: a roster member who never played still sized the guardians.
  */
 @Service
 public class CampaignRosterMembership {

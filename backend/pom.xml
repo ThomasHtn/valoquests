@@ -38,127 +38,97 @@
     <!-- Version shared by all Testcontainers dependencies. -->
     <testcontainers.version>2.0.5</testcontainers.version>
 
-    <!-- Static-analysis and coverage thresholds used by CI and SonarQube. -->
+    <!-- Static analysis, formatting and coverage tooling. -->
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <spotbugs-maven-plugin.version>4.10.3.0</spotbugs-maven-plugin.version>
     <spotbugs-annotations.version>4.9.8</spotbugs-annotations.version>
     <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+    <spotless-maven-plugin.version>3.10.3</spotless-maven-plugin.version>
 
-    <!-- Coverage floor enforced by jacoco:check. See the plugin comment before changing. -->
+    <!-- Coverage floor enforced by jacoco:check. -->
     <jacoco.line.coverage.minimum>0.90</jacoco.line.coverage.minimum>
     <jacoco.branch.coverage.minimum>0.70</jacoco.branch.coverage.minimum>
-    <sonar.coverage.jacoco.xmlReportPaths>
-      ${project.build.directory}/site/jacoco/jacoco.xml
-    </sonar.coverage.jacoco.xmlReportPaths>
-    <sonar.java.source>25</sonar.java.source>
   </properties>
 
   <dependencies>
 
-    <!--
-        Spring MVC, embedded servlet container and JSON serialization.
-    -->
+    <!-- Spring MVC, embedded servlet container and JSON serialization. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
 
-    <!--
-        Reactive WebClient used to communicate with the Henrik API.
-    -->
+    <!-- Reactive WebClient used to communicate with the Henrik API. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webclient</artifactId>
     </dependency>
 
-    <!--
-        Database persistence with Spring Data JPA and Hibernate.
-    -->
+    <!-- Database persistence with Spring Data JPA and Hibernate. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!--
-        Jakarta Bean Validation support for configuration properties,
-        DTOs and HTTP requests.
-    -->
+    <!-- Jakarta Bean Validation support for configuration properties, DTOs and HTTP requests. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
-    <!--
-        Spring Security infrastructure used to protect administrator routes.
-    -->
+    <!-- Spring Security infrastructure used to protect administrator routes. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
-    <!--
-        Health, information and metrics endpoints.
-    -->
+    <!-- Health, information and metrics endpoints. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
-    <!--
-        Generates the OpenAPI document and exposes Swagger UI.
-    -->
+    <!-- Generates the OpenAPI document and exposes Swagger UI. -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>${springdoc.version}</version>
     </dependency>
 
-    <!--
-        Generates metadata for typed Spring configuration properties.
-    -->
+    <!-- Generates metadata for typed Spring configuration properties. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-configuration-processor</artifactId>
       <optional>true</optional>
     </dependency>
 
-    <!--
-        Flyway integration managed by Spring Boot.
-    -->
+    <!-- Flyway integration managed by Spring Boot. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-flyway</artifactId>
     </dependency>
 
-    <!--
-        PostgreSQL-specific Flyway support.
-    -->
+    <!-- PostgreSQL-specific Flyway support. -->
     <dependency>
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
 
-    <!--
-        PostgreSQL JDBC driver required when running the application.
-    -->
+    <!-- PostgreSQL JDBC driver required when running the application. -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
 
-    <!--
-        Compile-time boilerplate generation.
-    -->
+    <!-- Compile-time boilerplate generation. -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
 
-    <!--
-        Compile-time annotations used for narrowly justified SpotBugs suppressions.
-    -->
+    <!-- Compile-time annotations used for narrowly justified SpotBugs suppressions. -->
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>
@@ -170,46 +140,35 @@
     <!-- Test dependencies                                             -->
     <!-- ============================================================= -->
 
-    <!--
-        Main Spring Boot test stack:
-        JUnit Jupiter, AssertJ, Mockito and Spring Test.
-    -->
+    <!-- Main Spring Boot test stack: JUnit Jupiter, AssertJ, Mockito and Spring Test. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!--
-        Spring MVC test support, including MockMvc.
-    -->
+    <!-- Spring MVC test support, including MockMvc. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webmvc-test</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!--
-        Spring Security test helpers.
-    -->
+    <!-- Spring Security test helpers. -->
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!--
-        In-memory database used by automated tests.
-    -->
+    <!-- In-memory database used by automated tests. -->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
 
-    <!--
-    JUnit 5 integration used to manage the lifecycle of Testcontainers.
-    -->
+    <!-- JUnit 5 integration used to manage the lifecycle of Testcontainers. -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
@@ -217,9 +176,7 @@
       <scope>test</scope>
     </dependency>
 
-    <!--
-        PostgreSQL container used by integration tests.
-    -->
+    <!-- PostgreSQL container used by integration tests. -->
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-postgresql</artifactId>
@@ -227,6 +184,7 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Fake HTTP server standing in for Henrik in the client tests. -->
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>mockwebserver</artifactId>
@@ -234,9 +192,7 @@
       <scope>test</scope>
     </dependency>
 
-    <!--
-        Architecture rules: the one-way package layering and the absence of cycles.
-    -->
+    <!-- Architecture rules: the one-way package layering and the absence of cycles. -->
     <dependency>
       <groupId>com.tngtech.archunit</groupId>
       <artifactId>archunit-junit5</artifactId>
@@ -249,18 +205,13 @@
   <build>
     <plugins>
 
-      <!--
-          Configures Java compilation and annotation processors.
-      -->
+      <!-- Configures Java compilation and annotation processors. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
 
         <configuration>
-          <!--
-              Keeps method parameter names available to Spring
-              and OpenAPI at runtime.
-          -->
+          <!-- Keeps method parameter names available to Spring and OpenAPI at runtime. -->
           <parameters>true</parameters>
 
           <annotationProcessorPaths>
@@ -272,10 +223,7 @@
               <version>${lombok.version}</version>
             </path>
 
-            <!--
-                Generates configuration metadata for application
-                properties.
-            -->
+            <!-- Generates configuration metadata for application properties. -->
             <path>
               <groupId>org.springframework.boot</groupId>
               <artifactId>spring-boot-configuration-processor</artifactId>
@@ -287,7 +235,47 @@
       </plugin>
 
 
-      <!-- Enforces formatting rules that prevent the most common review noise. -->
+      <!-- Fixable formatting: `./mvnw spotless:apply` rewrites, `verify` only checks. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-maven-plugin.version}</version>
+        <configuration>
+          <java>
+            <removeUnusedImports/>
+            <!-- Same order as Checkstyle's CustomImportOrder: static imports, then the rest. -->
+            <importOrder>
+              <order>#,</order>
+            </importOrder>
+            <forbidWildcardImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+          </java>
+          <formats>
+            <format>
+              <includes>
+                <include>src/**/*.sql</include>
+                <include>src/**/*.properties</include>
+                <include>*.md</include>
+                <include>.env.example</include>
+              </includes>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </format>
+          </formats>
+        </configuration>
+        <executions>
+          <execution>
+            <id>check-format</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Layout, naming and Javadoc rules that a formatter cannot fix. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -332,14 +320,7 @@
         </executions>
       </plugin>
 
-      <!--
-          Produces the XML coverage report consumed by SonarQube, and fails the build when
-          coverage drops below the level the suite currently reaches.
-
-          The thresholds sit just under the measured figures. They are a ratchet against silent
-          erosion, not a target to chase: raise them when coverage genuinely improves, and never
-          lower them to make a build pass.
-      -->
+      <!-- Coverage report and floor: a ratchet, raise it when coverage improves, never lower it. -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -386,9 +367,7 @@
         </executions>
       </plugin>
 
-      <!--
-          Packages the application as an executable Spring Boot archive.
-      -->
+      <!-- Packages the application as an executable Spring Boot archive. -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>

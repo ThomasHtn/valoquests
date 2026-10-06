@@ -1,9 +1,10 @@
+import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { primaryTitleOf } from '@core/campaign/titles/campaign-title.utils';
 import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
-import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { DailyRanking } from '@core/ranking/ranking.model';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
+
 import { SquadRow } from './squad-sheet.model';
 
 /**

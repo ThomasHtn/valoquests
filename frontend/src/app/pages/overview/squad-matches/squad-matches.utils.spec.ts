@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { Match } from '@core/matches/match.model';
+
 import { toHistoryMatch } from './squad-matches.utils';
 
 const MATCH = { id: 42, mapName: 'Ascent' } as Match;

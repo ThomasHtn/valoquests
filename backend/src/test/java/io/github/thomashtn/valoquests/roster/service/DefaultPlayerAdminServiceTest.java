@@ -86,8 +86,7 @@ class DefaultPlayerAdminServiceTest {
     /**
      * Verifies that the administration listing keeps archived players.
      *
-     * <p>They are hidden from the public listing, and this screen is the only place offering to
-     * restore one.
+     * <p>The public listing hides them, and this screen is the only place to restore one.
      */
     @Test
     void shouldListArchivedPlayersToo() {
@@ -272,8 +271,7 @@ class DefaultPlayerAdminServiceTest {
     /**
      * Verifies that a player finalized weeks depend on is archived rather than deleted.
      *
-     * <p>Deleting it would leave a closed week crediting a boss kill to a row that no longer
-     * exists, and those weeks are immutable.
+     * <p>Finalized weeks are immutable and must not credit a boss kill to a deleted row.
      */
     @Test
     void shouldArchiveAPlayerThatFoughtABoss() {

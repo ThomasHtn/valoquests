@@ -11,6 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 import { Chart } from 'chart.js';
 
@@ -23,8 +24,7 @@ import {
   resolveTierOrdinal,
 } from '@core/players/competitive-tier/player-competitive-tier.utils';
 import { SeasonRank } from '@core/players/progression/player-progression.model';
-import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
-import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
+import { ChartTooltipAnchor } from '@shared/chart/chart.model';
 import { createCrosshairPlugin } from '@shared/chart/chart-plugins.utils';
 import { AXIS_TICK_FONT } from '@shared/chart/chart-theme.constants';
 import {
@@ -35,8 +35,10 @@ import {
   resolveChartTheme,
   resolveSeriesColor,
 } from '@shared/chart/chart-theme.utils';
-import { ChartTooltipAnchor } from '@shared/chart/chart.model';
+import { ChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip';
+import { trackChartTooltip } from '@shared/chart/chart-tooltip/chart-tooltip.utils';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { KeyFigures } from '../key-figures/key-figures';
 import {
   RANK_JOURNEY_COMPACT_QUERY,

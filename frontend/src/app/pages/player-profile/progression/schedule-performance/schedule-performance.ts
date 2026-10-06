@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
+
 import { formatPercent } from '@core/i18n/format/number-format.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import {
   HourSlotPerformance,
@@ -9,6 +10,7 @@ import {
 import { BarChart } from '@shared/chart/bar-chart/bar-chart';
 import { ChartBar } from '@shared/chart/chart.model';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { MINIMUM_SAMPLE } from './schedule-performance.constants';
 import { ScheduleChart } from './schedule-performance.model';
 

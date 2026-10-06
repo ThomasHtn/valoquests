@@ -9,11 +9,12 @@ import {
 } from '@angular/core';
 
 import { Translation } from '@core/i18n/translation';
-import { MatchesApi } from '@core/matches/matches-api';
-import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { HistoryMatch, MatchDay } from '@core/matches/day/match-day.model';
 import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
+import { MatchesApi } from '@core/matches/matches-api';
+import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { MatchHistory } from '@shared/match-history/match-history';
+
 import { toHistoryMatch } from './squad-matches.utils';
 
 /**

@@ -3,9 +3,7 @@ package io.github.thomashtn.valoquests.campaign.model;
 /**
  * What one Sunday's extraction would bring home from a given base, and what caps it.
  *
- * <p>Pure arithmetic shared by the replay, which settles a week for real, and the campaign reading,
- * which forecasts the week in progress from the base as it stands, so the forecast never promises
- * what the settlement does not deliver.
+ * <p>Shared by the replay and the forecast, so the forecast never promises more than the settlement.
  *
  * @param challengeRescued  wounded the challenges already brought home, capped at the group
  * @param remainingGroup    wounded the ship has to reach itself

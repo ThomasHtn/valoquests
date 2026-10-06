@@ -1,12 +1,13 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
+
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Translation } from '@core/i18n/translation';
 
-import { AdminActionState } from './admin-action.model';
 import { IDLE_ACTION } from './admin-action.constants';
+import { AdminActionState } from './admin-action.model';
 import { AdminCommandRunner } from './admin-command-runner';
 
 describe('AdminCommandRunner', () => {

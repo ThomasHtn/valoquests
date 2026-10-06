@@ -5,9 +5,8 @@ import java.time.LocalDate;
 /**
  * One week's fight as it stands when its Sunday closes, as the replay engine consumes it.
  *
- * <p>The fight itself is settled before the engine sees it: whether the guardian fell, and how far
- * the squad got if it did not, is a question about the week's matches, not about the base. The
- * engine only turns that answer into people saved and people lost.
+ * <p>The fight is settled from the matches beforehand; the engine only turns it into people saved
+ * and lost.
  *
  * @param weekIndex        one-based position in the campaign
  * @param settlementDay    Sunday the week is settled on
@@ -30,8 +29,7 @@ public record CampaignWeekInput(
     /**
      * Returns how far the squad got on the guardian, as a share of its hit points.
      *
-     * <p>One for a guardian that fell, whatever the overkill. It multiplies the extraction and,
-     * squared, the losses a surviving guardian inflicts.
+     * <p>One for a guardian that fell. It scales the extraction and, squared, the guardian's losses.
      *
      * @return progress between zero and one
      */

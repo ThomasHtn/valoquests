@@ -1,17 +1,14 @@
 package io.github.thomashtn.valoquests.campaign.model;
 
 /**
- * Week a campaign is asked to start on.
- *
- * <p>The choice is made once, at opening, and decides the ten Mondays the campaign is built around.
+ * Week a campaign is asked to start on, chosen once at opening.
  */
 public enum CampaignStartWeek {
 
     /**
      * The Monday of the week in progress, so the days already played count from the start.
      *
-     * <p>Retroactive: the campaign is running the moment it is opened and its first days are
-     * rebuilt from the matches already imported.
+     * <p>Retroactive: the first days are rebuilt from the matches already imported.
      */
     CURRENT_WEEK,
 

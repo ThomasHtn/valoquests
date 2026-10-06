@@ -30,8 +30,7 @@ public interface RankingQueryService {
     /**
      * Returns one day's ranking, read back off the stored matches.
      *
-     * <p>Nothing is persisted at this scale: unlike the weekly board, a day is priced on demand from
-     * the matches it holds, through the same scoring table the weekly ranking and the campaign read.
+     * <p>Unlike the weekly board, nothing is persisted: the day is priced on demand.
      *
      * @param day day to rank, or {@code null} for today
      * @return that day's ranking

@@ -10,10 +10,10 @@ import {
 } from '@angular/core';
 
 import { Button } from '@shared/button/button';
-import { TextField } from '@shared/text-field/text-field';
-import { TextFieldInput } from '@shared/text-field/text-field-input';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { Spinner } from '@shared/spinner/spinner';
+import { TextField } from '@shared/text-field/text-field';
+import { TextFieldInput } from '@shared/text-field/text-field-input';
 
 /**
  * Modal confirmation for an irreversible backoffice action, optionally gated by a typed phrase.

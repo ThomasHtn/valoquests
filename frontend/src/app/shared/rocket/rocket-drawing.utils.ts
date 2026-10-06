@@ -1,4 +1,5 @@
 import { svgElement } from '@core/svg/svg-element.utils';
+
 import {
   GANTRY_ARM_HEIGHTS,
   GANTRY_BRACE_STEP,

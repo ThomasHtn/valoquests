@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
-import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
+
 import { Reserves } from '../campaign-panel.model';
 import { TANK_KEYS } from './base-reserves.constants';
 import { RescueShare, SundayLimit } from './base-reserves.model';

@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+
 import { afterEach, beforeEach, describe, it, vi } from 'vitest';
 
 import { API_ENDPOINTS } from '../api-endpoints.constants';
@@ -19,8 +20,15 @@ const REFRESHED_URLS = [
   API_ENDPOINTS.currentChallenges,
 ];
 
-function status(lastCompletedAt: string, inProgress = false): object {
-  return { inProgress, lastCompletedAt };
+/**
+ * Status body whose last import is `lastImportedAt`; the last pass ended then unless stated.
+ */
+function status(
+  lastImportedAt: string,
+  inProgress = false,
+  lastCompletedAt = lastImportedAt,
+): object {
+  return { inProgress, lastCompletedAt, lastImportedAt };
 }
 
 describe('LiveRefresh', () => {
@@ -60,10 +68,12 @@ describe('LiveRefresh', () => {
     await settle();
   }
 
-  async function pollStatus(at: string, inProgress = false): Promise<void> {
+  async function pollStatus(at: string, inProgress = false, completedAt = at): Promise<void> {
     await vi.advanceTimersByTimeAsync(LIVE_REFRESH_POLL_MS);
     TestBed.tick();
-    httpMock.expectOne(API_ENDPOINTS.synchronizationStatus).flush(status(at, inProgress));
+    httpMock
+      .expectOne(API_ENDPOINTS.synchronizationStatus)
+      .flush(status(at, inProgress, completedAt));
     await settle();
   }
 
@@ -83,7 +93,7 @@ describe('LiveRefresh', () => {
     httpMock.verify();
   }
 
-  it('reloads the screens as soon as a later synchronization has finished', async () => {
+  it('reloads the screens as soon as a later synchronization has imported matches', async () => {
     await settleInitialLoad('2026-09-07T10:00:00Z');
 
     await pollStatus('2026-09-07T10:30:00Z');
@@ -96,6 +106,14 @@ describe('LiveRefresh', () => {
 
     await pollStatus('2026-09-07T10:00:00Z', true);
     await pollStatus('2026-09-07T10:00:00Z', true);
+
+    httpMock.verify();
+  });
+
+  it('leaves the screens alone when a later synchronization imported nothing', async () => {
+    await settleInitialLoad('2026-09-07T10:00:00Z');
+
+    await pollStatus('2026-09-07T10:00:00Z', false, '2026-09-07T10:05:00Z');
 
     httpMock.verify();
   });

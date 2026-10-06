@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import { LucideCheck } from '@lucide/angular';
 
-import { InView } from '@shared/in-view/in-view';
-import { Tooltip } from '@shared/tooltip/tooltip';
 import { BoardMark } from '@core/challenges/card/challenge-card.model';
+import { InView } from '@shared/in-view/in-view';
 import { ProgressTip } from '@shared/progress-tip/progress-tip';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { CONFETTI } from './progress-mark.constants';
 
 /**

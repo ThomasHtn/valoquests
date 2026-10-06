@@ -12,9 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * Calculates the rate a metric takes over a set of matches, as one ratio of totals.
  *
- * <p>Totals divided once, never an average of per-match ratios: a 30-kill Deathmatch and a 2-kill
- * remnant of one are not two equally weighted opinions about a player's aim. This is the only place a
- * rate is defined.
+ * <p>Totals are divided once, never averaged per match, so short matches do not weigh as much as long
+ * ones. This is the only place a rate is defined.
  */
 @Component
 public class AggregateRateCalculator {
@@ -37,8 +36,7 @@ public class AggregateRateCalculator {
     /**
      * Calculates the rate a metric takes over the supplied matches.
      *
-     * <p>Empty when the rate is not defined, which is not the same as it being zero: a player with no
-     * match has no kill-to-death ratio, and the caller decides what an undefined rate is worth.
+     * <p>Empty means undefined, not zero; the caller decides what an undefined rate is worth.
      *
      * @param metric  rate metric to calculate
      * @param matches matches to aggregate, already filtered by the caller
@@ -61,8 +59,7 @@ public class AggregateRateCalculator {
     /**
      * Calculates the kill-to-death ratio.
      *
-     * <p>A deathless set of matches counts as one death, so its ratio is its kill total, as for a
-     * single match in {@link PlayerMatch#killDeathRatio(int)}.
+     * <p>Zero deaths count as one, as in {@link PlayerMatch#killDeathRatio(int)}.
      *
      * @param matches matches to aggregate
      * @return calculated ratio

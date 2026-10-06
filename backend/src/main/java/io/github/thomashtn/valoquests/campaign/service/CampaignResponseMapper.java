@@ -21,8 +21,7 @@ import java.util.List;
 /**
  * Turns replayed campaign rows (weeks and daily snapshots) into API responses.
  *
- * <p>Pure mapping: no repository, no clock. The query service loads the rows and decides what is
- * revealed; this class only reads figures off them.</p>
+ * <p>Pure mapping: no repository, no clock.</p>
  */
 final class CampaignResponseMapper {
 

@@ -8,12 +8,14 @@ import {
   input,
   viewChild,
 } from '@angular/core';
+
 import { Chart, ChartConfiguration, Plugin } from 'chart.js';
 
 import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { formatNumber } from '@core/i18n/format/number-format.utils';
 import { Translation } from '@core/i18n/translation';
 
+import { ChartBar, ChartValueFormatter } from '../chart.model';
 import { AXIS_TICK_FONT } from '../chart-theme.constants';
 import {
   axisTitleOptions,
@@ -23,7 +25,6 @@ import {
   registerChartComponents,
   resolveChartTheme,
 } from '../chart-theme.utils';
-import { ChartBar, ChartValueFormatter } from '../chart.model';
 
 /**
  * One categorical series as bars; no legend, the highlighted bar prints its value.

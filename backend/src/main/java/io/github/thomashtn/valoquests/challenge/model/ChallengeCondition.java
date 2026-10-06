@@ -34,10 +34,7 @@ public record ChallengeCondition(
 ) {
 
     /**
-     * Returns the effective game-mode filter.
-     *
-     * <p>Definitions without an explicit game mode are treated as applying to
-     * every game mode.</p>
+     * Returns the effective game-mode filter, every mode when none is set.
      *
      * @return configured mode or {@link ChallengeGameMode#ANY}
      */

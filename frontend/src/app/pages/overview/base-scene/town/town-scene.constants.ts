@@ -1,4 +1,5 @@
 import { ROCKET_PALETTE } from '@shared/rocket/rocket-drawing.constants';
+
 import { LotRow, RowLayout, SkyKey, SkyState } from './town-scene.model';
 
 /**

@@ -19,9 +19,7 @@ import lombok.Setter;
 /**
  * What one frozen-roster player produced on one day of a campaign.
  *
- * <p>Written by the replay alongside the base's own day. Stored rather than re-priced on demand:
- * the weekly titles, the squad table and the profile all read the same figures, and each of them
- * would otherwise walk sixty days of matches per request to get them.
+ * <p>Written by the replay and stored so titles, squad table and profile avoid re-pricing matches.
  */
 @Getter
 @Setter

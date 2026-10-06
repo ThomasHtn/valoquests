@@ -1,6 +1,7 @@
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
+
 import { ChallengeProgress, RosterPlayer } from '../challenge.model';
 import { MAX_SEGMENTED_TARGET } from './challenge-card.constants';
 import {

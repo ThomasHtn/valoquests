@@ -5,12 +5,9 @@ import io.github.thomashtn.valoquests.match.model.GameMode;
 /**
  * Defines the game-mode filters supported by challenge conditions.
  *
- * <p>Restricted to modes synchronization actually imports: a filter on a mode the tracker does not
- * store would define a challenge that can never progress. See {@link GameMode#isImportEligible()}.
- *
- * <p>The long-format filter is an explicit list rather than {@link GameMode#isRoundBased()}: Spike
- * Rush and Skirmish are round-based too, and short. Premier is left out on purpose, so that every
- * label can say "en Compétitif ou Non classé" and stay true.
+ * <p>Only modes {@link GameMode#isImportEligible()} accepts, or a challenge could never progress. The
+ * long format is an explicit list, not {@link GameMode#isRoundBased()}, and leaves Premier out so every
+ * label can say "en Compétitif ou Non classé".
  */
 public enum ChallengeGameMode {
 
@@ -20,7 +17,7 @@ public enum ChallengeGameMode {
     ANY,
 
     /**
-     * Includes competitive matches only. Reserved to the hardest weekly tier.
+     * Includes competitive matches only, reserved to the hardest weekly tier.
      */
     COMPETITIVE,
 
@@ -75,8 +72,7 @@ public enum ChallengeGameMode {
     /**
      * Tells whether this filter only lets ranked matches through.
      *
-     * <p>What the catalogue exposes as "competitive only": a player who never queues ranked cannot
-     * complete such a challenge, and the interface has to say so rather than let them find out.
+     * <p>Exposed so the interface warns players who never queue ranked.
      *
      * @return {@code true} for the competitive-only filter
      */

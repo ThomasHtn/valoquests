@@ -64,9 +64,7 @@ class AdminApiKeyFilterTest {
     /**
      * Confirms that a valid key reaches the application controller.
      *
-     * <p>The player does not exist in the test database, so the expected
-     * application response is HTTP 404. Receiving 404 proves that the security
-     * filter accepted the request.</p>
+     * <p>The player does not exist, so an HTTP 404 proves the filter let the request through.</p>
      *
      * @throws Exception when MockMvc cannot execute the request
      */

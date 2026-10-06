@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { LucideZap } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+
 import { CatalogueGroup } from '../challenges.model';
 
 /**

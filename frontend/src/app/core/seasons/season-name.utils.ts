@@ -1,4 +1,5 @@
 import { TranslateFn } from '@core/i18n/translation.model';
+
 import { EPISODE_SEASON_PATTERN, YEAR_SEASON_PATTERN } from './season-name.constants';
 import { SeasonCode, SeasonParts } from './season-name.model';
 

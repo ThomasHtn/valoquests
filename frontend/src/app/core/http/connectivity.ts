@@ -1,7 +1,7 @@
 import { DOCUMENT, inject, Service, signal } from '@angular/core';
 
-import { SnackbarQueue } from '@core/snackbar/snackbar';
 import { Translation } from '@core/i18n/translation';
+import { SnackbarQueue } from '@core/snackbar/snackbar';
 
 /**
  * Tracks the online state and announces each change once, rather than every screen failing.

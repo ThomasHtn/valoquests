@@ -1,3 +1,4 @@
+import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
 import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
@@ -9,11 +10,11 @@ import {
   toOperators,
 } from '@core/challenges/card/challenge-card.utils';
 import { CurrentChallenges } from '@core/challenges/challenge.model';
-import { campaignMidnight } from '@core/campaign/calendar/campaign-calendar.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+
 import { formatSigned } from '../overview.utils';
 import { DayTally, TallyTile } from './day-orders.model';
 

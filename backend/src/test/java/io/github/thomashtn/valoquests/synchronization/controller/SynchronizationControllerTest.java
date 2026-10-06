@@ -29,16 +29,21 @@ class SynchronizationControllerTest {
     private SynchronizationQueryService synchronizationQueryService;
 
     /**
-     * Verifies that the status is public and exposes both fields.
+     * Verifies that the status is public and exposes every field.
      */
     @Test
     void shouldExposeTheStatusWithoutAdminKey() throws Exception {
         when(synchronizationQueryService.findStatus())
-            .thenReturn(new SynchronizationStatusResponse(true, Instant.parse("2026-09-30T10:00:00Z")));
+            .thenReturn(new SynchronizationStatusResponse(
+                true,
+                Instant.parse("2026-09-30T10:00:00Z"),
+                Instant.parse("2026-09-30T09:30:00Z")
+            ));
 
         mockMvc.perform(get("/api/synchronization/status"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.inProgress").value(true))
-            .andExpect(jsonPath("$.lastCompletedAt").value("2026-09-30T10:00:00Z"));
+            .andExpect(jsonPath("$.lastCompletedAt").value("2026-09-30T10:00:00Z"))
+            .andExpect(jsonPath("$.lastImportedAt").value("2026-09-30T09:30:00Z"));
     }
 }

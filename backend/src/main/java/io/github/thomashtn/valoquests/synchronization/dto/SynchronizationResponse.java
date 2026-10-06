@@ -16,8 +16,7 @@ import java.time.Instant;
  * @param status current or final execution status
  * @param startedAt execution start timestamp
  * @param finishedAt execution completion timestamp
- * @param lastSuccessfulSynchronizationAt latest successful player
- *                                                synchronization
+ * @param lastSuccessfulSynchronizationAt latest successful player synchronization
  * @param playersProcessed number of processed players
  * @param failureCount number of failed player synchronizations
  * @param matchesImported number of newly imported player-match associations

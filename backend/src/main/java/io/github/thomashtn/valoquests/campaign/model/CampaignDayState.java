@@ -5,8 +5,7 @@ import java.time.LocalDate;
 /**
  * The base at the close of one day, as the replay computed it.
  *
- * <p>Stocks and population are the state carried into the next day; everything else is what moved
- * that day, kept so a screen can explain a number rather than only show it.
+ * <p>Stocks and population carry into the next day; the other fields only describe that day.
  *
  * @param day              calendar day
  * @param damage           damage the roster dealt that day

@@ -5,8 +5,7 @@ import java.time.Instant;
 /**
  * How one week's guardian fight stands, replayed from the week's matches.
  *
- * <p>The finishing blow belongs to the match that took the guardian's last hit point, never to the
- * synchronization that discovered it half an hour later: the instant kept is the match's own start.
+ * <p>The finishing blow is dated by the match's start, never by the synchronization that found it.
  *
  * @param damageDealt      damage the roster dealt over the week
  * @param defeated         whether the guardian fell

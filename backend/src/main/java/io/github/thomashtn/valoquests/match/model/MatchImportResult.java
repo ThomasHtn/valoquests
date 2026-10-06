@@ -54,12 +54,9 @@ public record MatchImportResult(
     }
 
     /**
-     * Indicates that every valid tracked-player match from the page was already
-     * persisted, which is a safe incremental-pagination boundary.
+     * Indicates that every valid match of the page was already stored, a safe pagination boundary.
      *
-     * <p>Skipped entries are deliberately excluded from the valid count: a page holding nothing but
-     * modes the tracker ignores proves nothing about the history behind it, and must not be read as
-     * a boundary.
+     * <p>Skipped entries do not count: a page of ignored modes proves nothing about older history.
      */
     public boolean knownHistoryReached() {
         int validMatches = imported + alreadyKnown;

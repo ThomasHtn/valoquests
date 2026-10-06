@@ -1,10 +1,11 @@
+import { TranslateFn } from '@core/i18n/translation.model';
+
 import {
   COMPETITIVE_TIER_GROUPS,
   COMPETITIVE_TIER_ORDER,
   TIER_GROUP_COLOR_TOKENS,
 } from './player-competitive-tier.constants';
 import { CompetitiveTier, CompetitiveTierVisual, TierGroup } from './player-competitive-tier.model';
-import { TranslateFn } from '@core/i18n/translation.model';
 
 /**
  * Rank group of a tier, `undefined` for a tier the backend added since this build.

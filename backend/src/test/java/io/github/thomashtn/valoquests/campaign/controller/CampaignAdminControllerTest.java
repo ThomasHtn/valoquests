@@ -51,8 +51,7 @@ class CampaignAdminControllerTest {
     /**
      * Verifies that opening a campaign answers with the ten weeks it just scheduled.
      *
-     * <p>Also pins the default: an unqualified request opens on the next Monday, so the admin
-     * who does not choose never starts a campaign retroactively by accident.
+     * <p>Without a date it opens next Monday, so a campaign never starts retroactively by accident.
      */
     @Test
     void shouldOpenACampaign() throws Exception {

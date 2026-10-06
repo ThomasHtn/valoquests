@@ -54,12 +54,10 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Verifies that the production challenge catalogue remains compatible with the parser and every
- * registered progress calculator, at both squad levels, and that it obeys the rules of
+ * Verifies that the production catalogue parses, calculates at both squad levels and obeys
  * {@code docs/CHALLENGES.md}.
  *
- * <p>The rules are checked on the content of each row, never on a list of codes, so a challenge
- * added later falls under the same rules instead of slipping past them.
+ * <p>Rules are checked on each row's content, not on a list of codes, so a new challenge falls under them too.
  */
 class ChallengeCatalogueCompatibilityTest {
 
@@ -107,8 +105,7 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Statistics the Henrik API never reports outside round-based modes.
      *
-     * <p>Headshots and damage come back as zero on every deathmatch and every skirmish row. A
-     * challenge measuring them there can never be completed, whatever its target says.
+     * <p>They come back as zero on deathmatch and skirmish rows, so a challenge on them there can never complete.
      */
     private static final Set<ChallengeMetric> ROUND_BASED_ONLY_METRICS =
         EnumSet.of(ChallengeMetric.HEADSHOTS, ChallengeMetric.DAMAGE_DEALT);
@@ -122,9 +119,7 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Progress modes the catalogue still declares.
      *
-     * <p>Ratios held across the week and streaks are deliberately absent: each could be lost by one
-     * bad match. The modes and their calculators stay registered, which
-     * {@link #shouldRegisterCalculatorForEveryProgressMode()} still covers.
+     * <p>Week-long ratios and streaks are left out since one bad match could lose them; calculators stay registered.
      */
     private static final Set<ProgressMode> EXPECTED_CATALOGUE_MODES = EnumSet.of(
         ProgressMode.SUM,
@@ -321,8 +316,7 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Verifies that a daily bar is never spread over more than two matches.
      *
-     * <p>A daily may ask for a volume of matches — the catalogue writes up to six — but a bar to
-     * clear match after match stays inside two, otherwise a single bad game costs the day.
+     * <p>A daily may ask for up to six matches, but a per-match bar spans at most two or one bad game costs the day.
      *
      * @throws IOException when the production migration cannot be read
      */
@@ -346,8 +340,7 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Verifies that no challenge measures a statistic its mode never reports.
      *
-     * <p>The Henrik payload returns zero headshots and zero damage on every deathmatch and every
-     * skirmish. A challenge asking for either there is not hard, it is impossible.
+     * <p>Henrik returns zero headshots and damage on deathmatch and skirmish, so such a challenge is impossible.
      *
      * @throws IOException when the production migration cannot be read
      */
@@ -369,8 +362,7 @@ class ChallengeCatalogueCompatibilityTest {
     /**
      * Verifies that no challenge requires deathmatch and team deathmatch at once.
      *
-     * <p>Both modes are played in bursts and rarely in the same week, so a challenge needing a
-     * volume of each is decided by the squad's habits rather than by its play.
+     * <p>Both modes are played in bursts, rarely in the same week, so such a challenge rewards habits, not play.
      *
      * @throws IOException when the production migration cannot be read
      */

@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+
 import { LucideCircleCheck, LucideTriangleAlert, LucideX } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';

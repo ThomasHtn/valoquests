@@ -1,9 +1,10 @@
-import { Campaign } from '@core/campaign/campaign.model';
-import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { LucideBuilding2 } from '@lucide/angular';
 
+import { Campaign } from '@core/campaign/campaign.model';
+import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { TranslateFn } from '@core/i18n/translation.model';
+
 import {
   CARRY_MODES,
   HULL_FIGURE_MIN_SIZE,

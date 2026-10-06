@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
   ChangeDetectionStrategy,
@@ -9,14 +10,16 @@ import {
   linkedSignal,
   viewChild,
 } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+
 import { LucideCheck, LucideLock, LucideTarget } from '@lucide/angular';
+
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TranslateFn } from '@core/i18n/translation.model';
-import { drawShip, noseHeight, outline } from '@shared/rocket/rocket-drawing.utils';
-import { ROCKET_PART_COUNT, SHIP, SKIRT } from '@shared/rocket/rocket-drawing.constants';
 import { svgElement as el } from '@core/svg/svg-element.utils';
+import { ROCKET_PART_COUNT, SHIP, SKIRT } from '@shared/rocket/rocket-drawing.constants';
+import { drawShip, noseHeight, outline } from '@shared/rocket/rocket-drawing.utils';
+
 import { RocketPart } from '../campaign-panel.model';
 import {
   BASE_Y,

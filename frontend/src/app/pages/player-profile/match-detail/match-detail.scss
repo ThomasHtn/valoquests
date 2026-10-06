@@ -18,7 +18,7 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.25rem;
-  border-left: 2px solid currentColor;
+  border-left: 2px solid currentcolor;
   background-color: tint(text-primary, 4%);
 
   @include from(sm) {

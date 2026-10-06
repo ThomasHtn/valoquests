@@ -22,13 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Reads one day of a campaign, player by player.
  *
- * <p>Reads only what the replay already wrote. Re-pricing the day here would be a second answer to
- * a question the campaign has already answered, and two answers to the same question is how a
- * squad table ends up disagreeing with the base it feeds.
- *
- * <p>The week's titles are read here too, because the day's squad table shows them beside each
- * player. They come from the ranking rows as they stand, resolved by the same resolvers the ranking
- * uses, so the two screens can never award a title differently.
+ * <p>Reads only what the replay wrote, never re-prices. Titles use the ranking's own resolvers so both
+ * screens agree.
  */
 @Service
 @Transactional(readOnly = true)

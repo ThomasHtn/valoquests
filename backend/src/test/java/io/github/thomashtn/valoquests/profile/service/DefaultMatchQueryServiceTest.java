@@ -105,8 +105,7 @@ class DefaultMatchQueryServiceTest {
     /**
      * Makes the player exist and the repository return the supplied matches.
      *
-     * <p>A non-empty page is also given a pricing pass that finds nothing, so the tests reading the
-     * Valorant statistics do not each have to describe a scoring run they are not about.
+     * <p>A non-empty page also gets an empty pricing pass, so statistics tests need not describe a scoring run.
      */
     private void given(List<PlayerMatch> matches) {
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
@@ -240,8 +239,7 @@ class DefaultMatchQueryServiceTest {
         LocalDate day = FIXTURE_WEEK_START.plusDays(2);
 
         when(playerRepository.existsById(PLAYER_ID)).thenReturn(true);
-        // One match per page: whatever rank this one holds within its day, the page it shipped on
-        // cannot say, since the rest of the day is on other pages entirely.
+        // One match per page: its rank within the day is unknowable since the rest of the day is elsewhere.
         when(playerMatchRepository.findHistory(any(), any(), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of(pageMatch), PageRequest.of(0, 1), 11));
         when(weekCalendar.dayOf(any(Instant.class))).thenReturn(day);

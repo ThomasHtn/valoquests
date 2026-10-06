@@ -7,7 +7,10 @@ on:
       - develop
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - 'docs/**'
+      - '**/README.md'
+      - '.prettierrc.json'
+      - '.github/**'
 
   pull_request:
     branches:
@@ -15,7 +18,10 @@ on:
       - develop
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-ci.yml'
+      - 'docs/**'
+      - '**/README.md'
+      - '.prettierrc.json'
+      - '.github/**'
 
   workflow_dispatch:
 
@@ -52,9 +58,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Prettier also covers the repository docs and workflows.
       - name: Check formatting
         run: npm run format:check
 
+      # ESLint on TypeScript and templates, then Stylelint on stylesheets.
       - name: Lint
         run: npm run lint
 

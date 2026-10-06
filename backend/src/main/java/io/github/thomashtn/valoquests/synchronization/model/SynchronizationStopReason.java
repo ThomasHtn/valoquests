@@ -2,9 +2,6 @@ package io.github.thomashtn.valoquests.synchronization.model;
 
 /**
  * Describes why a match-history walk stopped.
- *
- * <p>Reported alongside every synchronization result so an admin can tell a healthy incremental
- * run from a truncated one without reading through the logs.
  */
 public enum SynchronizationStopReason {
 

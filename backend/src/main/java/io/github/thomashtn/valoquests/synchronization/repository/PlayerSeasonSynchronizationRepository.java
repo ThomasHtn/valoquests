@@ -26,9 +26,7 @@ public interface PlayerSeasonSynchronizationRepository
     /**
      * Finds the state of one season addressed by its Henrik identifier.
      *
-     * <p>Used at a season boundary to decide whether an older season must still be walked.
-     * Deliberately keyed on the external identifier so the lookup creates nothing: a season never
-     * targeted before has no local row, returns empty, and is therefore left alone.
+     * <p>Keyed on the external identifier so the lookup creates no season row at a season boundary.
      *
      * @param playerId tracked player identifier
      * @param seasonExternalId Henrik season identifier

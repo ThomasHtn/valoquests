@@ -24,7 +24,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Implements player list and profile consultation from persisted match data. */
+/**
+ * Implements player list and profile consultation from persisted match data.
+ */
 @Service
 @Transactional(readOnly = true)
 public class DefaultPlayerQueryService implements PlayerQueryService {
@@ -83,15 +85,10 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     }
 
     /**
-     * Returns every tracked player with aggregate match statistics scoped to the season currently in
-     * progress and to competitive matches.
+     * Returns every tracked player with statistics for the current season's competitive matches.
      *
-     * <p>Archived players are left out: they were removed from the roster and only remain stored so
-     * the finalized weeks naming them stay readable. They are still resolvable through
-     * {@link #findProfile}, which is what keeps a link from such a week working.
-     *
-     * <p>Falls back to every competitive match on record when no season is known yet - an empty
-     * database, before the first synchronization ever runs.
+     * <p>Archived players are left out but stay resolvable through {@link #findProfile}. Without a known
+     * season, every competitive match on record is used.
      *
      * @return tracked player summaries
      */
@@ -153,9 +150,8 @@ public class DefaultPlayerQueryService implements PlayerQueryService {
     /**
      * Reports where a player stands on today's diminishing-returns ladder.
      *
-     * <p>Read on its own rather than counted from the profile's own matches: those are filtered by
-     * the season, mode and week the reader is looking at, and the ladder counts every valued match of
-     * the day whatever mode it was played in.
+     * <p>Read separately: the profile's matches are filtered, while the ladder counts every valued match
+     * of the day.
      *
      * @param playerId internal player identifier
      * @return the day's standing

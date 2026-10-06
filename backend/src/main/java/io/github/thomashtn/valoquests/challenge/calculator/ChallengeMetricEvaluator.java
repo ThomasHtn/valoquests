@@ -82,8 +82,7 @@ public class ChallengeMetricEvaluator {
     /**
      * Divides one match total by the rounds it was played over.
      *
-     * <p>Every match reaching a calculator has played at least one round, since eligibility is checked
-     * before any metric is evaluated. The guard covers the metric being evaluated directly in a test.
+     * <p>Eligibility already guarantees one round; the guard only covers direct calls.
      *
      * @param total       value to average
      * @param playerMatch player-match statistics
@@ -104,8 +103,7 @@ public class ChallengeMetricEvaluator {
     /**
      * Calculates the share of one match's kills that were headshots.
      *
-     * <p>A match without a kill has no headshot rate to speak of and scores zero, which keeps it from
-     * satisfying any positive threshold.
+     * <p>A match without a kill scores zero, so it never meets a positive threshold.
      *
      * @param playerMatch player-match statistics
      * @return headshot ratio between zero and one
@@ -125,8 +123,7 @@ public class ChallengeMetricEvaluator {
     /**
      * Returns one when the match was won and zero otherwise.
      *
-     * <p>Delegated rather than read from {@code result}: Deathmatch has no team result, and a
-     * Deathmatch victory must count here as it does in the damage scoring table.
+     * <p>Delegated rather than read from {@code result}, because Deathmatch has no team result.
      *
      * @param playerMatch player-match statistics
      * @return numeric win contribution

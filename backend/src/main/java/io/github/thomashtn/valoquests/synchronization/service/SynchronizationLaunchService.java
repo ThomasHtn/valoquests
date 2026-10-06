@@ -6,8 +6,7 @@ import io.github.thomashtn.valoquests.shared.exception.ResourceNotFoundException
 /**
  * Accepts synchronization requests and runs them in the background.
  *
- * <p>The request is acknowledged immediately; the run is observed through the synchronization
- * history.
+ * <p>Acknowledged immediately; the run is followed through the synchronization history.
  */
 public interface SynchronizationLaunchService {
 

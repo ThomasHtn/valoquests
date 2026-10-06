@@ -61,9 +61,9 @@ export const ADMIN_NAV_GROUPS: readonly NavGroup[] = [
 ];
 
 /**
- * Age past which the last synchronization reads as late: 30-minute cadence plus a margin.
+ * Age past which the last synchronization reads as late: 5-minute cadence plus two missed runs.
  */
-export const SYNC_STALE_AFTER_MS = 40 * 60_000;
+export const SYNC_STALE_AFTER_MS = 15 * 60_000;
 
 /**
  * Refresh period of the elapsed synchronization time.

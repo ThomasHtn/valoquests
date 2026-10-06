@@ -19,10 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Unit tests for {@link DefaultCampaignResetService}.
  *
- * <p>The statements themselves are Postgres-specific and are exercised for real by
- * {@code AdminBackofficeIntegrationTest}. What is pinned here is which tables the reset names: a
- * table silently dropped from the list would leave derived data behind and is exactly the regression
- * these assertions catch.
+ * <p>{@code AdminBackofficeIntegrationTest} runs the SQL; this pins the table list so none is silently dropped.
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultCampaignResetServiceTest {

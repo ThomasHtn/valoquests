@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+
 import { LucideCheck } from '@lucide/angular';
 
-import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { MarkDetail } from '@core/challenges/card/challenge-card.model';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
 
 /**
  * Progress tooltip: operator, exact figures, state and gap; the opener draws the gauge.

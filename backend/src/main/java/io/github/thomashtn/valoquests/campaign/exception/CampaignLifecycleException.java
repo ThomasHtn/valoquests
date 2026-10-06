@@ -5,8 +5,7 @@ import io.github.thomashtn.valoquests.shared.exception.ConflictException;
 /**
  * Signals that a campaign cannot be opened, started or stopped as asked.
  *
- * <p>A conflict rather than a bad request: every case is a state the backoffice can see and fix —
- * a campaign already running, an empty roster, a guardian catalogue too small to draw from.
+ * <p>A conflict rather than a bad request: every case is a state the backoffice can fix.
  */
 public class CampaignLifecycleException extends ConflictException {
 

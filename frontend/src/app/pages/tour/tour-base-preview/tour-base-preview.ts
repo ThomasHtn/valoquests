@@ -6,6 +6,7 @@ import {
   input,
   linkedSignal,
 } from '@angular/core';
+
 import { LucideRocket, LucideUsers } from '@lucide/angular';
 
 import { formatFigure } from '@core/i18n/format/number-format.utils';

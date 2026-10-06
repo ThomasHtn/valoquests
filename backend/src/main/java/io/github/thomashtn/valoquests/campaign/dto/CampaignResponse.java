@@ -9,9 +9,7 @@ import java.util.List;
 /**
  * The campaign in force, whatever state it is in.
  *
- * <p>Answers even when there is none: {@code status} is null and every other field is empty, which
- * is what lets the site say "no campaign is running" from the same call rather than from a 404 it
- * would have to treat as a state.
+ * <p>Answers even when there is none, with a {@code null} status, rather than a 404.
  *
  * @param id               campaign identifier, {@code null} when there is none
  * @param status           where the campaign stands, {@code null} when there is none

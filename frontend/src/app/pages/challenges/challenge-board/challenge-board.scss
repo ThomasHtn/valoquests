@@ -7,6 +7,7 @@
   --gap: 0.375rem;
 
   display: block;
+
   /* Operator columns that do not fit are clipped, not scrolled. */
   overflow-x: clip;
 }
@@ -155,7 +156,7 @@ thead .challenge-board__lead {
 
 .challenge-board__operator-button[aria-pressed='true'] .challenge-board__operator-star {
   opacity: 1;
-  fill: currentColor;
+  fill: currentcolor;
 }
 
 /* Ruled in brand so the totals read as the board's last row. */
@@ -209,7 +210,7 @@ tfoot td {
 @property --shift {
   syntax: '<length>';
   inherits: true;
-  initial-value: 0px;
+  initial-value: 0;
 }
 
 /* Cells are cut one gap past the challenge column so nothing passes under its translucent fill. */

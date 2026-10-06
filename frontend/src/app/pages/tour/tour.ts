@@ -1,24 +1,22 @@
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
+
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TourVisit } from '@core/tour/tour-visit';
 import { Breakpoint } from '@core/viewport/breakpoint';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
 import { DayCell } from '@pages/challenges/challenges.model';
 import { DailyWeek } from '@pages/challenges/daily-week/daily-week';
-import { DeckCard } from '@shared/deck-card/deck-card';
 import { Podium } from '@pages/leaderboard/podium/podium';
 import { MissionReadings } from '@pages/overview/mission-readings/mission-readings';
 import { Mission } from '@pages/overview/mission-readings/mission-readings.model';
+import { DeckCard } from '@shared/deck-card/deck-card';
 import { NavChip } from '@shared/nav-chip/nav-chip';
 
-import { TourBasePreview } from './tour-base-preview/tour-base-preview';
-import { TourCampaignTrack } from './tour-campaign-track/tour-campaign-track';
-import { TourCapacity } from './tour-capacity/tour-capacity';
 import {
   FULL_CAMPAIGN_POPULATION,
   TOUR_SPEC_KEYS,
@@ -27,6 +25,16 @@ import {
   TOUR_STEPS_WITHOUT_SPECS,
 } from './tour.constants';
 import { ClaimRun, TourStepId } from './tour.model';
+import {
+  buildTourDailyRow,
+  buildTourWeek,
+  endOfDay,
+  splitEmphasis,
+  startOfWeek,
+} from './tour.utils';
+import { TourBasePreview } from './tour-base-preview/tour-base-preview';
+import { TourCampaignTrack } from './tour-campaign-track/tour-campaign-track';
+import { TourCapacity } from './tour-capacity/tour-capacity';
 import {
   TOUR_SAMPLE_CAPACITY,
   TOUR_SAMPLE_CONTRIBUTION,
@@ -42,13 +50,6 @@ import {
   TOUR_SAMPLE_STAKES,
 } from './tour-samples.constants';
 import { TourTracker } from './tour-tracker/tour-tracker';
-import {
-  buildTourDailyRow,
-  buildTourWeek,
-  endOfDay,
-  splitEmphasis,
-  startOfWeek,
-} from './tour.utils';
 
 /**
  * Chrome-free first-visit tour; real components fed a sample, the live campaign may be empty.

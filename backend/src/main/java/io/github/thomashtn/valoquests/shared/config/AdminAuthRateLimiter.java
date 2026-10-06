@@ -11,11 +11,8 @@ import org.springframework.stereotype.Component;
 /**
  * Throttles repeated failed {@code X-Admin-Key} attempts per remote address.
  *
- * <p>The admin key is a single shared secret compared in constant time by {@link AdminApiKeyFilter},
- * which defeats timing attacks but not a caller simply guessing values fast enough. This tracks
- * invalid-key failures per remote address in memory and locks an address out for a short duration
- * once it crosses a small budget — enough to make brute-forcing impractical without penalizing an admin
- * who mistypes the key once or twice.
+ * <p>Constant-time comparison stops timing attacks, not brute force: an address crossing a small failure
+ * budget is locked out for a short while, kept in memory.
  */
 @Component
 public class AdminAuthRateLimiter {
@@ -26,8 +23,7 @@ public class AdminAuthRateLimiter {
     private final int maxFailures;
 
     /**
-     * Duration a remote address stays locked out from the failure that crosses {@link #maxFailures},
-     * and the duration after which a failure count below the budget resets.
+     * Lockout duration, also the window after which a failure count below the budget resets.
      */
     private final Duration lockoutDuration;
 
@@ -38,9 +34,6 @@ public class AdminAuthRateLimiter {
 
     /**
      * Number of tracked addresses beyond which expired windows are swept before a new one is added.
-     *
-     * <p>Far above what this application's handful of admins can produce, so a legitimate
-     * mistyped key never triggers the sweep.</p>
      */
     private static final int SWEEP_THRESHOLD = 1_000;
 
@@ -54,8 +47,7 @@ public class AdminAuthRateLimiter {
      * Creates the administrative authentication rate limiter.
      *
      * @param maxFailures     failed attempts allowed before a remote address is locked out
-     * @param lockoutDuration duration a remote address stays locked out, and the window a failure
-     *                        count resets after
+     * @param lockoutDuration lockout duration and failure-count reset window
      * @param clock           application clock
      */
     public AdminAuthRateLimiter(
@@ -119,8 +111,7 @@ public class AdminAuthRateLimiter {
     /**
      * Number of remote addresses currently tracked.
      *
-     * <p>Package-private and used only by tests: sweeping reclaims memory, which no response or
-     * lockout decision reveals, so this is the only way to assert it actually happens.</p>
+     * <p>Test-only: the only way to observe that sweeping reclaims memory.
      *
      * @return count of tracked failure windows
      */
@@ -131,11 +122,8 @@ public class AdminAuthRateLimiter {
     /**
      * Drops windows that have outlived their lockout, once enough addresses are tracked.
      *
-     * <p>A window is otherwise only discarded when its own address is seen again, so addresses that
-     * fail once and never return stay in the map for good. The keys come from unauthenticated
-     * callers, which makes that a slow leak an attacker can drive by rotating source addresses.
-     * Sweeping keeps the map proportional to the addresses currently failing rather than to every
-     * address that ever failed.</p>
+     * <p>Otherwise a window only goes when its address returns, a leak an attacker could drive by
+     * rotating source addresses.
      */
     private void sweepExpiredWindows() {
         if (windowsByRemoteAddress.size() < SWEEP_THRESHOLD) {
@@ -179,8 +167,7 @@ public class AdminAuthRateLimiter {
         }
 
         /**
-         * Determines whether this window no longer applies: its lockout is over, or, below the
-         * budget, its first failure is older than the lockout duration.
+         * Determines whether the lockout is over, or, below the budget, the first failure is too old.
          *
          * @param now     current instant
          * @param lockout configured lockout duration

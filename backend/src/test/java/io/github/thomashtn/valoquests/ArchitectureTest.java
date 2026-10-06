@@ -16,9 +16,7 @@ import java.util.List;
 /**
  * Keeps the feature packages a one-way graph, as described in the README's package map.
  *
- * <p>A package may only use packages of a lower tier. Packages sharing a tier are independent of
- * each other. A new top-level package must be added to {@link #TIERS} before it compiles into a
- * green build.
+ * <p>A package may only use lower tiers, never a same-tier sibling; new packages must join {@link #TIERS}.
  */
 @AnalyzeClasses(packages = ArchitectureTest.ROOT, importOptions = ImportOption.DoNotIncludeTests.class)
 final class ArchitectureTest {

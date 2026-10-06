@@ -6,8 +6,7 @@ import java.time.LocalDate;
 /**
  * One valued match, priced once with both multipliers and split into its two resources.
  *
- * <p>{@code damage} is the whole of what the match produced; {@code food} and {@code components}
- * always add up to it, so a consumer may read either the total or the split without reconciling.
+ * <p>{@code food} and {@code components} always add up to {@code damage}.
  *
  * @param playerMatchId      internal player-match identifier
  * @param playerId           internal identifier of the player who played it

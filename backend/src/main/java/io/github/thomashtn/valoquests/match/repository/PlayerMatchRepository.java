@@ -31,6 +31,15 @@ public interface PlayerMatchRepository
     boolean existsByPlayerIdAndMatchId(Long playerId, Long matchId);
 
     /**
+     * Determines whether a player has a match imported after an instant.
+     *
+     * @param playerId   internal player identifier
+     * @param importedAt exclusive lower bound on the import instant
+     * @return {@code true} when at least one match was imported after the bound
+     */
+    boolean existsByPlayerIdAndCreatedAtAfter(Long playerId, Instant importedAt);
+
+    /**
      * Returns the players with a stored match started at or after an instant.
      *
      * @param startedAt inclusive lower bound
@@ -69,8 +78,7 @@ public interface PlayerMatchRepository
     /**
      * Retrieves the matches played by a player during a half-open period.
      *
-     * <p>The beginning is inclusive and the end is exclusive. The associated Valorant match is
-     * loaded in the same query, since every caller reads it on each row.</p>
+     * <p>The Valorant match is fetched in the same query, since every caller reads it.
      *
      * @param playerId    internal player identifier
      * @param periodStart inclusive beginning of the period
@@ -98,12 +106,8 @@ public interface PlayerMatchRepository
     /**
      * Retrieves the matches of every player holding one of several statuses over a half-open period.
      *
-     * <p>The beginning is inclusive and the end is exclusive, as in {@link #findByPlayerInPeriod}.
-     * One query for the whole roster and the whole period, player and match fetched with it, because
-     * the campaign replay prices up to eleven weeks after every synchronization.
-     *
-     * <p>Each caller states the statuses it needs: the campaign replay reads every status and keeps
-     * its frozen roster, the rankings read the players they list.
+     * <p>One query for the whole roster and period, because the campaign replay prices up to eleven
+     * weeks after every synchronization.
      *
      * @param statuses    statuses a player may hold for their matches to be returned
      * @param periodStart inclusive beginning of the period
@@ -132,10 +136,7 @@ public interface PlayerMatchRepository
     /**
      * Returns a filtered page of matches for one tracked player.
      *
-     * <p>Every {@link PlayerMatchHistoryCriteria} field is optional and ignored when {@code null},
-     * so one query serves the unfiltered history and every combination the match page offers.
-     * Criteria are bundled into one parameter, rather than passed individually, to keep this method
-     * under the project's parameter-count limit.
+     * <p>Every {@link PlayerMatchHistoryCriteria} field is ignored when {@code null}.
      *
      * @param playerId internal player identifier
      * @param criteria optional season, map, agent, result, game mode and week-range filters
@@ -169,9 +170,7 @@ public interface PlayerMatchRepository
     /**
      * Returns a page of the matches a campaign's roster played over a half-open period.
      *
-     * <p>Backs the squad's shared history, so the player is fetched with each row: every entry is
-     * named after who played it. The roster is the one frozen at the campaign's opening, further
-     * narrowed to the statuses the caller lists.
+     * <p>The roster is the one frozen at the campaign's opening, narrowed to the given statuses.
      *
      * @param campaignId  campaign whose roster the players must belong to
      * @param statuses    statuses a player may hold for their matches to be returned
@@ -215,12 +214,7 @@ public interface PlayerMatchRepository
     /**
      * Returns one player's matches inside a set of seasons, most recent first.
      *
-     * <p>Exists so the progression endpoint's season filter is applied by the database rather than
-     * by discarding rows in memory: its analytics span a whole career, so loading every stored
-     * match to keep one act's worth grows with the player's history instead of with the answer.
-     *
-     * <p>Every game mode is returned, not just competitive: the personal-records section measures
-     * the active-day streak across all of them.
+     * <p>Every game mode is returned: the personal records measure the active-day streak across all.
      *
      * @param playerId  internal player identifier
      * @param seasonIds seasons to keep; must be non-empty, since an empty {@code IN} matches nothing
@@ -233,10 +227,7 @@ public interface PlayerMatchRepository
     );
 
     /**
-     * Returns the matches of one game mode, optionally inside one season, of every player not
-     * holding a given status.
-     *
-     * <p>Loads the whole squad in one query, for lists that would otherwise query once per player.
+     * Returns the squad's matches of one game mode, optionally inside one season.
      *
      * @param seasonId       season to keep, or {@code null} for every season
      * @param gameMode       game mode to keep
@@ -264,9 +255,7 @@ public interface PlayerMatchRepository
     /**
      * Loads one tracked player's statistics for one match, scoped to that player.
      *
-     * <p>Scoped by {@code playerId} rather than looked up by {@code id} alone, so a match detail
-     * request can never resolve to a row belonging to a different tracked player than the one named
-     * in the request path.
+     * <p>Scoped by {@code playerId} so a request never resolves to another player's row.
      *
      * @param id       internal player-match identifier
      * @param playerId internal player identifier the match must belong to
@@ -278,10 +267,6 @@ public interface PlayerMatchRepository
     /**
      * Loads every other tracked player's statistics for the same underlying match.
      *
-     * <p>The squad is small enough that two tracked players routinely land in the same lobby; a
-     * match's detail surfaces every one of them found in the same match, on either team, rather than
-     * only the requesting player's own row.
-     *
      * @param matchId  internal identifier of the shared underlying match
      * @param playerId internal identifier of the player whose own row is excluded
      * @return the other tracked players' statistics for that match
@@ -289,4 +274,3 @@ public interface PlayerMatchRepository
     @EntityGraph(attributePaths = {"player"})
     List<PlayerMatch> findByMatchIdAndPlayerIdNot(Long matchId, Long playerId);
 }
-

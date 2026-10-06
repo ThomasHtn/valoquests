@@ -46,9 +46,7 @@ class PaginationGuardTest {
     }
 
     /**
-     * Verifies that a size outside the accepted range is reported as a caller error rather than
-     * reaching {@code PageRequest.of}, which would answer a 500, or the database, which would
-     * fetch the whole table.
+     * Verifies that an out-of-range size is a caller error rather than a 500 or a whole-table fetch.
      *
      * @param size rejected page size
      */

@@ -59,10 +59,8 @@ public record ChallengeDefinition(
     /**
      * Returns the value calculators compare a player's progress against.
      *
-     * <p>Not always the condition's target: a challenge counting matches that cleared a bar
-     * progresses towards its number of occurrences, a streak towards its length, and a composite
-     * one towards the sum of its targets. This is the figure the interface must draw a progress
-     * bar against, and every calculator scores against it.
+     * <p>Not always the condition's target: occurrences, streak length or, for a composite, the sum of
+     * targets. The interface draws its progress bar against it.
      *
      * @return progress target
      */

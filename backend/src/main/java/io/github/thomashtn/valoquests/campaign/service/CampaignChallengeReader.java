@@ -17,12 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Prices what a campaign's validated challenges bring back, week by week.
  *
- * <p>A challenge never damages a guardian: it rescues wounded, and those wounded are acquired
- * whatever else happens that week. They leave first on Sunday, spending neither food nor
- * components and without suffering the guardian progress — the players went and got them.
- *
- * <p>Both cadences are read the same way. The daily challenge resolves on its own evening but its
- * rescues wait for the ship like everyone else's, so it is credited to the week it falls in.
+ * <p>Challenge rescues are acquired whatever happens: they cost no stock and ignore guardian progress.
+ * Daily challenges are credited to the week they fall in.
  */
 @Service
 @Transactional(readOnly = true)

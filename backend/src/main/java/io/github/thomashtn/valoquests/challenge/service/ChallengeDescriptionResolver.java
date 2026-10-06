@@ -16,16 +16,13 @@ import java.util.regex.Pattern;
 /**
  * Rewrites a catalogue description so its numbers are the resolved targets, not the base ones.
  *
- * <p>The catalogue's French copy embeds the amateur-grid numbers in the order the conditions declare
- * them (occurrences before the per-match target). Each numeric token that equals the next expected
- * base number is replaced by its resolved counterpart; anything else is left untouched, so a copy
- * that does not follow the convention keeps its original text rather than being mangled.
+ * <p>Copy quotes the amateur numbers in condition order; each token equal to the next expected number
+ * is replaced, anything else is left untouched.
  */
 final class ChallengeDescriptionResolver {
 
     /**
-     * A French number: grouped thousands ("12 000") or a plain integer with an optional decimal
-     * part ("0,90").
+     * A French number: grouped thousands ("12 000") or an integer with optional decimals ("0,90").
      */
     private static final Pattern NUMBER = Pattern.compile("\\d{1,3}(?: \\d{3})+|\\d+(?:,\\d+)?");
 
@@ -83,8 +80,7 @@ final class ChallengeDescriptionResolver {
     /**
      * Drops the plural of the one or two words following a count that resolved to 1.
      *
-     * <p>"1 parties compétitives" reads "1 partie compétitive"; a word without a trailing "s"
-     * stops the agreement, so "1 kills ou plus" only touches "kills".
+     * <p>A word without a trailing "s" stops the agreement.
      */
     private static String singularizeUnits(String description) {
         Matcher matcher = SINGULAR_UNIT.matcher(description);

@@ -1,4 +1,5 @@
 import type { LucideIcon } from '@lucide/angular';
+
 import { ConsistencyMatch } from '@core/players/progression/player-progression.model';
 
 /**

@@ -9,13 +9,15 @@ import {
   model,
   viewChildren,
 } from '@angular/core';
+
 import { LucideDynamicIcon, LucideStar } from '@lucide/angular';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
+import { OVERVIEW_TAB_ICONS, TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 import { OverviewTab, OverviewTabKey } from './overview-tabs.model';
 import { keyedTabIndex } from './overview-tabs.utils';
-import { OVERVIEW_TAB_ICONS, TAB_SLIDE_EASING, TAB_SLIDE_MS } from './overview-tabs.constants';
 
 /**
  * Overview tab bar (WAI-ARIA tabs pattern); a star pins the default tab, which leads the bar.

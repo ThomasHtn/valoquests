@@ -9,10 +9,11 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { buildTownScene } from './town/town-scene.utils';
-import { CLOCK_TICK_MS, TOWN_HEIGHT, TOWN_WIDTH } from './town/town-scene.constants';
+
 import { SCENE_HEADROOM } from './base-scene.constants';
 import { readSeenPopulation, writeSeenPopulation } from './base-scene.utils';
+import { CLOCK_TICK_MS, TOWN_HEIGHT, TOWN_WIDTH } from './town/town-scene.constants';
+import { buildTownScene } from './town/town-scene.utils';
 
 /**
  * Colony town drawn as an SVG skyline that grows with the population.

@@ -1,4 +1,5 @@
 import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
+
 import { KeyFigureIcon, KeyFigureTone } from '../key-figures/key-figures.model';
 
 /**

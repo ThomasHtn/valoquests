@@ -277,8 +277,7 @@ class DefaultWeeklyChallengeDrawServiceTest {
     /**
      * Verifies that consecutive weeks draw different packs from the same catalogue.
      *
-     * <p>Regression test: the week used to be mixed into the candidate order as a shared additive
-     * offset, which left the sorted order identical and drew the same pack every single week.</p>
+     * <p>Regression: an additive week offset once kept the order unchanged and drew the same pack weekly.</p>
      */
     @Test
     void shouldDrawDifferentPacksOnConsecutiveWeeks() {
@@ -347,8 +346,7 @@ class DefaultWeeklyChallengeDrawServiceTest {
         when(challengeRepository.findAllByEnabledTrueAndCadenceOrderByIdAsc(ChallengeCadence.WEEKLY))
             .thenReturn(candidates);
 
-        // Both candidates of every tier were drawn: the cycle is complete, so the next draw picks
-        // from the full catalogue again and lands on whatever the weekly ordering ranks first.
+        // Every candidate was drawn, so the cycle restarts from the full catalogue.
         givenPastSelections(candidates);
 
         List<String> withCompletedCycle = selectCodes(WEEK_START);
@@ -359,12 +357,9 @@ class DefaultWeeklyChallengeDrawServiceTest {
     }
 
     /**
-     * Verifies that a tier holding a single challenge keeps drawing it, rather than the week being
-     * left without a pack.
+     * Verifies that a single-challenge tier keeps drawing it rather than leaving the week without a pack.
      *
-     * <p>No-repeat is a preference. A tier with one enabled challenge has nothing to alternate
-     * with, and refusing to repeat it there would break the one guarantee the pack does make: one
-     * challenge per tier, every week.
+     * <p>No-repeat is only a preference; one challenge per tier every week is the guarantee.
      */
     @Test
     void shouldReuseAChallengeRatherThanLeaveTheTierEmpty() {
@@ -381,8 +376,7 @@ class DefaultWeeklyChallengeDrawServiceTest {
     /**
      * Verifies that a redraw clears the week's progress and its pack, then draws a different one.
      *
-     * <p>The whole point of the operation: the draw is deterministic per week, so discarding the
-     * pack and re-selecting would otherwise hand back the exact same five challenges.
+     * <p>The draw is deterministic per week, so a plain re-selection would return the same pack.
      */
     @Test
     void shouldRedrawAPackDifferentFromTheOneItDiscards() {
@@ -515,8 +509,7 @@ class DefaultWeeklyChallengeDrawServiceTest {
     /**
      * Creates one interchangeable catalogue candidate.
      *
-     * <p>Candidates of the same tier share a category, so category diversity never constrains
-     * which one is drawn: only the weekly ordering does.</p>
+     * <p>Same-tier candidates share a category, so only the weekly ordering decides the draw.</p>
      *
      * @param tier challenge tier
      * @param index      candidate index within its tier

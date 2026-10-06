@@ -1,5 +1,5 @@
-import { GuardianCategory } from '@core/campaign/campaign-week.model';
 import { CampaignDifficulty } from '@core/campaign/campaign.model';
+import { GuardianCategory } from '@core/campaign/campaign-week.model';
 import { ChallengeTier } from '@core/challenges/challenge.model';
 
 /**

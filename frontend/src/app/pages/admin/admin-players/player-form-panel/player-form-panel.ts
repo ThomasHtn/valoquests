@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
+
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -12,6 +13,7 @@ import { SelectOption } from '@shared/select/select.model';
 import { Spinner } from '@shared/spinner/spinner';
 import { TextField } from '@shared/text-field/text-field';
 import { TextFieldInput } from '@shared/text-field/text-field-input';
+
 import { INITIAL_STATUSES, NO_PORTRAIT } from './player-form-panel.constants';
 import { PlayerFormResult } from './player-form-panel.model';
 

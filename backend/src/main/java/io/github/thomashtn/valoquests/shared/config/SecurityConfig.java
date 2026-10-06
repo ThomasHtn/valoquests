@@ -19,15 +19,8 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * Configures stateless HTTP security and CORS rules for the application.
  *
- * <p>The public site is read-only, so every {@code GET /api/**} is open while anything else is
- * denied unless a rule allows it. The OpenAPI document and Swagger UI are the exception that is
- * <em>off</em> by default: they publish the full map of the administrative API — every route, its
- * payload and its error codes — which hands an attacker the plan even though it never hands over
- * the key. Administrative routes are authenticated by
- * {@link AdminApiKeyFilter} and authorized here through {@link AdminApiKeyFilter#ADMIN_ROLE}: the
- * filter reports <em>why</em> a key was refused, this chain decides <em>whether</em> a request may
- * proceed. Both steps must agree, hence the shared
- * {@link AdminApiKeyFilter#ADMIN_PATH_PATTERN}.</p>
+ * <p>Every {@code GET /api/**} is public, anything else is denied; API docs are off by default. Admin
+ * routes are authenticated by {@link AdminApiKeyFilter} and authorized here on the shared path pattern.
  */
 @Configuration
 public class SecurityConfig {
@@ -68,21 +61,16 @@ public class SecurityConfig {
                 SessionCreationPolicy.STATELESS
             ))
             .authorizeHttpRequests(authorize -> {
-                // The container forwards its own errors to /error; denying that dispatch would turn
-                // them into an empty 403.
+                // Denying the /error dispatch would turn container errors into an empty 403.
                 authorize.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll();
 
                 authorize
-                    // Must stay ahead of the public GET rule below, which would otherwise open
-                    // every administrative read endpoint.
+                    // Must stay ahead of the public GET rule, which would open admin reads.
                     .requestMatchers(AdminApiKeyFilter.ADMIN_PATH_PATTERN)
                     .hasAuthority(AdminApiKeyFilter.ADMIN_ROLE)
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll();
 
-                // Opened only where the documentation is actually served. springdoc already
-                // unregisters these handlers when disabled, so this is the second of two locks
-                // rather than the only one: it keeps the rule and the feature switched by the same
-                // flag, instead of leaving a standing exception for routes that no longer exist.
+                // Same flag as springdoc, so no standing exception remains when the docs are off.
                 if (properties.apiDocsEnabled()) {
                     authorize.requestMatchers(
                         "/swagger-ui.html",
@@ -112,10 +100,7 @@ public class SecurityConfig {
     /**
      * Creates the CORS configuration used by the Angular frontend.
      *
-     * <p>Credentials are deliberately not allowed. The administrator key travels in the
-     * {@link AdminApiKeyFilter#HEADER_NAME} header, sessions are stateless and the API sets no
-     * cookie, so nothing here needs credentialed requests — and allowing them would forbid ever
-     * widening {@code frontendOrigin} past a single exact origin.</p>
+     * <p>Credentials are deliberately not allowed: the key travels in a header and the API sets no cookie.
      *
      * @param frontendOrigin allowed frontend origin
      * @return a URL-based CORS configuration source

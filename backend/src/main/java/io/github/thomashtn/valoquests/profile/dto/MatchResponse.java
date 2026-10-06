@@ -10,9 +10,7 @@ import java.time.Instant;
 /**
  * Exposes one player match in the paginated match-history API.
  *
- * <p>Carries what the match was worth to the squad alongside its Valorant statistics: without it the
- * history is a wall of numbers with no bearing on the ranking or the campaign they actually fed. The
- * amount is derived on read rather than stored, see
+ * <p>Also carries what the match was worth to the squad, derived on read by
  * {@link io.github.thomashtn.valoquests.scoring.service.DailyOutputReader}.
  *
  * @param id                      internal player-match identifier
@@ -31,11 +29,8 @@ import java.time.Instant;
  * @param adr                     average damage per round
  * @param headshotPercentage      share of shots that landed on the head, {@code null} without shot data
  * @param competitiveTier         tier the player held for this match
- * @param valoquestsDamage        damage this match dealt to the guardian, after both multipliers;
- *     {@code 0} for a match the ruleset does not value
- * @param damageCoefficientPercent share of its base damage the match kept, {@code 100} for a day's
- *     best games and lower once the day's ladder starts reducing them; {@code 0} for an unvalued
- *     match, which never enters that ladder
+ * @param valoquestsDamage        guardian damage after both multipliers, {@code 0} when not valued
+ * @param damageCoefficientPercent share of base damage kept after the day's ladder, {@code 0} when not valued
  * @param streakBonusPercent      bonus the player's days played this week added to this match
  * @param food                    food share of the damage
  * @param components              components share of the damage

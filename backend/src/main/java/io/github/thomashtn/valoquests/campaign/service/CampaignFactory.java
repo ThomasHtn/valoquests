@@ -34,17 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Builds a whole campaign at opening: its row, its frozen roster and its ten weeks.
  *
- * <p>The roster is the players active on the day it is opened, frozen there for the ten weeks.
- *
- * <p>The ten weeks exist before the first match is played, guardians included. The map is what the
- * squad plans against — a week ten with the biggest group behind the biggest guardian only means
- * something if it can be seen coming — and drawing a guardian week by week would also let a
- * catalogue edited mid-campaign change a fight that was already announced.
- *
- * <p>Guardian names are drawn without repetition inside their weight class, seeded on the campaign
- * number so a campaign reopened at the same number faces the same guardians. The catalogue holds
- * six minor, ten standard and six elite entries for two, six and two weeks, so a draw can never run
- * out.
+ * <p>All ten guardians are drawn up front, without repetition per weight class and seeded on the
+ * campaign number, so a catalogue edit mid-campaign never changes an announced fight.
  */
 @Service
 @Transactional(readOnly = true)
@@ -93,8 +84,8 @@ public class CampaignFactory {
     /**
      * Builds one campaign, unsaved.
      *
-     * <p>A campaign whose first Monday is today or already past starts {@link CampaignStatus#RUNNING}:
-     * it is under way and never waits for the nightly tick to start it.
+     * <p>Starts {@link CampaignStatus#RUNNING} when its first Monday is today or past, without waiting
+     * for the nightly tick.
      *
      * @param number         campaign number, one more than the last one ever opened
      * @param difficulty     difficulty the campaign is played at

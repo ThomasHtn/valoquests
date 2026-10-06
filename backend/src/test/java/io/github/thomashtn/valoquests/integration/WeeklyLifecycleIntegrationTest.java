@@ -52,10 +52,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Verifies the complete business lifecycle of a weekly competition.
  *
- * <p>The scenario starts from persisted players and matches. Production
- * services calculate challenge progress and ranking, then the application
- * clock advances to the next week before the real rollover service finalizes
- * the previous results and creates the next challenge pack.</p>
+ * <p>Production services compute progress and ranking, then the clock advances and the real rollover closes the
+ * week.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -251,14 +249,8 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies the live ranking created by challenge recalculation.
      *
-     * <p>Guardian damage is priced by the scoring table with both multipliers. Alpha plays one
-     * competitive match a day over four consecutive days, so the streak bonus climbs by 2 % a day:
-     * WIN 500 + LOSS 350 × 1.02 + WIN 500 × 1.04 + LOSS 350 × 1.06 = 500 + 357 + 520 + 371 = 1748.
-     * Bravo plays two matches a day over two days: LOSS 350 + LOSS 350, then WIN 500 × 1.02 + LOSS
-     * 350 × 1.02 = 700 + 510 + 357 = 1567. Alpha completes all five weekly challenges (5 + 9 + 14
-     * + 21 + 29 = 78 points at the amateur reference no campaign has raised), bravo only the EASY
-     * kills challenge (5); each may also have validated the day's challenge, which is read back
-     * rather than assumed.
+     * <p>Damage applies both multipliers, with a 2 % daily streak bonus: alpha scores 1748, bravo 1567.
+     * Alpha completes all five weeklies (78 points), bravo only the EASY kills one (5); dailies are read back.
      */
     private void assertCurrentRanking(Player alpha, Player bravo) {
         List<WeeklyPlayerScore> scores = loadScores(COMPETITION_WEEK_START);
@@ -287,16 +279,13 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Verifies creation of one fresh five-tier challenge pack, and of the zeroed ranking
-     * opening it.
+     * Verifies the fresh five-tier challenge pack and the zeroed ranking that open the week.
      *
      * @param alpha first tracked player, lowest identifier
      * @param bravo second tracked player
      */
     private void assertNextWeekCreated(Player alpha, Player bravo) {
-        // Six rows, not five: opening a week draws its five-tier pack and the Monday's own
-        // daily challenge, so the squad wakes up with something to do rather than with a page that
-        // only fills in at the first synchronization.
+        // Six rows: opening a week draws the five-tier pack plus Monday's daily.
         List<ChallengeSelection> challenges = loadChallenges(NEXT_WEEK_START);
 
         assertThat(challenges)
@@ -322,9 +311,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
             .singleElement()
             .satisfies(daily -> assertThat(daily.getDay()).isEqualTo(NEXT_WEEK_START));
 
-        // The new week opens at zero rather than at nothing: without these rows every screen
-        // reading the current ranking would show its empty state until the next synchronization.
-        // Nobody has scored yet, so nobody holds a position; the rows read in identifier order.
+        // Zeroed rows let screens show a ranking before the first sync; nobody holds a position yet.
         List<WeeklyPlayerScore> scores = loadScores(NEXT_WEEK_START);
         assertThat(scores).hasSize(2);
         assertOpeningScore(scores.get(0), alpha);
@@ -400,9 +387,7 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Prices the daily challenges this player validated this week.
      *
-     * <p>The day's challenge is drawn from the pool, so whether this player validated it is read
-     * back rather than assumed. Outside any campaign a validated daily pays 24 points: weight 1.2
-     * at the 2 000 floor.
+     * <p>The daily is drawn from the pool, so validation is read back. Outside a campaign each pays 24 points.
      *
      * @param player player whose dailies are priced
      * @return the points those dailies add
@@ -428,9 +413,9 @@ class WeeklyLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
     }
 
     /**
-     * Removes migration-seeded players for deterministic ranking. Marking them inactive is not
-     * enough: an inactive player still gets a weekly score built for display, so they would still
-     * show up in the ranking assertions below.
+     * Removes migration-seeded players for a deterministic ranking.
+     *
+     * <p>Deactivating them is not enough: inactive players still get a weekly score row for display.
      */
     private void deactivateSeededPlayers() {
         playerRepository.deleteAll();

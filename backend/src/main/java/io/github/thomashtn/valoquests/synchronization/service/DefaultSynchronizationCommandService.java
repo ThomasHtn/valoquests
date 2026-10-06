@@ -19,18 +19,8 @@ import org.springframework.stereotype.Service;
 /**
  * Executes and records scheduled and manual synchronizations.
  *
- * <p>Deliberately not transactional, see {@link SeasonSynchronizationStateService}: each execution
- * and every player outcome commit on their own, so partial failures stay visible without blocking the
- * remaining players. {@link NonTransactionalGuard} sits at the entry of both commands because, checked
- * deeper, its failure would be recorded as an ordinary player failure instead of failing fast.</p>
- *
- * <p>Importing matches is only half of the workflow: challenge progress and the weekly ranking are
- * derived from the stored matches and stay stale until they are rebuilt. Every execution that
- * actually imported something therefore ends with a challenge recalculation, which is what keeps the
- * ranking live between two scheduled runs.</p>
- *
- * <p>An execution is only marked finished once that recalculation and the campaign replay are done:
- * the public synchronization status reads a finished execution as "the screens are up to date".</p>
+ * <p>Deliberately not transactional: each player outcome commits on its own, so one failure never
+ * blocks the others. An execution that imported matches ends by rebuilding progress, ranking and campaign.
  */
 @Service
 public class DefaultSynchronizationCommandService
@@ -107,9 +97,7 @@ public class DefaultSynchronizationCommandService
     /**
      * Executes a synchronization for one player and records its outcome.
      *
-     * <p>Treated as a batch of one: the same per-player step, completion and status derivation as
-     * {@link #synchronizeAllPlayers(SynchronizationTrigger)} apply here, so a failure is logged once
-     * and recorded with a {@link SynchronizationPlayerResult} row exactly like a batch failure.</p>
+     * <p>A batch of one: a failure is recorded as a {@link SynchronizationPlayerResult}, not thrown.
      *
      * @param playerId tracked player identifier
      * @throws PlayerNotFoundException when no tracked player owns the identifier
@@ -190,11 +178,9 @@ public class DefaultSynchronizationCommandService
     }
 
     /**
-     * Rebuilds everything derived from the newly imported matches: challenge progress, the weekly
-     * ranking and the campaign.
+     * Rebuilds challenge progress, the weekly ranking and the campaign from the stored matches.
      *
-     * <p>Skipped when nothing was imported: all of it is derived exclusively from stored matches, so
-     * an execution that added none can only recompute the very same values.
+     * <p>Skipped when nothing was imported, since it would recompute the same values.
      *
      * @param matchesImported number of matches imported by the execution
      */
@@ -213,10 +199,7 @@ public class DefaultSynchronizationCommandService
     /**
      * Rebuilds challenge progress and the weekly ranking from the newly imported matches.
      *
-     * <p>A recalculation failure is logged instead of propagated. The matches are already committed
-     * and the execution genuinely succeeded, so failing it here would misreport the import and, on
-     * the batch path, discard the summary of every player that was processed. Progress is rebuilt
-     * from scratch on the next run, which makes a transient failure self-healing.
+     * <p>Failures are logged, not thrown: the import succeeded and the next run rebuilds from scratch.
      *
      * @param matchesImported number of matches imported by the execution
      */
@@ -236,12 +219,8 @@ public class DefaultSynchronizationCommandService
     /**
      * Replays the campaign over the matches that were just imported.
      *
-     * <p>Runs after the challenge recalculation because the campaign credits the wounded those
-     * challenges rescued, and this is what makes a day's gains show up on the day itself rather
-     * than at the next nightly tick.
-     *
-     * <p>Caught and logged like the recalculation above: the replay is idempotent and the scheduled
-     * tick will redo it, so a stale base must never fail a synchronization that did import matches.
+     * <p>Runs after the challenge recalculation, whose rescued wounded it credits. Failures are logged
+     * only: the replay is idempotent and the daily tick redoes it.
      *
      * @param matchesImported number of matches imported by the execution
      */

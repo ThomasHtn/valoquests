@@ -1,4 +1,5 @@
 import { PageResponse } from '@core/http/page-response.model';
+
 import { RankingHistoryWeek } from './ranking.model';
 
 /**

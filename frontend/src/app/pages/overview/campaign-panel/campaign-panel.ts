@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+
 import { LucideChevronDown, LucideHistory } from '@lucide/angular';
 
-import { CampaignApi } from '@core/campaign/campaign-api';
-import { Campaign } from '@core/campaign/campaign.model';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { Campaign } from '@core/campaign/campaign.model';
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { CampaignHistory } from '@core/campaign/campaign-history.model';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
 import { localMidnight } from '@core/date/date.utils';
@@ -12,6 +13,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing.constants';
+
 import { BaseReserves } from './base-reserves/base-reserves';
 import { CampaignHistoryView } from './campaign-history/campaign-history';
 import { CURRENT_CURVE_COLOR, PAST_CURVE_COLORS } from './campaign-panel.constants';

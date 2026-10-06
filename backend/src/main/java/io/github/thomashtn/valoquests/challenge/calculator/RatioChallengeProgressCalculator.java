@@ -11,9 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * Calculates ratio-based weekly challenges.
  *
- * <p>Checks a rate against a fixed threshold. The rate itself is calculated by
- * {@link AggregateRateCalculator}, from totals across all eligible matches rather than from an
- * average of per-match ratios.</p>
+ * <p>The rate comes from {@link AggregateRateCalculator}, as totals over all eligible matches.
  */
 @Component
 public class RatioChallengeProgressCalculator
@@ -56,10 +54,7 @@ public class RatioChallengeProgressCalculator
     /**
      * Calculates the ratio configured by the challenge definition.
      *
-     * <p>A ratio challenge may declare a minimum number of eligible matches.
-     * The calculated ratio remains visible before this minimum is reached,
-     * but the challenge cannot be completed until the match requirement is
-     * satisfied.</p>
+     * <p>The ratio shows before the minimum match count is reached, but cannot complete until it is.
      *
      * @param definition parsed challenge definition
      * @param context    weekly player context

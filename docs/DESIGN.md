@@ -29,16 +29,16 @@ Le projet a déjà une identité, dite **« Expédition »**, définie dans `../
 réinventer. L'ordre de priorité est toujours : les mots de Thomas, puis le système existant, puis mes
 choix.
 
-| | Valeur | Où |
-|---|---|---|
-| Marque | `#d9954a` ambre, avec `#e8ab6b` en variante claire | `colors.css` |
-| Sol | `#0f1c26` teal-navy, `#0a151d` en creusé | `colors.css` |
-| Panneaux | `#1b2c3a`, `#253645`, `#33495b` | `colors.css` |
-| Bords | `--color-edge` et `--color-edge-strong`, translucides | `colors.css` |
-| Texte | `#ece8e1`, `#a4a7a6`, `#868b8d` | `colors.css` |
-| Display | Oswald 400–700, auto-hébergée | `typography.css` |
-| Texte courant | Barlow Condensed 400/500/600/700, auto-hébergée | `typography.css` |
-| Icônes | `@lucide/angular` | `../frontend/package.json` |
+|               | Valeur                                                | Où                         |
+| ------------- | ----------------------------------------------------- | -------------------------- |
+| Marque        | `#d9954a` ambre, avec `#e8ab6b` en variante claire    | `colors.css`               |
+| Sol           | `#0f1c26` teal-navy, `#0a151d` en creusé              | `colors.css`               |
+| Panneaux      | `#1b2c3a`, `#253645`, `#33495b`                       | `colors.css`               |
+| Bords         | `--color-edge` et `--color-edge-strong`, translucides | `colors.css`               |
+| Texte         | `#ece8e1`, `#a4a7a6`, `#868b8d`                       | `colors.css`               |
+| Display       | Oswald 400–700, auto-hébergée                         | `typography.css`           |
+| Texte courant | Barlow Condensed 400/500/600/700, auto-hébergée       | `typography.css`           |
+| Icônes        | `@lucide/angular`                                     | `../frontend/package.json` |
 
 **Le site est sombre, et seulement sombre.** Il n'y a pas de thème clair et il n'y en aura pas. C'est
 un choix de direction, pas un oubli.
@@ -86,18 +86,18 @@ Chaque ajout se justifie dans le message de commit.
 
 **Déjà en place, à garder**
 
-| Lib | Ce qu'elle fait |
-|---|---|
-| `@lucide/angular` | le jeu d'icônes, source unique |
-| `chart.js` | les vrais graphiques multi-séries, chargé en lazy sur `/players/:id` seulement |
+| Lib                                 | Ce qu'elle fait                                                                                                                                                                                                                                                                        |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@lucide/angular`                   | le jeu d'icônes, source unique                                                                                                                                                                                                                                                         |
+| `chart.js`                          | les vrais graphiques multi-séries, chargé en lazy sur `/players/:id` seulement                                                                                                                                                                                                         |
 | _(aucune pour les jauges radiales)_ | chaque jauge dessine son anneau elle-même : deux cercles SVG et un `stroke-dashoffset`, la bibliothèque `angular-svg-round-progressbar` a été retirée le 05/09/2026. Le tableau des défis n'utilise plus d'anneaux : ses cellules se remplissent du bas vers le haut (`progress-mark`) |
 
 **À ajouter, justifié**
 
-| Lib | Poids | Pourquoi |
-|---|---|---|
+| Lib                | Poids  | Pourquoi                                                                                                                                                                         |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@floating-ui/dom` | ~10 kB | placement des infobulles avec détection de collision et retournement. Le `shared/tooltip` fait main ne sait pas gérer un bord d'écran, et un tableau de bord dense en a partout. |
-| `motion` | ~18 kB | ressorts et transitions de position. Les animations Angular font du timing, pas de la physique — c'est précisément l'écart entre une interface correcte et une finition Apple. |
+| `motion`           | ~18 kB | ressorts et transitions de position. Les animations Angular font du timing, pas de la physique — c'est précisément l'écart entre une interface correcte et une finition Apple.   |
 
 **Où le fait main reste meilleur**
 

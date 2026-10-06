@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, computed, DestroyRef, ElementRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+
 import {
   LucideBed,
   LucideCrown,
@@ -18,13 +19,14 @@ import {
 
 import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
 import { resolveDifficultyVisual } from '@core/challenges/visual/challenge-visual.utils';
-import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { resolveLocale } from '@core/i18n/format/locale.utils';
 import { formatFigure, formatNumber } from '@core/i18n/format/number-format.utils';
+import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { RULE_ANCHOR } from '@core/rules/rule-anchor.constants';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
+
 import { RuleSection } from './rule-section/rule-section';
 import { RuleText } from './rule-text/rule-text';
 import {
@@ -32,21 +34,21 @@ import {
   CAMPAIGN_WEEKS,
   CHALLENGE_WORTH,
   DECAY_LADDER,
+  DIFFICULTY_BANDS,
   EXAMPLE_OPERATORS,
   EXAMPLE_REFERENCE,
   GROUP_FACTOR,
+  GUARDIAN_CATEGORY_MODIFIERS,
   GUARDIAN_FACTOR,
   GUARDIAN_LOSS_LADDER,
   LIFECYCLE_KEYS,
   MODE_GROUPS,
   PROGRESSION_PER_WEEK,
+  RULE_CONSTANTS,
+  RULE_TITLES,
   STREAK_LADDER,
   SUNDAY_EXAMPLE,
   SUNDAY_TERM_KEYS,
-  DIFFICULTY_BANDS,
-  GUARDIAN_CATEGORY_MODIFIERS,
-  RULE_CONSTANTS,
-  RULE_TITLES,
   WEEK_STEP_KEYS,
 } from './rules.constants';
 

@@ -9,9 +9,6 @@ import java.util.List;
 /**
  * A campaign built but not yet persisted: the row, its frozen roster and its ten weeks.
  *
- * <p>Built as one piece because it is only ever meaningful as one: a campaign without its weeks has
- * no map, and a campaign without its roster has no denominator.
- *
  * @param campaign the campaign row
  * @param roster   the players frozen into it
  * @param weeks    its ten weeks, week one first

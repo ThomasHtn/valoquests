@@ -26,8 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Draws, reads and redraws deterministic weekly challenge packs.
  *
- * <p>A complete pack contains exactly one challenge for every supported tier. Existing
- * selections are never replaced during the week; {@link WeeklyPackDraw} picks the missing ones.</p>
+ * <p>One challenge per tier; existing selections are never replaced, {@link WeeklyPackDraw} picks the
+ * missing ones.
  */
 @Service
 public class DefaultWeeklyChallengeDrawService implements WeeklyChallengeDrawService {
@@ -179,13 +179,8 @@ public class DefaultWeeklyChallengeDrawService implements WeeklyChallengeDrawSer
     /**
      * Discards the current week's pack, with its progress, and draws a new one.
      *
-     * <p>Salted with the current instant, so the new pack differs from the one being discarded.
-     * The scheduled draw stays unsalted and reproducible: it is what makes a week survive a
-     * restart, whereas a redraw is by definition an admin overriding what that draw produced,
-     * and one that gave the same five challenges back would be no redraw at all.
-     *
-     * <p>The no-repeat cycle is unaffected: it replays weeks strictly before this one, so the
-     * discarded pack never counted towards it and the new one is not penalized by it.
+     * <p>Salted with the current instant so the new pack differs; the scheduled draw stays unsalted and
+     * reproducible. The no-repeat cycle only replays earlier weeks, so it is unaffected.
      *
      * @return the newly drawn pack
      */
@@ -197,9 +192,7 @@ public class DefaultWeeklyChallengeDrawService implements WeeklyChallengeDrawSer
 
         validateRedrawable(weekStart, discarded);
 
-        // Progress first: it references the pack. Loaded then deleted rather than through a derived
-        // `deleteAllBy…`, which would make SpotBugs read the repository as mutable state everywhere.
-        // The week's daily draws and their progress are not part of the pack and stay.
+        // Progress first, it references the pack; no derived deleteAllBy, which SpotBugs flags as mutable.
         progressRepository.deleteAll(
             progressRepository
                 .findAllBySelectionWeekStartOrderByPlayerIdAscSelectionIdAsc(weekStart)
@@ -223,9 +216,7 @@ public class DefaultWeeklyChallengeDrawService implements WeeklyChallengeDrawSer
     /**
      * Refuses to redraw a pack that is already frozen.
      *
-     * <p>The current week's pack is never finalized in a healthy state — the rollover only freezes
-     * weeks strictly before the one in progress. Reaching this means a rollover closed the running
-     * week, and rewriting its pack on top of that would compound the damage rather than repair it.
+     * <p>The rollover only freezes past weeks, so a frozen current pack means something already broke.
      *
      * @param weekStart Monday identifying the week being redrawn
      * @param selections the pack about to be discarded

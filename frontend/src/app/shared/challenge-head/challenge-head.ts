@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
+import { BoardRow } from '@core/challenges/card/challenge-card.model';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { FigurePipe } from '@core/i18n/format/figure-pipe';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { BoardRow } from '@core/challenges/card/challenge-card.model';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
+
 import { ChallengeHeadGain } from './challenge-head.model';
 
 /**

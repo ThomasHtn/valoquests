@@ -6,6 +6,7 @@ import { MatchDetail } from '@core/matches/match.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { formatKda, formatScore } from '@core/players/player-format.utils';
 import { resolveKdVisual } from '@core/players/stats/player-stats.utils';
+
 import { MatchFigure, MatchShotCount, MatchTeammateRow } from './match-detail.model';
 
 /**

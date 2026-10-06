@@ -14,12 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Atomically finalizes the past weeks still open and opens the current week.
  *
- * <p>The service uses the Monday stored in weekly tables as the week
- * identifier. No dedicated week table is required.</p>
- *
- * <p>The whole rollover runs inside one database transaction. Consequently,
- * failure while creating the new challenge pack also rolls back the
- * finalization of the previous week.</p>
+ * <p>Weeks are identified by their Monday. Everything runs in one transaction, so a failure opening the
+ * new week also rolls back the finalization.
  */
 @Service
 public class DefaultWeeklyRolloverService
@@ -84,12 +80,8 @@ public class DefaultWeeklyRolloverService
     /**
      * Finalizes every past week still open and prepares the current one.
      *
-     * <p>Catches up rather than only handling last week: every past week still holding an active
-     * pack is finalized, oldest first, so a Monday the application was down or the job failed never
-     * leaves its week open.</p>
-     *
-     * <p>The method is idempotent. A week whose challenges are already finalized is no longer
-     * pending, so it is neither recalculated nor modified again.</p>
+     * <p>Every pending past week is finalized, oldest first, so a missed Monday never leaves a week open.
+     * Idempotent: a finalized week is no longer pending.
      */
     @Override
     @Transactional
@@ -112,8 +104,7 @@ public class DefaultWeeklyRolloverService
             pendingWeekStarts
         );
 
-        // Weeks are independent — each is rebuilt from its own matches — but finalizing them in
-        // chronological order is what keeps the log readable when several are caught up at once.
+        // Weeks are independent; chronological order only keeps the log readable.
         pendingWeekStarts.forEach(
             weekStart ->
                 weekFinalizer.finalizeWeek(weekStart, rolloverTime)

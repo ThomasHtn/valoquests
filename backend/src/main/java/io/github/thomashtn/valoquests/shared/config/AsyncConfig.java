@@ -22,13 +22,8 @@ public class AsyncConfig {
     /**
      * Creates the executor running administrative commands in the background.
      *
-     * <p>Single-threaded with a queue of one. This executor does not keep runs apart on its own:
-     * scheduled jobs run on the scheduler thread, not here. {@code MatchHistoryLock} does, and
-     * refuses a concurrent request with a 409 before it reaches this executor.
-     *
-     * <p>The queue only absorbs a run accepted while the previous task, which has already released
-     * the lock, is still leaving its thread. Anything beyond is rejected with a
-     * {@code TaskRejectedException}, answered as a 409 as well.
+     * <p>Single thread, queue of one; {@code MatchHistoryLock}, not this executor, keeps runs apart.
+     * Overflow raises {@code TaskRejectedException}, answered as a 409.
      *
      * @return the administrative task executor
      */

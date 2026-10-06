@@ -1,12 +1,15 @@
 import { DOCUMENT, effect, inject, Service } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { filter, fromEvent, interval } from 'rxjs';
+
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
+
 import { Connectivity } from '../connectivity';
 import { PublicResources } from '../public-resources';
-import { liveRefreshStamp } from './live-refresh.utils';
 import { resourceValue } from '../resource-state.utils';
 import { LIVE_REFRESH_POLL_MS } from './live-refresh.constants';
+import { liveRefreshStamp } from './live-refresh.utils';
 
 /**
  * Reloads shared resources when {@link liveRefreshStamp} changes, so open tabs stay current.
@@ -79,8 +82,8 @@ export class LiveRefresh {
         return;
       }
 
-      // The completion instant moves only once challenges and campaign are rebuilt.
-      const stamp = liveRefreshStamp(status.lastCompletedAt, new Date());
+      // A pass that imported nothing changed nothing, so only an import reloads the screens.
+      const stamp = liveRefreshStamp(status.lastImportedAt, new Date());
       if (this.stamp !== null && stamp !== this.stamp) {
         this.publicResources.reload();
       }

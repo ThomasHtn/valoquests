@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+
 import { Strike } from '../mission-readings.model';
 
 /**

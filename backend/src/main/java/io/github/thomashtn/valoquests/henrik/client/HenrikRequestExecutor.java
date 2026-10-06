@@ -18,17 +18,9 @@ import reactor.core.publisher.Mono;
 /**
  * Sends every Henrik HTTP request, behind the shared rate limiter and retry policy.
  *
- * <p>An HTTP error response is turned into a typed exception by {@link HenrikResponseHandler}.
- *
- * <p>A connect or read timeout, a connection reset or any other transport-level failure never reaches
- * {@link HenrikResponseHandler}: that component only runs for an HTTP response Henrik actually sent.
- * {@code WebClient} instead wraps every one of these into a {@link WebClientRequestException}, whose
- * cause is the actual transport exception (a raw {@link java.io.IOException}, a
- * {@link java.util.concurrent.TimeoutException} or Netty's own {@link TimeoutException}, a distinct,
- * unrelated class despite the identical name). Left unwrapped, {@link HenrikRetryStrategy} would treat
- * every one of them as non-retryable, since it only recognizes {@link HenrikApiException}, and a
- * single dropped packet would abort an otherwise healthy match-history walk. Wrapping them here,
- * before the retry policy is applied, is what makes them retried exactly like an HTTP 503.
+ * <p>Transport failures ({@link WebClientRequestException}) are wrapped into {@link HenrikApiException}
+ * before the retry policy, so a dropped connection is retried like an HTTP 503. Netty's {@link TimeoutException}
+ * is unrelated to the JDK class of the same name.
  */
 @Component
 public class HenrikRequestExecutor {
@@ -80,8 +72,7 @@ public class HenrikRequestExecutor {
     /**
      * Sends one GET request to Henrik and decodes its body.
      *
-     * <p>URI variables passed to {@link UriBuilder#build(Object...)} are encoded, so a Riot ID holding
-     * spaces or special characters cannot corrupt the request path.
+     * <p>Pass Riot IDs as URI variables so their spaces and special characters are encoded.
      *
      * @param operationName operation name used in retry logs and transport errors
      * @param uri           builds the request URI relative to the Henrik base URL
@@ -117,9 +108,7 @@ public class HenrikRequestExecutor {
     /**
      * Executes one Henrik HTTP operation.
      *
-     * <p>The supplier must create the reactive HTTP request. Wrapping its
-     * invocation in {@link Mono#defer(Supplier)} ensures that every physical
-     * request, including a retry, acquires a rate-limit permit.</p>
+     * <p>Deferred so every physical request, retries included, acquires a rate-limit permit.
      *
      * @param operationName   operation name used in retry logs
      * @param requestSupplier supplier creating the HTTP request

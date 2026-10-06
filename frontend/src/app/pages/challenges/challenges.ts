@@ -8,12 +8,12 @@ import {
   signal,
 } from '@angular/core';
 
-import { CampaignApi } from '@core/campaign/campaign-api';
 import {
   campaignMidnight,
   remainingWeekTime,
   weekDayIndex,
 } from '@core/campaign/calendar/campaign-calendar.utils';
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { DAILY_TONE } from '@core/challenges/card/challenge-card.constants';
 import {
   BoardRow,
@@ -43,6 +43,7 @@ import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { EmptyPlate } from '@shared/empty-plate/empty-plate.model';
 import { ResourceState } from '@shared/resource-state/resource-state';
 import { WeekCountdown } from '@shared/week-countdown/week-countdown';
+
 import { ChallengeBoard } from './challenge-board/challenge-board';
 import { ChallengeCatalogueView } from './challenge-catalogue/challenge-catalogue';
 import { ChallengeDeck } from './challenge-deck/challenge-deck';

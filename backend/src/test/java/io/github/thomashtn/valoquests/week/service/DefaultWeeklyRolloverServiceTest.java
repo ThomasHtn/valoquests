@@ -172,8 +172,7 @@ class DefaultWeeklyRolloverServiceTest {
 
         service.rolloverIfNeeded();
 
-        // Progress before ranking: the ranking is derived from the progress, so rebuilding it
-        // first would freeze the week on values that ignore the matches just imported.
+        // Progress first: the ranking derives from it and would otherwise ignore the imported matches.
         InOrder rebuildOrder = inOrder(
             challengeRecalculationService,
             rankingRecalculationService
@@ -251,8 +250,7 @@ class DefaultWeeklyRolloverServiceTest {
         catchUpOrder.verify(rankingRecalculationService)
             .recalculateWeek(PREVIOUS_WEEK_START);
 
-        // The new week is opened once every caught-up week's ranking has been rebuilt: opening it
-        // settles the campaign week that just ended, against the rankings those passes just froze.
+        // The new week opens last, settling the ended week against the rankings just frozen.
         catchUpOrder.verify(weekOpener)
             .openWeek(CURRENT_WEEK_START);
 
@@ -267,11 +265,9 @@ class DefaultWeeklyRolloverServiceTest {
     }
 
     /**
-     * Verifies that no week is re-finalized when none is still open, and the current week is still
-     * opened.
+     * Verifies that no week is re-finalized when none is open, and the current week is still opened.
      *
-     * <p>Covers both an already finalized previous week and the very first application week: in
-     * either case the week is not pending.</p>
+     * <p>Covers an already finalized previous week and the very first application week.
      */
     @Test
     void shouldOnlyOpenTheWeekWhenNoneIsPending() {

@@ -87,8 +87,7 @@ public final class RankingFixtures {
     }
 
     /**
-     * Builds a reading from per-player, per-day outputs; the days played this week are
-     * taken from each output itself.
+     * Builds a reading from per-player, per-day outputs, each carrying its own days played.
      *
      * @param outputs output per player and per day
      * @return the reading

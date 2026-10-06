@@ -1,5 +1,6 @@
 import { NgOptimizedImage } from '@angular/common';
 import { Component, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
 import { KEY_FIGURE_ICONS, KEY_FIGURE_TONE_MODIFIERS } from './key-figures.constants';

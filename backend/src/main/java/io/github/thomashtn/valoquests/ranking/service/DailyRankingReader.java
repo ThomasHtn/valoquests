@@ -19,13 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Prices one day on demand and ranks the roster on it.
  *
- * <p>Nothing is persisted at this scale. The day is read back off the stored matches through the
- * same reader the weekly ranking and the campaign use, so one evening is worth the same wherever it
- * is shown.
- *
- * <p>Every player of the roster gets a line, archived ones aside, whether they played or not: a zero
- * on an evening the rest of the squad played is exactly what this board exists to show. Only the
- * competing squad takes a slot and counts towards the roster.
+ * <p>Nothing is persisted: the day is priced by the same reader as the week and the campaign. Every
+ * non-archived player gets a line, even at zero, but only the competing squad takes a slot.
  */
 @Service
 @Transactional(readOnly = true)

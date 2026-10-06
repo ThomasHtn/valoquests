@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SeasonEvolution } from '@core/players/progression/player-progression.model';
+
 import { buildEvolutionSeries } from './evolution-chart-series.utils';
 
 /**

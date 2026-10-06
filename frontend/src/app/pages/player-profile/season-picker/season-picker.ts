@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 import { nextInstanceId } from '@core/dom/instance-id.utils';
@@ -17,6 +18,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Season } from '@core/seasons/season.model';
 import { handleListboxKeydown } from '@shared/listbox/listbox-keyboard.utils';
+
 import { SeasonPickerOption } from './season-picker.model';
 import { buildSeasonPickerOptions } from './season-picker.utils';
 

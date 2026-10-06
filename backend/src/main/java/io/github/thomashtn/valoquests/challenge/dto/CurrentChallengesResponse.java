@@ -34,8 +34,7 @@ public record CurrentChallengesResponse(
     /**
      * Exposes one active player, the unit every completion count below is read against.
      *
-     * @param id          player identifier, the one {@link ChallengeProgressResponse#completedPlayerIds()}
-     *                    references
+     * @param id          player identifier referenced by {@link ChallengeProgressResponse#completedPlayerIds()}
      * @param displayName name shown for the player
      * @param portrait    agent portrait chosen by the player, {@code null} when none was chosen
      */
@@ -63,10 +62,7 @@ public record CurrentChallengesResponse(
     }
 
     /**
-     * Exposes one selected challenge and how far the squad has got with it.
-     *
-     * <p>Progress is read both ways: collectively ("how many of us finished this") and player by
-     * player ("how far is each of us"), past days' challenges included.
+     * Exposes one selected challenge and how far the squad and each player have got with it.
      *
      * @param id                   selection identifier, the one progress rows reference
      * @param code                 stable catalogue code
@@ -76,10 +72,9 @@ public record CurrentChallengesResponse(
      * @param tier           tier, {@code null} for a daily challenge
      * @param day                  day a daily challenge covers, {@code null} for a weekly one
      * @param metric               metric the challenge measures
-     * @param targetValue          value a player's progress must reach to complete it, resolved
-     *                             against the campaign in force at draw time
-     * @param survivors            survivors one player brings back by completing it, before the
-     *                             weekly progression, also the points it earns in the weekly ranking
+     * @param targetValue          value to reach, resolved at draw time
+     * @param survivors            survivors one player brings back before weekly progression, also
+     *                             its ranking points
      * @param completedPlayerIds   identifiers of the active players who completed it, ascending
      * @param players              each active player's progress, in roster order
      */

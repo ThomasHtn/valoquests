@@ -14,12 +14,8 @@ import org.springframework.stereotype.Component;
 /**
  * Automatically finalizes the previous week and prepares the new one.
  *
- * <p>A synchronization runs first, and the job fires two hours after midnight rather than at it:
- * Henrik only returns finished matches, and a competitive game started late on Sunday ends well
- * after 00:00. A finalized week is never revisited, so its last matches must be in before it freezes.
- *
- * <p>Waits for the {@link MatchHistoryLock} when an administrator holds it, since a skipped
- * rollover would leave the week open until someone runs it by hand.
+ * <p>Synchronizes first and fires two hours after midnight, so late Sunday matches are in before the week
+ * freezes. Waits for the {@link MatchHistoryLock}, since a skipped rollover would leave the week open.
  */
 @Component
 @ConditionalOnProperty(
@@ -85,9 +81,8 @@ public class WeeklyRolloverScheduler {
     /**
      * Executes the rollover every Monday, at the configured hour of the calendar zone.
      *
-     * <p>Errors are logged; the transactional service prevents partial finalization. A failed or
-     * skipped rollover is caught up by {@link MissedScheduleCatchUp} at the next startup, or by
-     * {@code POST /api/admin/weeks/rollover}.</p>
+     * <p>A failed or skipped rollover is caught up by {@link MissedScheduleCatchUp} at the next startup,
+     * or by {@code POST /api/admin/weeks/rollover}.
      */
     @Scheduled(
         cron = "${app.scheduling.week-rollover-cron}",
@@ -133,12 +128,8 @@ public class WeeklyRolloverScheduler {
     /**
      * Imports the matches played between the last synchronization and the rollover.
      *
-     * <p>Runs outside the rollover transaction, which is what the synchronization requires and what
-     * lets its imported matches survive a later rollover failure.
-     *
-     * <p>A failure is logged and the rollover proceeds. Finalizing a week that may miss its very
-     * last matches is the lesser evil: skipping the rollover would leave the week open forever,
-     * since the next run only ever looks at the week that just ended.
+     * <p>Runs outside the rollover transaction so imported matches survive a rollover failure. A failure
+     * is logged and the rollover proceeds: missing a few matches beats leaving the week open.
      */
     private void importMatchesPlayedSinceLastSynchronization() {
         try {

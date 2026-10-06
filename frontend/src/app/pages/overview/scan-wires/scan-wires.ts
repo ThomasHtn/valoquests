@@ -1,5 +1,7 @@
 import { afterNextRender, DestroyRef, Directive, ElementRef, inject } from '@angular/core';
+
 import { svgElement } from '@core/svg/svg-element.utils';
+
 import { PLANET_VIEW_SIZE } from '../planet-figure/planet-figure.constants';
 import { MARKS, WIRE_HALO } from './scan-wires.constants';
 

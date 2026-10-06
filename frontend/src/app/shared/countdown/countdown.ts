@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 import { TranslatePipe } from '@core/i18n/translate-pipe';
+
 import { countdownUnits } from './countdown.utils';
 
 /**

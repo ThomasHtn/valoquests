@@ -39,8 +39,7 @@ public record PlayerDetailsResponse(
     /**
      * Where this player stands on today's diminishing-returns ladder, before their next match.
      *
-     * <p>Says what the next match is worth before it is played, the only form in which the ladder
-     * can change what somebody does.
+     * <p>Shown before the next match is played, the only way the ladder can change what somebody does.
      *
      * @param matchesToday     valued matches already played today
      * @param nextMatchPercent share of its base damage the next match would keep
@@ -59,8 +58,7 @@ public record PlayerDetailsResponse(
     /**
      * Exposes one player's aggregated statistics over the matches the profile filters select.
      *
-     * <p>Derived from the stored matches, so the totals only cover the seasons the synchronization
-     * imported and will read lower than a lifetime figure from an external tracker.
+     * <p>Covers only the imported seasons, so totals read lower than an external tracker's lifetime figure.
      *
      * @param kda                ratio of kills and assists to deaths
      * @param winRate            share of matches won, as a percentage

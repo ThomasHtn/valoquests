@@ -145,8 +145,7 @@ class DefaultRankingRecalculationServiceTest {
 
         List<WeeklyPlayerScore> scores = recalculate();
 
-        // Same total, same damage: Bravo validated more challenges, so Bravo reads first, but the
-        // points are equal and the position is shared.
+        // Same total and damage: Bravo reads first with more challenges, but the position is shared.
         assertThat(scores).extracting(score -> score.getPlayer().getId()).containsExactly(2L, 1L);
         assertThat(scores).extracting(WeeklyPlayerScore::getPosition).containsExactly(1, 1);
     }

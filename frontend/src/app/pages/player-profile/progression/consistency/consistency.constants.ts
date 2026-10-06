@@ -1,6 +1,7 @@
+import { MatchResult } from '@core/matches/match-result.model';
+
 import { KeyFigureIcon, KeyFigureTone } from '../key-figures/key-figures.model';
 import { ConsistencyTrend } from './consistency.model';
-import { MatchResult } from '@core/matches/match-result.model';
 
 /**
  * Width of one column of dots, in combat score.

@@ -8,8 +8,7 @@ import java.util.List;
 /**
  * Reads the campaign for the public site.
  *
- * <p>Read-only throughout: nothing here opens, replays or settles anything. A page view must never
- * be able to move a base.
+ * <p>Read-only: a page view must never open, replay or settle anything.
  */
 public interface CampaignQueryService {
 

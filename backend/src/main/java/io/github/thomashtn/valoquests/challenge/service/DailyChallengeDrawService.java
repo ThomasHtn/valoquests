@@ -12,8 +12,7 @@ public interface DailyChallengeDrawService {
     /**
      * Returns the daily challenge of one day, drawing it when the day has none yet.
      *
-     * <p>Drawn from the daily pool, common to the whole squad, and never repeated within twenty-seven
-     * days while the pool allows it.
+     * <p>Common to the squad, never repeated within twenty-seven days while the pool allows it.
      *
      * @param day day to draw for
      * @return the day's challenge

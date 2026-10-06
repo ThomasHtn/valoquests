@@ -17,10 +17,14 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Scoring ruleset")
 class DefaultScoringRulesetTest {
 
-    /** Reference the gameplay document works its examples on. */
+    /**
+     * Reference the gameplay document works its examples on.
+     */
     private static final int DOCUMENT_REFERENCE = 5_300;
 
-    /** Ruleset under test. */
+    /**
+     * Ruleset under test.
+     */
     private final DefaultScoringRuleset ruleset = new DefaultScoringRuleset();
 
     @Test

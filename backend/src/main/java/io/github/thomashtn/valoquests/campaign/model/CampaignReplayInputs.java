@@ -6,8 +6,7 @@ import java.util.Map;
 /**
  * Everything one replay of a campaign reads, gathered before a single figure is computed.
  *
- * <p>Assembled in one pass so the replay itself is a pure function of it: the same inputs give the
- * same base, whether the replay runs after a synchronization, at midnight or from an admin click.
+ * <p>The replay is a pure function of these inputs: the same inputs always give the same base.
  *
  * @param days       every day of the campaign so far, oldest first, days nobody played included
  * @param weeks      the weeks whose Sunday has been reached, week one first

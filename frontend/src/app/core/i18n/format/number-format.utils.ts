@@ -1,5 +1,5 @@
-import { resolveLocale } from './locale.utils';
 import { Language } from '../translation.model';
+import { resolveLocale } from './locale.utils';
 
 /**
  * Number grouped by the locale but always with a decimal point, as Valorant prints stats.

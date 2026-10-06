@@ -1,4 +1,5 @@
 import { CompetitiveTier } from '@core/players/competitive-tier/player-competitive-tier.model';
+
 import { GameMode } from './game-mode/match-game-mode.model';
 import { MatchResult } from './match-result.model';
 

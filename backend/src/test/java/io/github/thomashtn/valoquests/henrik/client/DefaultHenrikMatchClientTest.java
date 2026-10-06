@@ -26,10 +26,8 @@ import org.springframework.http.MediaType;
 /**
  * HTTP tests for {@link DefaultHenrikMatchClient}.
  *
- * <p>These exercise the real request against a local server, so the query string, the page-size
- * bounds and the retry behaviour are checked as they are actually sent. The bounds matter: Henrik
- * caps a match-history page at ten, and a request outside that range fails upstream in a way the
- * walker cannot distinguish from an exhausted history.
+ * <p>Runs against a local server. Henrik caps a page at ten, and an out-of-range request fails like an
+ * exhausted history.
  */
 @DisplayName("Henrik match client")
 class DefaultHenrikMatchClientTest {
@@ -195,8 +193,7 @@ class DefaultHenrikMatchClientTest {
             { "status": 200, "data": [] }
             """));
 
-        // A single attempt would abort on the first genuine failure, but a rate-limit response is
-        // expected during a long walk and gets its own, larger budget.
+        // Rate limits are expected during a long walk, so they get their own larger budget.
         DefaultHenrikMatchClient client = createClient(1, 3);
 
         assertThat(client.getMatches(PUUID, 0, 10).data()).isEmpty();
@@ -258,8 +255,7 @@ class DefaultHenrikMatchClientTest {
     }
 
     /**
-     * Creates a match client targeting the local server, using the same attempt budget for genuine
-     * failures and rate-limit responses.
+     * Creates a match client targeting the local server, with one budget for failures and rate limits.
      *
      * @param maxAttempts maximum request attempts, including the first
      * @return the client under test
@@ -271,9 +267,8 @@ class DefaultHenrikMatchClientTest {
     /**
      * Creates a match client targeting the local server.
      *
-     * @param maxAttempts          maximum request attempts for a genuine failure, including the first
-     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
-     *                             first
+     * @param maxAttempts          maximum attempts for a genuine failure, including the first
+     * @param rateLimitMaxAttempts maximum attempts for a rate-limit response, including the first
      * @return the client under test
      */
     private DefaultHenrikMatchClient createClient(int maxAttempts, int rateLimitMaxAttempts) {
@@ -283,9 +278,8 @@ class DefaultHenrikMatchClientTest {
     /**
      * Creates a match client targeting the local server with a configurable read timeout.
      *
-     * @param maxAttempts          maximum request attempts for a genuine failure, including the first
-     * @param rateLimitMaxAttempts maximum request attempts for a rate-limit response, including the
-     *                             first
+     * @param maxAttempts          maximum attempts for a genuine failure, including the first
+     * @param rateLimitMaxAttempts maximum attempts for a rate-limit response, including the first
      * @param readTimeout          maximum duration allowed for a response
      * @return the client under test
      */

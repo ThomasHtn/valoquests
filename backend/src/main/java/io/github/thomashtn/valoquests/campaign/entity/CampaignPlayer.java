@@ -17,10 +17,8 @@ import lombok.Setter;
 /**
  * One player frozen into a campaign's roster at opening.
  *
- * <p>The roster is the campaign's denominator: guardians, groups and the base are all sized per
- * active player. Reading it live from the player table would let a deactivation halfway through
- * shrink a guardian the squad already spent four weeks on, so it is copied here instead. A player
- * deactivated or archived mid-campaign keeps their row and keeps counting until it closes.
+ * <p>Copied rather than read live, since everything is sized per active player: a player deactivated
+ * mid-campaign keeps counting until it closes.
  */
 @Getter
 @Setter

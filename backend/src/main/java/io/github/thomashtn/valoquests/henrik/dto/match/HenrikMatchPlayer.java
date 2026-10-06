@@ -27,9 +27,7 @@ public record HenrikMatchPlayer(
     /**
      * Carries one player's scoreboard for a single match.
      *
-     * <p>Every counter is boxed because Henrik omits them for some game modes rather than sending
-     * zero. A {@code null} therefore means "not reported", which the mapper must not confuse with
-     * a genuine zero.
+     * <p>Counters are boxed: Henrik omits them in some modes, and {@code null} means "not reported".
      *
      * @param score     combat score
      * @param kills     kills scored

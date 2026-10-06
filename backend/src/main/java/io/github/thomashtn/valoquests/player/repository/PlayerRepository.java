@@ -28,8 +28,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     /**
      * Determines whether a Riot identity is already tracked, ignoring case.
      *
-     * <p>Case-insensitive because Riot itself treats {@code Name#TAG} and {@code name#tag} as the
-     * same account: comparing them exactly would let the very same player be added twice.
+     * <p>Case-insensitive because Riot treats {@code Name#TAG} and {@code name#tag} as one account.
      *
      * @param gameName Riot game name, excluding the tag line
      * @param tagLine  Riot tag line, excluding the leading hash character
@@ -38,8 +37,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     boolean existsByGameNameIgnoreCaseAndTagLineIgnoreCase(String gameName, String tagLine);
 
     /**
-     * Returns tracked players having the requested status in deterministic
-     * identifier order.
+     * Returns tracked players having the requested status, ordered by identifier.
      *
      * @param status player lifecycle status
      * @return matching players ordered by identifier
@@ -47,24 +45,19 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findAllByStatusOrderByIdAsc(PlayerStatus status);
 
     /**
-     * Returns every tracked player, regardless of status, in deterministic identifier order.
+     * Returns every tracked player, regardless of status, ordered by identifier.
      *
-     * <p>Reserved for administration, which is the only place an archived player must still be
-     * visible. Every other caller wants {@link #findAllByStatusNotOrderByIdAsc(PlayerStatus)}.
+     * <p>Administration only; every other caller wants {@link #findAllByStatusNotOrderByIdAsc(PlayerStatus)}.
      *
      * @return every player ordered by identifier
      */
     List<Player> findAllByOrderByIdAsc();
 
     /**
-     * Returns every tracked player except those holding the excluded status, in deterministic
-     * identifier order.
+     * Returns every tracked player except those holding the excluded status, ordered by identifier.
      *
-     * <p>Used wherever every player must be processed regardless of competition eligibility (e.g.
-     * synchronization, challenge progress calculation): an inactive player is still tracked and
-     * still completes challenges individually, it just never competes. Callers pass
-     * {@link PlayerStatus#ARCHIVED}, which is the one status that means the opposite — the player
-     * left the roster and only survives so the history that names it stays readable.
+     * <p>Callers pass {@link PlayerStatus#ARCHIVED}: an inactive player is still synchronized and
+     * still completes challenges, it just never competes.
      *
      * @param status status to leave out
      * @return matching players ordered by identifier
@@ -74,9 +67,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     /**
      * Returns the most recent successful synchronization instant across every tracked player.
      *
-     * <p>Aggregated by the database rather than by loading the players, since the caller only ever
-     * needs the maximum.
-     *
      * @return the latest instant, or empty when no player was ever synchronized
      */
     @Query("select max(player.lastSuccessfulSynchronizationAt) from Player player")
@@ -85,8 +75,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     /**
      * Stores the Riot PUUID resolved for a player, unless its Riot identity changed meanwhile.
      *
-     * <p>A targeted update rather than a save of the loaded entity: the Henrik call in between may
-     * take long enough for an administrator to edit the player, and a full save would undo that edit.
+     * <p>A targeted update, so an admin edit made during the Henrik call is not overwritten.
      *
      * @param playerId  tracked player identifier
      * @param gameName  Riot game name the PUUID was resolved from
@@ -116,8 +105,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     /**
      * Stores what a successful synchronization learned about a player, and nothing else.
      *
-     * <p>A targeted update rather than a save of the entity loaded minutes earlier, which would
-     * overwrite any name, portrait, status or Riot identity an administrator changed meanwhile.
+     * <p>A targeted update, so admin edits made since the player was loaded are not overwritten.
      *
      * @param playerId        tracked player identifier
      * @param competitiveTier current competitive tier

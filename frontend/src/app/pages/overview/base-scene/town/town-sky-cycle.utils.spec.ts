@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { mixColor, moonAt, skyAt, sunAt } from './town-sky-cycle.utils';
 import { SKY_KEYS } from './town-scene.constants';
+import { mixColor, moonAt, skyAt, sunAt } from './town-sky-cycle.utils';
 
 describe('skyAt', () => {
   it('returns a key exactly at its hour', () => {

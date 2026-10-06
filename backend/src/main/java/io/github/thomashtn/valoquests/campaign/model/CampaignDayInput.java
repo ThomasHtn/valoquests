@@ -5,10 +5,8 @@ import java.time.LocalDate;
 /**
  * What the frozen roster produced on one calendar day, as the replay engine consumes it.
  *
- * <p>Already priced: both multipliers were applied by the scoring reader before the day reached
- * here, so the engine only ever adds, spends and feeds. Days nobody played are still present, with
- * zeroes — they are the days the base eats without earning, which is the whole point of the famine
- * rule.
+ * <p>Already priced, both multipliers applied. Days nobody played are present with zeroes: the base
+ * still eats on them.
  *
  * @param day            calendar day
  * @param damage         damage every roster player dealt that day, food and components summed

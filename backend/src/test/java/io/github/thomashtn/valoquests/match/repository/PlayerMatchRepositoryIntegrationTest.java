@@ -34,9 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Verifies {@link PlayerMatchRepository#findHistory} against PostgreSQL.
  *
- * <p>Regression coverage for a bug where optional {@code map}/{@code agent} filters bound as
- * {@code null} made Hibernate send an untyped parameter into {@code LOWER(...)}, which PostgreSQL
- * resolved as {@code bytea} and rejected with {@code function lower(bytea) does not exist}.</p>
+ * <p>Guards against null {@code map}/{@code agent} filters reaching {@code LOWER(...)} as {@code bytea}.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -183,18 +181,11 @@ class PlayerMatchRepositoryIntegrationTest
     }
 
     /**
-     * Exercises {@link PlayerMatchRepository#findHistory} unpaged, as the profile statistics read
-     * it, against real PostgreSQL: a narrow period keeps only the matches inside it, and
-     * {@link PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_START}/{@link
-     * PlayerMatchHistoryCriteria#UNBOUNDED_PERIOD_END} (what callers use in place of a week filter)
-     * still return every match regardless of date.
+     * Verifies that unpaged {@link PlayerMatchRepository#findHistory} keeps a narrow period and that unbounded bounds
+     * keep every match.
      *
-     * <p>Regression guard for a bug where the period was bound through a
-     * {@code :param IS NULL OR ...} check: PostgreSQL 16 rejected it with "could not determine data
-     * type of parameter", since that placeholder's only usage in the query text carried no type
-     * information at statement-prepare time - independent of whether the bound value later turned
-     * out to be null. See {@link PlayerMatchHistoryCriteria}'s Javadoc for the full explanation and
-     * why the fix is an unconditional comparison rather than a cast.
+     * <p>Guards against a {@code :param IS NULL OR ...} period check, which PostgreSQL 16 rejects as untyped.
+     * See {@link PlayerMatchHistoryCriteria}.
      */
     @Test
     void shouldFilterStatisticsByWeekPeriodWithoutAPostgresTypeInferenceError() {

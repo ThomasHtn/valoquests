@@ -6,6 +6,7 @@
   align-items: center;
   gap: 0.5rem 1rem;
   padding: 0.6rem 1rem 0.6rem 0.5rem;
+
   /* Transparent, not removed: the rows below keep a 2px edge the columns align on. */
   border-left: 2px solid transparent;
   background: --alpha(var(--color-text-primary) / 8%);

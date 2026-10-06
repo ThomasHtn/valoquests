@@ -1,17 +1,19 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
-import { Tooltip } from '@shared/tooltip/tooltip';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { ChampionBadge } from '@shared/champion-badge/champion-badge';
 import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
 import { TitleBadge } from '@shared/title-badge/title-badge';
+import { Tooltip } from '@shared/tooltip/tooltip';
+
 import { SQUAD_COLUMNS } from './squad-sheet.constants';
 import { SquadRow } from './squad-sheet.model';
 

@@ -5,10 +5,7 @@ import java.util.List;
 /**
  * The ten weeks every campaign is played on, in order.
  *
- * <p>Written down rather than drawn: a campaign is meant to be comparable to every other one, and a
- * schedule that varied would make two campaigns of the same squad incomparable. The ladder is not
- * monotonic on purpose — week 6 is a breather right after the first peak, week 7 is the hardest
- * guardian-to-group ratio of the campaign, and week 10 pairs the biggest group with the biggest guardian.
+ * <p>Fixed rather than drawn so campaigns stay comparable; the ladder is deliberately not monotonic.
  */
 public final class CampaignSchedule {
 

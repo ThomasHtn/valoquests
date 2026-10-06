@@ -41,9 +41,7 @@ class WeekAdminControllerTest {
     /**
      * Verifies that the route runs the same catch-up rollover the Monday schedule runs.
      *
-     * <p>The repair path for a rollover that never fired: without it a past week's fight stays
-     * unresolved until the next Monday, and both the campaign map and the colony's morale keep
-     * reading it as a week that was never fought.
+     * <p>It repairs a rollover that never fired, which would leave the past week's fight unresolved until Monday.
      */
     @Test
     void shouldRunTheRolloverNow() throws Exception {

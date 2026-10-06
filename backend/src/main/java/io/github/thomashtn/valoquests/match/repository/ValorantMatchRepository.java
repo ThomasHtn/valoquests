@@ -11,8 +11,7 @@ public interface ValorantMatchRepository extends JpaRepository<ValorantMatch, Lo
     /**
      * Finds the match carrying one Henrik match identifier.
      *
-     * <p>This lookup is what makes the import idempotent: a match already stored for one tracked
-     * player is reused when a second tracked player of the same game is imported.
+     * <p>Keeps the import idempotent: a match shared by two tracked players is stored once.
      *
      * @param externalMatchId Henrik match identifier
      * @return the matching match when it is already stored

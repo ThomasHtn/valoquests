@@ -39,12 +39,9 @@ class DefaultSeasonQueryServiceTest {
     }
 
     /**
-     * Verifies that seasons are returned most recent first, whatever order they were created in,
-     * with only the most recent one flagged as in progress.
+     * Verifies that seasons are returned most recent first, with only that one flagged as in progress.
      *
-     * <p>Insertion order is deliberately the reverse of the chronological one here: seasons are
-     * created as matches are imported, so an older season can easily carry a greater
-     * identifier.</p>
+     * <p>Insertion order is reversed on purpose: seasons follow imports, so an older one can have a greater id.</p>
      */
     @Test
     void shouldOrderSeasonsByEpisodeAndActDescending() {
@@ -113,9 +110,7 @@ class DefaultSeasonQueryServiceTest {
     /**
      * Verifies that the year era Riot renamed its seasons to outranks every episode-era season.
      *
-     * <p>Only the episode spelling used to be read, so a year-era season scored the undatable key
-     * and sorted behind the episodes it actually follows: the "current" season then resolved to a
-     * stale act for as long as the new era lasted.
+     * <p>Regression: year-era seasons once sorted behind episodes, so the current season resolved to a stale act.
      */
     @Test
     void shouldOrderYearEraSeasonsAfterEveryEpisodeEraSeason() {

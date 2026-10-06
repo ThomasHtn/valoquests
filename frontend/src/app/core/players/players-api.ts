@@ -5,8 +5,8 @@ import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 import { GameMode } from '@core/matches/game-mode/match-game-mode.model';
 
 import { PlayerDetails } from './player-details.model';
-import { PlayerProgression } from './progression/player-progression.model';
 import { PlayerSummary } from './player-summary.model';
+import { PlayerProgression } from './progression/player-progression.model';
 
 /**
  * Data-access service for tracked players.

@@ -1,5 +1,5 @@
-import { ChallengeCatalogueEntry } from '@core/challenges/challenge.model';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
+import { ChallengeCatalogueEntry } from '@core/challenges/challenge.model';
 import { ChallengeTier } from '@core/challenges/visual/challenge-visual.model';
 
 /**

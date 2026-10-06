@@ -1,5 +1,5 @@
-import { LOCALES } from './locale.constants';
 import { Language } from '../translation.model';
+import { LOCALES } from './locale.constants';
 
 /**
  * `Intl` locale of a language.

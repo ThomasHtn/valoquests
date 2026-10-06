@@ -11,17 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Resolves a week's challenge calibration (reference, grid and reward progression) from the campaign
- * that covers it.
+ * Resolves a week's challenge calibration (reference, grid and reward progression) from its campaign.
  *
- * <p>Falls back twice. A week outside any live campaign takes the last closed campaign's
- * calibration, so a squad between two campaigns keeps the targets it earned rather than dropping
- * back to a beginner's; a database that never had a campaign takes the amateur one.
- *
- * <p>The week index is clamped to the campaign's own ten weeks, so a challenge drawn in the gap
- * between opening and the first Monday already pays at the campaign's reference but at week one's
- * progression. Between two campaigns everything pays at week one: the reward progression belongs to
- * a campaign, and inheriting week ten's would pay a bonus nobody is playing for.
+ * <p>Without a live campaign, falls back to the last closed one at week one, else to amateur. The week
+ * index is clamped to the campaign's ten weeks.
  */
 @Service
 @Transactional(readOnly = true)

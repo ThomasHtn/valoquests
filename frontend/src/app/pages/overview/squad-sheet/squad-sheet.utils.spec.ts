@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CampaignToday } from '@core/campaign/campaign-today.model';
 import { DailyRanking } from '@core/ranking/ranking.model';
+
 import { buildSquad } from './squad-sheet.utils';
 
 describe('buildSquad', () => {

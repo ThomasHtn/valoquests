@@ -4,6 +4,7 @@
   /* Brand (Expédition amber). */
   --color-brand-500: #d9954a;
   --color-brand-400: #e8ab6b;
+
   /* Hover step of a brand-400 link, never a fill. */
   --color-brand-300: #f0c493;
 
@@ -16,6 +17,7 @@
 
   /* Night sky of the overview's base scene, darker than any surface. */
   --color-night-sky: #040a11;
+
   /* Wells, dial tracks and scrims laid on the night scene; a hair less blue than `night-sky`. */
   --color-night-well: #040a0f;
 
@@ -25,6 +27,7 @@
 
   /* Illustration line between `surface-600` and the text greys (empty plates, rocket ghost). */
   --color-ghost-line: #5b7688;
+
   /* Cold starlight, paler than any text grey. */
   --color-starlight: #cfe4ee;
 

@@ -9,9 +9,7 @@ import java.util.Map;
 /**
  * The day in progress: what the squad has brought in, and who is carrying it.
  *
- * <p>Provisional until midnight, and deliberately so: a match that comes in later can push a
- * cheaper one down a tier and move a total that was already on screen. The day is only final once
- * it is over.
+ * <p>Provisional until midnight: a later match can reprice earlier ones and move the totals.
  *
  * @param day                       calendar day
  * @param damage                    damage the roster has dealt today

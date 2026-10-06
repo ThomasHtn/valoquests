@@ -36,12 +36,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Verifies the weekly ranking against a real PostgreSQL database: how validated challenges are
- * priced and ordered, and who takes a slot.
+ * Verifies the weekly ranking against a real PostgreSQL database: challenge pricing, order and slots.
  *
- * <p>No campaign is ever opened here, so every challenge pays at the 2 000 floor: 24 points for
- * the day's challenge, then 20 / 34 / 54 / 78 / 108 by tier. No match is stored either, so
- * the guardian damage is zero throughout and the order is decided by the challenges alone.
+ * <p>No campaign is opened, so challenges pay the 2 000 floor (daily 24, tiers 20 to 108) and damage stays zero.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
@@ -108,8 +105,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(3);
-        // bravo: HARD 21 alone. alpha: EASY 5 + NORMAL 9 = 14. charlie validated nothing, and
-        // at zero points holds no position at all.
+        // bravo: HARD 21; alpha: EASY 5 + NORMAL 9 = 14; charlie has zero points, so no position.
         assertScore(scores.get(0), bravo, 21, 1, 0, 1, null);
         assertScore(scores.get(1), alpha, 14, 2, 0, 2, null);
         assertScore(scores.get(2), charlie, 0, 0, 0, null, null);
@@ -135,8 +131,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(2);
-        // The daily weighs 1.2 against EASY's 1.0, so at the amateur reference it pays 6 against 5
-        // and takes the first place on its own. Both are counted apart all the same.
+        // The daily (weight 1.2) pays 6 against EASY's 5, so it takes first place on its own.
         assertScore(scores.get(0), alpha, 6, 0, 1, 1, null);
         assertScore(scores.get(1), bravo, 5, 1, 0, 2, null);
     }
@@ -177,9 +172,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(3);
-        // First pass: alpha (MEDIUM 14) > bravo (NORMAL 9) > charlie (EASY 5), which seeds the
-        // previous positions. Second pass: bravo also validates MEDIUM (9 + 14 = 23) while alpha
-        // loses hers and, at zero, her position.
+        // Pass 1 seeds positions alpha > bravo > charlie; pass 2 gives bravo 23 and drops alpha to zero.
         assertScore(scores.get(0), bravo, 23, 2, 0, 1, 2);
         assertScore(scores.get(1), charlie, 5, 1, 0, 2, 3);
         assertScore(scores.get(2), alpha, 0, 0, 0, null, 1);
@@ -196,9 +189,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         Player bravo = createPlayer("ranking-tie-bravo", "Bravo");
         Player charlie = createPlayer("ranking-tie-charlie", "Charlie");
 
-        // bravo reaches 14 through EASY 5 + NORMAL 9; alpha and charlie each reach 14 through one
-        // MEDIUM. Nobody dealt damage, so the three share the first place; rows read back in
-        // identifier order once positions tie.
+        // All three reach 14 with no damage, so they share first place and read back by identifier.
         ChallengeSelection bravoEasy = createSelection("RANKING_TIE_BRAVO_EASY", ChallengeTier.EASY);
         ChallengeSelection bravoNormal = createSelection("RANKING_TIE_BRAVO_NORMAL", ChallengeTier.NORMAL);
         ChallengeSelection alphaMedium = createSelection("RANKING_TIE_ALPHA_MEDIUM", ChallengeTier.MEDIUM);
@@ -322,8 +313,7 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         List<WeeklyPlayerScore> scores = loadScores();
 
         assertThat(scores).hasSize(2);
-        // Ordered by position, NULLS LAST: the pro's null position comes after the regular's real
-        // one, whatever the HARD challenge would have paid a competing player.
+        // Ordered by position NULLS LAST, so the pro's null position comes after the regular's.
         WeeklyPlayerScore regularScore = scores.get(0);
         WeeklyPlayerScore proScore = scores.get(1);
 

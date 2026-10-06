@@ -7,9 +7,8 @@ import java.time.Instant;
 /**
  * Exposes one tracked player as the administration screens need it.
  *
- * <p>Distinct from {@link io.github.thomashtn.valoquests.profile.dto.PlayerSummaryResponse}:
- * administration edits identities rather than displaying performance, so it carries the raw Riot
- * fields and the synchronization state, and none of the aggregated statistics.
+ * <p>Unlike {@link io.github.thomashtn.valoquests.profile.dto.PlayerSummaryResponse}, carries raw Riot
+ * fields and synchronization state but no statistics.
  *
  * @param id                              internal player identifier
  * @param gameName                        Riot game name

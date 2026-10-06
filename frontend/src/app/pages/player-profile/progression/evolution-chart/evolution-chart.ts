@@ -1,19 +1,21 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
-import { formatSeasonName } from '@core/seasons/season-name.utils';
 import {
   formatHeadshotPercentage,
   formatKda,
   formatScore,
 } from '@core/players/player-format.utils';
 import { SeasonEvolution } from '@core/players/progression/player-progression.model';
-import { LineChart } from '@shared/chart/line-chart/line-chart';
+import { formatSeasonName } from '@core/seasons/season-name.utils';
 import { resolveSeriesColor } from '@shared/chart/chart-theme.utils';
+import { LineChart } from '@shared/chart/line-chart/line-chart';
 import { Tooltip } from '@shared/tooltip/tooltip';
-import { buildEvolutionSeries } from './evolution-chart-series.utils';
+
 import { EVOLUTION_METRICS } from './evolution-chart.constants';
-import { EvolutionMetric, EvolutionLegendEntry } from './evolution-chart.model';
+import { EvolutionLegendEntry, EvolutionMetric } from './evolution-chart.model';
+import { buildEvolutionSeries } from './evolution-chart-series.utils';
 
 /**
  * Match-by-match evolution of one metric across the selected seasons, swapped by buttons.

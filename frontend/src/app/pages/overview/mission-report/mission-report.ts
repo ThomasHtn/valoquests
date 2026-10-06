@@ -9,20 +9,22 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+
 import { LucideCrown, LucideDynamicIcon, LucideFileText, LucideX } from '@lucide/angular';
 
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Avatar } from '@shared/avatar/avatar';
 import { Button } from '@shared/button/button';
 import { CountUp } from '@shared/count-up/count-up';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { TITLE_BADGE_ICONS } from '@shared/title-badge/title-badge.constants';
+
 import { RESCUE_SEGMENT_COUNT } from './mission-report.constants';
-import { MissionReportGain, MissionReport as MissionReportView } from './mission-report.model';
+import { MissionReport as MissionReportView, MissionReportGain } from './mission-report.model';
 import { buildReportGains } from './mission-report.utils';
 
 /**

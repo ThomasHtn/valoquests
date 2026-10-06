@@ -147,8 +147,7 @@ class DailyRankingReaderTest {
 
         DailyRankingResponse board = reader.read(DAY);
 
-        // Charlie brought the most and is listed first, but takes no slot; Alpha played nothing
-        // and has no position either.
+        // Deactivated Charlie is listed first without a slot; Alpha played nothing.
         assertThat(board.ranking()).extracting(DailyRankingEntryResponse::playerId).containsExactly(3L, 1L);
         assertThat(board.ranking().get(0).position()).isNull();
         assertThat(board.ranking().get(1).position()).isNull();

@@ -28,10 +28,8 @@ import lombok.Setter;
 /**
  * One of a campaign's ten weeks: its planet, its guardian, and how its Sunday went.
  *
- * <p>All ten rows are created at opening, so the map exists before the first match is played. The
- * top half — planet, category, weights, guardian, hit points, group — is decided then and never
- * moves. Everything from {@link #damageDealt} down is output: the replay rewrites it from the
- * matches and challenges every time it runs, so nothing here is ever incremented.
+ * <p>Fields up to the group are frozen at opening; everything from {@link #damageDealt} down is
+ * rewritten by each replay, never incremented.
  */
 @Getter
 @Setter

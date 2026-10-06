@@ -23,9 +23,8 @@ import lombok.Setter;
 /**
  * One ten-week rescue campaign, opened from the backoffice at a fixed difficulty.
  *
- * <p>The difficulty is written at opening and never touched again. It sizes the guardians and the
- * groups, and decides which of a challenge's two written grids is played, so a difficulty that moved
- * mid-campaign would resize a guardian the squad has already spent a week on.
+ * <p>The difficulty is frozen at opening: it sizes guardians and groups, so changing it mid-campaign
+ * would resize a guardian already fought.
  */
 @Getter
 @Setter
@@ -81,8 +80,7 @@ public class Campaign extends AuditableEntity {
     /**
      * Day an admin cut the campaign short, or {@code null} for one that ran its course.
      *
-     * <p>{@link #closedAt} cannot tell the two apart: it is set either way. This gives the replay a
-     * day to stop on, so a campaign stopped in week four is never credited weeks five to ten.
+     * <p>Gives the replay a day to stop on; {@link #closedAt} is set in both cases.
      */
     @Column(name = "stopped_on")
     private LocalDate stoppedOn;
@@ -95,9 +93,6 @@ public class Campaign extends AuditableEntity {
 
     /**
      * Difficulty the admin chose at opening, frozen for the whole campaign.
-     *
-     * <p>The only dial: it carries the reference every other figure is a multiple of, and decides
-     * which of the two grids written in the catalogue this campaign's challenges are drawn from.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 12)
@@ -105,9 +100,6 @@ public class Campaign extends AuditableEntity {
 
     /**
      * Returns the weekly reference per player every figure of this campaign is a multiple of.
-     *
-     * <p>Read from the difficulty rather than stored: the difficulty is frozen at opening, so the
-     * reference cannot drift, and there is no second copy to keep in step with it.
      *
      * @return the campaign's reference
      */
@@ -118,8 +110,7 @@ public class Campaign extends AuditableEntity {
     /**
      * Returns the last day this campaign's base is ever computed on.
      *
-     * <p>The tenth Sunday, or the day an admin stopped it. Not the Monday after: the tenth week
-     * settles on its own Sunday, so there is nothing left to credit on day seventy-one.
+     * <p>The tenth Sunday, or the day an admin stopped it.
      *
      * @return the campaign's final day
      */

@@ -2,6 +2,7 @@ package io.github.thomashtn.valoquests.synchronization.service;
 
 import io.github.thomashtn.valoquests.henrik.client.HenrikMmrClient;
 import io.github.thomashtn.valoquests.henrik.dto.mmr.HenrikMmrResponse;
+import io.github.thomashtn.valoquests.match.repository.PlayerMatchRepository;
 import io.github.thomashtn.valoquests.player.entity.Player;
 import io.github.thomashtn.valoquests.player.exception.PlayerNotFoundException;
 import io.github.thomashtn.valoquests.player.mapper.HenrikMmrMapper;
@@ -19,11 +20,8 @@ import org.springframework.stereotype.Service;
 /**
  * Orchestrates the synchronization of one tracked player.
  *
- * <p>Resolves the Riot account, refreshes the competitive rank, then delegates the match history to
- * {@link SeasonMatchHistoryWalker}, which owns the season scope and pagination rules.
- *
- * <p><strong>Deliberately not transactional</strong>, enforced at entry by {@link NonTransactionalGuard}:
- * see {@link SeasonSynchronizationStateService}.
+ * <p>Deliberately not transactional, enforced by {@link NonTransactionalGuard}. The rank is refreshed
+ * only when a match arrived since the last successful pass.
  */
 @Service
 public class PlayerSynchronizationService {
@@ -60,6 +58,11 @@ public class PlayerSynchronizationService {
     private final SeasonMatchHistoryWalker matchHistoryWalker;
 
     /**
+     * Repository telling whether matches arrived since the last successful pass.
+     */
+    private final PlayerMatchRepository playerMatchRepository;
+
+    /**
      * Clock used to produce deterministic timestamps.
      */
     private final Clock clock;
@@ -71,8 +74,8 @@ public class PlayerSynchronizationService {
      * @param accountResolutionService service resolving missing Riot account identifiers
      * @param mmrClient                Henrik client returning competitive ranks
      * @param mmrMapper                mapper turning Henrik rank payloads into player fields
-     * @param matchHistoryWalker       walker importing the current and previous seasons' match
-     *                                 history
+     * @param matchHistoryWalker       walker importing the current and previous seasons
+     * @param playerMatchRepository    repository of the player's imported matches
      * @param clock                    clock producing deterministic timestamps
      */
     public PlayerSynchronizationService(
@@ -81,6 +84,7 @@ public class PlayerSynchronizationService {
         HenrikMmrClient mmrClient,
         HenrikMmrMapper mmrMapper,
         SeasonMatchHistoryWalker matchHistoryWalker,
+        PlayerMatchRepository playerMatchRepository,
         Clock clock
     ) {
         this.playerRepository = playerRepository;
@@ -88,12 +92,12 @@ public class PlayerSynchronizationService {
         this.mmrClient = mmrClient;
         this.mmrMapper = mmrMapper;
         this.matchHistoryWalker = matchHistoryWalker;
+        this.playerMatchRepository = playerMatchRepository;
         this.clock = clock;
     }
 
     /**
-     * Synchronizes the Riot account, current rank and every match of the current and previous
-     * seasons.
+     * Synchronizes the Riot account, rank and matches of the current and previous seasons.
      *
      * @param playerId internal player identifier
      * @return synchronization result
@@ -111,12 +115,12 @@ public class PlayerSynchronizationService {
             resolvedPlayer.getDisplayName()
         );
 
-        HenrikMmrResponse mmrResponse = mmrClient.getCurrentMmr(
-            resolvedPlayer.getRiotPuuid()
-        );
-        mmrMapper.updatePlayer(mmrResponse, resolvedPlayer);
-
         MatchHistoryWalkResult walkResult = matchHistoryWalker.walk(resolvedPlayer);
+        if (rankMayHaveChanged(resolvedPlayer, walkResult)) {
+            HenrikMmrResponse mmrResponse = mmrClient.getCurrentMmr(resolvedPlayer.getRiotPuuid());
+            mmrMapper.updatePlayer(mmrResponse, resolvedPlayer);
+        }
+
         Instant completedAt = clock.instant();
         resolvedPlayer.setLastSuccessfulSynchronizationAt(completedAt);
         // Only the synchronized fields: the player was loaded minutes ago and may have been edited.
@@ -141,5 +145,21 @@ public class PlayerSynchronizationService {
             walkResult.matchesImported(),
             walkResult.stopReason()
         );
+    }
+
+    /**
+     * Tells whether the rank needs a Henrik call: only a played match can move it.
+     *
+     * <p>Matches imported by a pass that then failed count too, so a failed rank call is retried.
+     *
+     * @param player     synchronized player, holding the previous successful pass instant
+     * @param walkResult outcome of this pass's match history walk
+     * @return {@code true} when the stored rank may be outdated
+     */
+    private boolean rankMayHaveChanged(Player player, MatchHistoryWalkResult walkResult) {
+        Instant lastSuccessfulAt = player.getLastSuccessfulSynchronizationAt();
+        return walkResult.matchesImported() > 0
+            || lastSuccessfulAt == null
+            || playerMatchRepository.existsByPlayerIdAndCreatedAtAfter(player.getId(), lastSuccessfulAt);
     }
 }

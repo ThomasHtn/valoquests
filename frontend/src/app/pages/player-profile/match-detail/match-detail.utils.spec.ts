@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
 import { MatchDetail } from '@core/matches/match.model';
+
 import { buildMatchFigures, buildMatchTeammateRows } from './match-detail.utils';
 
 /**

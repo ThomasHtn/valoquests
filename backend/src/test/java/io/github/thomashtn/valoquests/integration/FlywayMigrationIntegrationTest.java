@@ -65,8 +65,7 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that no challenge survives measuring a week against the weeks before it.
      *
-     * <p>Such a challenge is decided partly before its own week opens, and rewards the absence that
-     * makes a player's baseline easy to beat. V38 deleted every one of them.
+     * <p>Such a challenge is partly decided before its week opens and rewards absence. V38 deleted them all.
      */
     @Test
     void shouldRemoveChallengesSpanningSeveralWeeks() {
@@ -85,8 +84,7 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that no challenge survives filtered on a mode that is no longer imported.
      *
-     * <p>Such a challenge could be drawn into a weekly pack and would then stay at zero for every
-     * player, wasting one of the difficulty slots of that week.
+     * <p>Drawn into a weekly pack, it would stay at zero for everyone and waste a difficulty slot.
      */
     @Test
     void shouldRemoveChallengesFilteredOnAnUnimportedGameMode() {
@@ -107,8 +105,7 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that the reset left no derived data behind.
      *
-     * <p>Every one of these tables is rebuilt from the matches the next synchronization imports.
-     * A surviving row would describe a history the database can no longer justify.
+     * <p>These tables are rebuilt from the next synchronization, so a surviving row would be unjustified.
      */
     @Test
     void shouldLeaveEveryDerivedTableEmpty() {
@@ -130,8 +127,7 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that the guardian catalogue carries the twenty-two entries a campaign draws from.
      *
-     * <p>A campaign spends two minor weeks, six standard ones and two elite ones, so each class has
-     * to hold at least that many entries or the draw would have to repeat a guardian.
+     * <p>A campaign draws two minor, six standard and two elite weeks, so each class needs that many entries.
      */
     @Test
     void shouldSeedTheGuardianCatalogue() {
@@ -152,8 +148,7 @@ class FlywayMigrationIntegrationTest extends PostgreSqlIntegrationTest {
     /**
      * Verifies that a player result can record why its match-history walk stopped.
      *
-     * <p>Nullable on purpose: a player that failed never completed a walk, so requiring a value here
-     * would make a failure impossible to persist.
+     * <p>Nullable on purpose: a failed player never completed a walk, so a required value would block it.
      */
     @Test
     void shouldRecordTheWalkStopReasonAsAnOptionalColumn() {

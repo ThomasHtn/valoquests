@@ -1,6 +1,7 @@
-import { CampaignWeek, ExtractionLimiter } from '@core/campaign/campaign-week.model';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { Campaign } from '@core/campaign/campaign.model';
+import { CampaignWeek, ExtractionLimiter } from '@core/campaign/campaign-week.model';
+
 import {
   LedgerCell,
   LedgerColumn,

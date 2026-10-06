@@ -32,9 +32,7 @@ import org.springframework.web.context.request.async.AsyncRequestTimeoutExceptio
 /**
  * Verifies how failures are turned into HTTP responses.
  *
- * <p>The point of these tests is the boundary between "the caller got it wrong" and "we got it
- * wrong". Getting that boundary wrong is invisible in a green build: the API keeps answering, it
- * just blames the wrong party and hands internal text to whoever asked.
+ * <p>They pin the line between caller and server errors; crossing it blames the wrong party and leaks internal text.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -173,8 +171,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("answers 405 rather than 500 for an unsupported method on an authorized route")
     void shouldAnswerMethodNotAllowedForAnUnsupportedMethod() throws Exception {
-        // A public route only permits GET, so anything else is denied by security before routing.
-        // Reaching the 405 handler at all therefore requires an authorized admin route.
+        // Public routes deny non-GET before routing, so only an authorized admin route reaches the 405 handler.
         mockMvc.perform(
                 post("/api/admin/synchronizations/1")
                     .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY)

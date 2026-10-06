@@ -41,8 +41,7 @@ class AdminSessionControllerTest {
     /**
      * Verifies that a missing key and an invalid key stay distinguishable.
      *
-     * <p>The two cases mean different things to whoever is signing in — nothing typed yet versus a
-     * wrong value — and the login screen relies on telling them apart.
+     * <p>The login screen tells "nothing typed yet" apart from "wrong value".
      */
     @Test
     void shouldDistinguishAMissingKeyFromAnInvalidOne() throws Exception {

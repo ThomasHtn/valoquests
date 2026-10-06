@@ -11,19 +11,12 @@ public enum PlayerStatus {
     ACTIVE,
 
     /**
-     * Player is still tracked and synchronized, and still completes challenges individually, but
-     * never consumes a ranking slot and is left out of a newly opened campaign's roster.
+     * Player is still synchronized and completes challenges, but never ranks nor joins a new campaign roster.
      */
     INACTIVE,
 
     /**
-     * Player was removed from the roster while keeping the history it took part in.
-     *
-     * <p>Not synchronized, and absent from every public listing, but still resolvable by
-     * identifier: a campaign roster may count it and a stored ranking may hold its position.
-     * Deleting the row outright would leave those references pointing at nothing, so an archived
-     * player is what a deletion becomes once the player was on a campaign roster. The status is
-     * reversible, which is what makes archiving acceptable in the first place.
+     * Player removed from the roster, neither synchronized nor listed, but kept for past rosters and rankings.
      */
     ARCHIVED
 }

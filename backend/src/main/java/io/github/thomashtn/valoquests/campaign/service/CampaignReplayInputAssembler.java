@@ -28,10 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Reads everything one campaign needs to be replayed, in one pass.
  *
- * <p>Reads the frozen roster, never the live one. A player deactivated or archived halfway through
- * a campaign keeps feeding the base they started: their statuses are not filtered out here, only
- * their membership of the campaign's roster is checked, so the history of a week already played can
- * never be rewritten by a backoffice click.
+ * <p>Filters on the frozen roster, never on player status, so a backoffice click cannot rewrite
+ * a week already played.
  */
 @Service
 @Transactional(readOnly = true)
@@ -77,9 +75,8 @@ public class CampaignReplayInputAssembler {
     /**
      * Gathers one campaign's inputs from its first day to a last day.
      *
-     * <p>Two cutoffs, because a day is played before it is closed: the matches of {@code lastDay}
-     * feed the base and the guardian, while only a Sunday on or before {@code settledThrough} is
-     * settled. Handing the same day to both settles a Sunday that is still being played.
+     * <p>Two cutoffs: matches up to {@code lastDay} count, but only Sundays up to
+     * {@code settledThrough} are settled, so a Sunday still being played is never settled.
      *
      * @param campaign       campaign to read
      * @param weeks          the campaign's ten weeks, week one first

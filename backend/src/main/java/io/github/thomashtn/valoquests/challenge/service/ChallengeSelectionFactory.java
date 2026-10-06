@@ -13,10 +13,7 @@ import org.springframework.stereotype.Component;
 /**
  * Builds selections carrying the rule grid the campaign's level plays against.
  *
- * <p>The draw picks, the row stores, everything else reads: this is the one place the catalogue's
- * two written grids become the single definition a week is played against. Storing rather than
- * choosing again on read is what makes a replay stable — a campaign that changed level would
- * otherwise rewrite the objectives of weeks already played.
+ * <p>The grid is stored, not chosen again on read, so a replay never rewrites past weeks' objectives.
  */
 @Component
 public class ChallengeSelectionFactory {

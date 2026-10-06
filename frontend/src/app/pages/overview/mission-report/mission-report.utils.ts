@@ -1,14 +1,15 @@
-import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
+import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
 import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignWeek } from '@core/campaign/campaign-week.model';
-import { WEEKLY_TITLES } from '@core/campaign/campaign.constants';
+import { resolveTitleVisual } from '@core/campaign/titles/campaign-title-visual.utils';
+import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayerSummary } from '@core/players/player-summary.model';
 import { RankingHistoryWeek } from '@core/ranking/ranking.model';
+
 import { fatalBlow } from '../mission-readings/mission-readings.utils';
 import { SEEN_REPORT_KEY } from './mission-report.constants';
-import { CONCEPT_ICONS } from '@core/concepts/concept.constants';
 import {
   MissionReport,
   MissionReportBlow,

@@ -11,9 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Resets the derived data with native statements, mirroring
  * {@code V13__reset_derived_synchronization_data.sql}.
  *
- * <p>Challenge selections, their progress, rankings and campaigns are all derived from stored
- * matches: a finalized week whose matches were deleted would report results nothing in the database
- * can justify, so everything derived goes together and is rebuilt from an empty state.
+ * <p>Everything derived from matches is wiped together, so no result outlives the matches behind it.
  */
 @Service
 public class DefaultCampaignResetService implements CampaignResetService {
@@ -24,12 +22,7 @@ public class DefaultCampaignResetService implements CampaignResetService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCampaignResetService.class);
 
     /**
-     * Empties every derived table in one statement.
-     *
-     * <p>{@code CASCADE} is deliberately omitted and every referencing table listed instead, as in
-     * the migration: Postgres then accepts the statement only while the list stays complete, so a
-     * table added later cannot be silently emptied by this reset — the reset fails loudly instead,
-     * which is exactly when someone must decide whether the new table belongs here.
+     * Empties every derived table, without {@code CASCADE} so a new referencing table makes it fail loudly.
      */
     private static final String TRUNCATE_DERIVED_DATA = """
         TRUNCATE TABLE
@@ -51,10 +44,7 @@ public class DefaultCampaignResetService implements CampaignResetService {
         """;
 
     /**
-     * Clears the incremental synchronization watermark of every player.
-     *
-     * <p>Left as it is, it would claim a history that no longer exists and make the next
-     * synchronization stop at matches it never imported.
+     * Clears every player's synchronization watermark, so the next run does not stop at unimported matches.
      */
     private static final String CLEAR_PLAYER_WATERMARKS = """
         UPDATE player

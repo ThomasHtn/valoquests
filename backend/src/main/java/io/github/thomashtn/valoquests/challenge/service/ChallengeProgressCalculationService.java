@@ -75,8 +75,7 @@ public class ChallengeProgressCalculationService {
     /**
      * Calculates one player's progress on every selection of one week.
      *
-     * <p>The week's matches are loaded once. A daily selection is evaluated over its own day only,
-     * carved out of them.
+     * <p>The week's matches load once; a daily selection is evaluated over its own day only.
      *
      * @param player     player being recalculated
      * @param weekStart  Monday identifying the week

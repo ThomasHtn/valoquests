@@ -1,4 +1,5 @@
 import { readStorage, writeStorage } from '@core/storage/safe-storage.utils';
+
 import { SEEN_POPULATION_KEY } from './base-scene.constants';
 
 /**

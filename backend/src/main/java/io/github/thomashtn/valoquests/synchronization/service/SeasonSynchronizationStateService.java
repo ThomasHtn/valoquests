@@ -12,26 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Owns the per-player, per-season completion flag and pagination checkpoint driving match-history
- * pagination.
+ * Owns the per-player, per-season completion flag and pagination checkpoint of the match history walk.
  *
- * <p><strong>Every method commits on its own.</strong> That is what makes the flag trustworthy:
- * {@link #startSeason} commits {@code complete = false} before a single match of that season is
- * imported, {@link #recordProgress} commits the checkpoint only after the page it reflects was itself
- * committed, and {@link #markSeasonComplete} commits only after the page that proved the boundary was
- * itself committed. A crash at any point therefore leaves {@code complete = false} with a partial
- * history and a checkpoint no more advanced than what is actually stored, which the next run repairs
- * by resuming from that checkpoint; {@code complete = true} with missing pages is unreachable.
- *
- * <p><strong>Callers must not wrap the walk in a transaction.</strong> This is the one home of that
- * rule for the whole synchronization chain ({@link DefaultSynchronizationCommandService},
- * {@link PlayerSynchronizationService}, {@link SeasonMatchHistoryWalker}). Adding
- * {@code @Transactional} above {@link SeasonMatchHistoryWalker#walk} or its callers would join all
- * of these calls into one transaction, defer every commit to the end, and let a rollback erase the
- * {@code complete = false} row along with the imported matches, silently abandoning a season that
- * was being caught up. It would also hold that transaction open across every Henrik call. Enforced
- * by {@link io.github.thomashtn.valoquests.shared.util.NonTransactionalGuard} at the entry of
- * {@link PlayerSynchronizationService#synchronize} and of both synchronization commands.
+ * <p>Every method commits on its own, after the pages it reflects, so a crash never leaves a season
+ * marked complete with missing pages. Callers must therefore never wrap the walk in a transaction.
  */
 @Service
 public class SeasonSynchronizationStateService {
@@ -69,8 +53,7 @@ public class SeasonSynchronizationStateService {
     /**
      * Declares that a season is being walked for a player, creating its state when absent.
      *
-     * <p>An existing state is returned untouched, so a season already marked complete keeps its
-     * flag and a re-walk of an interrupted season keeps its {@code false} and its checkpoint.
+     * <p>An existing state is returned untouched, keeping its flag and checkpoint.
      *
      * @param player tracked player
      * @param season season about to be walked
@@ -90,9 +73,7 @@ public class SeasonSynchronizationStateService {
     /**
      * Advances the resumable checkpoint of a season being walked.
      *
-     * <p>Called only once the page it reflects has itself been durably imported, so a crash right
-     * after this call still leaves a checkpoint no more advanced than what is actually stored.
-     * Idempotent and safe under concurrent execution: the stored offset never moves backward.
+     * <p>Call only after the page it reflects is committed. The stored offset never moves backward.
      *
      * @param playerId  tracked player identifier
      * @param seasonId  local season identifier
@@ -109,8 +90,7 @@ public class SeasonSynchronizationStateService {
     /**
      * Forgets the checkpoint of a season, so no later run jumps to it.
      *
-     * <p>Called when matches played since the checkpoint was written may have shifted the history
-     * by a page or more: the offset no longer points at the match it was recorded for.
+     * <p>Used when newer matches may have shifted the history, so the offset no longer fits.
      *
      * @param playerId tracked player identifier
      * @param seasonId local season identifier
@@ -125,8 +105,7 @@ public class SeasonSynchronizationStateService {
     /**
      * Marks a season as walked back to its oldest match.
      *
-     * <p>Idempotent: re-marking an already complete season preserves the original completion
-     * instant, so the timestamp keeps reporting when the history was actually secured.
+     * <p>Idempotent: an already complete season keeps its original completion instant.
      *
      * @param playerId tracked player identifier
      * @param seasonId local season identifier
@@ -150,11 +129,7 @@ public class SeasonSynchronizationStateService {
     /**
      * Finds a season the player started but never finished walking.
      *
-     * <p>Called when the walk crosses into an older season. An empty result means that season must
-     * be left alone: either it was never targeted, in which case it is outside the current scope, or
-     * it is already complete. A present result is a one-time catch-up, which is how an interrupted
-     * run or a season change is repaired without ever widening the scope beyond seasons this
-     * application already committed to.
+     * <p>Empty means the older season is left alone: never targeted, or already complete.
      *
      * @param playerId tracked player identifier
      * @param seasonExternalId Henrik identifier of the season just crossed into
@@ -172,8 +147,7 @@ public class SeasonSynchronizationStateService {
      * State of a season a walk is about to start or resume.
      *
      * @param resumeOffset pagination offset a resumed walk may start from, zero for a fresh season
-     * @param complete     whether the season was already walked back to its oldest match, so
-     *     stopping at the first already-stored match is safe
+     * @param complete     whether stopping at the first already-stored match is safe
      */
     public record SeasonWalkStart(int resumeOffset, boolean complete) {
     }

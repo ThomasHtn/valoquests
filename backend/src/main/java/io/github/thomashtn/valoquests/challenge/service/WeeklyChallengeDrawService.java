@@ -12,8 +12,7 @@ public interface WeeklyChallengeDrawService {
     /**
      * Returns the weekly challenge pack for the requested week.
      *
-     * <p>Existing selections are preserved and missing tiers are
-     * completed when possible. Daily selections are never part of the pack.</p>
+     * <p>Existing selections are kept and missing tiers completed when possible; dailies are never part of it.
      *
      * @param weekStart Monday identifying the requested week
      * @return selected weekly challenges
@@ -25,9 +24,7 @@ public interface WeeklyChallengeDrawService {
     /**
      * Returns every selection a week already owns, weekly pack and daily draws alike, creating none.
      *
-     * <p>This is the read-only counterpart of {@link #selectWeekChallenges(LocalDate)}, and the
-     * only safe way to reach a past week: selecting would hand a finalized week a brand new pack
-     * and rewrite history.
+     * <p>The only safe way to read a past week: {@link #selectWeekChallenges(LocalDate)} would give it a new pack.
      *
      * @param weekStart Monday identifying the requested week
      * @return the week's selections, empty when it never had any
@@ -39,15 +36,8 @@ public interface WeeklyChallengeDrawService {
     /**
      * Discards the current week's weekly pack and draws a brand new one.
      *
-     * <p>The counterpart of {@link #selectWeekChallenges(LocalDate)}, which never replaces what a
-     * week already holds. This is the admin's override, for the week whose pack no longer
-     * matches the catalogue it was drawn from — a challenge disabled or removed after the draw.
-     *
-     * <p>Restricted to the week in progress: a past week's pack is what its frozen ranking was
-     * earned against, and redrawing it would rewrite history. Daily draws are left alone.
-     *
-     * <p>Destructive. The progress recorded against the discarded pack goes with it, and cannot be
-     * recovered: the challenges it was measured against no longer exist.
+     * <p>Destructive and limited to the week in progress: the discarded pack's progress is lost for good.
+     * Daily draws are left alone.
      *
      * @return the newly drawn pack
      */

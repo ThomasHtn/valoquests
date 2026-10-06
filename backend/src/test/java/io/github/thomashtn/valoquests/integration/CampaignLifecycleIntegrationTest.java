@@ -65,13 +65,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Drives one campaign through its whole life on a real PostgreSQL: opened from the backoffice,
- * started and settled by the production rollover, closed after its tenth Sunday, then a second one
- * stopped early and deleted.
+ * Drives one campaign from opening to closing on a real PostgreSQL, then stops and deletes a second one.
  *
- * <p>What unit tests cannot vouch for: that the difficulty, the roster freeze, the guardian draw,
- * the replay and the closing agree on the same rows once every service runs against the migrated
- * schema, and that the campaign's own reference is the one the challenges are priced at.
+ * <p>Checks that difficulty, roster freeze, guardian draw, replay and closing agree on the same rows, and that
+ * challenges are priced at the campaign's own reference.
  */
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,

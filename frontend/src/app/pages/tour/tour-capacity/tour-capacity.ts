@@ -1,13 +1,14 @@
 import { LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+
 import { LucideDynamicIcon } from '@lucide/angular';
 
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
+import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
 import { CountUp } from '@shared/count-up/count-up';
 import { InView } from '@shared/in-view/in-view';
-import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
 
 import { TourCapacityTile } from './tour-capacity.model';
 import { buildCapacityTiles } from './tour-capacity.utils';

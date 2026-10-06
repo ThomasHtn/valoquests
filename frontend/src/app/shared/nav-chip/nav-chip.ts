@@ -1,4 +1,5 @@
 import { Directive, input } from '@angular/core';
+
 import { NavChipVariant } from './nav-chip.model';
 
 /**

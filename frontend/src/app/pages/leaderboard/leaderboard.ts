@@ -1,32 +1,33 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
 import { LucideChevronDown, LucideChevronUp, LucideDynamicIcon } from '@lucide/angular';
 
-import { CampaignApi } from '@core/campaign/campaign-api';
 import { weekDayIndex } from '@core/campaign/calendar/campaign-calendar.utils';
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
+import { CampaignApi } from '@core/campaign/campaign-api';
 import { CampaignHistory } from '@core/campaign/campaign-history.model';
 import { WeeklyTitle } from '@core/campaign/titles/campaign-title.model';
 import { primaryTitle } from '@core/campaign/titles/campaign-title.utils';
-import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { CHALLENGE_DIFFICULTIES } from '@core/challenges/challenge.constants';
 import { WEEK_DAYS } from '@core/date/date.constants';
 import { daysBetween } from '@core/date/date.utils';
 import { anyError, anyLoading, reloadAll, resourceValue } from '@core/http/resource-state.utils';
 import { resolveLocale } from '@core/i18n/format/locale.utils';
+import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { TranslateFn } from '@core/i18n/translation.model';
 import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { PlayersApi } from '@core/players/players-api';
-import { RankingApi } from '@core/ranking/ranking-api';
 import {
   DailyRankingEntry,
   RankingEntry,
   RankingHistoryEntry,
   RankingHistoryWeek,
 } from '@core/ranking/ranking.model';
+import { RankingApi } from '@core/ranking/ranking-api';
 import { PageHeader } from '@layout/page-header/page-header';
 import { PAGE_LAYOUT_CLASS } from '@layout/page-layout.constants';
 import { Avatar } from '@shared/avatar/avatar';
@@ -42,6 +43,8 @@ import { StreakGauge } from '@shared/streak-gauge/streak-gauge';
 import { streakBonusOf, streakWeekOf } from '@shared/streak-gauge/streak-gauge.utils';
 import { TitleBadge } from '@shared/title-badge/title-badge';
 import { Tooltip } from '@shared/tooltip/tooltip';
+
+import { BoardRow, BoardStreak, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import {
   boardColumns,
   formatWeekSpan,
@@ -50,7 +53,6 @@ import {
   resolveTitleMeasures,
   weekChallengeCeiling,
 } from './leaderboard-board.utils';
-import { BoardRow, BoardStreak, BoardTitle, BoardWeek, WeekOption } from './leaderboard.model';
 import { Podium } from './podium/podium';
 import { WeekPicker } from './week-picker/week-picker';
 

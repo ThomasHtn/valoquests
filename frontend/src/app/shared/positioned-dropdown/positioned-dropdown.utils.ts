@@ -1,10 +1,11 @@
 import { afterNextRender, DestroyRef, inject, signal } from '@angular/core';
+
+import { DROPDOWN_GAP_PX, DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
 import {
   DropdownPanelPosition,
-  PositionedDropdownRefs,
   PositionedDropdown,
+  PositionedDropdownRefs,
 } from './positioned-dropdown.model';
-import { DROPDOWN_GAP_PX, DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
 
 /**
  * Pins a fixed dropdown panel under its trigger, closing it on outside click, resize or scroll.

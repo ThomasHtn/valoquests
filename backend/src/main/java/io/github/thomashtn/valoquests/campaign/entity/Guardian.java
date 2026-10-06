@@ -17,9 +17,7 @@ import lombok.Setter;
 /**
  * One entry of the guardian catalogue.
  *
- * <p>A campaign draws ten of these at opening, two minor, six standard and two elite, and points at
- * the rows it drew. Renaming an entry later therefore renames it everywhere, including on campaigns
- * already closed, which is what a catalogue is for.
+ * <p>Campaigns reference the rows they drew, so renaming an entry also renames it on closed campaigns.
  */
 @Getter
 @Setter

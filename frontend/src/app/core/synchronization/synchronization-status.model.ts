@@ -11,4 +11,9 @@ export interface SynchronizationStatus {
    * ISO instant the last successful synchronization finished its rebuilds, `null` if never.
    */
   readonly lastCompletedAt: string | null;
+
+  /**
+   * ISO instant the last synchronization that imported matches finished, `null` if never.
+   */
+  readonly lastImportedAt: string | null;
 }

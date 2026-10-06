@@ -70,8 +70,7 @@ class DefaultSynchronizationLaunchServiceTest {
     /**
      * Verifies that two quick requests cannot both be accepted.
      *
-     * <p>The lock is taken on the request thread, so the second request is refused even though the
-     * first run has not started yet.
+     * <p>The lock is taken on the request thread, so the second request is refused before the first run starts.
      */
     @Test
     @DisplayName("Refuses a second batch request while the first one still holds the lock")

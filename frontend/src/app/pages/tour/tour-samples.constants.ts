@@ -1,5 +1,5 @@
-import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { ChallengeOperator } from '@core/challenges/card/challenge-card.model';
+import { resolvePlayerAvatarUrl } from '@core/players/avatar/player-avatar.utils';
 import { BoardRow } from '@pages/leaderboard/leaderboard.model';
 import { Capacity } from '@pages/overview/extraction-gauges/extraction-gauges.model';
 import {
