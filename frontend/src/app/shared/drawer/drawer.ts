@@ -2,7 +2,9 @@ import {
   afterNextRender,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
+  inject,
   input,
   output,
   signal,
@@ -70,11 +72,25 @@ export class Drawer {
    * Bound here: the a11y lint rejects a template `(click)` on a dialog (Escape covers it).
    */
   constructor() {
+    // A parent `@if` may drop the open dialog, skipping the native focus return of `close()`.
+    let opener: HTMLElement | null = null;
+    inject(DestroyRef).onDestroy(() => {
+      if (document.activeElement === document.body) {
+        opener?.focus();
+      }
+    });
+
     afterNextRender(() => {
       const dialog = this.dialog().nativeElement;
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       dialog.showModal();
+      // A press started inside the panel (a text selection) must not close it on release.
+      let pressedOnBackdrop = false;
+      dialog.addEventListener('pointerdown', (event) => {
+        pressedOnBackdrop = event.target === dialog;
+      });
       dialog.addEventListener('click', (event) => {
-        if (event.target === dialog) {
+        if (pressedOnBackdrop && event.target === dialog) {
           this.close();
         }
       });

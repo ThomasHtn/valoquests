@@ -1,13 +1,12 @@
 @if (src(); as imageUrl) {
-  <img
+  <!-- `fill` lets a 16:9 map splash crop to the square without tripping the directive's ratio check. -->
+  <span
     [attr.aria-hidden]="decorative() || null"
-    [alt]="accessibleName() ?? ''"
     [class.notch-tr]="notched()"
-    [height]="40"
-    [ngSrc]="imageUrl"
-    [width]="40"
     class="media-thumbnail media-thumbnail--image"
-  />
+  >
+    <img [alt]="accessibleName() ?? ''" [ngSrc]="imageUrl" class="media-thumbnail__image" fill />
+  </span>
 } @else {
   <span
     [attr.aria-hidden]="decorative() || null"

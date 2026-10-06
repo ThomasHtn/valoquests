@@ -91,6 +91,11 @@ export class ConfirmDialog {
   protected readonly typedPhrase = signal('');
 
   /**
+   * Element focused before opening, refocused on close.
+   */
+  private opener: HTMLElement | null = null;
+
+  /**
    * Whether confirming is allowed.
    */
   protected readonly canConfirm = computed(() => {
@@ -104,14 +109,25 @@ export class ConfirmDialog {
   });
 
   /**
-   * Focuses the panel on open; clears the phrase on close so a failed action keeps it.
+   * Focuses the panel on open, the opener on close; the phrase clears on close so a failed action keeps it.
    */
   constructor() {
     effect(() => {
       if (this.open()) {
+        this.opener ??=
+          document.activeElement instanceof HTMLElement ? document.activeElement : null;
         this.panel()?.nativeElement.focus();
       } else {
         this.typedPhrase.set('');
+        this.opener?.focus();
+        this.opener = null;
+      }
+    });
+
+    // Busy disables the focused button, which would drop focus to the page under the scrim.
+    effect(() => {
+      if (this.busy()) {
+        this.panel()?.nativeElement.focus();
       }
     });
   }

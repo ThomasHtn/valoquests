@@ -34,22 +34,23 @@
         <section aria-labelledby="board-title" class="leaderboard__board">
           <h2 class="sr-only" id="board-title">{{ 'leaderboard.board.label' | translate }}</h2>
 
-          <!-- Column header, hidden from AT: each row value carries its own caption. -->
+          <!-- Labels hidden from AT, as each row value carries its own caption; the help stays focusable. -->
           @if (board.ranked.length > 0) {
-            <div aria-hidden="true" class="leaderboard__head bar-head">
-              <span class="bar-count clip-hex"
+            <div class="leaderboard__head bar-head">
+              <span aria-hidden="true" class="bar-count clip-hex"
                 ><span class="clip-hex">{{
                   board.ranked.length + board.unranked.length
                 }}</span></span
               >
-              <span class="leaderboard__label label-caption">
+              <span aria-hidden="true" class="leaderboard__label label-caption">
                 {{ 'leaderboard.board.operator' | translate }}
               </span>
               @for (column of columns(); track column.key) {
                 <span
                   [appTooltip]="column.help | translate"
                   [class.leaderboard__column--streak]="column.key === 'streak'"
-                  class="leaderboard__column label-caption"
+                  class="leaderboard__column label-caption focus-ring"
+                  tabindex="0"
                 >
                   {{ column.label | translate }}
                 </span>

@@ -100,6 +100,16 @@
     </div>
   } @else if (campaignResource.isLoading()) {
     <p class="admin-campaigns__message">{{ 'admin.campaigns.loading' | translate }}</p>
+  } @else if (campaignResource.error()) {
+    <!-- A failed read is not "no campaign": opening one stays locked until it settles. -->
+    <app-resource-state
+      (retry)="campaignResource.reload()"
+      [errorText]="'admin.campaigns.error' | translate"
+      [isError]="true"
+      [isLoading]="false"
+      [loadingText]="'admin.campaigns.loading' | translate"
+      padding="flush"
+    />
   } @else {
     <p class="admin-campaigns__message admin-campaigns__message--empty">
       {{ 'admin.campaigns.none' | translate }}
@@ -113,7 +123,7 @@
       (triggered)="askToOpen()"
       [actionLabel]="'admin.campaigns.open.action' | translate"
       [description]="'admin.campaigns.open.description' | translate"
-      [disabled]="live() !== null"
+      [disabled]="live() !== null || !!campaignResource.error()"
       [heading]="'admin.campaigns.open.heading' | translate"
       [state]="openState()"
     >
@@ -167,7 +177,7 @@
     [errorText]="'admin.campaigns.error' | translate"
     [isEmpty]="closed().length === 0"
     [isError]="!!historyResource.error()"
-    [isLoading]="historyResource.isLoading()"
+    [isLoading]="historyLoading()"
     [loadingText]="'admin.campaigns.loading' | translate"
   >
     <ul class="flex flex-col gap-2">

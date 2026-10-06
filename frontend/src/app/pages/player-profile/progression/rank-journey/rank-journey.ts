@@ -162,7 +162,11 @@ export class RankJourney {
       }
     });
 
-    inject(DestroyRef).onDestroy(() => this.chart?.destroy());
+    // Bumping the request drops a draw still awaiting its badges, which would chart a detached canvas.
+    inject(DestroyRef).onDestroy(() => {
+      this.drawRequest++;
+      this.chart?.destroy();
+    });
   }
 
   /**

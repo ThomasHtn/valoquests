@@ -41,7 +41,11 @@
     @if (!isLoading()) {
       <!-- Folded: none of its rows exist before it opens. -->
       <section aria-labelledby="catalogue-title">
-        <details (toggle)="toggleCatalogue($event)" class="challenges__fold">
+        <details
+          (toggle)="toggleCatalogue($event)"
+          [open]="catalogueOpen()"
+          class="challenges__fold"
+        >
           <summary class="challenges__fold-bar focus-ring">
             <h2 class="challenges__fold-title" id="catalogue-title">
               {{ 'challenges.catalogue.title' | translate }}

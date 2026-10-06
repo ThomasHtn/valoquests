@@ -92,6 +92,7 @@
         "error": "Could not load the history.",
         "loading": "Loading the history…",
         "loadingPlayers": "Loading players…",
+        "playersError": "Could not load the per-player results.",
         "playersProcessed": {
           "one": "{{count}} player processed",
           "other": "{{count}} players processed"
@@ -827,7 +828,7 @@
       "shelter": "Shelter capacity",
       "shelterAria": "Food can shelter {{count}} wounded out of the {{wounded}} spotted, {{percent}}%.",
       "breach": "The breakthrough",
-      "breachAria": "The breakthrough in {{guardian}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
+      "breachAria": "The breakthrough in {{boss}}'s lines reaches {{percent}}%: only that share of what is ready to board gets away.",
       "aboard": "Aboard",
       "aboardAria": "{{count}} wounded would be aboard on Sunday out of the {{wounded}} spotted, {{percent}}%: {{extraction}} by the extraction and {{challenges}} already secured by the challenges.",
       "spotted": "wounded spotted",

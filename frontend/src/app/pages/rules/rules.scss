@@ -120,7 +120,8 @@
 /* The "how it plays" column only exists from `sm`. */
 .rule-table--weeks .rule-table__head,
 .rule-table--weeks .rule-table__row {
-  grid-template-columns: 2.5rem 5.5rem 5.5rem 5rem;
+  /* Capped rather than fixed: below 375px the three figures shrink instead of pushing the page. */
+  grid-template-columns: 2.5rem minmax(0, 5.5rem) minmax(0, 5.5rem) minmax(0, 5rem);
 
   @include from(sm) {
     grid-template-columns: 2.5rem 6rem 9rem 5.5rem minmax(0, 1fr);

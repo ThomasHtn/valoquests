@@ -235,9 +235,8 @@ export class Tooltip implements OnDestroy {
     this.bubble.set(bubble);
     this.listenForEscape();
     this.listenForMovement();
-    if (this.isClickTriggered()) {
-      this.listenForOutsideClick();
-    }
+    // Hover tooltips too: iOS opens them on tap but sends no `mouseleave` to close them.
+    this.listenForOutsideClick();
   }
 
   /**
@@ -436,7 +435,7 @@ export class Tooltip implements OnDestroy {
   }
 
   /**
-   * Closes a click tooltip on a pointer down outside its host.
+   * Closes the tooltip on a pointer down outside its host.
    */
   private listenForOutsideClick(): void {
     this.outsideListener = this.renderer.listen(

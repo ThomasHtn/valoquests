@@ -55,7 +55,9 @@ export class PageScroll {
         clearTimeout(this.restoreTimer);
         this.restoring = event.navigationTrigger === 'popstate';
       } else if (event instanceof NavigationEnd) {
-        this.deep.set(false);
+        // Read the body rather than reset: a query-only navigation keeps the same scrolled page.
+        const body = this.body();
+        this.deep.set(!!body && body.scrollTop > body.clientHeight * SCROLL_TOP_THRESHOLD_SCREENS);
         if (this.restoring) {
           this.restore(this.offsets.get(event.urlAfterRedirects) ?? 0);
         }

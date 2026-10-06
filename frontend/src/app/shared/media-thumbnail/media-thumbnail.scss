@@ -9,6 +9,11 @@
 }
 
 .media-thumbnail--image {
+  position: relative;
+  display: block;
+}
+
+.media-thumbnail__image {
   object-fit: cover;
 }
 

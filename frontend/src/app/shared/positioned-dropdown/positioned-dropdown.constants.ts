@@ -4,6 +4,11 @@
 export const DROPDOWN_GAP_PX = 8;
 
 /**
- * Room in px needed below the trigger before opening upwards: the 24rem list cap plus the gap.
+ * Height cap in px of the panel's list, the `menu-scroll` 24rem.
  */
-export const DROPDOWN_ROOM_PX = 384 + DROPDOWN_GAP_PX;
+export const DROPDOWN_LIST_MAX_PX = 384;
+
+/**
+ * Room in px needed below the trigger before opening upwards: the list cap plus the gap.
+ */
+export const DROPDOWN_ROOM_PX = DROPDOWN_LIST_MAX_PX + DROPDOWN_GAP_PX;

@@ -300,6 +300,11 @@ export class ChallengeBoard {
     if (!this.press || event.pointerId !== this.press.pointerId) {
       return;
     }
+    // Released outside the host before capture: the press is over, not a hover drag.
+    if (event.buttons === 0) {
+      this.pressEnd();
+      return;
+    }
     const travel = event.clientX - this.press.x;
     if (!this.dragging()) {
       if (Math.abs(travel) < BOARD_DRAG_THRESHOLD_PX) {

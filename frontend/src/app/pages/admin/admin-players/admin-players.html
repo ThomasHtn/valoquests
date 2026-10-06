@@ -55,7 +55,7 @@
     [errorText]="'admin.players.error' | translate"
     [isEmpty]="players().length === 0"
     [isError]="!!playersResource.error()"
-    [isLoading]="playersResource.isLoading()"
+    [isLoading]="playersLoading()"
     [loadingText]="'admin.players.loading' | translate"
     padding="flush"
   >

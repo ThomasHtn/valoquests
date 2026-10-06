@@ -42,10 +42,22 @@ export class Translation {
    */
   private requestedLanguage = this.language();
 
+  /**
+   * Whether a dictionary has loaded; until then a switch to the same language retries the load.
+   */
+  private loaded = false;
+
   constructor() {
     // `<html lang>` follows the language, for assistive technologies.
     effect(() => {
       document.documentElement.lang = this.language();
+    });
+
+    // A first load lost to the network would otherwise leave raw keys until a reload.
+    window.addEventListener('online', () => {
+      if (!this.loaded) {
+        void this.initialize();
+      }
     });
   }
 
@@ -56,6 +68,7 @@ export class Translation {
     const dictionary = await this.load(this.language());
     if (dictionary) {
       this.dictionary.set(dictionary);
+      this.loaded = true;
     }
   }
 
@@ -63,7 +76,7 @@ export class Translation {
    * Loads the language's dictionary, then switches to it and persists it; a failure keeps the old one.
    */
   public async setLanguage(language: Language): Promise<void> {
-    if (language === this.requestedLanguage) {
+    if (language === this.requestedLanguage && this.loaded) {
       return;
     }
     this.requestedLanguage = language;
@@ -79,6 +92,7 @@ export class Translation {
     }
 
     this.dictionary.set(dictionary);
+    this.loaded = true;
     this.language.set(language);
     writeStorage(LANGUAGE_STORAGE_KEY, language);
   }

@@ -41,7 +41,7 @@
   role="listbox"
 >
   <!-- Capped in height so a long list stays inside the viewport. -->
-  <div class="menu-scroll">
+  <div [style.max-height.px]="panelPosition().maxHeight" class="menu-scroll">
     @if (emptyText() && options().length <= 1) {
       <p class="select__empty">{{ emptyText() }}</p>
     } @else {

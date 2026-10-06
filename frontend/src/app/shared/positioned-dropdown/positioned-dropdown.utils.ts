@@ -1,6 +1,10 @@
 import { afterNextRender, DestroyRef, inject, signal } from '@angular/core';
 
-import { DROPDOWN_GAP_PX, DROPDOWN_ROOM_PX } from './positioned-dropdown.constants';
+import {
+  DROPDOWN_GAP_PX,
+  DROPDOWN_LIST_MAX_PX,
+  DROPDOWN_ROOM_PX,
+} from './positioned-dropdown.constants';
 import {
   DropdownPanelPosition,
   PositionedDropdown,
@@ -22,6 +26,7 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
     bottom: null,
     right: 0,
     minWidth: 0,
+    maxHeight: DROPDOWN_LIST_MAX_PX,
   });
 
   afterNextRender(() => {
@@ -61,11 +66,13 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
     const below = window.innerHeight - rect.bottom;
     // Upwards when the list does not fit below but has more room above.
     const upwards = below < DROPDOWN_ROOM_PX && rect.top > below;
+    const room = (upwards ? rect.top : below) - 2 * DROPDOWN_GAP_PX;
     panelPosition.set({
       top: upwards ? null : rect.bottom + DROPDOWN_GAP_PX,
       bottom: upwards ? window.innerHeight - rect.top + DROPDOWN_GAP_PX : null,
       right: window.innerWidth - rect.right,
       minWidth: rect.width,
+      maxHeight: Math.max(0, Math.min(DROPDOWN_LIST_MAX_PX, room)),
     });
     isOpen.set(true);
   }

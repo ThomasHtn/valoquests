@@ -6,10 +6,6 @@
   align-items: flex-end;
   min-height: 17.5rem;
   overflow: hidden;
-
-  @include below(sm) {
-    height: 15rem;
-  }
 }
 
 .podium__sky {
@@ -43,19 +39,19 @@
 .podium__place--1 {
   --medal: var(--color-accent-gold);
 
-  order: 2;
+  grid-area: 1 / 2;
 }
 
 .podium__place--2 {
   --medal: var(--color-podium-silver);
 
-  order: 1;
+  grid-area: 1 / 1;
 }
 
 .podium__place--3 {
   --medal: var(--color-podium-bronze);
 
-  order: 3;
+  grid-area: 1 / 3;
 }
 
 .podium__holders {

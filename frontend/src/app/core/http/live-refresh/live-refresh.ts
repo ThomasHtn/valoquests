@@ -1,4 +1,4 @@
-import { DOCUMENT, effect, inject, Service } from '@angular/core';
+import { DOCUMENT, effect, inject, Service, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { filter, fromEvent, interval } from 'rxjs';
@@ -47,10 +47,10 @@ export class LiveRefresh {
   private stamp: string | null = null;
 
   constructor() {
-    // Polling offline would only turn every screen into an error state.
+    // Polling offline would only turn every screen into an error state; a hidden tab catches up on return.
     interval(LIVE_REFRESH_POLL_MS)
       .pipe(
-        filter(() => this.connectivity.online()),
+        filter(() => this.connectivity.online() && this.document.visibilityState === 'visible'),
         takeUntilDestroyed(),
       )
       .subscribe(() => this.synchronizationApi.status.reload());
@@ -66,7 +66,7 @@ export class LiveRefresh {
 
     fromEvent(this.document, 'visibilitychange')
       .pipe(
-        filter(() => this.document.visibilityState === 'visible'),
+        filter(() => this.connectivity.online() && this.document.visibilityState === 'visible'),
         takeUntilDestroyed(),
       )
       .subscribe(() => this.synchronizationApi.status.reload());
@@ -82,10 +82,11 @@ export class LiveRefresh {
         return;
       }
 
-      // A pass that imported nothing changed nothing, so only an import reloads the screens.
+      // A pass that imported nothing changed nothing, so only an import or a failed refresh reloads.
       const stamp = liveRefreshStamp(status.lastImportedAt, new Date());
-      if (this.stamp !== null && stamp !== this.stamp) {
-        this.publicResources.reload();
+      const isStale = untracked(this.publicResources.isStale);
+      if (this.stamp !== null && (stamp !== this.stamp || isStale)) {
+        this.publicResources.refresh();
       }
       this.stamp = stamp;
     });

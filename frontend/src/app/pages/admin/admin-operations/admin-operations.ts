@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { LucideChevronDown, LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
@@ -25,7 +25,6 @@ import { StatusBadge } from '@shared/status-badge/status-badge';
 import { StatusBadgeTone } from '@shared/status-badge/status-badge.model';
 
 import { AdminActionCard } from '../admin-action-card/admin-action-card';
-import { SYNCHRONIZATION_POLL_INTERVAL_MS } from './admin-operations.constants';
 import { SynchronizationFigure } from './admin-operations.model';
 
 /**
@@ -79,25 +78,14 @@ export class AdminOperations {
   private readonly playersResource = this.adminApi.players;
 
   /**
-   * Latest synchronization execution.
-   */
-  private readonly synchronizationResource = this.adminApi.latestSynchronization;
-
-  /**
    * Latest execution, `undefined` when none ever ran.
    */
-  protected readonly synchronization = computed(() =>
-    resourceValue(this.synchronizationResource, undefined),
-  );
+  protected readonly synchronization = this.adminApi.synchronization;
 
   /**
    * Whether a synchronization runs; disables both sync buttons rather than meet a 409.
    */
-  protected readonly synchronizing = computed(() => {
-    const execution = this.synchronization();
-
-    return execution !== undefined && IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(execution.status);
-  });
+  protected readonly synchronizing = this.adminApi.synchronizing;
 
   /**
    * Player to synchronize, `null` while none is chosen.
@@ -254,20 +242,20 @@ export class AdminOperations {
   );
 
   /**
-   * Polls the running synchronization; the interval only lives while one is in flight.
+   * Refreshes the shared reads on arrival, and the history once a running synchronization ends.
    */
   constructor() {
-    effect((onCleanup) => {
-      if (!this.synchronizing()) {
-        return;
+    // Root resources outlive the page, so they may date from the last visit.
+    this.adminApi.latestSynchronization.reload();
+    this.playersResource.reload();
+
+    let wasSynchronizing = this.synchronizing();
+    effect(() => {
+      const synchronizing = this.synchronizing();
+      if (wasSynchronizing && !synchronizing) {
+        untracked(() => this.historyResource.reload());
       }
-
-      const handle = setInterval(
-        () => this.synchronizationResource.reload(),
-        SYNCHRONIZATION_POLL_INTERVAL_MS,
-      );
-
-      onCleanup(() => clearInterval(handle));
+      wasSynchronizing = synchronizing;
     });
   }
 

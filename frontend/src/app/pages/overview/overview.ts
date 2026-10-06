@@ -3,14 +3,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   inject,
+  linkedSignal,
   signal,
   untracked,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { LucideDynamicIcon, LucideFileText } from '@lucide/angular';
+import { map } from 'rxjs';
 
 import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { CampaignApi } from '@core/campaign/campaign-api';
@@ -304,6 +308,11 @@ export class Overview {
   private readonly reportWeek = signal<number | null>(null);
 
   /**
+   * Last report closed, kept in memory too so a blocked storage does not reopen it on every import.
+   */
+  private readonly seenReport = signal<string | null>(readSeenReport());
+
+  /**
    * Last settled week's Monday report, `null` before the first Sunday.
    */
   protected readonly missionReport = computed<MissionReportView | null>(() =>
@@ -341,8 +350,13 @@ export class Overview {
    * Guardian's descent over the week and its projected fall.
    */
   protected readonly fall = computed<GuardianFall | null>(() =>
-    buildGuardianFall(this.currentWeek(), Date.now()),
+    buildGuardianFall(this.currentWeek(), this.now()),
   );
+
+  /**
+   * Clock the fall forecast projects from, refreshed every minute.
+   */
+  private readonly now = signal(Date.now());
 
   /**
    * Squad's input into the week, one segment per operator.
@@ -405,13 +419,23 @@ export class Overview {
   protected readonly favoriteTab = signal<OverviewTabKey | null>(readFavoriteTab());
 
   /**
-   * Tab whose panel shows under the mission.
+   * Tab named by the URL, `null` when absent or unknown.
    */
-  protected readonly selectedTab = signal<OverviewTabKey>(
-    parseOverviewTab(this.route.snapshot.queryParamMap.get(OVERVIEW_TAB_PARAM)) ??
-      this.favoriteTab() ??
-      'challenges',
+  private readonly tabParam = toSignal(
+    this.route.queryParamMap.pipe(
+      map((params) => parseOverviewTab(params.get(OVERVIEW_TAB_PARAM))),
+    ),
+    { initialValue: parseOverviewTab(this.route.snapshot.queryParamMap.get(OVERVIEW_TAB_PARAM)) },
   );
+
+  /**
+   * Tab whose panel shows under the mission; a URL without a tab keeps the current one.
+   */
+  protected readonly selectedTab = linkedSignal<OverviewTabKey | null, OverviewTabKey>({
+    source: this.tabParam,
+    computation: (param, previous) =>
+      param ?? previous?.value ?? untracked(this.favoriteTab) ?? 'challenges',
+  });
 
   /**
    * Tab bar entries, the pinned one leading.
@@ -485,9 +509,15 @@ export class Overview {
   });
 
   constructor() {
+    const clock = setInterval(() => this.now.set(Date.now()), 60_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(clock));
+
     // Tab in the URL so links reopen it; `replaceUrl` keeps switches off the back button.
     effect(() => {
       const tab = this.selectedTab();
+      if (this.tabParam() === tab) {
+        return;
+      }
       untracked(() =>
         this.router.navigate([], {
           relativeTo: this.route,
@@ -501,7 +531,8 @@ export class Overview {
     // Auto-opens once per settled week; the context bar's button reopens it.
     effect(() => {
       const report = this.missionReport();
-      if (report && readSeenReport() !== report.weekStart) {
+      if (report && untracked(this.seenReport) !== report.weekStart) {
+        this.reportWeek.set(null);
         this.reportOpen.set(true);
       }
     });
@@ -550,8 +581,10 @@ export class Overview {
   protected closeReport(): void {
     const report = this.missionReport();
     if (report) {
+      this.seenReport.set(report.weekStart);
       writeSeenReport(report.weekStart);
     }
+    this.reportWeek.set(null);
     this.reportOpen.set(false);
     this.reportOpener?.focus();
     this.reportOpener = null;

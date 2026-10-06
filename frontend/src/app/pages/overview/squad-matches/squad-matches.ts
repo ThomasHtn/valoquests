@@ -8,6 +8,7 @@ import {
   untracked,
 } from '@angular/core';
 
+import { PublicResources } from '@core/http/public-resources';
 import { Translation } from '@core/i18n/translation';
 import { HistoryMatch, MatchDay } from '@core/matches/day/match-day.model';
 import { groupMatchesByDay } from '@core/matches/day/match-day.utils';
@@ -33,9 +34,29 @@ export class SquadMatches {
   private readonly translation = inject(Translation);
 
   /**
+   * Shared resources, whose reloads this page-local list follows.
+   */
+  private readonly publicResources = inject(PublicResources);
+
+  /**
+   * Reload counter of the shared resources.
+   */
+  private readonly revision = this.publicResources.revision;
+
+  /**
    * Zero-based index of the last requested page.
    */
   private readonly page = signal(0);
+
+  /**
+   * Pages folded into {@link matches}, which a failed refresh leaves as they were.
+   */
+  private readonly loadedPages = signal(0);
+
+  /**
+   * Page count of the last successful read, kept through a failed one.
+   */
+  private readonly totalPages = signal(0);
 
   /**
    * Current page of the roster's matches, refetched when the page moves.
@@ -67,26 +88,60 @@ export class SquadMatches {
   /**
    * Whether another page remains to fetch.
    */
-  protected readonly hasMore = computed(() =>
-    this.resource.hasValue() ? this.page() + 1 < this.resource.value().totalPages : false,
-  );
+  protected readonly hasMore = computed(() => this.loadedPages() < this.totalPages());
 
   /**
    * Whether a further page is loading, as opposed to the first one.
    */
   protected readonly isLoadingMore = computed(() => this.resource.isLoading() && this.page() > 0);
 
+  /**
+   * Whether a further page failed; a failed refresh of the first one keeps the list silently.
+   */
+  protected readonly loadMoreFailed = computed(
+    () => !!this.resource.error() && this.page() > 0 && this.matches().length > 0,
+  );
+
   constructor() {
+    // The first run is the initial load, already requested by the resource.
+    const initialRevision = this.revision();
+    effect(() => {
+      if (this.revision() === initialRevision) {
+        return;
+      }
+      // Back to the newest page, which a day turn may also have emptied.
+      if (untracked(this.page) > 0) {
+        this.page.set(0);
+      } else {
+        this.resource.reload();
+      }
+    });
+
     // Untracked `page`, so a load starting does not re-append the previous page.
     effect(() => {
       if (this.resource.isLoading() || !this.resource.hasValue()) {
         return;
       }
-      const rows = this.resource.value().content.map(toHistoryMatch);
-      if (untracked(this.page) === 0) {
+      const { content, totalPages } = this.resource.value();
+      const rows = content.map(toHistoryMatch);
+      const page = untracked(this.page);
+      if (page === 0) {
         this.matches.set(rows);
       } else {
         this.matches.update((matches) => [...matches, ...rows]);
+      }
+      this.loadedPages.set(page + 1);
+      this.totalPages.set(totalPages);
+    });
+
+    // A failed refresh keeps the list on screen; flagged stale, the next poll tries again.
+    effect(() => {
+      if (
+        this.resource.error() !== undefined &&
+        untracked(this.page) === 0 &&
+        untracked(this.matches).length > 0
+      ) {
+        untracked(() => this.publicResources.markStale());
       }
     });
   }
@@ -98,6 +153,7 @@ export class SquadMatches {
     if (!this.hasMore() || this.resource.isLoading()) {
       return;
     }
-    this.page.update((page) => page + 1);
+    // From the pages on screen: after a failed refresh `page` is back at 0 while the list is not.
+    this.page.set(this.loadedPages());
   }
 }

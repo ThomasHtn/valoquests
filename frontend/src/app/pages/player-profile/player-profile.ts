@@ -198,6 +198,18 @@ export class PlayerProfile {
   });
 
   /**
+   * Player the season-scoped reads target, `null` until the seasons first load so they start on the right one.
+   */
+  private readonly scopedPlayerId = computed(() =>
+    this.seasonsResource.status() === 'loading' ? null : this.playerId(),
+  );
+
+  /**
+   * Whether the history waits on the seasons before its first page.
+   */
+  protected readonly historyPending = computed(() => this.seasonsResource.status() === 'loading');
+
+  /**
    * Player details, unscoped so a filter change never brings back the skeleton.
    */
   protected readonly detailsResource = this.playersApi.details(this.playerId);
@@ -211,7 +223,7 @@ export class PlayerProfile {
    * Statistics of the filtered matches, idle while every mode is shown.
    */
   protected readonly scopedDetailsResource = this.playersApi.scopedDetails(
-    this.playerId,
+    this.scopedPlayerId,
     this.gameModeFilter,
     this.seasonId,
   );
@@ -254,7 +266,7 @@ export class PlayerProfile {
    * Requested page of match history.
    */
   protected readonly matchesResource = this.matchesApi.history(
-    this.playerId,
+    this.scopedPlayerId,
     this.page,
     this.gameModeFilter,
     this.seasonId,

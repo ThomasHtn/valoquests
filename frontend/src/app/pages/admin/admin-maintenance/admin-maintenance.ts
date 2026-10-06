@@ -4,8 +4,6 @@ import { AdminApi } from '@core/admin/admin-api';
 import { IDLE_ACTION } from '@core/admin/commands/admin-action.constants';
 import { AdminActionState } from '@core/admin/commands/admin-action.model';
 import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
-import { IN_FLIGHT_SYNCHRONIZATION_STATUSES } from '@core/admin/synchronization/admin-synchronization.constants';
-import { resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -66,11 +64,7 @@ export class AdminMaintenance {
   /**
    * Whether a synchronization is in flight, shown upfront rather than left to the 409.
    */
-  protected readonly synchronizing = computed(() => {
-    const execution = resourceValue(this.adminApi.latestSynchronization, undefined);
-
-    return execution !== undefined && IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(execution.status);
-  });
+  protected readonly synchronizing = this.adminApi.synchronizing;
 
   /**
    * Translated phrase the operator must type to confirm.
@@ -78,6 +72,13 @@ export class AdminMaintenance {
   protected readonly confirmationPhrase = computed(() =>
     this.translation.translate('admin.maintenance.reset.phrase'),
   );
+
+  /**
+   * Refreshes the synchronization status, which may date from an earlier page.
+   */
+  constructor() {
+    this.adminApi.latestSynchronization.reload();
+  }
 
   /**
    * Opens the confirmation dialog.

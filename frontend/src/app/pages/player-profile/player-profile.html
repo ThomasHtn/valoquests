@@ -317,7 +317,7 @@
           [days]="matchDays()"
           [isEmpty]="matches().length === 0"
           [isError]="!!matchesResource.error() && matches().length === 0"
-          [isLoading]="matchesResource.isLoading() && matches().length === 0"
+          [isLoading]="(historyPending() || matchesResource.isLoading()) && matches().length === 0"
           [hasMore]="hasMoreMatches()"
           [isLoadingMore]="isLoadingMoreMatches()"
           [loadMoreFailed]="!!matchesResource.error() && matches().length > 0"

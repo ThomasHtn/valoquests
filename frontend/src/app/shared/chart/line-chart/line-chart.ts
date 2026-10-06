@@ -148,7 +148,11 @@ export class LineChart {
       this.chart.update('none');
     });
 
-    inject(DestroyRef).onDestroy(() => this.chart?.destroy());
+    // Cleared so the pending resize frame finds no chart, as a destroyed one has no canvas.
+    inject(DestroyRef).onDestroy(() => {
+      this.chart?.destroy();
+      this.chart = null;
+    });
   }
 
   /**

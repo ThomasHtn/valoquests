@@ -92,6 +92,7 @@
         "error": "Impossible de charger l'historique.",
         "loading": "Chargement de l'historique…",
         "loadingPlayers": "Chargement des joueurs…",
+        "playersError": "Impossible de charger le détail des joueurs.",
         "playersProcessed": {
           "one": "{{count}} joueur traité",
           "other": "{{count}} joueurs traités"

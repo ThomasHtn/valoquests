@@ -3,12 +3,14 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 
 import {
@@ -28,6 +30,7 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Language, TranslateFn } from '@core/i18n/translation.model';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
+import { Breakpoint } from '@core/viewport/breakpoint';
 import { NavigationPanel } from '@layout/navigation-panel/navigation-panel';
 import { FocusTrap } from '@shared/focus-trap/focus-trap';
 import { Tooltip } from '@shared/tooltip/tooltip';
@@ -87,6 +90,11 @@ export class Sidebar {
    * Drawer state, shared with the page header's burger.
    */
   protected readonly navigationPanel = inject(NavigationPanel);
+
+  /**
+   * Viewport breakpoints, since the drawer only exists below `lg`.
+   */
+  private readonly breakpoint = inject(Breakpoint);
 
   /**
    * Current URL, matched by hand since `routerLinkActive` cannot express `activeRoutes`.
@@ -233,6 +241,21 @@ export class Sidebar {
   constructor() {
     const clock = setInterval(() => this.now.set(Date.now()), SIDEBAR_CLOCK_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(clock));
+
+    // A browser back or a programmatic navigation leaves the page without a nav item click.
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.navigationPanel.close());
+
+    // From `lg` the drawer is the rail, whose focus trap would otherwise lock the keyboard in.
+    effect(() => {
+      if (this.breakpoint.isLarge()) {
+        untracked(() => this.navigationPanel.close());
+      }
+    });
 
     // After render: the closed panel is `visibility: hidden`, so its button is focusable only then.
     afterRenderEffect(() => {

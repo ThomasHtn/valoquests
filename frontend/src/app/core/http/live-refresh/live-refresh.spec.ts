@@ -2,7 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { afterEach, beforeEach, describe, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { CampaignApi } from '@core/campaign/campaign-api';
 
 import { API_ENDPOINTS } from '../api-endpoints.constants';
 import { LiveRefresh } from './live-refresh';
@@ -48,6 +50,7 @@ describe('LiveRefresh', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -143,5 +146,34 @@ describe('LiveRefresh', () => {
 
     httpMock.expectOne(API_ENDPOINTS.synchronizationStatus).flush(status('2026-09-07T10:00:00Z'));
     httpMock.verify();
+  });
+
+  it('skips the poll while the tab is hidden', async () => {
+    await settleInitialLoad('2026-09-07T10:00:00Z');
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+
+    await vi.advanceTimersByTimeAsync(LIVE_REFRESH_POLL_MS);
+    TestBed.tick();
+
+    httpMock.verify();
+  });
+
+  it('keeps the shown value when a refresh fails, then retries at the next poll', async () => {
+    await settleInitialLoad('2026-09-07T10:00:00Z');
+    await pollStatus('2026-09-07T10:30:00Z');
+
+    httpMock
+      .expectOne(API_ENDPOINTS.campaign)
+      .flush(null, { status: 503, statusText: 'Service Unavailable' });
+    httpMock.match(() => true).forEach((request) => request.flush({}));
+    await settle();
+
+    const campaign = TestBed.inject(CampaignApi).campaign;
+    expect(campaign.error()).toBeUndefined();
+    expect(campaign.value()).toEqual({});
+
+    await pollStatus('2026-09-07T10:30:00Z');
+
+    expectScreensReloaded();
   });
 });

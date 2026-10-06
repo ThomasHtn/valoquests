@@ -23,6 +23,11 @@ export interface DropdownPanelPosition {
    * Minimum panel width in px.
    */
   minWidth: number;
+
+  /**
+   * List height cap in px, shrunk to the room on the opening side so no option ends off-screen.
+   */
+  maxHeight: number;
 }
 
 /**

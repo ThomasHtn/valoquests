@@ -7,6 +7,6 @@
   [isEmpty]="matches().length === 0"
   [isError]="!!resource.error() && matches().length === 0"
   [isLoadingMore]="isLoadingMore()"
-  [loadMoreFailed]="!!resource.error() && matches().length > 0"
+  [loadMoreFailed]="loadMoreFailed()"
   [isLoading]="resource.isLoading() && matches().length === 0"
 />

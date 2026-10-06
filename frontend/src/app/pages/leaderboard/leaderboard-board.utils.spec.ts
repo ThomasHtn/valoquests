@@ -38,12 +38,14 @@ describe('placeWeekInCampaign', () => {
 });
 
 describe('formatWeekSpan', () => {
-  it('spells the month once when Monday and Sunday share it', () => {
-    expect(formatWeekSpan('2026-09-07', 'en-US')).toBe('7 – Sep 13');
+  it('spells a shared month once, where the language writes it', () => {
+    expect(formatWeekSpan('2026-09-07', 'en-US')).toBe('Sep 7 – 13');
+    expect(formatWeekSpan('2026-09-07', 'fr-FR')).toBe('7 – 13 sept.');
   });
 
   it('spells both months when the week straddles them', () => {
     expect(formatWeekSpan('2026-08-31', 'en-US')).toBe('Aug 31 – Sep 6');
+    expect(formatWeekSpan('2026-08-31', 'fr-FR')).toBe('31 août – 6 sept.');
   });
 });
 

@@ -18,7 +18,7 @@ import {
 } from '@core/campaign/campaign.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { formatDayMonth } from '@core/date/date-format.utils';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
@@ -120,6 +120,11 @@ export class AdminCampaigns {
    * Closed campaigns, empty while the history loads or fails.
    */
   protected readonly closed = computed(() => resourceValue(this.historyResource, []));
+
+  /**
+   * Whether the archive has nothing to show yet; a live refresh keeps the rows.
+   */
+  protected readonly historyLoading = anyLoading(this.historyResource);
 
   /**
    * State of the open command.

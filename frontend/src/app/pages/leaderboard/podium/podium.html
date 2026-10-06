@@ -7,7 +7,7 @@
     preserveAspectRatio="xMidYMax slice"
   ></svg>
 
-  <!-- 1st centred via CSS `order`, so the DOM keeps reading order for AT. -->
+  <!-- Each place pinned to its column, so a missing place leaves its slot empty and AT reads 1, 2, 3. -->
   <ol [attr.aria-label]="'leaderboard.podium.label' | translate" class="podium__places">
     @for (place of places(); track place.position) {
       @let tied = place.rows.length > 1;

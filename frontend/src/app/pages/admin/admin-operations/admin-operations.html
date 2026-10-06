@@ -206,6 +206,15 @@
                 <p class="admin-operations__details-loading">
                   {{ 'admin.operations.history.loadingPlayers' | translate }}
                 </p>
+              } @else if (executionDetailsResource.error()) {
+                <app-resource-state
+                  (retry)="executionDetailsResource.reload()"
+                  [errorText]="'admin.operations.history.playersError' | translate"
+                  [isError]="true"
+                  [isLoading]="false"
+                  [loadingText]="'admin.operations.history.loadingPlayers' | translate"
+                  padding="flush"
+                />
               } @else {
                 <ul class="flex flex-col gap-2">
                   @for (player of executionDetailsPlayers(); track player.playerId) {

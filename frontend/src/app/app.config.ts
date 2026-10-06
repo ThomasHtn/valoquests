@@ -9,12 +9,14 @@ import {
   provideRouter,
   TitleStrategy,
   withComponentInputBinding,
+  withNavigationErrorHandler,
   withViewTransitions,
 } from '@angular/router';
 
 import { adminKeyInterceptor } from '@core/admin/session/admin-key.interceptor';
 import { TranslatedTitleStrategy } from '@core/i18n/title-strategy/translated-title-strategy';
 import { Translation } from '@core/i18n/translation';
+import { reloadOnStaleChunk } from '@core/navigation/navigation-stale-chunk.utils';
 
 import { routes } from './app.routes';
 
@@ -29,6 +31,8 @@ export const appConfig: ApplicationConfig = {
       routes,
       withComponentInputBinding(),
       withViewTransitions({ skipInitialTransition: true }),
+      // A tab opened before a deploy asks for chunks that no longer exist.
+      withNavigationErrorHandler(reloadOnStaleChunk),
     ),
     // The interceptor adds the admin key to `/api/admin` requests only.
     provideHttpClient(withFetch(), withInterceptors([adminKeyInterceptor])),

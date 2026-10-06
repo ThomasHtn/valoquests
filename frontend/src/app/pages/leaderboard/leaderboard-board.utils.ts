@@ -66,17 +66,21 @@ export function resolveSelectedWeek(
 }
 
 /**
- * Monday to Sunday, the month spelled once when shared (`31 août – 6 sept.`).
+ * Monday to Sunday, a shared month spelled once where the language puts it (`Sep 7 – 13`).
  */
 export function formatWeekSpan(weekStart: string, locale: string): string {
   const monday = localMidnight(weekStart);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + WEEK_DAYS - 1);
   const short = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
-  if (monday.getMonth() === sunday.getMonth()) {
-    return `${monday.getDate()} – ${short.format(sunday)}`;
+  if (monday.getMonth() !== sunday.getMonth()) {
+    return `${short.format(monday)} – ${short.format(sunday)}`;
   }
-  return `${short.format(monday)} – ${short.format(sunday)}`;
+  const parts = short.formatToParts(sunday).map((part) => part.type);
+  const monthFirst = parts.indexOf('month') < parts.indexOf('day');
+  return monthFirst
+    ? `${short.format(monday)} – ${sunday.getDate()}`
+    : `${monday.getDate()} – ${short.format(sunday)}`;
 }
 
 /**

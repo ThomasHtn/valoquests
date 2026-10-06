@@ -1,11 +1,12 @@
 import { inject, Service, signal } from '@angular/core';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 
+import { HistoryEntry } from './navigation-history.model';
 import { sameRoutePath } from './navigation-history.utils';
 
 /**
  * In-app history, so a back link returns where the reader came from.
- * A forward jump it cannot follow resets it, so a back link falls back to its static parent.
+ * Entries are matched by the navigation id the router stores in each, so back and forward both land right.
  */
 @Service()
 export class NavigationHistory {
@@ -15,14 +16,24 @@ export class NavigationHistory {
   private readonly router = inject(Router);
 
   /**
-   * In-app URLs up to the current one, oldest first.
+   * In-app entries, oldest first, forward ones included.
    */
-  private readonly stack: string[] = [];
+  private readonly entries: HistoryEntry[] = [];
+
+  /**
+   * Index of the current entry in {@link entries}, `-1` before the first navigation.
+   */
+  private cursor = -1;
 
   /**
    * Whether the navigation in flight is a browser back or forward.
    */
   private popping = false;
+
+  /**
+   * Navigation id stored in the entry a back or forward returns to, `null` when it has none.
+   */
+  private restoredId: number | null = null;
 
   /**
    * Whether the navigation in flight replaces the current entry.
@@ -38,29 +49,48 @@ export class NavigationHistory {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.popping = event.navigationTrigger === 'popstate';
+        this.restoredId = event.restoredState?.navigationId ?? null;
         this.replacing = this.router.currentNavigation()?.extras.replaceUrl === true;
       } else if (event instanceof NavigationEnd) {
-        this.record(event.urlAfterRedirects);
+        this.record(event.id, event.urlAfterRedirects);
       }
     });
   }
 
   /**
-   * Updates the stack after a navigation: pops on back or forward, rewrites on a replace, pushes otherwise.
+   * Moves the cursor on back or forward, rewrites on a replace, pushes otherwise.
    */
-  private record(url: string): void {
-    const top = this.stack.at(-1);
+  private record(id: number, url: string): void {
     if (this.popping) {
-      this.stack.pop();
-      if (this.stack.at(-1) !== url) {
-        this.stack.splice(0, this.stack.length, url);
-      }
-    } else if (top !== undefined && (this.replacing || sameRoutePath(top, url))) {
-      // A query-only change (a filter in the address) rewrites the entry.
-      this.stack[this.stack.length - 1] = url;
+      this.restore(id, url);
     } else {
-      this.stack.push(url);
+      const current = this.entries[this.cursor];
+      if (current !== undefined && (this.replacing || sameRoutePath(current.url, url))) {
+        // A query-only change (a filter in the address) rewrites the entry.
+        this.entries[this.cursor] = { ids: [...current.ids, id], url };
+      } else {
+        // As in the browser, a new page drops the entries ahead.
+        this.cursor++;
+        this.entries.splice(this.cursor, Infinity, { ids: [id], url });
+      }
     }
-    this.previousUrl.set(this.stack.at(-2) ?? null);
+    this.previousUrl.set(this.entries[this.cursor - 1]?.url ?? null);
+  }
+
+  /**
+   * Points the cursor at the entry a back or forward returned to; an unknown one starts afresh.
+   */
+  private restore(id: number, url: string): void {
+    const restoredId = this.restoredId;
+    const index =
+      restoredId === null ? -1 : this.entries.findIndex((entry) => entry.ids.includes(restoredId));
+    if (index === -1) {
+      this.entries.splice(0, Infinity, { ids: restoredId === null ? [id] : [restoredId, id], url });
+      this.cursor = 0;
+      return;
+    }
+    this.cursor = index;
+    // The router rewrites the restored entry's state with this navigation's id.
+    this.entries[index] = { ids: [...this.entries[index].ids, id], url };
   }
 }

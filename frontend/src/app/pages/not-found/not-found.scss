@@ -23,3 +23,8 @@
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
+
+/* Centred flex items size to content, and the illustration's 22.5rem would push past a 320px phone. */
+.not-found__plate {
+  max-width: 100%;
+}

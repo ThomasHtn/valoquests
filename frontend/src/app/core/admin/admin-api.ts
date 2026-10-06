@@ -1,5 +1,5 @@
 import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
-import { inject, Service, Signal } from '@angular/core';
+import { computed, effect, inject, linkedSignal, Service, Signal } from '@angular/core';
 
 import { firstValueFrom, Observable } from 'rxjs';
 
@@ -7,7 +7,7 @@ import { CampaignDifficulty, CampaignStartWeek } from '@core/campaign/campaign.m
 import { API_ENDPOINTS } from '@core/http/api-endpoints.constants';
 import { PageResponse } from '@core/http/page-response.model';
 import { PublicResources } from '@core/http/public-resources';
-import { reloadAll } from '@core/http/resource-state.utils';
+import { reloadAll, resourceValue } from '@core/http/resource-state.utils';
 
 import { SYNCHRONIZATION_HISTORY_PAGE_SIZE } from './admin-api.constants';
 import { CampaignAdmin } from './campaigns/admin-campaign.model';
@@ -20,6 +20,10 @@ import {
 } from './players/admin-player.model';
 import { AdminSession } from './session/admin-session';
 import { ADMIN_KEY_HEADER } from './session/admin-session.constants';
+import {
+  IN_FLIGHT_SYNCHRONIZATION_STATUSES,
+  SYNCHRONIZATION_POLL_INTERVAL_MS,
+} from './synchronization/admin-synchronization.constants';
 import {
   SynchronizationDetails,
   SynchronizationExecution,
@@ -55,11 +59,50 @@ export class AdminApi {
   );
 
   /**
-   * Latest synchronization, `undefined` if none ran; polled by `refresh` while in flight.
+   * Latest synchronization, `undefined` if none ran; polled while in flight.
    */
   public readonly latestSynchronization = httpResource<SynchronizationExecution>(() =>
     this.session.isAuthenticated() ? API_ENDPOINTS.admin.latestSynchronization : undefined,
   );
+
+  /**
+   * Latest execution, kept through a failed poll so a network blip does not read as "none ran".
+   */
+  public readonly synchronization = linkedSignal<
+    { readonly value: SynchronizationExecution | undefined; readonly failed: boolean },
+    SynchronizationExecution | undefined
+  >({
+    source: () => ({
+      value: resourceValue(this.latestSynchronization, undefined),
+      failed: this.latestSynchronization.error() !== undefined,
+    }),
+    computation: ({ value, failed }, previous) => (failed ? previous?.value : value),
+  });
+
+  /**
+   * Whether a synchronization runs, which every backoffice page must wait out.
+   */
+  public readonly synchronizing = computed(() => {
+    const execution = this.synchronization();
+
+    return execution !== undefined && IN_FLIGHT_SYNCHRONIZATION_STATUSES.includes(execution.status);
+  });
+
+  /**
+   * Polls the running synchronization here, so every page that waits on it sees it end.
+   */
+  constructor() {
+    effect((onCleanup) => {
+      if (!this.synchronizing()) {
+        return;
+      }
+      const handle = setInterval(
+        () => this.latestSynchronization.reload(),
+        SYNCHRONIZATION_POLL_INTERVAL_MS,
+      );
+      onCleanup(() => clearInterval(handle));
+    });
+  }
 
   /**
    * Page of past synchronizations, most recent first (`page` is zero-based).

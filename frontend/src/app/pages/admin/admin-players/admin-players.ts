@@ -18,7 +18,7 @@ import { AdminCommandRunner } from '@core/admin/commands/admin-command-runner';
 import { AdminPlayer, AdminPlayerStatus } from '@core/admin/players/admin-player.model';
 import { CampaignApi } from '@core/campaign/campaign-api';
 import { formatCampaignDateTime } from '@core/date/date-format.utils';
-import { resourceValue } from '@core/http/resource-state.utils';
+import { anyLoading, resourceValue } from '@core/http/resource-state.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { PageHeader } from '@layout/page-header/page-header';
@@ -103,6 +103,11 @@ export class AdminPlayers {
    * Players in backend order.
    */
   protected readonly players = computed(() => resourceValue(this.playersResource, []));
+
+  /**
+   * Whether the list has nothing to show yet; a reload after a mutation keeps the rows.
+   */
+  protected readonly playersLoading = anyLoading(this.playersResource);
 
   /**
    * Frozen roster notice of the live run, empty otherwise (the page must work without it).
