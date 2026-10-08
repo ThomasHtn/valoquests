@@ -52,7 +52,12 @@
       </div>
     </div>
 
-    <div [style.--breach]="breachLevel()" appInView class="mission-readings__track">
+    <div
+      [style.--breach]="breachLevel()"
+      [style.--strike-count]="strikes().length"
+      appInView
+      class="mission-readings__track"
+    >
       @if (breach() > 0) {
         <span class="mission-readings__front">
           @for (strike of strikes(); track strike.playerId) {

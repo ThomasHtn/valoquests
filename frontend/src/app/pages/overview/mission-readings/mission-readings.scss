@@ -1,5 +1,8 @@
 @use 'tools' as *;
 
+/* Narrowest tappable segment; the front widens past `--breach` to fit them all. */
+$strike-min: 0.75rem;
+
 /* Sunken ground of the clock, the stakes and the fall line; darker than any surface. */
 $well: tint(night-well, 52%);
 
@@ -138,6 +141,8 @@ $well: tint(night-well, 52%);
 
 /* Kept dark so the camps' figures stay readable on top. */
 .mission-readings__track {
+  --front: max(var(--breach), calc(var(--strike-count, 0) * #{$strike-min}));
+
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -150,7 +155,7 @@ $well: tint(night-well, 52%);
   position: absolute;
   inset: 0 auto 0 0;
   display: flex;
-  width: var(--breach);
+  width: var(--front);
   animation: duel-fill var(--duration-gauge-long) var(--ease-gauge) both;
 }
 
@@ -158,7 +163,7 @@ $well: tint(night-well, 52%);
 .mission-readings__strike {
   display: block;
   flex: var(--weight, 1) 1 0;
-  min-width: 0.75rem;
+  min-width: $strike-min;
   margin: 0;
   padding: 0;
   border: 0;
@@ -189,7 +194,7 @@ $well: tint(night-well, 52%);
 .mission-readings__breach-post {
   position: absolute;
   inset-block: 0;
-  left: clamp(0px, var(--breach), calc(100% - 3px));
+  left: clamp(0px, var(--front), calc(100% - 3px));
   width: 3px;
   background: var(--color-accent-gold);
   pointer-events: none;
@@ -201,7 +206,7 @@ $well: tint(night-well, 52%);
 .mission-readings__breach-seam {
   position: absolute;
   inset-block: 0;
-  left: clamp(0px, calc(var(--breach) - 10px), calc(100% - 24px));
+  left: clamp(0px, calc(var(--front) - 10px), calc(100% - 24px));
   width: 24px;
   cursor: help;
 }
