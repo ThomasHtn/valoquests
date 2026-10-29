@@ -159,9 +159,10 @@ Adding a challenge shape usually means a new calculator plus catalogue rows, not
 | `/api/synchronization`                      | `/api/admin/synchronizations`, `/api/admin/players/{id}/synchronizations` |
 
 `SecurityConfig` is stateless and denies by default; the admin rule must stay ahead of the public GET
-rule. `AdminApiKeyFilter` applies a per-remote-address lockout through `AdminAuthRateLimiter`. Behind a
-reverse proxy, keep `FORWARD_HEADERS_STRATEGY=framework`, otherwise every caller looks like the proxy
-and one attacker locks out everyone.
+rule. `AdminApiKeyFilter` applies a per-remote-address lockout through `AdminAuthRateLimiter`. Keep
+`FORWARD_HEADERS_STRATEGY=native`: it reads the client address from `X-Forwarded-For` sent by a private
+network only, whereas `framework` would also trust a client-sent `Forwarded` header and let an attacker
+dodge the lockout.
 
 Errors are thrown as `ResourceNotFoundException` / `InvalidRequestException` / `ConflictException` and
 rendered by `GlobalExceptionHandler` into `ApiErrorResponse`. Controllers never build an error
