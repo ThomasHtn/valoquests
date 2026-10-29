@@ -72,6 +72,7 @@
       "hideKey": "Hide key",
       "keyHint": "The key opens synchronisation, roster management and campaign controls.",
       "keyLabel": "Administration key",
+      "rateLimited": "Too many attempts: try again in a minute.",
       "rejected": "Key rejected by the server.",
       "showKey": "Show key",
       "submit": "Enter",

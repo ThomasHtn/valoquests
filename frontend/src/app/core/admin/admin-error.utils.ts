@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 
 import { ApiProblem } from './admin-error.model';
 
@@ -23,4 +23,23 @@ export function resolveAdminErrorMessage(error: unknown, fallback: string): stri
   }
 
   return problem?.detail ?? fallback;
+}
+
+/**
+ * Sign-in failure as a translation key: the backend words its refusals in English only.
+ */
+export function resolveSignInErrorKey(error: unknown): string | null {
+  if (!(error instanceof HttpErrorResponse)) {
+    return null;
+  }
+
+  switch (error.status) {
+    case HttpStatusCode.Unauthorized:
+    case HttpStatusCode.Forbidden:
+      return 'admin.login.rejected';
+    case HttpStatusCode.TooManyRequests:
+      return 'admin.login.rateLimited';
+    default:
+      return null;
+  }
 }

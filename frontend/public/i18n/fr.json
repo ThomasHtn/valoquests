@@ -72,6 +72,7 @@
       "hideKey": "Masquer la clé",
       "keyHint": "La clé ouvre la synchronisation, la gestion des joueurs et le pilotage de la campagne.",
       "keyLabel": "Clé d'administration",
+      "rateLimited": "Trop d'essais : réessaie dans une minute.",
       "rejected": "Clé refusée par le serveur.",
       "showKey": "Afficher la clé",
       "submit": "Entrer",

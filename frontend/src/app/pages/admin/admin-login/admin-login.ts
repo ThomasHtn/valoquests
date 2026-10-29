@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LucideChevronLeft, LucideEye, LucideEyeOff, LucideLockKeyhole } from '@lucide/angular';
 
 import { AdminApi } from '@core/admin/admin-api';
-import { resolveAdminErrorMessage } from '@core/admin/admin-error.utils';
+import { resolveAdminErrorMessage, resolveSignInErrorKey } from '@core/admin/admin-error.utils';
 import { AdminSession } from '@core/admin/session/admin-session';
 import { ADMIN_HOME_ROUTE } from '@core/admin/session/admin-session.constants';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
@@ -35,7 +35,7 @@ import { TextFieldInput } from '@shared/text-field/text-field-input';
   ],
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.scss',
-  host: { class: 'ambient-field' },
+  host: { class: 'ambient-field', role: 'main' },
 })
 export class AdminLogin {
   /**
@@ -123,10 +123,10 @@ export class AdminLogin {
       this.session.signIn(candidate);
       await this.router.navigate([ADMIN_HOME_ROUTE]);
     } catch (error: unknown) {
-      const message = resolveAdminErrorMessage(
-        error,
-        this.translation.translate('admin.login.rejected'),
-      );
+      const signInErrorKey = resolveSignInErrorKey(error);
+      const message = signInErrorKey
+        ? this.translation.translate(signInErrorKey)
+        : resolveAdminErrorMessage(error, this.translation.translate('admin.login.rejected'));
 
       this.error.set(message);
       this.snackbar.error(message);
