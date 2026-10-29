@@ -1,0 +1,20 @@
+# Tour stack, layered over compose.yaml by tour.sh under its own project name, so its database is a
+# throwaway volume and the app answers on a port of its own: `make up` and `make db` keep theirs.
+services:
+  # No published port: tour.sh restores the dump through `docker compose exec`.
+  postgres:
+    ports: !reset []
+
+  # A frozen copy: no job runs, so the squad stays exactly as the dump left it and Henrik is never called.
+  backend:
+    environment:
+      HENRIK_API_KEY: tour-offline
+      STANDARD_SYNC_ENABLED: "false"
+      WEEK_ROLLOVER_ENABLED: "false"
+      CAMPAIGN_TICK_ENABLED: "false"
+      SYNC_HISTORY_PURGE_ENABLED: "false"
+
+  # The app on 8100 instead of 8000.
+  frontend:
+    ports: !override
+      - "127.0.0.1:8100:8080"
