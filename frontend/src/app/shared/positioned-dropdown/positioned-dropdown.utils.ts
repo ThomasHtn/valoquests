@@ -12,7 +12,7 @@ import {
 } from './positioned-dropdown.model';
 
 /**
- * Pins a fixed dropdown panel under its trigger, closing it on outside click, resize or scroll.
+ * Pins a fixed dropdown panel under its trigger, closing it on outside click, width change or scroll.
  * Needs an injection context. The panel moves out of the host since `fixed` cannot escape a
  * `clip-path`, into the enclosing modal `<dialog>` if any, which would otherwise make it inert.
  */
@@ -48,8 +48,18 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   document.addEventListener('click', onDocumentClick);
   destroyRef.onDestroy(() => document.removeEventListener('click', onDocumentClick));
 
-  window.addEventListener('resize', close);
-  destroyRef.onDestroy(() => window.removeEventListener('resize', close));
+  // On phones the URL bar and the keyboard change the height only: the panel follows instead of closing.
+  let width = window.innerWidth;
+  const onResize = (): void => {
+    if (window.innerWidth !== width) {
+      width = window.innerWidth;
+      close();
+    } else if (isOpen()) {
+      open();
+    }
+  };
+  window.addEventListener('resize', onResize);
+  destroyRef.onDestroy(() => window.removeEventListener('resize', onResize));
 
   // Capture phase: `scroll` does not bubble, and inner containers like `<main>` scroll too.
   const onScroll = (event: Event): void => {
@@ -61,6 +71,9 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
   window.addEventListener('scroll', onScroll, true);
   destroyRef.onDestroy(() => window.removeEventListener('scroll', onScroll, true));
 
+  /**
+   * Places the panel on the side of the trigger with room for it, then shows it.
+   */
   function open(): void {
     const rect = trigger().nativeElement.getBoundingClientRect();
     const below = window.innerHeight - rect.bottom;
@@ -77,10 +90,16 @@ export function createPositionedDropdown(refs: PositionedDropdownRefs): Position
     isOpen.set(true);
   }
 
+  /**
+   * Hides the panel.
+   */
   function close(): void {
     isOpen.set(false);
   }
 
+  /**
+   * Hides the panel and gives focus back to its trigger, as after a pick from the keyboard.
+   */
   function closeAndRefocus(): void {
     close();
     trigger().nativeElement.focus();
