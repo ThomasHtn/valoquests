@@ -13,9 +13,9 @@ import io.github.thomashtn.valoquests.henrik.exception.HenrikServiceUnavailableE
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,7 +50,7 @@ class DefaultHenrikMatchClientTest {
 
     @AfterEach
     void tearDown() throws IOException {
-        mockWebServer.shutdown();
+        mockWebServer.close();
     }
 
     @Test
@@ -81,7 +81,7 @@ class DefaultHenrikMatchClientTest {
         assertThat(response.data().getFirst().metadata().matchId()).isEqualTo("match-1");
 
         RecordedRequest request = mockWebServer.takeRequest();
-        assertThat(request.getPath())
+        assertThat(request.getTarget())
             .isEqualTo("/valorant/v4/by-puuid/matches/eu/pc/" + PUUID + "?start=20&size=10");
     }
 
@@ -204,9 +204,10 @@ class DefaultHenrikMatchClientTest {
     @DisplayName("retries a read timeout as a transient failure and eventually succeeds")
     void shouldRetryAReadTimeoutAndSucceed() {
         mockWebServer.enqueue(
-            new MockResponse()
-                .setHeadersDelay(500, TimeUnit.MILLISECONDS)
-                .setBody("{ \"status\": 200, \"data\": [] }")
+            new MockResponse.Builder()
+                .headersDelay(500, TimeUnit.MILLISECONDS)
+                .body("{ \"status\": 200, \"data\": [] }")
+                .build()
         );
         mockWebServer.enqueue(jsonResponse(200, """
             { "status": 200, "data": [] }
@@ -222,10 +223,10 @@ class DefaultHenrikMatchClientTest {
     @DisplayName("gives up after repeated read timeouts")
     void shouldGiveUpAfterRepeatedReadTimeouts() {
         mockWebServer.enqueue(
-            new MockResponse().setHeadersDelay(500, TimeUnit.MILLISECONDS).setBody("{}")
+            new MockResponse.Builder().headersDelay(500, TimeUnit.MILLISECONDS).body("{}").build()
         );
         mockWebServer.enqueue(
-            new MockResponse().setHeadersDelay(500, TimeUnit.MILLISECONDS).setBody("{}")
+            new MockResponse.Builder().headersDelay(500, TimeUnit.MILLISECONDS).body("{}").build()
         );
 
         DefaultHenrikMatchClient client = createClient(2, 2, Duration.ofMillis(100));
@@ -317,23 +318,24 @@ class DefaultHenrikMatchClientTest {
      * Builds a JSON response with the given status.
      */
     private MockResponse jsonResponse(int status, String body) {
-        return new MockResponse()
-            .setResponseCode(status)
+        return new MockResponse.Builder()
+            .code(status)
             .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .setBody(body);
+            .body(body)
+            .build();
     }
 
     /**
      * Builds a 429 response that tells the client to retry after one second.
      */
     private MockResponse rateLimitResponse() {
-        return new MockResponse()
-            .setResponseCode(429)
+        return new MockResponse.Builder()
+            .code(429)
             .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .setHeader("Retry-After", "1")
             .setHeader("x-ratelimit-remaining", "0")
-            .setBody("""
+            .body("""
                 { "status": 429, "message": "Rate limit exceeded" }
-                """);
+                """).build();
     }
 }

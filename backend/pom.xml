@@ -32,7 +32,7 @@
 
     <!-- Explicit versions for dependencies not managed by Spring Boot. -->
     <springdoc.version>3.1.1</springdoc.version>
-    <mockwebserver.version>4.12.0</mockwebserver.version>
+    <mockwebserver.version>5.5.1</mockwebserver.version>
     <archunit.version>1.5.1</archunit.version>
 
     <!-- Version shared by all Testcontainers dependencies. -->
@@ -194,7 +194,7 @@
     <!-- Fake HTTP server standing in for Henrik in the client tests. -->
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
+      <artifactId>mockwebserver3</artifactId>
       <version>${mockwebserver.version}</version>
       <scope>test</scope>
     </dependency>

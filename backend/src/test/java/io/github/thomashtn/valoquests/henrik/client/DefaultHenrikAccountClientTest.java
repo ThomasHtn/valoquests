@@ -13,9 +13,9 @@ import io.github.thomashtn.valoquests.henrik.mapper.HenrikAccountMapper;
 import io.github.thomashtn.valoquests.henrik.model.HenrikAccount;
 import java.io.IOException;
 import java.time.Duration;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class DefaultHenrikAccountClientTest {
      */
     @AfterEach
     void tearDown() throws IOException {
-        mockWebServer.shutdown();
+        mockWebServer.close();
     }
 
     /**
@@ -96,13 +96,13 @@ class DefaultHenrikAccountClientTest {
         RecordedRequest request = mockWebServer.takeRequest();
 
         assertThat(request.getMethod()).isEqualTo("GET");
-        assertThat(request.getPath())
+        assertThat(request.getTarget())
             .isEqualTo("/valorant/v2/account/Psilonnix/EUW");
 
-        assertThat(request.getHeader(HttpHeaders.AUTHORIZATION))
+        assertThat(request.getHeaders().get(HttpHeaders.AUTHORIZATION))
             .isEqualTo("test-api-key");
 
-        assertThat(request.getHeader(HttpHeaders.ACCEPT))
+        assertThat(request.getHeaders().get(HttpHeaders.ACCEPT))
             .isEqualTo(MediaType.APPLICATION_JSON_VALUE);
     }
 
@@ -136,7 +136,7 @@ class DefaultHenrikAccountClientTest {
         assertThat(account.gameName())
             .isEqualTo("MDR nataNk");
 
-        assertThat(mockWebServer.takeRequest().getPath())
+        assertThat(mockWebServer.takeRequest().getTarget())
             .isEqualTo(
                 "/valorant/v2/account/MDR%20nataNk/1wnl"
             );
@@ -351,13 +351,14 @@ class DefaultHenrikAccountClientTest {
         int status,
         String body
     ) {
-        return new MockResponse()
-            .setResponseCode(status)
+        return new MockResponse.Builder()
+            .code(status)
             .setHeader(
                 HttpHeaders.CONTENT_TYPE,
                 MediaType.APPLICATION_JSON_VALUE
             )
-            .setBody(body);
+            .body(body)
+            .build();
     }
 
     /**
@@ -372,10 +373,12 @@ class DefaultHenrikAccountClientTest {
               "message": "Rate limit exceeded"
             }
             """)
+            .newBuilder()
             .setHeader("Retry-After", "1")
             .setHeader(
                 "X-RateLimit-Remaining",
                 "0"
-            );
+            )
+            .build();
     }
 }
