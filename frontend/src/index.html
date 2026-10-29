@@ -12,9 +12,11 @@
     <meta content="dark" name="color-scheme" />
     <link href="favicon.svg" rel="icon" type="image/svg+xml" />
     <link href="favicon.ico" rel="icon" type="image/x-icon" />
+    <!-- iOS home screen: opaque, so Safari does not fill the transparent corners with black. -->
+    <link href="icons/apple-touch-icon.png" rel="apple-touch-icon" />
     <!-- Installable app; `start_url` is the root, whatever page it was added from. -->
     <link href="manifest.webmanifest" rel="manifest" />
-    <!-- Link previews; make the image URL absolute once the public domain is final. -->
+    <!-- Link previews; chat apps only fetch an absolute image URL. -->
     <meta
       content="Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines."
       name="description"
@@ -26,7 +28,10 @@
       content="Les matchs Valorant de l'escouade, transformés en campagne coopérative de dix semaines."
       property="og:description"
     />
-    <meta content="/icons/icon-512.png" property="og:image" />
+    <meta content="https://valoquests.thomashtn.dev/" property="og:url" />
+    <meta content="https://valoquests.thomashtn.dev/icons/icon-512.png" property="og:image" />
+    <meta content="512" property="og:image:width" />
+    <meta content="512" property="og:image:height" />
     <meta content="summary" name="twitter:card" />
     <!-- First screen's fonts (see `styles/typography.css`), fetched with the stylesheet. -->
     <link
