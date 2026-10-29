@@ -1,18 +1,21 @@
 {
-  "name": "frontend",
+  "name": "valoquests",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
+    "test:ci": "ng test --watch=false --coverage",
+    "e2e": "playwright test",
     "lint": "ng lint && npm run lint:styles",
     "lint:styles": "stylelint \"src/**/*.{css,scss}\"",
-    "format": "prettier --write . ../README.md ../backend/README.md \"../docs/*.md\" \"../.github/**/*.yml\"",
-    "format:check": "prettier --check . ../README.md ../backend/README.md \"../docs/*.md\" \"../.github/**/*.yml\""
+    "format": "prettier --write \"src/**/*.{ts,html,css,scss}\" \"public/i18n/*.json\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.js stylelint.config.mjs",
+    "format:check": "prettier --check \"src/**/*.{ts,html,css,scss}\" \"public/i18n/*.json\" \"e2e/**/*.ts\" playwright.config.ts eslint.config.js stylelint.config.mjs",
+    "fix": "ng lint --fix --force && stylelint --fix \"src/**/*.{css,scss}\" && npm run format"
   },
   "private": true,
-  "packageManager": "npm@10.9.8",
+  "packageManager": "npm@11.21.1",
   "dependencies": {
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
@@ -29,8 +32,11 @@
     "@angular/build": "^22.0.8",
     "@angular/cli": "^22.0.8",
     "@angular/compiler-cli": "^22.0.0",
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
+    "@vitest/coverage-v8": "^4.1.12",
     "angular-eslint": "22.1.0",
     "eslint": "^10.6.0",
     "eslint-plugin-simple-import-sort": "^14.0.0",
@@ -43,5 +49,8 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "8.62.1",
     "vitest": "^4.0.8"
+  },
+  "engines": {
+    "node": "^22.22.3"
   }
 }
