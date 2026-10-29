@@ -321,7 +321,7 @@
           [hasMore]="hasMoreMatches()"
           [isLoadingMore]="isLoadingMoreMatches()"
           [loadMoreFailed]="!!matchesResource.error() && matches().length > 0"
-          (retry)="matchesResource.reload()"
+          (retry)="retryHistory()"
           (loadMore)="loadMoreMatches()"
         />
       } @else {

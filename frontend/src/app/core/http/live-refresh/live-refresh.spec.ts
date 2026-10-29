@@ -94,6 +94,7 @@ describe('LiveRefresh', () => {
           [
             API_ENDPOINTS.rankingHistory,
             API_ENDPOINTS.players,
+            API_ENDPOINTS.seasons,
             API_ENDPOINTS.synchronizationStatus,
           ] as string[]
         ).includes(request.url),

@@ -462,6 +462,16 @@ export class PlayerProfile {
   }
 
   /**
+   * Reloads the history, and the seasons too when they failed, so the season picker comes back.
+   */
+  protected retryHistory(): void {
+    if (this.seasonsResource.error()) {
+      this.seasonsResource.reload();
+    }
+    this.matchesResource.reload();
+  }
+
+  /**
    * Requests the next history page unless it is the last or one is in flight.
    */
   protected loadMoreMatches(): void {

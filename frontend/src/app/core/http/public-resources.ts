@@ -4,6 +4,7 @@ import { CampaignApi } from '@core/campaign/campaign-api';
 import { ChallengesApi } from '@core/challenges/challenges-api';
 import { PlayersApi } from '@core/players/players-api';
 import { RankingApi } from '@core/ranking/ranking-api';
+import { SeasonsApi } from '@core/seasons/seasons-api';
 import { SynchronizationApi } from '@core/synchronization/synchronization-api';
 
 import { reloadAll } from './resource-state.utils';
@@ -39,6 +40,11 @@ export class PublicResources {
   private readonly challengesApi = inject(ChallengesApi);
 
   /**
+   * Seasons API, so a new act shows up and a failed first load recovers on the next import.
+   */
+  private readonly seasonsApi = inject(SeasonsApi);
+
+  /**
    * Every shared resource but the synchronization status.
    */
   private readonly dataResources: readonly ResourceRef<unknown>[] = [
@@ -51,6 +57,7 @@ export class PublicResources {
     this.rankingApi.history,
     this.rankingApi.daily,
     this.challengesApi.current,
+    this.seasonsApi.seasons,
   ];
 
   /**
