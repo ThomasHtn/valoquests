@@ -10,31 +10,47 @@ challenges, the leaderboard, the player profiles and the backoffice. It reads ev
 | Language         | TypeScript 6, strict                                               |
 | Styling          | Tailwind 4 plus the "Expédition" design system in `src/styles/`    |
 | Icons and charts | `@lucide/angular`, `chart.js` (lazy, profile screens only)         |
-| Tests            | Vitest with jsdom                                                  |
-| Gates            | Prettier, ESLint (`angular-eslint`), Stylelint, `ng build`         |
+| Tests            | Vitest with jsdom, Playwright with axe-core against the images     |
+| Gates            | Prettier, ESLint (`angular-eslint`), Stylelint, coverage, build    |
 
-## Getting started
+## Start
 
-Requirements: Node.js 22, and the backend running on `localhost:8080`.
+Requirements: Node.js 22 and npm 11, and the backend running on `localhost:8080` (`make dev` at the
+root starts both).
 
 ```bash
-npm ci
+npx npm@11 install
 npm start        # dev server on :4200, proxies /api to localhost:8080
 ```
 
-`proxy.conf.json` keeps both sides same-origin during development, so no CORS setup is needed.
-`node_modules/` is not checked in: `npm ci` comes before any lint, test or build.
+`proxy.conf.json` keeps both sides same-origin during development, as nginx does in production.
 
-## Commands
+## Before committing
 
 ```bash
-npm start                                                        # dev server
-npm test -- --watch=false                                        # the suite CI runs
+npm run fix        # ESLint --fix, Stylelint --fix, Prettier
+npm run test:ci    # the suite CI runs, failing below the coverage floors of angular.json
+```
+
+`npm run lint` and `npm run format:check` are the read-only versions CI runs.
+
+## Tests while coding
+
+```bash
+npm test                                                                  # watch mode
 npm test -- --include=src/app/core/admin/session/admin-session.spec.ts   # a single spec
-npm run lint                                                     # ESLint, then Stylelint
-npm run lint -- --fix                                            # sort imports and other fixable rules
-npm run format                                                   # format:check is the CI gate
-npm run build                                                    # production bundle in dist/
+```
+
+## Browser tests
+
+The smoke tests in `e2e/` open every public page on a desktop and a phone, check nothing is left
+loading or failed, and run axe-core on each. They target the images on http://localhost:8000 with an
+empty squad:
+
+```bash
+npx playwright install chromium   # once
+make -C .. reset up
+npm run e2e
 ```
 
 ## Structure
@@ -49,7 +65,10 @@ Path aliases: `@core/*`, `@shared/*`, `@layout/*`, `@pages/*`, `@env/*`.
 | `shared/` | Presentational primitives: gauges, tiles, drawers, empty states, the rocket, the charts                                                                                                         |
 | `styles/` | design tokens (`colors.css`, `typography.css`, `elevation.css`), one file per theme of shared utilities, `motion/` for animations, `components/` for plain classes shared by several components |
 
-A screen is `x.ts` + `x.html` + `x.css`, plus `x.model.ts` for its view models.
+A screen is `x.ts` + `x.html` + `x.scss`, plus `x.model.ts` for its view models. Imports go `core`, then
+`shared`, then `layout`, then `pages`, never upwards, and a page never imports another page (the tour
+excepted, it showcases them). A relative import never leaves its folder: other folders are reached
+through the aliases. ESLint checks all of it.
 
 ## Data access
 
@@ -101,19 +120,29 @@ theme by design.
 ## Code style
 
 TypeScript is strict (`noUnusedLocals`, `noPropertyAccessFromIndexSignature`, `strictTemplates`).
-ESLint adds explicit member accessibility, member ordering (fields, constructor, methods), no
-`console.log`, `app` selector prefixes, native control flow only (`@if` / `@for`), `NgOptimizedImage`
+ESLint adds a JSDoc block on every declaration, OnPush on every component, explicit member
+accessibility, member ordering (fields, constructor, methods), no `console.log`, `app` selector prefixes, native control flow only (`@if` / `@for`), `NgOptimizedImage`
 for static images, an explicit `type` on every button, and one import order (Angular, libraries,
 `@core`/`@shared`/`@layout`/`@pages` aliases, relatives). Stylelint (`stylelint.config.mjs`) enforces
 the stylesheet rules below: BEM class names, no `&__`/`&--`, no hex or `rgb()` color in a component.
-Prettier (`.prettierrc.json`, at the repository root) formats the code, the i18n JSON, the docs and
-the workflows.
+Prettier (`.prettierrc.json`, at the repository root) formats the code and the i18n JSON.
 
 ## Docker
 
-`Dockerfile` builds the production bundle on `node:22-alpine` and serves it with nginx
-(`nginx.conf`). Quality gates run in CI before an image is built, so the build stage only produces the
-artifact. In production Traefik terminates HTTPS and routes `/api/*` to the backend on the same origin.
+`Dockerfile` builds the production bundle and serves it with an unprivileged nginx
+(`nginx.conf.template`), the app's single entry point: it relays `/api` and `/readyz` to the backend
+(`BACKEND_URL`), answers `/healthz` itself, sets the CSP and the cache headers, and returns a JSON 503
+when the backend is down. Quality gates run in CI before an image is built, so the build stage only
+produces the artifact.
+
+## Pitfalls
+
+- **`npm install` crashes on jsdom's canvas dependency**: that is npm 10. Use `npx npm@11 install`.
+- **A new inline script or a third-party URL is blocked**: the CSP of `nginx.conf.template` only allows
+  the app's own origin. Self-host the asset; never loosen the policy for it.
+- **A translation shows its raw key**: the key is missing from one of `public/i18n/fr.json` and
+  `en.json`. Both files always hold the same keys.
+- **`resource.value()` throws**: read it through `resourceValue()` (see Data access).
 
 ---
 
