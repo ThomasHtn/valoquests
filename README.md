@@ -183,8 +183,8 @@ The interface speaks French and English.
 - **Quality**: a comment on every declaration, ESLint, Stylelint, Prettier, Checkstyle, Spotless, SpotBugs, ArchUnit layering, JUnit on Testcontainers with JaCoCo floors, Vitest with coverage floors, and Playwright smoke tests with axe-core against the images.
 - **Supply chain**: every push to `main` is tested, scanned with Grype and driven in a browser before its images are published on GHCR; Dependabot and CodeQL watch the rest.
 
-[![Deliver](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/deliver.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/deliver.yml)
-[![CodeQL](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/codeql.yml/badge.svg)](https://github.com/ThomasHtn/valorant-tracker/actions/workflows/codeql.yml)
+[![Deliver](https://github.com/ThomasHtn/valoquests/actions/workflows/deliver.yml/badge.svg)](https://github.com/ThomasHtn/valoquests/actions/workflows/deliver.yml)
+[![CodeQL](https://github.com/ThomasHtn/valoquests/actions/workflows/codeql.yml/badge.svg)](https://github.com/ThomasHtn/valoquests/actions/workflows/codeql.yml)
 
 </details>
 
