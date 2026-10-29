@@ -3,7 +3,6 @@ package io.github.thomashtn.valoquests.shared.config;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.servlet.DispatcherType;
 import java.time.Clock;
-import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,13 +10,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Configures stateless HTTP security and CORS rules for the application.
+ * Configures stateless HTTP security; nginx serves the app and the API from one origin, so no CORS.
  *
  * <p>Every {@code GET /api/**} is public, anything else is denied; API docs are off by default. Admin
  * routes are authenticated by {@link AdminApiKeyFilter} and authorized here on the shared path pattern.
@@ -54,9 +50,6 @@ public class SecurityConfig {
     ) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(
-                corsConfigurationSource(properties.frontendOrigin())
-            ))
             .sessionManagement(session -> session.sessionCreationPolicy(
                 SessionCreationPolicy.STATELESS
             ))
@@ -68,7 +61,12 @@ public class SecurityConfig {
                     // Must stay ahead of the public GET rule, which would open admin reads.
                     .requestMatchers(AdminApiKeyFilter.ADMIN_PATH_PATTERN)
                     .hasAuthority(AdminApiKeyFilter.ADMIN_ROLE)
-                    .requestMatchers("/actuator/health", "/actuator/info").permitAll();
+                    // Open to probes: /livez and /readyz only tell up or down; the actuator lives on the
+                    // management port, which no proxy routes.
+                    .requestMatchers(
+                        "/livez", "/readyz",
+                        "/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus"
+                    ).permitAll();
 
                 // Same flag as springdoc, so no standing exception remains when the docs are off.
                 if (properties.apiDocsEnabled()) {
@@ -95,29 +93,5 @@ public class SecurityConfig {
             );
 
         return http.build();
-    }
-
-    /**
-     * Creates the CORS configuration used by the Angular frontend.
-     *
-     * <p>Credentials are deliberately not allowed: the key travels in a header and the API sets no cookie.
-     *
-     * @param frontendOrigin allowed frontend origin
-     * @return a URL-based CORS configuration source
-     */
-    private CorsConfigurationSource corsConfigurationSource(String frontendOrigin) {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(frontendOrigin));
-        configuration.setAllowedMethods(
-            List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        );
-        configuration.setAllowedHeaders(
-            List.of("Content-Type", "Authorization", AdminApiKeyFilter.HEADER_NAME)
-        );
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
     }
 }
