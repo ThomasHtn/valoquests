@@ -53,8 +53,7 @@ $breakpoints: (
  */
 @mixin truncate {
   /* Clip only inline so tall display fonts (Oswald) keep their descenders. */
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: clip visible;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
