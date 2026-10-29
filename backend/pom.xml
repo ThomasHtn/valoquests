@@ -17,7 +17,7 @@
   <!-- Project coordinates. -->
   <groupId>io.github.thomashtn</groupId>
   <artifactId>valo-quests</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <name>ValoQuests</name>
 
