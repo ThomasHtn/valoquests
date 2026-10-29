@@ -29,6 +29,16 @@
   }
 }
 
+/* The rest of the page swaps at once: the browser would otherwise cross-fade it whole, sidebar included. */
+::view-transition-old(root) {
+  display: none;
+}
+
+/* Shown as is, under the animated column. */
+::view-transition-new(root) {
+  animation: none;
+}
+
 /* Media query, not `motion-safe:`: no class reaches view-transition pseudo-elements. */
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(page-body) {

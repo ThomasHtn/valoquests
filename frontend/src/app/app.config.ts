@@ -17,6 +17,7 @@ import { adminKeyInterceptor } from '@core/admin/session/admin-key.interceptor';
 import { TranslatedTitleStrategy } from '@core/i18n/title-strategy/translated-title-strategy';
 import { Translation } from '@core/i18n/translation';
 import { reloadOnStaleChunk } from '@core/navigation/navigation-stale-chunk.utils';
+import { skipSamePageTransition } from '@core/navigation/navigation-view-transition.utils';
 
 import { routes } from './app.routes';
 
@@ -30,7 +31,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
-      withViewTransitions({ skipInitialTransition: true }),
+      withViewTransitions({
+        skipInitialTransition: true,
+        // A tab or a filter keeps the page: only a change of page fades the column.
+        onViewTransitionCreated: skipSamePageTransition,
+      }),
       // A tab opened before a deploy asks for chunks that no longer exist.
       withNavigationErrorHandler(reloadOnStaleChunk),
     ),
