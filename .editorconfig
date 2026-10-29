@@ -18,3 +18,6 @@ quote_type = single
 [*.md]
 max_line_length = off
 trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab

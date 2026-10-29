@@ -8,3 +8,7 @@ __screenshots__/
 # Dependencies
 /node_modules
 npm-debug.log
+
+# Browser tests
+/test-results/
+/playwright-report/
