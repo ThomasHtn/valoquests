@@ -7,29 +7,36 @@ described in [`docs/GAMEPLAY.md`](../docs/GAMEPLAY.md), and exposes the result t
 |           |                                                                                      |
 | --------- | ------------------------------------------------------------------------------------ |
 | Language  | Java 25                                                                              |
-| Framework | Spring Boot 4.0.6 (Web, Security, WebClient, Data JPA, Validation, Flyway, Actuator) |
+| Framework | Spring Boot 4.1.2 (Web, Security, WebClient, Data JPA, Validation, Flyway, Actuator) |
 | Database  | PostgreSQL 17, schema owned by Flyway                                                |
 | API docs  | springdoc OpenAPI, Swagger UI at `/swagger-ui.html`                                  |
 | Tests     | JUnit 5, AssertJ, Mockito, Testcontainers, MockWebServer, ArchUnit                   |
 | Gates     | Spotless, Checkstyle, SpotBugs, JaCoCo (90% line / 70% branch)                       |
 
-## Getting started
+## Start
 
-Requirements: JDK 25, Docker (for PostgreSQL and the integration tests), a HenrikDev API key.
+Requirements: JDK 25 and Docker (for PostgreSQL and the integration tests).
 
 ```bash
-docker compose up -d          # PostgreSQL 17 on :5432
-cp .env.example .env          # then set HENRIK_API_KEY and ADMIN_API_KEY
-./mvnw spring-boot:run        # API on :8080
+cp .env.example .env          # runs as is; set HENRIK_API_KEY to import real matches
+make -C .. db                 # PostgreSQL 17 on 127.0.0.1:5433
+./mvnw spring-boot:run        # API on :8080, actuator on :8081
 ```
 
 Flyway migrates the schema on startup. Swagger UI is available at
-`http://localhost:8080/swagger-ui.html` while `API_DOCS_ENABLED=true`.
+`http://localhost:8080/swagger-ui.html` while `API_DOCS_ENABLED=true`. To use a native PostgreSQL
+instead, point `DB_URL` in `.env` at it (`localhost:5432`).
+
+## Before committing
+
+```bash
+./mvnw spotless:apply         # imports, whitespace, final newlines
+./mvnw clean verify           # the full gate, what CI runs
+```
 
 ## Commands
 
 ```bash
-./mvnw verify                                            # the full gate, what CI runs
 ./mvnw test                                              # unit + integration tests
 ./mvnw test -Dtest=CampaignReplayEngineTest              # one class
 ./mvnw test -Dtest=CampaignReplayEngineTest#methodName   # one method
@@ -186,7 +193,7 @@ documents every knob and the reasoning behind the non-obvious ones. The ones wor
 
 | Variable                         | Why it matters                                                    |
 | -------------------------------- | ----------------------------------------------------------------- |
-| `HENRIK_API_KEY`                 | Required. Without it no match is ever imported                    |
+| `HENRIK_API_KEY`                 | Without a real one no match is ever imported                      |
 | `ADMIN_API_KEY`                  | Guards `/api/admin/**`. Use a long random secret                  |
 | `HENRIK_API_REQUESTS_PER_MINUTE` | Kept under the provider limit; a long history walk depends on it  |
 | `CALENDAR_ZONE`                  | The one zone `WeekCalendar` and every scheduled job share         |
@@ -205,14 +212,30 @@ Add new settings to `.env.example` too.
 - A service a controller calls is an interface plus a `Default*` implementation; internal
   collaborators stay plain classes. Constructor injection only.
 - Spotless keeps imports ordered and used, and whitespace clean; `./mvnw spotless:apply` fixes it.
-- Checkstyle enforces 4-space indent, no star imports, Javadoc on types and methods, bounded parameter
-  counts, no TODO comments. Comments explain intent and constraints, not mechanics.
+- Checkstyle enforces 4-space indent, no star imports, a Javadoc on every declaration (private ones and
+  fields included, test methods excepted), bounded parameter counts, no TODO comments. Comments explain intent and constraints, not mechanics.
+
+## Probes and metrics
+
+`/livez` and `/readyz` (database included) answer on the main port, for the healthcheck and the public
+uptime probe. The actuator lives on its own port, 8081, never routed: `/actuator/health`,
+`/actuator/info` (version and build time) and `/actuator/prometheus`.
 
 ## Docker
 
-`Dockerfile` builds the executable jar on `eclipse-temurin:25-jdk` and runs it on a JRE image as an
-unprivileged user. Quality gates run in CI before an image is ever built, so the build stage only
-packages the artifact.
+`Dockerfile` builds the executable jar on a pinned `eclipse-temurin:25` JDK, extracts its Spring Boot
+layers and runs them on the matching JRE as user 10001, with a `/readyz` healthcheck and a heap of 60 %
+of the container limit. Quality gates run in CI before an image is ever built, so the build stage only
+packages the artifact. [`docs/deployment.md`](../docs/deployment.md) says what a server needs.
+
+## Pitfalls
+
+- **One test class with `-Dtest` skips the `@Nested` ones**: run the whole suite.
+- **"too many clients" from PostgreSQL in the tests**: every cached Spring context keeps its pool open
+  on the shared container. Keep the pool small and reuse an existing context configuration rather than
+  adding `@TestPropertySource` variants.
+- **Strange compilation errors**: the IDE left broken classes in `target/`. Build with `clean`.
+- **A wrong day around midnight**: something read the JVM's zone instead of `WeekCalendar`.
 
 ---
 
