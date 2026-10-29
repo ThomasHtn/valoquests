@@ -24,6 +24,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DefaultMatchCorrectionServiceTest {
 
+    /**
+     * Mocked valorant match repository.
+     */
     @Mock
     private ValorantMatchRepository matchRepository;
 

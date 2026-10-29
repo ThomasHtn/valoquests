@@ -59,21 +59,39 @@ class PlayerSynchronizationServiceTest {
     private static final Instant PREVIOUS_SYNCHRONIZATION_AT =
         Instant.parse("2026-07-18T09:55:00Z");
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Mocked player account resolution service.
+     */
     @Mock
     private PlayerAccountResolutionService accountResolutionService;
 
+    /**
+     * Mocked henrik mmr client.
+     */
     @Mock
     private HenrikMmrClient mmrClient;
 
+    /**
+     * Mocked henrik mmr mapper.
+     */
     @Mock
     private HenrikMmrMapper mmrMapper;
 
+    /**
+     * Mocked season match history walker.
+     */
     @Mock
     private SeasonMatchHistoryWalker matchHistoryWalker;
 
+    /**
+     * Mocked player match repository.
+     */
     @Mock
     private PlayerMatchRepository playerMatchRepository;
 

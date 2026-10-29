@@ -64,6 +64,9 @@ public class DefaultSynchronizationQueryService implements SynchronizationQueryS
         this.playerRepository = playerRepository;
     }
 
+    /**
+     * Returns the most recent run, or a not-found error when none was recorded.
+     */
     @Override
     public SynchronizationResponse findLatest() {
         Synchronization synchronization = synchronizationRepository
@@ -103,6 +106,9 @@ public class DefaultSynchronizationQueryService implements SynchronizationQueryS
         );
     }
 
+    /**
+     * Pages the runs from the newest, each with the latest successful player synchronization.
+     */
     @Override
     public PageResponse<SynchronizationResponse> findHistory(
         int page,
@@ -127,6 +133,9 @@ public class DefaultSynchronizationQueryService implements SynchronizationQueryS
         return PageResponse.from(result, content);
     }
 
+    /**
+     * Returns one run with its per-player results ordered by player.
+     */
     @Override
     public SynchronizationDetailsResponse findById(long synchronizationId) {
         Synchronization synchronization = synchronizationRepository

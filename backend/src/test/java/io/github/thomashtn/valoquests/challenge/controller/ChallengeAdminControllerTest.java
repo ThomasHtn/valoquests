@@ -36,15 +36,27 @@ class ChallengeAdminControllerTest {
      */
     private static final String REDRAW = "/api/admin/challenges/current/redraw";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked weekly challenge draw service replacing the real bean.
+     */
     @MockitoBean
     private WeeklyChallengeDrawService weeklyDrawService;
 
+    /**
+     * Mocked challenge recalculation service replacing the real bean.
+     */
     @MockitoBean
     private ChallengeRecalculationService recalculationService;
 
+    /**
+     * Lock guarding the match history, as used by the code under test.
+     */
     @Autowired
     private MatchHistoryLock matchHistoryLock;
 

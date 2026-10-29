@@ -39,6 +39,9 @@ public class DefaultMatchCorrectionService implements MatchCorrectionService {
         this.matchRepository = matchRepository;
     }
 
+    /**
+     * Forces the game mode of a match and records the correction as manual.
+     */
     @Override
     @Transactional
     public MatchCorrectionResponse correctGameMode(Long matchId, GameMode gameMode) {

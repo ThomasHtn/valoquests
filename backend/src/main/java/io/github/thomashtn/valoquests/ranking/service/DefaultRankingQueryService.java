@@ -89,6 +89,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         this.championResolver = championResolver;
     }
 
+    /**
+     * Builds the ranking of the current week with the titles held so far.
+     */
     @Override
     public CurrentRankingResponse findCurrent() {
         LocalDate weekStart = weekCalendar.currentWeekStart();
@@ -113,6 +116,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         );
     }
 
+    /**
+     * Reads finalized weeks page by page, newest first, with their rows grouped per week.
+     */
     @Override
     public PageResponse<RankingHistoryWeekResponse> findHistory(int page, int size) {
         PaginationGuard.assertValidPageRequest(page, size);
@@ -132,6 +138,9 @@ public class DefaultRankingQueryService implements RankingQueryService {
         return PageResponse.from(weekPage, content);
     }
 
+    /**
+     * Delegates to the daily reader, defaulting to today.
+     */
     @Override
     public DailyRankingResponse findDaily(LocalDate day) {
         return dailyRankingReader.read(day == null ? weekCalendar.today() : day);

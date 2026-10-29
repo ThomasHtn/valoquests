@@ -45,12 +45,21 @@ class WeekChampionResolverTest {
      */
     private static final Player BRAVO = RankingFixtures.player(2, "Bravo", PlayerStatus.ACTIVE);
 
+    /**
+     * Mocked weekly player score repository.
+     */
     @Mock
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Resolver under test.
+     */
     private WeekChampionResolver resolver;
 
     @BeforeEach
@@ -88,6 +97,9 @@ class WeekChampionResolverTest {
         assertThat(resolver.championBefore(LAST_WEEK.plusWeeks(1))).isEqualTo(ALPHA.getId());
     }
 
+    /**
+     * Builds a row of last week at the given position.
+     */
     private static WeeklyPlayerScore row(Player player, int position) {
         WeeklyPlayerScore score = RankingFixtures.score(player, position, 1_000, 0);
         score.setWeekStart(LAST_WEEK);
@@ -95,6 +107,9 @@ class WeekChampionResolverTest {
         return score;
     }
 
+    /**
+     * Builds a running campaign whose ten weeks start on the given Monday.
+     */
     private static Campaign campaignCovering(LocalDate firstWeekStart) {
         Campaign campaign = CampaignFixtures.runningCampaign(1);
         campaign.setFirstWeekStart(firstWeekStart);

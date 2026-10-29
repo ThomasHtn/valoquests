@@ -59,24 +59,45 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final Instant CALCULATION_TIME = Instant.parse("2026-07-24T12:00:00Z");
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back challenge rows.
+     */
     @Autowired
     private ChallengeRepository challengeRepository;
 
+    /**
+     * Repository to seed and read back challenge selection rows.
+     */
     @Autowired
     private ChallengeSelectionRepository challengeSelectionRepository;
 
+    /**
+     * Repository to seed and read back player challenge progress rows.
+     */
     @Autowired
     private PlayerChallengeProgressRepository progressRepository;
 
+    /**
+     * Repository to seed and read back weekly player score rows.
+     */
     @Autowired
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Real ranking recalculation service taken from the Spring context.
+     */
     @Autowired
     private RankingRecalculationService rankingRecalculationService;
 
+    /**
+     * Flushes and clears the persistence context.
+     */
     @Autowired
     private EntityManager entityManager;
 
@@ -333,6 +354,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         flushAndClear();
     }
 
+    /**
+     * Persists an active player.
+     */
     private Player createPlayer(String riotPuuid, String displayName) {
         Player player = new Player();
         player.setRiotPuuid(riotPuuid);
@@ -345,6 +369,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return playerRepository.save(player);
     }
 
+    /**
+     * Persists an inactive player, who is not ranked.
+     */
     private Player createNonCompetitivePlayer(String riotPuuid, String displayName) {
         Player player = createPlayer(riotPuuid, displayName);
         player.setStatus(PlayerStatus.INACTIVE);
@@ -352,6 +379,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return playerRepository.save(player);
     }
 
+    /**
+     * Persists a weekly challenge of the given tier and selects it for the week.
+     */
     private ChallengeSelection createSelection(String code, ChallengeTier tier) {
         Challenge challenge = challengeRepository.save(createChallenge(code, ChallengeCadence.WEEKLY, tier));
 
@@ -364,6 +394,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return challengeSelectionRepository.save(selection);
     }
 
+    /**
+     * Persists a daily challenge and selects it for the given day.
+     */
     private ChallengeSelection createDailyChallenge(String code, LocalDate day) {
         Challenge challenge = challengeRepository.save(createChallenge(code, ChallengeCadence.DAILY, null));
 
@@ -378,6 +411,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return challengeSelectionRepository.save(selection);
     }
 
+    /**
+     * Persists a challenge with a single trivial condition.
+     */
     private Challenge createChallenge(String code, ChallengeCadence cadence, ChallengeTier tier) {
         Challenge challenge = new Challenge();
         challenge.setCode(code);
@@ -406,6 +442,9 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return challenge;
     }
 
+    /**
+     * Persists the progress of a player on a selection, completed or not.
+     */
     private PlayerChallengeProgress createProgress(Player player, ChallengeSelection selection, boolean completed) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);
@@ -419,12 +458,18 @@ class RankingIntegrationTest extends PostgreSqlIntegrationTest {
         return progressRepository.save(progress);
     }
 
+    /**
+     * Reads the stored weekly scores from a clean persistence context.
+     */
     private List<WeeklyPlayerScore> loadScores() {
         flushAndClear();
 
         return scoreRepository.findAllByWeekStartOrderByPositionAscPlayerIdAsc(WEEK_START);
     }
 
+    /**
+     * Forces pending writes to the database and drops cached entities.
+     */
     private void flushAndClear() {
         entityManager.flush();
         entityManager.clear();

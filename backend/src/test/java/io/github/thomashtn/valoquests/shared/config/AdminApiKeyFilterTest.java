@@ -17,9 +17,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class AdminApiKeyFilterTest {
 
+    /**
+     * Admin endpoint the requests are sent to.
+     */
     private static final String SYNCHRONIZATION_ENDPOINT =
         "/api/admin/players/1/synchronizations";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 

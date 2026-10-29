@@ -26,12 +26,21 @@ class CampaignRosterMembershipTest {
      */
     private static final long PLAYER_ID = 7L;
 
+    /**
+     * Mocked campaign player repository.
+     */
     @Mock
     private CampaignPlayerRepository campaignPlayerRepository;
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Instance under test, built with the mocks above.
+     */
     @InjectMocks
     private CampaignRosterMembership membership;
 

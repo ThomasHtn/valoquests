@@ -313,6 +313,9 @@ class DailyOutputReaderTest {
         assertThat(reader.dailyYield(1L, MONDAY)).isEqualTo(new DailyYield(12, 25, null, null));
     }
 
+    /**
+     * Returns the stored matches started inside the window, in chronological order.
+     */
     private List<PlayerMatch> stored(Instant from, Instant to) {
         return storedMatches.stream()
             .filter(match -> !match.getMatch().getStartedAt().isBefore(from)
@@ -323,10 +326,16 @@ class DailyOutputReaderTest {
             .toList();
     }
 
+    /**
+     * Returns the statuses of the players taken into account.
+     */
     private static Set<PlayerStatus> everyone() {
         return Set.of(PlayerStatus.ACTIVE, PlayerStatus.INACTIVE);
     }
 
+    /**
+     * Builds a player with the given identifier and status.
+     */
     private static Player player(long id, PlayerStatus status) {
         Player player = new Player();
         player.setId(id);
@@ -335,15 +344,24 @@ class DailyOutputReaderTest {
         return player;
     }
 
+    /**
+     * Stores the matches as played by the player.
+     */
     private void givenMatches(Player player, List<PlayerMatch> matches) {
         matches.forEach(match -> match.setPlayer(player));
         storedMatches.addAll(matches);
     }
 
+    /**
+     * Builds competitive wins on one day.
+     */
     private List<PlayerMatch> competitiveWins(LocalDate day, int count) {
         return matches(day, count, GameMode.COMPETITIVE, 18);
     }
 
+    /**
+     * Builds deathmatch wins on one day.
+     */
     private List<PlayerMatch> deathmatchWins(LocalDate day, int count) {
         return matches(day, count, GameMode.DEATHMATCH, 12);
     }

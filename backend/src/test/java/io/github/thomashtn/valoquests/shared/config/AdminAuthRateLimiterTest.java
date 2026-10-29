@@ -174,6 +174,9 @@ class AdminAuthRateLimiterTest {
          */
         private Instant instant;
 
+        /**
+         * Starts the clock at the given instant.
+         */
         MutableClock(Instant instant) {
             this.instant = instant;
         }
@@ -187,16 +190,25 @@ class AdminAuthRateLimiterTest {
             instant = instant.plus(duration);
         }
 
+        /**
+         * Always reports UTC.
+         */
         @Override
         public ZoneId getZone() {
             return ZoneOffset.UTC;
         }
 
+        /**
+         * Unsupported, the tests never change the zone.
+         */
         @Override
         public Clock withZone(ZoneId zone) {
             throw new UnsupportedOperationException("not needed by these tests");
         }
 
+        /**
+         * Returns the instant set by the tests.
+         */
         @Override
         public Instant instant() {
             return instant;

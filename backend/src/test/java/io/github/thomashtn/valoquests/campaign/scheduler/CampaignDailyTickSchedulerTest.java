@@ -20,6 +20,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CampaignDailyTickSchedulerTest {
 
+    /**
+     * Mocked daily tick service.
+     */
     @Mock
     private DailyTickService dailyTickService;
 

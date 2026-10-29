@@ -35,18 +35,33 @@ class DefaultDailyTickServiceTest {
      */
     private static final LocalDate TICK_DAY = LocalDate.of(2026, 9, 7);
 
+    /**
+     * Mocked daily challenge draw service.
+     */
     @Mock
     private DailyChallengeDrawService dailyDrawService;
 
+    /**
+     * Mocked challenge recalculation service.
+     */
     @Mock
     private ChallengeRecalculationService recalculationService;
 
+    /**
+     * Mocked campaign lifecycle service.
+     */
     @Mock
     private CampaignLifecycleService lifecycleService;
 
+    /**
+     * Mocked campaign replay service.
+     */
     @Mock
     private CampaignReplayService replayService;
 
+    /**
+     * Service under test.
+     */
     private DailyTickService dailyTickService;
 
     @BeforeEach

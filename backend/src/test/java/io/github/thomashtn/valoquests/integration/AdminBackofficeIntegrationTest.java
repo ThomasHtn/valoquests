@@ -77,54 +77,105 @@ class AdminBackofficeIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final Instant MATCH_TIME = Instant.parse("2026-07-15T20:00:00Z");
 
+    /**
+     * Real campaign reset service taken from the Spring context.
+     */
     @Autowired
     private CampaignResetService campaignResetService;
 
+    /**
+     * Real player query service taken from the Spring context.
+     */
     @Autowired
     private PlayerQueryService playerQueryService;
 
+    /**
+     * Real player admin service taken from the Spring context.
+     */
     @Autowired
     private PlayerAdminService playerAdminService;
 
+    /**
+     * Repository to seed and read back player season synchronization rows.
+     */
     @Autowired
     private PlayerSeasonSynchronizationRepository seasonSynchronizationRepository;
 
+    /**
+     * Flushes and clears the persistence context.
+     */
     @Autowired
     private EntityManager entityManager;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back season rows.
+     */
     @Autowired
     private SeasonRepository seasonRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Repository to seed and read back player match rows.
+     */
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Repository to seed and read back challenge rows.
+     */
     @Autowired
     private ChallengeRepository challengeRepository;
 
+    /**
+     * Repository to seed and read back challenge selection rows.
+     */
     @Autowired
     private ChallengeSelectionRepository challengeSelectionRepository;
 
+    /**
+     * Repository to seed and read back player challenge progress rows.
+     */
     @Autowired
     private PlayerChallengeProgressRepository progressRepository;
 
+    /**
+     * Repository to seed and read back weekly player score rows.
+     */
     @Autowired
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Repository to seed and read back guardian rows.
+     */
     @Autowired
     private GuardianRepository guardianRepository;
 
+    /**
+     * Repository to seed and read back campaign week rows.
+     */
     @Autowired
     private CampaignWeekRepository campaignWeekRepository;
 
+    /**
+     * Repository to seed and read back campaign rows.
+     */
     @Autowired
     private CampaignRepository campaignRepository;
 
+    /**
+     * Repository to seed and read back campaign player rows.
+     */
     @Autowired
     private CampaignPlayerRepository campaignPlayerRepository;
 

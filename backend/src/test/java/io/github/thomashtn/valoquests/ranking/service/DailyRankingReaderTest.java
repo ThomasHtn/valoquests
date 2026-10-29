@@ -50,12 +50,21 @@ class DailyRankingReaderTest {
      */
     private static final Player CHARLIE = RankingFixtures.player(3, "Charlie", PlayerStatus.INACTIVE);
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Mocked daily output reader.
+     */
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    /**
+     * Reader under test.
+     */
     private DailyRankingReader reader;
 
     @BeforeEach

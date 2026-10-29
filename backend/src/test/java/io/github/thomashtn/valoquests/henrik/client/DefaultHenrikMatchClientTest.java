@@ -313,6 +313,9 @@ class DefaultHenrikMatchClientTest {
         );
     }
 
+    /**
+     * Builds a JSON response with the given status.
+     */
     private MockResponse jsonResponse(int status, String body) {
         return new MockResponse()
             .setResponseCode(status)
@@ -320,6 +323,9 @@ class DefaultHenrikMatchClientTest {
             .setBody(body);
     }
 
+    /**
+     * Builds a 429 response that tells the client to retry after one second.
+     */
     private MockResponse rateLimitResponse() {
         return new MockResponse()
             .setResponseCode(429)

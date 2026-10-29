@@ -18,7 +18,13 @@ public enum GameMode {
      * Ranked queue, the reference mode of the game.
      */
     COMPETITIVE(true, true, "competitive"),
+    /**
+     * Casual queue played with the ranked ruleset.
+     */
     UNRATED(true, true, "unrated"),
+    /**
+     * Shortened round-based queue.
+     */
     SWIFTPLAY(true, true, "swiftplay"),
 
     /**
@@ -30,8 +36,17 @@ public enum GameMode {
      * Short round-based mode.
      */
     SPIKE_RUSH(true, true, "spikerush"),
+    /**
+     * Free-for-all mode without rounds.
+     */
     DEATHMATCH(false, true, "deathmatch"),
+    /**
+     * Team-based mode without rounds.
+     */
     TEAM_DEATHMATCH(false, true, "teamdeathmatch", "hurm"),
+    /**
+     * Weapon-progression mode without rounds.
+     */
     ESCALATION(false, true, "escalation", "ggteam"),
 
     /**
@@ -89,6 +104,9 @@ public enum GameMode {
      */
     private final Set<String> aliases;
 
+    /**
+     * Builds a mode from its round-based flag, its import eligibility and the Henrik identifiers it answers to.
+     */
     GameMode(boolean roundBased, boolean importEligible, String... aliases) {
         this.roundBased = roundBased;
         this.importEligible = importEligible;

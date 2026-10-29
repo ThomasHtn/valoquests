@@ -50,18 +50,33 @@ class CampaignReplayServiceTest {
      */
     private static final CampaignReplayResult NO_RESULT = new CampaignReplayResult(List.of(), List.of());
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Mocked campaign week repository.
+     */
     @Mock
     private CampaignWeekRepository weekRepository;
 
+    /**
+     * Mocked campaign replay input assembler.
+     */
     @Mock
     private CampaignReplayInputAssembler assembler;
 
+    /**
+     * Mocked campaign replay engine.
+     */
     @Mock
     private CampaignReplayEngine engine;
 
+    /**
+     * Mocked campaign replay writer.
+     */
     @Mock
     private CampaignReplayWriter writer;
 

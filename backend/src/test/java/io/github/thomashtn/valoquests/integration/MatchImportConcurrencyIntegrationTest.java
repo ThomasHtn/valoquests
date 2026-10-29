@@ -48,15 +48,27 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final String SEASON_ID = "concurrency-season";
 
+    /**
+     * Real match import service taken from the Spring context.
+     */
     @Autowired
     private MatchImportService matchImportService;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Repository to seed and read back player match rows.
+     */
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
@@ -163,6 +175,9 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
         }
     }
 
+    /**
+     * Waits for the other thread at the barrier, then runs the task so both race together.
+     */
     private Object awaitAndRun(CyclicBarrier barrier, Callable<?> task) {
         try {
             barrier.await(10, TimeUnit.SECONDS);
@@ -211,6 +226,9 @@ class MatchImportConcurrencyIntegrationTest extends PostgreSqlIntegrationTest {
         );
     }
 
+    /**
+     * Builds a Henrik player entry for a tracked player on the given team.
+     */
     private HenrikMatchPlayer henrikPlayer(Player player, String teamId) {
         return new HenrikMatchPlayer(
             player.getRiotPuuid(),

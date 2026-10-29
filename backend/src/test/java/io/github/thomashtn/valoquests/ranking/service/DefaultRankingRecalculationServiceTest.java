@@ -59,18 +59,33 @@ class DefaultRankingRecalculationServiceTest {
      */
     private static final Player CHARLIE = RankingFixtures.player(3, "Charlie", PlayerStatus.INACTIVE);
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Mocked weekly player score repository.
+     */
     @Mock
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Mocked daily output reader.
+     */
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    /**
+     * Mocked challenge points reader.
+     */
     @Mock
     private ChallengePointsReader challengePointsReader;
 
+    /**
+     * Service under test.
+     */
     private DefaultRankingRecalculationService service;
 
     @BeforeEach
@@ -251,14 +266,23 @@ class DefaultRankingRecalculationServiceTest {
         verify(scoreRepository).deleteAllByWeekStartAndPlayerIdNotIn(WEEK_START, List.of(ALPHA.getId()));
     }
 
+    /**
+     * Stubs the tracked, non-archived players.
+     */
     private void givenRoster(Player... players) {
         when(playerRepository.findAllByStatusNotOrderByIdAsc(PlayerStatus.ARCHIVED)).thenReturn(List.of(players));
     }
 
+    /**
+     * Stubs the daily output read for the whole week.
+     */
     private void givenOutput(DailyOutput output) {
         when(dailyOutputReader.read(any(), eq(WEEK_START), eq(WEEK_START.plusDays(6)))).thenReturn(output);
     }
 
+    /**
+     * Recalculates the week and returns the rows that were saved.
+     */
     @SuppressWarnings("unchecked")
     private List<WeeklyPlayerScore> recalculate() {
         service.recalculateWeek(WEEK_START);

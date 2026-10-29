@@ -156,6 +156,9 @@ class DefaultScoringRulesetTest {
             .isEqualTo(39);
     }
 
+    /**
+     * Returns the reward at a reference of 10,000, which exposes the challenge weight times ten.
+     */
     private int tenTimesWeightOf(ChallengeCadence cadence, ChallengeTier tier) {
         return ruleset.challengeReward(
             cadence,
@@ -164,10 +167,16 @@ class DefaultScoringRulesetTest {
         );
     }
 
+    /**
+     * Returns the survivors rewarded in the first week.
+     */
     private int survivorsOf(ChallengeCadence cadence, ChallengeTier tier) {
         return ruleset.challengeReward(cadence, tier, calibrationAtWeek(1));
     }
 
+    /**
+     * Builds a calibration at the given week with the documented reference.
+     */
     private static ChallengeCalibration calibrationAtWeek(int weekIndex) {
         return new ChallengeCalibration(DOCUMENT_REFERENCE, weekIndex, CampaignDifficulty.AMATEUR);
     }

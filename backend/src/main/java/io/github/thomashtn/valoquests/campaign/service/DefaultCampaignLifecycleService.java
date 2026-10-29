@@ -226,6 +226,9 @@ public class DefaultCampaignLifecycleService implements CampaignLifecycleService
         return campaign;
     }
 
+    /**
+     * Deletes the campaign; the database cascade removes its weeks, roster and snapshots.
+     */
     @Override
     @Transactional
     public void delete(long id) {

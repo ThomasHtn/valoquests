@@ -22,9 +22,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class SynchronizationControllerTest {
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked synchronization query service replacing the real bean.
+     */
     @MockitoBean
     private SynchronizationQueryService synchronizationQueryService;
 

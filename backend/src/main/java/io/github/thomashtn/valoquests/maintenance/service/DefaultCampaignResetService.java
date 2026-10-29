@@ -74,6 +74,9 @@ public class DefaultCampaignResetService implements CampaignResetService {
         this.entityManager = entityManager;
     }
 
+    /**
+     * Truncates every derived table and clears the player watermarks in one transaction.
+     */
     @Override
     @Transactional
     public void resetCampaign() {

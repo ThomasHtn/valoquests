@@ -58,19 +58,37 @@ class CampaignReplayInputAssemblerTest {
      */
     private static final LocalDate SUNDAY = MONDAY.plusDays(6);
 
+    /**
+     * Mocked daily output reader.
+     */
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    /**
+     * Mocked campaign challenge reader.
+     */
     @Mock
     private CampaignChallengeReader challengeReader;
 
+    /**
+     * Mocked campaign player repository.
+     */
     @Mock
     private CampaignPlayerRepository campaignPlayerRepository;
 
+    /**
+     * Assembler under test.
+     */
     private CampaignReplayInputAssembler assembler;
 
+    /**
+     * Campaign whose replay input is assembled.
+     */
     private Campaign campaign;
 
+    /**
+     * Weeks returned for the campaign.
+     */
     private List<CampaignWeek> weeks;
 
     @BeforeEach

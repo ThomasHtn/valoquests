@@ -48,20 +48,38 @@ class DefaultCampaignQueryServiceTest {
      */
     private static final LocalDate TODAY = CampaignFixtures.FIRST_WEEK_START.plusDays(9);
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Mocked campaign week repository.
+     */
     @Mock
     private CampaignWeekRepository weekRepository;
 
+    /**
+     * Mocked campaign daily snapshot repository.
+     */
     @Mock
     private CampaignDailySnapshotRepository snapshotRepository;
 
+    /**
+     * Mocked campaign day reader.
+     */
     @Mock
     private CampaignDayReader dayReader;
 
+    /**
+     * Service under test.
+     */
     private DefaultCampaignQueryService service;
 
+    /**
+     * Campaign returned by the repository.
+     */
     private Campaign campaign;
 
     @BeforeEach

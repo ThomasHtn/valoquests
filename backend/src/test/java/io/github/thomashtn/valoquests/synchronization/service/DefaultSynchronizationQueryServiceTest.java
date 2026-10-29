@@ -36,27 +36,51 @@ import org.springframework.data.domain.Pageable;
 @ExtendWith(MockitoExtension.class)
 class DefaultSynchronizationQueryServiceTest {
 
+    /**
+     * Instant the run starts at.
+     */
     private static final Instant STARTED_AT =
         Instant.parse("2026-07-20T08:00:00Z");
 
+    /**
+     * Instant the run ends at.
+     */
     private static final Instant FINISHED_AT =
         Instant.parse("2026-07-20T08:00:05Z");
 
+    /**
+     * Instant of the last import.
+     */
     private static final Instant LAST_IMPORT_AT =
         Instant.parse("2026-07-20T07:30:05Z");
 
+    /**
+     * Instant of the last successful player synchronization.
+     */
     private static final Instant LAST_SUCCESSFUL_AT =
         Instant.parse("2026-07-20T08:00:04Z");
 
+    /**
+     * Mocked synchronization repository.
+     */
     @Mock
     private SynchronizationRepository synchronizationRepository;
 
+    /**
+     * Mocked synchronization player result repository.
+     */
     @Mock
     private SynchronizationPlayerResultRepository playerResultRepository;
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Service under test.
+     */
     private SynchronizationQueryService service;
 
     /**

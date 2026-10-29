@@ -34,12 +34,21 @@ class RankingAdminControllerTest {
      */
     private static final String RECALCULATION = "/api/admin/rankings/recalculation";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked ranking recalculation service replacing the real bean.
+     */
     @MockitoBean
     private RankingRecalculationService rankingRecalculationService;
 
+    /**
+     * Lock guarding the match history, as used by the code under test.
+     */
     @Autowired
     private MatchHistoryLock matchHistoryLock;
 

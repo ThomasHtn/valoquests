@@ -39,15 +39,27 @@ class MissedScheduleCatchUpTest {
      */
     private static final LocalDate MONDAY = LocalDate.of(2026, 9, 21);
 
+    /**
+     * Mocked weekly rollover scheduler.
+     */
     @Mock
     private WeeklyRolloverScheduler rolloverScheduler;
 
+    /**
+     * Mocked campaign daily tick scheduler.
+     */
     @Mock
     private CampaignDailyTickScheduler tickScheduler;
 
+    /**
+     * Mocked challenge selection repository.
+     */
     @Mock
     private ChallengeSelectionRepository challengeSelectionRepository;
 
+    /**
+     * Mocked task scheduler.
+     */
     @Mock
     private TaskScheduler taskScheduler;
 

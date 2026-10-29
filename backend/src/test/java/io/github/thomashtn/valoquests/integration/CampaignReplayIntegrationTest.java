@@ -74,41 +74,80 @@ class CampaignReplayIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final int REFERENCE = CampaignDifficulty.AMATEUR.reference();
 
+    /**
+     * Real campaign replay service taken from the Spring context.
+     */
     @Autowired
     private CampaignReplayService replayService;
 
+    /**
+     * Repository to seed and read back campaign rows.
+     */
     @Autowired
     private CampaignRepository campaignRepository;
 
+    /**
+     * Repository to seed and read back campaign player rows.
+     */
     @Autowired
     private CampaignPlayerRepository campaignPlayerRepository;
 
+    /**
+     * Repository to seed and read back campaign week rows.
+     */
     @Autowired
     private CampaignWeekRepository campaignWeekRepository;
 
+    /**
+     * Repository to seed and read back campaign daily snapshot rows.
+     */
     @Autowired
     private CampaignDailySnapshotRepository snapshotRepository;
 
+    /**
+     * Repository to seed and read back campaign player day rows.
+     */
     @Autowired
     private CampaignPlayerDayRepository playerDayRepository;
 
+    /**
+     * Repository to seed and read back guardian rows.
+     */
     @Autowired
     private GuardianRepository guardianRepository;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back season rows.
+     */
     @Autowired
     private SeasonRepository seasonRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Repository to seed and read back player match rows.
+     */
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Campaign replayed by the scenarios.
+     */
     private Campaign campaign;
 
+    /**
+     * Player enrolled in the campaign roster.
+     */
     private Player rosterPlayer;
 
     @BeforeEach

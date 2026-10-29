@@ -23,9 +23,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CampaignChallengeCalibrationSourceTest {
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Source under test.
+     */
     private CampaignChallengeCalibrationSource source;
 
     @BeforeEach

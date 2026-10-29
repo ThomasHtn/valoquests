@@ -84,24 +84,45 @@ class SeasonRolloverSynchronizationIntegrationTest extends PostgreSqlIntegration
      */
     private static final String OUT_OF_SCOPE_SEASON = "season-rollover-oldest";
 
+    /**
+     * Real synchronization command service taken from the Spring context.
+     */
     @Autowired
     private SynchronizationCommandService synchronizationCommandService;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Runs raw SQL against the test database.
+     */
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * Mocked henrik account client replacing the real bean.
+     */
     @MockitoBean
     private HenrikAccountClient accountClient;
 
+    /**
+     * Mocked henrik mmr client replacing the real bean.
+     */
     @MockitoBean
     private HenrikMmrClient mmrClient;
 
+    /**
+     * Mocked henrik match client replacing the real bean.
+     */
     @MockitoBean
     private HenrikMatchClient matchClient;
 

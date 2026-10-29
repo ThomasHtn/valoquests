@@ -17,6 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SynchronizationHistoryPurgeSchedulerTest {
 
+    /**
+     * Mocked synchronization history purger.
+     */
     @Mock
     private SynchronizationHistoryPurger historyPurger;
 

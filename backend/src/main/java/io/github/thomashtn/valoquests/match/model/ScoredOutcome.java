@@ -8,7 +8,16 @@ package io.github.thomashtn.valoquests.match.model;
  * {@link GameMode#DEATHMATCH}, which has no reliable team result, scores a win at 40 kills.
  */
 public enum ScoredOutcome {
+    /**
+     * The match scores as a win.
+     */
     WIN,
+    /**
+     * The match scores as a loss.
+     */
     LOSS,
+    /**
+     * The match scores as a draw.
+     */
     DRAW
 }

@@ -44,18 +44,33 @@ class SynchronizationHistoryIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
+    /**
+     * Real synchronization history purger taken from the Spring context.
+     */
     @Autowired
     private SynchronizationHistoryPurger historyPurger;
 
+    /**
+     * Repository to seed and read back synchronization rows.
+     */
     @Autowired
     private SynchronizationRepository synchronizationRepository;
 
+    /**
+     * Repository to seed and read back synchronization player result rows.
+     */
     @Autowired
     private SynchronizationPlayerResultRepository playerResultRepository;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Flushes and clears the persistence context.
+     */
     @Autowired
     private EntityManager entityManager;
 

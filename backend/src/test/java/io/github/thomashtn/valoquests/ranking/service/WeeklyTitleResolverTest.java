@@ -42,6 +42,9 @@ class WeeklyTitleResolverTest {
      */
     private static final Player ECHO = RankingFixtures.player(5, "Echo", PlayerStatus.ACTIVE);
 
+    /**
+     * Resolver under test.
+     */
     private final WeeklyTitleResolver resolver = new WeeklyTitleResolver();
 
     @Test
@@ -126,6 +129,9 @@ class WeeklyTitleResolverTest {
         assertThat(titles).containsExactly(Map.entry(WeeklyTitle.SCOUT, ALPHA.getId()));
     }
 
+    /**
+     * Builds a weekly row with the given position and activity figures.
+     */
     private static WeeklyPlayerScore row(
         Player player,
         Integer position,

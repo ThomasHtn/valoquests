@@ -77,21 +77,39 @@ class DefaultMatchQueryServiceTest {
      */
     private static final LocalDate FIXTURE_WEEK_START = LocalDate.of(2026, 7, 13);
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Mocked player match repository.
+     */
     @Mock
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Mocked week calendar.
+     */
     @Mock
     private WeekCalendar weekCalendar;
 
+    /**
+     * Mocked daily output reader.
+     */
     @Mock
     private DailyOutputReader dailyOutputReader;
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Service under test.
+     */
     private DefaultMatchQueryService service;
 
     @BeforeEach
@@ -539,6 +557,9 @@ class DefaultMatchQueryServiceTest {
         when(weekCalendar.today()).thenReturn(FIXTURE_WEEK_START);
     }
 
+    /**
+     * Builds a player match with the given kills, deaths, assists and shot placement.
+     */
     private PlayerMatch match(
         int kills,
         int deaths,
@@ -573,6 +594,9 @@ class DefaultMatchQueryServiceTest {
         return playerMatch;
     }
 
+    /**
+     * Builds the tracked player.
+     */
     private Player player() {
         Player player = new Player();
         player.setId(PLAYER_ID);

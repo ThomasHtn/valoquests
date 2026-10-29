@@ -29,9 +29,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class SquadMatchControllerTest {
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked match query service replacing the real bean.
+     */
     @MockitoBean
     private MatchQueryService queryService;
 

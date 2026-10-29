@@ -30,9 +30,15 @@ class CampaignControllerTest {
      */
     private static final LocalDate TODAY = LocalDate.of(2026, 9, 16);
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked campaign query service replacing the real bean.
+     */
     @MockitoBean
     private CampaignQueryService queryService;
 

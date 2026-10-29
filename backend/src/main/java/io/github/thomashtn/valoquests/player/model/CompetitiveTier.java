@@ -8,31 +8,109 @@ import java.util.Locale;
  * <p>Declared from the lowest to the highest rank: comparisons rely on that order.
  */
 public enum CompetitiveTier {
+    /**
+     * No competitive rank yet.
+     */
     UNRANKED,
+    /**
+     * Lowest division of the Iron rank.
+     */
     IRON_1,
+    /**
+     * Middle division of the Iron rank.
+     */
     IRON_2,
+    /**
+     * Highest division of the Iron rank.
+     */
     IRON_3,
+    /**
+     * Lowest division of the Bronze rank.
+     */
     BRONZE_1,
+    /**
+     * Middle division of the Bronze rank.
+     */
     BRONZE_2,
+    /**
+     * Highest division of the Bronze rank.
+     */
     BRONZE_3,
+    /**
+     * Lowest division of the Silver rank.
+     */
     SILVER_1,
+    /**
+     * Middle division of the Silver rank.
+     */
     SILVER_2,
+    /**
+     * Highest division of the Silver rank.
+     */
     SILVER_3,
+    /**
+     * Lowest division of the Gold rank.
+     */
     GOLD_1,
+    /**
+     * Middle division of the Gold rank.
+     */
     GOLD_2,
+    /**
+     * Highest division of the Gold rank.
+     */
     GOLD_3,
+    /**
+     * Lowest division of the Platinum rank.
+     */
     PLATINUM_1,
+    /**
+     * Middle division of the Platinum rank.
+     */
     PLATINUM_2,
+    /**
+     * Highest division of the Platinum rank.
+     */
     PLATINUM_3,
+    /**
+     * Lowest division of the Diamond rank.
+     */
     DIAMOND_1,
+    /**
+     * Middle division of the Diamond rank.
+     */
     DIAMOND_2,
+    /**
+     * Highest division of the Diamond rank.
+     */
     DIAMOND_3,
+    /**
+     * Lowest division of the Ascendant rank.
+     */
     ASCENDANT_1,
+    /**
+     * Middle division of the Ascendant rank.
+     */
     ASCENDANT_2,
+    /**
+     * Highest division of the Ascendant rank.
+     */
     ASCENDANT_3,
+    /**
+     * Lowest division of the Immortal rank.
+     */
     IMMORTAL_1,
+    /**
+     * Middle division of the Immortal rank.
+     */
     IMMORTAL_2,
+    /**
+     * Highest division of the Immortal rank.
+     */
     IMMORTAL_3,
+    /**
+     * Highest rank of the game.
+     */
     RADIANT;
 
     /**

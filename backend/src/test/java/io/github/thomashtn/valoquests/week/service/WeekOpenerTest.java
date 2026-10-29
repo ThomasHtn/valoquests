@@ -28,24 +28,45 @@ class WeekOpenerTest {
      */
     private static final LocalDate WEEK_START = LocalDate.of(2026, 9, 7);
 
+    /**
+     * Mocked campaign lifecycle service.
+     */
     @Mock
     private CampaignLifecycleService lifecycleService;
 
+    /**
+     * Mocked campaign replay service.
+     */
     @Mock
     private CampaignReplayService replayService;
 
+    /**
+     * Mocked weekly challenge draw service.
+     */
     @Mock
     private WeeklyChallengeDrawService weeklyDrawService;
 
+    /**
+     * Mocked daily challenge draw service.
+     */
     @Mock
     private DailyChallengeDrawService dailyDrawService;
 
+    /**
+     * Mocked challenge recalculation service.
+     */
     @Mock
     private ChallengeRecalculationService challengeRecalculationService;
 
+    /**
+     * Mocked ranking recalculation service.
+     */
     @Mock
     private RankingRecalculationService rankingRecalculationService;
 
+    /**
+     * Opener under test.
+     */
     private WeekOpener opener;
 
     @BeforeEach

@@ -36,15 +36,27 @@ class CampaignAdminControllerTest {
      */
     private static final String ADMIN_KEY = "test-admin-key-0123456789abcdef0";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked campaign lifecycle service replacing the real bean.
+     */
     @MockitoBean
     private CampaignLifecycleService lifecycleService;
 
+    /**
+     * Mocked daily tick service replacing the real bean.
+     */
     @MockitoBean
     private DailyTickService dailyTickService;
 
+    /**
+     * Lock guarding the match history, as used by the code under test.
+     */
     @Autowired
     private MatchHistoryLock matchHistoryLock;
 

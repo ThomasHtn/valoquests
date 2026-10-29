@@ -47,6 +47,9 @@ public class DefaultSynchronizationLaunchService implements SynchronizationLaunc
         this.playerRepository = playerRepository;
     }
 
+    /**
+     * Dispatches the all-players run while holding the guarded-job lock.
+     */
     @Override
     public void launchAllPlayers() {
         dispatchHoldingTheLock(runner::runAllPlayers);

@@ -301,6 +301,9 @@ class DefaultPlayerQueryServiceTest {
             .isInstanceOf(PlayerNotFoundException.class);
     }
 
+    /**
+     * Builds a player with the given identifier.
+     */
     private Player player(long id) {
         Player player = new Player();
         player.setId(id);
@@ -310,12 +313,18 @@ class DefaultPlayerQueryServiceTest {
         return player;
     }
 
+    /**
+     * Builds a match of the given player.
+     */
     private PlayerMatch match(Player player, MatchResult result, String agentName, String mapName) {
         PlayerMatch playerMatch = match(result, agentName, mapName);
         playerMatch.setPlayer(player);
         return playerMatch;
     }
 
+    /**
+     * Builds a match with the given result, agent and map.
+     */
     private PlayerMatch match(MatchResult result, String agentName, String mapName) {
         ValorantMatch valorantMatch = new ValorantMatch();
         valorantMatch.setMapName(mapName);

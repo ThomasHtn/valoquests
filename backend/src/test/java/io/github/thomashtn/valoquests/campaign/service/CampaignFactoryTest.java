@@ -53,12 +53,21 @@ class CampaignFactoryTest {
         .mapToObj(index -> CampaignFixtures.player(index, "Op" + index))
         .toList();
 
+    /**
+     * Mocked guardian repository stub.
+     */
     @Mock
     private GuardianRepositoryStub guardianRepository;
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Factory under test.
+     */
     private CampaignFactory factory;
 
     @BeforeEach

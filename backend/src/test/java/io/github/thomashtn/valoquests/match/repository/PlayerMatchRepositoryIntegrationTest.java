@@ -48,21 +48,39 @@ import org.springframework.transaction.annotation.Transactional;
 class PlayerMatchRepositoryIntegrationTest
     extends PostgreSqlIntegrationTest {
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back season rows.
+     */
     @Autowired
     private SeasonRepository seasonRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Repository to seed and read back player match rows.
+     */
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Repository to seed and read back campaign rows.
+     */
     @Autowired
     private CampaignRepository campaignRepository;
 
+    /**
+     * Repository to seed and read back campaign player rows.
+     */
     @Autowired
     private CampaignPlayerRepository campaignPlayerRepository;
 
@@ -279,6 +297,9 @@ class PlayerMatchRepositoryIntegrationTest
         assertThat(nextDay).isEmpty();
     }
 
+    /**
+     * Persists a named player with the given status.
+     */
     private Player createPlayer(String name, PlayerStatus status) {
         Player player = new Player();
 
@@ -291,6 +312,9 @@ class PlayerMatchRepositoryIntegrationTest
         return playerRepository.save(player);
     }
 
+    /**
+     * Persists the default active player.
+     */
     private Player createPlayer() {
         Player player = new Player();
 
@@ -303,6 +327,9 @@ class PlayerMatchRepositoryIntegrationTest
         return playerRepository.save(player);
     }
 
+    /**
+     * Persists the season of the scenarios.
+     */
     private Season createSeason() {
         Season season = new Season();
 
@@ -312,6 +339,9 @@ class PlayerMatchRepositoryIntegrationTest
         return seasonRepository.save(season);
     }
 
+    /**
+     * Persists a competitive match in the given season.
+     */
     private ValorantMatch createMatch(Season season) {
         ValorantMatch match = new ValorantMatch();
 
@@ -330,6 +360,9 @@ class PlayerMatchRepositoryIntegrationTest
         return valorantMatchRepository.save(match);
     }
 
+    /**
+     * Persists the stats of a player in a match.
+     */
     private PlayerMatch createPlayerMatch(Player player, ValorantMatch match) {
         PlayerMatch playerMatch = new PlayerMatch();
 

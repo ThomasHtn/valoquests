@@ -114,66 +114,132 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
      */
     private static final Instant CLOSING_TIME = Instant.parse("2026-09-28T00:05:00Z");
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Clock the tests move forward by hand.
+     */
     @Autowired
     private MutableClock mutableClock;
 
+    /**
+     * Real campaign lifecycle service taken from the Spring context.
+     */
     @Autowired
     private CampaignLifecycleService lifecycleService;
 
+    /**
+     * Repository to seed and read back synchronization rows.
+     */
     @Autowired
     private SynchronizationRepository synchronizationRepository;
 
+    /**
+     * Real weekly rollover service taken from the Spring context.
+     */
     @Autowired
     private WeeklyRolloverService weeklyRolloverService;
 
+    /**
+     * Real challenge calibration source taken from the Spring context.
+     */
     @Autowired
     private ChallengeCalibrationSource calibrationSource;
 
+    /**
+     * Repository to seed and read back campaign rows.
+     */
     @Autowired
     private CampaignRepository campaignRepository;
 
+    /**
+     * Repository to seed and read back campaign player rows.
+     */
     @Autowired
     private CampaignPlayerRepository campaignPlayerRepository;
 
+    /**
+     * Repository to seed and read back campaign week rows.
+     */
     @Autowired
     private CampaignWeekRepository campaignWeekRepository;
 
+    /**
+     * Repository to seed and read back campaign daily snapshot rows.
+     */
     @Autowired
     private CampaignDailySnapshotRepository snapshotRepository;
 
+    /**
+     * Repository to seed and read back campaign player day rows.
+     */
     @Autowired
     private CampaignPlayerDayRepository playerDayRepository;
 
+    /**
+     * Repository to seed and read back challenge selection rows.
+     */
     @Autowired
     private ChallengeSelectionRepository challengeSelectionRepository;
 
+    /**
+     * Repository to seed and read back weekly player score rows.
+     */
     @Autowired
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Repository to seed and read back player rows.
+     */
     @Autowired
     private PlayerRepository playerRepository;
 
+    /**
+     * Repository to seed and read back season rows.
+     */
     @Autowired
     private SeasonRepository seasonRepository;
 
+    /**
+     * Repository to seed and read back valorant match rows.
+     */
     @Autowired
     private ValorantMatchRepository valorantMatchRepository;
 
+    /**
+     * Repository to seed and read back player match rows.
+     */
     @Autowired
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Flushes and clears the persistence context.
+     */
     @Autowired
     private EntityManager entityManager;
 
+    /**
+     * First roster player.
+     */
     private Player alpha;
 
+    /**
+     * Second roster player.
+     */
     private Player bravo;
 
+    /**
+     * Third roster player.
+     */
     private Player charlie;
 
+    /**
+     * Season the matches belong to.
+     */
     private Season season;
 
     @BeforeEach
@@ -382,12 +448,18 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
             .toList();
     }
 
+    /**
+     * Lists the Monday of every campaign week.
+     */
     private static List<LocalDate> weekStarts() {
         return CampaignSchedule.weeks().stream()
             .map(shape -> FIRST_WEEK_START.plusWeeks(shape.weekIndex() - 1L))
             .toList();
     }
 
+    /**
+     * Persists a player with the given status.
+     */
     private Player createPlayer(String riotPuuid, String gameName, PlayerStatus status) {
         Player player = new Player();
         player.setRiotPuuid(riotPuuid);
@@ -399,6 +471,9 @@ class CampaignLifecycleIntegrationTest extends PostgreSqlIntegrationTest {
         return playerRepository.save(player);
     }
 
+    /**
+     * Persists the season used by the scenarios.
+     */
     private Season createSeason() {
         Season created = new Season();
         created.setExternalId("campaign-lifecycle-season");

@@ -32,9 +32,15 @@ class MatchAdminControllerTest {
      */
     private static final String ADMIN_KEY = "test-admin-key-0123456789abcdef0";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 
+    /**
+     * Mocked match correction service replacing the real bean.
+     */
     @MockitoBean
     private MatchCorrectionService correctionService;
 

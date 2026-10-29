@@ -6,7 +6,13 @@ package io.github.thomashtn.valoquests.match.model;
  * <p>Scoring reads {@link ScoredOutcome} instead, which reinterprets Deathmatch and unknown results.
  */
 public enum MatchResult {
+    /**
+     * The player team won the match.
+     */
     WIN,
+    /**
+     * The player team lost the match.
+     */
     LOSS,
 
     /**

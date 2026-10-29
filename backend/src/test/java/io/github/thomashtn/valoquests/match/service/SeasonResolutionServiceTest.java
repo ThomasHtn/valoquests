@@ -23,6 +23,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SeasonResolutionServiceTest {
 
+    /**
+     * Mocked season repository.
+     */
     @Mock
     private SeasonRepository seasonRepository;
 

@@ -33,6 +33,9 @@ public enum GameModeSource {
      */
     private final int priority;
 
+    /**
+     * Builds a source with its trust priority.
+     */
     GameModeSource(int priority) {
         this.priority = priority;
     }

@@ -72,6 +72,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
      */
     private static final double SURVIVORS_PER_REFERENCE_DIVISOR = 1_000.0;
 
+    /**
+     * Looks the damage up per mode and outcome, zero when either is unknown.
+     */
     @Override
     public int matchDamage(GameMode gameMode, ScoredOutcome outcome) {
         if (gameMode == null || outcome == null) {
@@ -121,6 +124,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         return outcome == ScoredOutcome.WIN ? winDamage : lossDamage;
     }
 
+    /**
+     * Applies the full, half or reduced coefficient according to the rank of the match in the day.
+     */
     @Override
     public int matchDamageCoefficientPercent(int rankInDay) {
         if (rankInDay <= FULL_DAMAGE_RANK_LIMIT) {
@@ -134,6 +140,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         return REDUCED_DAMAGE_PERCENT;
     }
 
+    /**
+     * Grants a bonus per consecutive played day after the first, capped.
+     */
     @Override
     public int streakBonusPercent(int playedDays) {
         int bonusDays = Math.clamp(playedDays - 1L, 0, STREAK_BONUS_DAY_CAP);
@@ -141,6 +150,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         return bonusDays * STREAK_BONUS_PERCENT_PER_DAY;
     }
 
+    /**
+     * Gives long modes and quick modes their own food share, zero for the others.
+     */
     @Override
     public int foodSharePercent(GameMode gameMode) {
         if (gameMode == null) {
@@ -155,6 +167,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         };
     }
 
+    /**
+     * Raises the reward by a fixed percentage for each week elapsed since the first.
+     */
     @Override
     public int rewardProgressionPercent(int weekIndex) {
         int weeksElapsed = Math.max(0, weekIndex - 1);
@@ -162,6 +177,9 @@ public final class DefaultScoringRuleset implements ScoringRuleset {
         return (int) PERCENT_SCALE + weeksElapsed * REWARD_PROGRESSION_PERCENT_PER_WEEK;
     }
 
+    /**
+     * Prices the reward from the calibration reference, the challenge weight and the week progression.
+     */
     @Override
     public int challengeReward(ChallengeCadence cadence, ChallengeTier tier, ChallengeCalibration calibration) {
         double weight = challengeWeight(cadence, tier);

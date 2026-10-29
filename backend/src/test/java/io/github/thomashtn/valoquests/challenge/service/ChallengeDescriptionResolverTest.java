@@ -121,14 +121,23 @@ class ChallengeDescriptionResolverTest {
         )).isEqualTo("Remporter 4 parties compétitives.");
     }
 
+    /**
+     * Builds a definition that sums one condition.
+     */
     private static ChallengeDefinition sum(ChallengeCondition condition) {
         return new ChallengeDefinition(ProgressMode.SUM, List.of(condition));
     }
 
+    /**
+     * Builds a definition that counts the matches satisfying one condition.
+     */
     private static ChallengeDefinition count(ChallengeCondition condition) {
         return new ChallengeDefinition(ProgressMode.COUNT_MATCHES, List.of(condition));
     }
 
+    /**
+     * Builds a condition reached by accumulating the metric up to the target.
+     */
     private static ChallengeCondition cumulative(ChallengeMetric metric, String target) {
         return new ChallengeCondition(
             metric, ChallengeOperator.GTE, new BigDecimal(target), ChallengeGameMode.ANY,
@@ -136,6 +145,9 @@ class ChallengeDescriptionResolverTest {
         );
     }
 
+    /**
+     * Builds a condition that must be met in a single match, a number of times.
+     */
     private static ChallengeCondition perMatch(ChallengeMetric metric, String target, int occurrences) {
         return new ChallengeCondition(
             metric, ChallengeOperator.GTE, new BigDecimal(target), ChallengeGameMode.ANY,

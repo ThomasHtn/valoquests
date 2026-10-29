@@ -100,18 +100,33 @@ class SeasonMatchHistoryWalkerTest {
      */
     private static final Instant MATCH_START = Instant.parse("2026-07-20T18:00:00Z");
 
+    /**
+     * Mocked henrik match client.
+     */
     @Mock
     private HenrikMatchClient matchClient;
 
+    /**
+     * Mocked match import service.
+     */
     @Mock
     private MatchImportService matchImportService;
 
+    /**
+     * Mocked season resolution service.
+     */
     @Mock
     private SeasonResolutionService seasonResolutionService;
 
+    /**
+     * Mocked season synchronization state service.
+     */
     @Mock
     private SeasonSynchronizationStateService stateService;
 
+    /**
+     * Mocked player match repository.
+     */
     @Mock
     private PlayerMatchRepository playerMatchRepository;
 

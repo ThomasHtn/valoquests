@@ -57,12 +57,21 @@ class MatchImportServiceTest {
      */
     private static final String SEASON_ID = "season-1";
 
+    /**
+     * Mocked valorant match repository.
+     */
     @Mock
     private ValorantMatchRepository matchRepository;
 
+    /**
+     * Mocked player match repository.
+     */
     @Mock
     private PlayerMatchRepository playerMatchRepository;
 
+    /**
+     * Mocked season resolution service.
+     */
     @Mock
     private SeasonResolutionService seasonResolutionService;
 

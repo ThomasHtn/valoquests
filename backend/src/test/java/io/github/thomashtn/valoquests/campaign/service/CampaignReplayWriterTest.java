@@ -53,23 +53,44 @@ class CampaignReplayWriterTest {
      */
     private static final Instant FINISHING_INSTANT = Instant.parse("2026-09-09T20:15:00Z");
 
+    /**
+     * Mocked campaign week repository.
+     */
     @Mock
     private CampaignWeekRepository weekRepository;
 
+    /**
+     * Mocked campaign daily snapshot repository.
+     */
     @Mock
     private CampaignDailySnapshotRepository snapshotRepository;
 
+    /**
+     * Mocked campaign player day repository.
+     */
     @Mock
     private CampaignPlayerDayRepository playerDayRepository;
 
+    /**
+     * Mocked entity manager.
+     */
     @Mock
     private EntityManager entityManager;
 
+    /**
+     * Instance under test, built with the mocks above.
+     */
     @InjectMocks
     private CampaignReplayWriter writer;
 
+    /**
+     * Campaign the replay is written into.
+     */
     private Campaign campaign;
 
+    /**
+     * Week of the campaign targeted by the writes.
+     */
     private CampaignWeek week;
 
     @BeforeEach

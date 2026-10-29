@@ -50,27 +50,51 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @ExtendWith(MockitoExtension.class)
 class DefaultSynchronizationCommandServiceTest {
 
+    /**
+     * Instant the run starts at.
+     */
     private static final Instant STARTED_AT =
         Instant.parse("2026-07-18T14:00:00Z");
 
+    /**
+     * Mocked player synchronization service.
+     */
     @Mock
     private PlayerSynchronizationService playerSynchronizationService;
 
+    /**
+     * Mocked player repository.
+     */
     @Mock
     private PlayerRepository playerRepository;
 
+    /**
+     * Mocked synchronization repository.
+     */
     @Mock
     private SynchronizationRepository synchronizationRepository;
 
+    /**
+     * Mocked synchronization player result repository.
+     */
     @Mock
     private SynchronizationPlayerResultRepository playerResultRepository;
 
+    /**
+     * Mocked challenge recalculation service.
+     */
     @Mock
     private ChallengeRecalculationService challengeRecalculationService;
 
+    /**
+     * Mocked campaign replay service.
+     */
     @Mock
     private CampaignReplayService campaignReplayService;
 
+    /**
+     * Service under test.
+     */
     private DefaultSynchronizationCommandService service;
 
     /**

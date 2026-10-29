@@ -48,11 +48,20 @@ class CampaignChallengeReaderTest {
      */
     private static final Player OUTSIDER = CampaignFixtures.player(9, "Outsider");
 
+    /**
+     * Mocked player challenge progress repository.
+     */
     @Mock
     private PlayerChallengeProgressRepository progressRepository;
 
+    /**
+     * Reader under test.
+     */
     private CampaignChallengeReader reader;
 
+    /**
+     * Campaign whose challenges are read.
+     */
     private Campaign campaign;
 
     @BeforeEach

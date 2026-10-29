@@ -26,6 +26,9 @@ public final class RankingFixtures {
      */
     public static final Instant MIDWEEK = Instant.parse("2026-09-09T12:00:00Z");
 
+    /**
+     * Prevents instantiation of this static fixture holder.
+     */
     private RankingFixtures() {
     }
 

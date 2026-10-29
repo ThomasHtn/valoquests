@@ -165,6 +165,9 @@ public class DefaultPlayerAdminService implements PlayerAdminService {
         return toResponse(playerRepository.save(player));
     }
 
+    /**
+     * Moves the player to the new status, guarding roster changes during a campaign.
+     */
     @Override
     @Transactional
     public PlayerAdminResponse changeStatus(long playerId, PlayerStatus status) {

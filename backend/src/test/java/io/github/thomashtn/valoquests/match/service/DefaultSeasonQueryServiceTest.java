@@ -140,6 +140,9 @@ class DefaultSeasonQueryServiceTest {
         assertThat(service.resolveCurrentSeasonId()).isNull();
     }
 
+    /**
+     * Builds a season with the given identifier and name.
+     */
     private Season season(Long id, String name) {
         Season season = new Season();
         season.setId(id);

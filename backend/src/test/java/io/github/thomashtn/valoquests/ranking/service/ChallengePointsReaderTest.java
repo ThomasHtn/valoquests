@@ -52,9 +52,15 @@ class ChallengePointsReaderTest {
      */
     private static final Player BRAVO = RankingFixtures.player(2, "Bravo", PlayerStatus.ACTIVE);
 
+    /**
+     * Mocked player challenge progress repository.
+     */
     @Mock
     private PlayerChallengeProgressRepository progressRepository;
 
+    /**
+     * Reader under test.
+     */
     private ChallengePointsReader reader;
 
     @BeforeEach
@@ -97,6 +103,9 @@ class ChallengePointsReaderTest {
         assertThat(reader.read(WEEK_START).get(ALPHA.getId())).isEqualTo(new ChallengeTally(7, 0, 1));
     }
 
+    /**
+     * Builds a selection of the given cadence and tier.
+     */
     private static ChallengeSelection selection(long id, ChallengeCadence cadence, ChallengeTier tier) {
         Challenge challenge = new Challenge();
         challenge.setCadence(cadence);
@@ -111,6 +120,9 @@ class ChallengePointsReaderTest {
         return selection;
     }
 
+    /**
+     * Builds the progress of a player on a selection.
+     */
     private static PlayerChallengeProgress progress(Player player, ChallengeSelection selection, boolean completed) {
         PlayerChallengeProgress progress = new PlayerChallengeProgress();
         progress.setPlayer(player);

@@ -53,18 +53,33 @@ class DefaultCampaignLifecycleServiceTest {
      */
     private static final LocalDate FIRST_WEEK_START = CampaignFixtures.FIRST_WEEK_START;
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Mocked campaign player repository.
+     */
     @Mock
     private CampaignPlayerRepository campaignPlayerRepository;
 
+    /**
+     * Mocked campaign week repository.
+     */
     @Mock
     private CampaignWeekRepository campaignWeekRepository;
 
+    /**
+     * Mocked campaign factory.
+     */
     @Mock
     private CampaignFactory factory;
 
+    /**
+     * Mocked campaign replay service.
+     */
     @Mock
     private CampaignReplayService replayService;
 

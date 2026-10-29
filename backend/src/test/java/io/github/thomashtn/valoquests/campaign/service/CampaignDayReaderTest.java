@@ -43,24 +43,45 @@ class CampaignDayReaderTest {
      */
     private static final LocalDate TODAY = CampaignFixtures.FIRST_WEEK_START.plusDays(2);
 
+    /**
+     * Mocked campaign player day repository.
+     */
     @Mock
     private CampaignPlayerDayRepository playerDayRepository;
 
+    /**
+     * Mocked campaign daily snapshot repository.
+     */
     @Mock
     private CampaignDailySnapshotRepository snapshotRepository;
 
+    /**
+     * Mocked weekly player score repository.
+     */
     @Mock
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Mocked weekly title resolver.
+     */
     @Mock
     private WeeklyTitleResolver titleResolver;
 
+    /**
+     * Mocked week champion resolver.
+     */
     @Mock
     private WeekChampionResolver championResolver;
 
+    /**
+     * Instance under test, built with the mocks above.
+     */
     @InjectMocks
     private CampaignDayReader reader;
 
+    /**
+     * Campaign whose days are read.
+     */
     private Campaign campaign;
 
     @BeforeEach

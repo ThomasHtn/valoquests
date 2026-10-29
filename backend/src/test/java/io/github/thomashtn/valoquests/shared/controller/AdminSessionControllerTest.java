@@ -23,6 +23,9 @@ class AdminSessionControllerTest {
      */
     private static final String ADMIN_KEY = "test-admin-key-0123456789abcdef0";
 
+    /**
+     * Sends the HTTP requests of the tests.
+     */
     @Autowired
     private MockMvc mockMvc;
 

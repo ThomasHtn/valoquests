@@ -76,21 +76,39 @@ class DefaultRankingQueryServiceTest {
      */
     private static final Player CHARLIE = RankingFixtures.player(3, "Charlie", PlayerStatus.INACTIVE);
 
+    /**
+     * Mocked weekly player score repository.
+     */
     @Mock
     private WeeklyPlayerScoreRepository scoreRepository;
 
+    /**
+     * Mocked challenge selection repository.
+     */
     @Mock
     private ChallengeSelectionRepository challengeSelectionRepository;
 
+    /**
+     * Mocked daily ranking reader.
+     */
     @Mock
     private DailyRankingReader dailyRankingReader;
 
+    /**
+     * Mocked weekly title resolver.
+     */
     @Mock
     private WeeklyTitleResolver titleResolver;
 
+    /**
+     * Mocked campaign repository.
+     */
     @Mock
     private CampaignRepository campaignRepository;
 
+    /**
+     * Service under test.
+     */
     private DefaultRankingQueryService service;
 
     @BeforeEach

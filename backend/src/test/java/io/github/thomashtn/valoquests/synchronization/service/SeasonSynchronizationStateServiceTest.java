@@ -38,6 +38,9 @@ class SeasonSynchronizationStateServiceTest {
      */
     private static final String SEASON_EXTERNAL_ID = "season-1";
 
+    /**
+     * Mocked player season synchronization repository.
+     */
     @Mock
     private PlayerSeasonSynchronizationRepository stateRepository;
 

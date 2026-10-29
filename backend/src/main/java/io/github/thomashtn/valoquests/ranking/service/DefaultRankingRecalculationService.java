@@ -111,12 +111,18 @@ public class DefaultRankingRecalculationService implements RankingRecalculationS
         this.weekCalendar = weekCalendar;
     }
 
+    /**
+     * Recalculates the week in progress.
+     */
     @Override
     @Transactional
     public void recalculateCurrentRanking() {
         recalculateWeek(weekCalendar.currentWeekStart());
     }
 
+    /**
+     * Rebuilds the weekly rows from the daily output, or clears them when no player is tracked.
+     */
     @Override
     @Transactional
     public void recalculateWeek(LocalDate weekStart) {

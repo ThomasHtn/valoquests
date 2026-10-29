@@ -7,5 +7,13 @@ package io.github.thomashtn.valoquests.scoring.model;
  * never share a pool.
  */
 public enum ChallengeCadence {
-    WEEKLY, DAILY
+    /**
+     * Drawn on Monday and measured over the whole week.
+     */
+    WEEKLY,
+
+    /**
+     * Drawn each morning and measured over that day.
+     */
+    DAILY
 }

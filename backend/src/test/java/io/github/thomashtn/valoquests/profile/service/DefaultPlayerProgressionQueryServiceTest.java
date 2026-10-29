@@ -513,6 +513,9 @@ class DefaultPlayerProgressionQueryServiceTest {
         });
     }
 
+    /**
+     * Stubs the repository with the player match history.
+     */
     private void givenHistory(PlayerMatch... matches) {
         List<PlayerMatch> history = List.of(matches);
 
@@ -530,6 +533,9 @@ class DefaultPlayerProgressionQueryServiceTest {
             });
     }
 
+    /**
+     * Returns the season with this identifier, created once.
+     */
     private Season season(long id) {
         return seasons.computeIfAbsent(id, key -> {
             Season season = new Season();
@@ -539,6 +545,9 @@ class DefaultPlayerProgressionQueryServiceTest {
         });
     }
 
+    /**
+     * Builds a competitive match of the player with the given result.
+     */
     private PlayerMatch competitive(long seasonId, String startedAt, MatchResult result) {
         ValorantMatch valorantMatch = new ValorantMatch();
         valorantMatch.setSeason(season(seasonId));
@@ -563,11 +572,17 @@ class DefaultPlayerProgressionQueryServiceTest {
         return playerMatch;
     }
 
+    /**
+     * Sets the competitive tier of a match.
+     */
     private PlayerMatch ranked(PlayerMatch match, CompetitiveTier tier) {
         match.setCompetitiveTier(tier);
         return match;
     }
 
+    /**
+     * Builds one won competitive match per combat score in the season.
+     */
     private List<PlayerMatch> scoredSeason(long seasonId, int... combatScores) {
         List<PlayerMatch> matches = new ArrayList<>();
         for (int index = 0; index < combatScores.length; index++) {
