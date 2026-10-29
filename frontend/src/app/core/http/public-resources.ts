@@ -78,6 +78,9 @@ export class PublicResources {
    */
   public readonly revision = this.reloadCount.asReadonly();
 
+  /**
+   * Keeps the last good value of each screen through a failed background reload.
+   */
   constructor() {
     // A failed background reload keeps the screen as it was rather than showing an error.
     effect(() => {

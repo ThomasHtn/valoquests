@@ -41,8 +41,17 @@ const SEASONS: readonly Season[] = [
   `,
 })
 class SeasonPickerHost {
+  /**
+   * Seasons offered.
+   */
   public readonly seasons = SEASONS;
+  /**
+   * Selection of the single-choice picker.
+   */
   public readonly single = signal<readonly number[]>([]);
+  /**
+   * Selection of the multiple-choice picker.
+   */
   public readonly several = signal<readonly number[]>([3]);
 }
 

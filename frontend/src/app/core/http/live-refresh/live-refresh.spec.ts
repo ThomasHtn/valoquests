@@ -71,6 +71,9 @@ describe('LiveRefresh', () => {
     await settle();
   }
 
+  /**
+   * Lets one poll fire and answers it with the given synchronization status.
+   */
   async function pollStatus(at: string, inProgress = false, completedAt = at): Promise<void> {
     await vi.advanceTimersByTimeAsync(LIVE_REFRESH_POLL_MS);
     TestBed.tick();
@@ -80,6 +83,9 @@ describe('LiveRefresh', () => {
     await settle();
   }
 
+  /**
+   * Expects every refreshed screen to have been requested again.
+   */
   function expectScreensReloaded(): void {
     REFRESHED_URLS.forEach((url) => httpMock.expectOne(url));
     httpMock

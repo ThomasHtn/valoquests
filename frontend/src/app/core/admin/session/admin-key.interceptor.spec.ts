@@ -11,7 +11,13 @@ import { adminKeyInterceptor } from './admin-key.interceptor';
 import { AdminSession } from './admin-session';
 import { ADMIN_KEY_HEADER, ADMIN_LOGIN_ROUTE } from './admin-session.constants';
 
+/**
+ * An administrative route, which must carry the key.
+ */
 const ADMIN_URL = `${environment.apiBaseUrl}/admin/players`;
+/**
+ * A public route, which must never carry the key.
+ */
 const PUBLIC_URL = `${environment.apiBaseUrl}/players`;
 
 describe('adminKeyInterceptor', () => {

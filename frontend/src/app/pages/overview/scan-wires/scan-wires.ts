@@ -23,6 +23,9 @@ export class ScanWires {
    */
   private observer: ResizeObserver | null = null;
 
+  /**
+   * Draws the wires once rendered and again whenever the report resizes.
+   */
   constructor() {
     afterNextRender(() => {
       const draw = (): void => this.draw();

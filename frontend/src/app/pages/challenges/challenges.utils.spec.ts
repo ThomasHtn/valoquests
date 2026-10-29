@@ -9,12 +9,18 @@ import {
   toRuleParts,
 } from './challenges.utils';
 
+/**
+ * A squad member as the challenge cards show them.
+ */
 const operator = (playerId: number): ChallengeOperator => ({
   playerId,
   name: `P${playerId}`,
   portrait: null,
 });
 
+/**
+ * Weekly progress from `[playerId, value, completed]` lines.
+ */
 const weekly = (targetValue: number, lines: [number, number, boolean][]): ChallengeProgress =>
   ({
     targetValue,

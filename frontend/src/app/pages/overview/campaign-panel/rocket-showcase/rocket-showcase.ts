@@ -90,6 +90,9 @@ export class RocketShowcase {
     return this.parts().find((part) => part.index === index) ?? null;
   });
 
+  /**
+   * Redraws the rocket whenever the shown stage changes.
+   */
   constructor() {
     afterRenderEffect(() => {
       this.render(this.viewer().nativeElement, this.shown());

@@ -17,14 +17,7 @@ import { ROCKET_PART_COUNT } from '@shared/rocket/rocket-drawing.constants';
 import { BaseReserves } from './base-reserves/base-reserves';
 import { CampaignHistoryView } from './campaign-history/campaign-history';
 import { CURRENT_CURVE_COLOR, PAST_CURVE_COLORS } from './campaign-panel.constants';
-import {
-  HistoryCurve,
-  HistoryRow,
-  LedgerColumn,
-  LedgerRow,
-  Reserves,
-  RocketPart,
-} from './campaign-panel.model';
+import { HistoryCurve, HistoryRow, Reserves, RocketPart } from './campaign-panel.model';
 import {
   buildLedger,
   buildReserves,
@@ -33,6 +26,7 @@ import {
   resolveSeasonKey,
 } from './campaign-panel.utils';
 import { ReserveLedger } from './reserve-ledger/reserve-ledger';
+import { LedgerColumn, LedgerRow } from './reserve-ledger/reserve-ledger.model';
 import { RocketShowcase } from './rocket-showcase/rocket-showcase';
 
 /**

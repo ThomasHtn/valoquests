@@ -22,6 +22,9 @@ const MONDAY = Date.parse('2026-01-04T23:00:00Z');
  */
 const WEDNESDAY_NOON = MONDAY + 2.5 * DAY_MS;
 
+/**
+ * A campaign week with its guardian and stocks, overridable field by field.
+ */
 function week(overrides: Partial<CampaignWeek> = {}): CampaignWeek {
   return {
     weekIndex: 1,

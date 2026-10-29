@@ -508,6 +508,9 @@ export class Overview {
     };
   });
 
+  /**
+   * Ticks the page clock and keeps the selected tab in the URL.
+   */
   constructor() {
     const clock = setInterval(() => this.now.set(Date.now()), 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(clock));

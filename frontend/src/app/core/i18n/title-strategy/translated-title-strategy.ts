@@ -26,6 +26,9 @@ export class TranslatedTitleStrategy extends TitleStrategy {
    */
   private readonly titleKey = signal<string | undefined>(undefined);
 
+  /**
+   * Rewrites the tab title whenever the route or the language changes.
+   */
   constructor() {
     super();
 

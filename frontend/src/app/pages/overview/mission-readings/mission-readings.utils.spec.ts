@@ -101,6 +101,9 @@ describe('buildSundayStakes', () => {
 });
 
 describe('buildContribution', () => {
+  /**
+   * A competing ranking entry with the given damage and points.
+   */
   function entry(id: number, damage: number, points: number): RankingEntry {
     return {
       position: id,
@@ -127,6 +130,9 @@ describe('buildContribution', () => {
     };
   }
 
+  /**
+   * The current week's ranking made of the given entries.
+   */
   function ranking(entries: readonly RankingEntry[]): CurrentRanking {
     return {
       weekStart: '2026-01-05',

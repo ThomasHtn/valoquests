@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { formatElapsed } from './date-format.utils';
 
+/**
+ * Reference instant every elapsed time is measured from.
+ */
 const at = Date.parse('2026-10-02T12:00:00Z');
 
 describe('formatElapsed', () => {

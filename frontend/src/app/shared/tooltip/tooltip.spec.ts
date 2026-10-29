@@ -22,7 +22,13 @@ import { Tooltip } from './tooltip';
   `,
 })
 class TooltipHost {
+  /**
+   * Tooltip text, changed by some tests.
+   */
   public readonly text = signal('Last synchronization: 5 minutes ago');
+  /**
+   * Whether the tooltip is switched off.
+   */
   public readonly disabled = signal(false);
 }
 

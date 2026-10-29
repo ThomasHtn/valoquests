@@ -8,6 +8,9 @@ import {
   toMarkDetail,
 } from './challenge-card.utils';
 
+/**
+ * One player's rung on a challenge card.
+ */
 const rung = (value: number, done: boolean): ChallengeRung => ({
   playerId: 1,
   name: 'Neon',
@@ -20,7 +23,9 @@ const rung = (value: number, done: boolean): ChallengeRung => ({
   idle: value === 0,
 });
 
-// Echoes key and params so assertions read the raw wording inputs.
+/**
+ * Echoes key and params so assertions read the raw wording inputs.
+ */
 const echo: TranslateFn = (key, params) => `${key} ${JSON.stringify(params)}`;
 
 describe('describeRung', () => {
@@ -70,6 +75,9 @@ describe('toMarkDetail', () => {
   });
 });
 
+/**
+ * Mark detail the splitting tests never read.
+ */
 const detail = {} as MarkDetail;
 
 describe('splitCompactFigure', () => {

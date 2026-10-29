@@ -21,6 +21,9 @@ export class FigurePipe implements PipeTransform {
    */
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
+  /**
+   * Re-renders the figures when the language changes.
+   */
   constructor() {
     effect(() => {
       this.translation.language();

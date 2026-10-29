@@ -20,6 +20,9 @@ export class TranslatePipe implements PipeTransform {
    */
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
+  /**
+   * Re-renders the texts when the language changes.
+   */
   constructor() {
     effect(() => {
       this.translation.language();

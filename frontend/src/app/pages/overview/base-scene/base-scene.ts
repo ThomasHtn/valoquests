@@ -70,6 +70,9 @@ export class BaseScene {
    */
   private drawnPopulation: number | null = null;
 
+  /**
+   * Ticks the sky clock and redraws the town when its population changes.
+   */
   constructor() {
     const timer = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));

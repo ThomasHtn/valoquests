@@ -238,6 +238,9 @@ export class Sidebar {
     return this.syncStale() ? 'stale' : 'fresh';
   });
 
+  /**
+   * Ticks the sync clock and closes the mobile drawer after any navigation.
+   */
   constructor() {
     const clock = setInterval(() => this.now.set(Date.now()), SIDEBAR_CLOCK_MS);
     inject(DestroyRef).onDestroy(() => clearInterval(clock));

@@ -114,6 +114,9 @@ describe('buildSquad', () => {
     ]);
   });
 
+  /**
+   * A ranking entry for one player, overridable field by field.
+   */
   function entry(overrides: {
     playerId: number;
     position: number | null;

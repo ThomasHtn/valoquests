@@ -47,6 +47,9 @@ export class Translation {
    */
   private loaded = false;
 
+  /**
+   * Keeps `<html lang>` in step and retries a dictionary load lost offline.
+   */
   constructor() {
     // `<html lang>` follows the language, for assistive technologies.
     effect(() => {

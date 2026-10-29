@@ -4,6 +4,59 @@ const { defineConfig } = require('eslint/config');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
+const jsdoc = require('eslint-plugin-jsdoc');
+
+/**
+ * Declarations that must carry a JSDoc block, on top of classes, functions and methods (constructors
+ * included). Exported constants are matched on the `export` node, where their comment sits. Members of
+ * interfaces are documented; a small inline object type reads well enough from its property names.
+ */
+const DOCUMENTED_DECLARATIONS = [
+  'PropertyDefinition',
+  'TSInterfaceDeclaration',
+  'TSInterfaceBody > TSPropertySignature',
+  'TSInterfaceBody > TSMethodSignature',
+  'TSTypeAliasDeclaration',
+  'TSEnumDeclaration',
+  'Program > VariableDeclaration',
+  'ExportNamedDeclaration:has(> VariableDeclaration)',
+  'ExportDefaultDeclaration',
+];
+
+/**
+ * Message shown when a layer imports one above it.
+ */
+const LAYER_MESSAGE = 'A layer never imports a layer above it.';
+
+/**
+ * Aliases each layer must not import, with the reason shown on a violation.
+ */
+const LAYERS = [
+  { layer: 'core', forbidden: ['@shared/*', '@layout/*', '@pages/*'], message: LAYER_MESSAGE },
+  { layer: 'shared', forbidden: ['@layout/*', '@pages/*'], message: LAYER_MESSAGE },
+  { layer: 'layout', forbidden: ['@pages/*'], message: LAYER_MESSAGE },
+  {
+    layer: 'pages',
+    forbidden: ['@pages/*'],
+    message: 'A page never imports another page: move shared code to core/ or shared/.',
+  },
+];
+
+/**
+ * Message of the relative import rules: crossing folders goes through an alias the layer rules check.
+ */
+const RELATIVE_MESSAGE =
+  'A relative import stays inside its folder: use @core/, @shared/, @layout/ or @pages/ instead.';
+
+/**
+ * Two levels up always leaves the component or feature folder the file belongs to.
+ */
+const LEAVES_PARENT = { regex: '^\\.\\./\\.\\./', message: RELATIVE_MESSAGE };
+
+/**
+ * One level up from a folder's top-level file lands among the other folders of its layer.
+ */
+const LEAVES_FOLDER = { regex: '^\\.\\./', message: RELATIVE_MESSAGE };
 
 module.exports = defineConfig([
   {
@@ -15,9 +68,9 @@ module.exports = defineConfig([
       angular.configs.tsRecommended,
     ],
     processor: angular.processInlineTemplates,
-    plugins: { 'simple-import-sort': simpleImportSort },
+    plugins: { jsdoc, 'simple-import-sort': simpleImportSort },
     rules: {
-      // One stable import order, fixed by `npm run lint -- --fix`: Angular, libraries, aliases, relatives.
+      // One stable import order, fixed by `npm run fix`: Angular, libraries, aliases, relatives.
       'simple-import-sort/imports': [
         'error',
         {
@@ -40,10 +93,11 @@ module.exports = defineConfig([
           style: 'camelCase',
         },
       ],
+      // Attribute selectors too, so buttons and links stay native elements (`<button appButton>`).
       '@angular-eslint/component-selector': [
         'error',
         {
-          type: 'element',
+          type: ['element', 'attribute'],
           prefix: 'app',
           style: 'kebab-case',
         },
@@ -66,38 +120,52 @@ module.exports = defineConfig([
 
       // Diagnostics are fine; stray debug logging is not.
       'no-console': ['error', { allow: ['error', 'warn'] }],
-    },
-  },
-  // Layering, see frontend/CLAUDE.md: core <- shared <- layout <- pages, and no page imports another.
-  ...[
-    ['src/app/core/**/*.ts', ['@shared/*', '@layout/*', '@pages/*']],
-    ['src/app/shared/**/*.ts', ['@layout/*', '@pages/*']],
-    ['src/app/layout/**/*.ts', ['@pages/*']],
-  ].map(([files, group]) => ({
-    files: [files],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        { patterns: [{ group, message: 'A layer never imports a layer above it.' }] },
-      ],
-    },
-  })),
-  {
-    // The tour is the one page allowed to showcase other pages' components.
-    files: ['src/app/pages/**/*.ts'],
-    ignores: ['src/app/pages/tour/**'],
-    rules: {
-      'no-restricted-imports': [
+
+      // OnPush everywhere: with signals, a component only renders when its inputs or signals change.
+      '@angular-eslint/prefer-on-push-component-change-detection': 'error',
+
+      // Every declaration is documented, so a newcomer never meets an unexplained name.
+      'jsdoc/require-jsdoc': [
         'error',
         {
-          patterns: [
-            {
-              group: ['@pages/*'],
-              message: 'A page never imports another page: move shared code to core/ or shared/.',
-            },
-          ],
+          publicOnly: false,
+          // The fixer would insert empty blocks; a missing comment is written by hand.
+          enableFixer: false,
+          require: { ClassDeclaration: true, FunctionDeclaration: true, MethodDefinition: true },
+          contexts: DOCUMENTED_DECLARATIONS,
         },
       ],
+
+      // One layout for every block: `/**`, one line of text, ` */`. Auto-fixed by `npm run fix`.
+      'jsdoc/multiline-blocks': ['error', { noSingleLineBlocks: true }],
+      'jsdoc/no-blank-blocks': 'error',
+      'jsdoc/check-alignment': 'error',
+      'jsdoc/no-multi-asterisks': 'error',
+
+      // TypeScript carries the types; JSDoc carries the intent.
+      'jsdoc/no-types': 'error',
+    },
+  },
+  // Layering, see frontend/README.md: core <- shared <- layout <- pages, a layer never imports one above
+  // it and a page never imports another page. A relative import never leaves its folder, so it cannot
+  // dodge the aliases. The tour is the one page allowed to showcase other pages' components.
+  ...LAYERS.flatMap(({ layer, forbidden, message }) =>
+    [
+      [`src/app/${layer}/**/*.ts`, LEAVES_PARENT],
+      [`src/app/${layer}/*/*.ts`, LEAVES_FOLDER],
+    ].map(([files, relative]) => ({
+      files: [files],
+      ignores: layer === 'pages' ? ['src/app/pages/tour/**'] : [],
+      rules: {
+        'no-restricted-imports': ['error', { patterns: [{ group: forbidden, message }, relative] }],
+      },
+    })),
+  ),
+  {
+    // The tour still keeps its relative imports inside its own folder.
+    files: ['src/app/pages/tour/**/*.ts'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [LEAVES_PARENT] }],
     },
   },
   {

@@ -43,6 +43,9 @@ function season(
   };
 }
 
+/**
+ * A player's ranks across several acts, peaks included.
+ */
 const JOURNEY: readonly SeasonRank[] = [
   season('e10a6', 'GOLD_3'),
   season('e11a1', 'PLATINUM_3'),

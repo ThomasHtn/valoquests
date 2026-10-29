@@ -120,6 +120,9 @@ export class MissionReport {
    */
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
+  /**
+   * Moves focus into the report when it opens.
+   */
   constructor() {
     effect(() => {
       if (this.open()) {

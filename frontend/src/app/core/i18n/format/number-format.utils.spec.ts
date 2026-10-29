@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { formatDecimal, formatFigure, formatPercent } from './number-format.utils';
 
-// Intl separates French figures with narrow no-break spaces; compared on plain spaces here.
+/**
+ * Intl separates French figures with narrow no-break spaces; compared on plain spaces here.
+ */
 const plain = (text: string): string => text.replace(/[\u00a0\u202f]/g, ' ');
 
 describe('formatDecimal', () => {

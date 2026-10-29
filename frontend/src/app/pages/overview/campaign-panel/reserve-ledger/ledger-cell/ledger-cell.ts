@@ -4,7 +4,7 @@ import { formatFigure } from '@core/i18n/format/number-format.utils';
 import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 
-import { LedgerCell, LedgerRow } from '../../campaign-panel.model';
+import { LedgerCell, LedgerRow } from '../reserve-ledger.model';
 
 /**
  * Ledger cell; the host is the grid item and carries the bar heights as custom properties.

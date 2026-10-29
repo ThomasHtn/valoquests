@@ -5,10 +5,16 @@ import { CampaignWeek } from '@core/campaign/campaign-week.model';
 
 import { padCurve, resolvePlanetState, resolveSeasonKey } from './campaign-panel.utils';
 
+/**
+ * A campaign week, still being played unless overridden.
+ */
 function week(overrides: Partial<CampaignWeek>): CampaignWeek {
   return { weekIndex: 1, defeated: false, settled: false, ...overrides } as CampaignWeek;
 }
 
+/**
+ * A running campaign in its third week unless overridden.
+ */
 function campaign(overrides: Partial<Campaign>): Campaign {
   return { status: 'RUNNING', currentWeekIndex: 3, ...overrides } as Campaign;
 }

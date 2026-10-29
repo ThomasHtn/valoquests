@@ -38,6 +38,9 @@ export class Shell {
    */
   protected readonly breakpoint = inject(Breakpoint);
 
+  /**
+   * Starts the app-wide services that must hear every navigation.
+   */
   constructor() {
     // Eager: the shell outlives every route, so these hear every navigation.
     inject(LiveRefresh);

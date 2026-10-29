@@ -66,6 +66,9 @@ export class PlanetFigure {
    */
   private readonly planet = viewChild.required<ElementRef<SVGSVGElement>>('planet');
 
+  /**
+   * Redraws the planet whenever its week or guardian changes.
+   */
   constructor() {
     afterRenderEffect(() => {
       this.draw(this.planet().nativeElement, this.weekIndex(), this.guardianLeft());

@@ -46,6 +46,9 @@ export class LiveRefresh {
    */
   private stamp: string | null = null;
 
+  /**
+   * Polls the synchronization status while the tab is visible and online.
+   */
   constructor() {
     // Polling offline would only turn every screen into an error state; a hidden tab catches up on return.
     interval(LIVE_REFRESH_POLL_MS)

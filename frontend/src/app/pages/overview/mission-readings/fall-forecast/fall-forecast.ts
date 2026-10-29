@@ -219,6 +219,9 @@ export class FallForecast {
    */
   private readonly translation = inject(Translation);
 
+  /**
+   * Tracks the panel width, which sets how much of the forecast fits.
+   */
   constructor() {
     afterRenderEffect((onCleanup) => {
       const element = this.panel().nativeElement;

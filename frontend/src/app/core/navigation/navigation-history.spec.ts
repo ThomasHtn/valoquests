@@ -27,6 +27,9 @@ describe('NavigationHistory', () => {
     await vi.advanceTimersByTimeAsync(0);
   }
 
+  /**
+   * Navigates to a URL and waits for the history to record it.
+   */
   async function visit(url: string, replaceUrl = false): Promise<void> {
     await router.navigateByUrl(url, { replaceUrl });
     await settle();

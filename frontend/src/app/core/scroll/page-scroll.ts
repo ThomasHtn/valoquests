@@ -43,6 +43,9 @@ export class PageScroll {
    */
   public readonly deep = signal(false);
 
+  /**
+   * Saves each page's scroll position and restores it on back navigation.
+   */
   constructor() {
     // Scroll events do not bubble, so listen in the capture phase.
     this.document.addEventListener('scroll', (event) => this.onScroll(event), {

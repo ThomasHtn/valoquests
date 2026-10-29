@@ -102,6 +102,9 @@ export class SquadMatches {
     () => !!this.resource.error() && this.page() > 0 && this.matches().length > 0,
   );
 
+  /**
+   * Returns to the newest page whenever new matches arrive.
+   */
   constructor() {
     // The first run is the initial load, already requested by the resource.
     const initialRevision = this.revision();

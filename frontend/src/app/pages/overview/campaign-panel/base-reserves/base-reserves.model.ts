@@ -1,6 +1,6 @@
 import { LucideIcon } from '@lucide/angular';
 
-import { LedgerKey } from '../campaign-panel.model';
+import { LedgerKey } from '../reserve-ledger/reserve-ledger.model';
 
 /**
  * One segment of the rescue bar and its legend line.

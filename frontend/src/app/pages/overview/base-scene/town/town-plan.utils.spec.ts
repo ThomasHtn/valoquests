@@ -3,8 +3,17 @@ import { describe, expect, it } from 'vitest';
 import { buildingAt, growthOf, planCity, tierAt } from './town-plan.utils';
 import { FOUNDING_CAMP, LAUNCH_PLOT, TIER_HEIGHTS } from './town-scene.constants';
 
+/**
+ * The town plan every test reads.
+ */
 const lots = planCity();
+/**
+ * Tier of every lot at a given growth.
+ */
 const standing = (growth: number): number[] => lots.map((lot) => tierAt(lot, growth));
+/**
+ * Every growth threshold of the plan.
+ */
 const events = lots.flatMap((lot) => lot.thresholds);
 
 describe('planCity', () => {

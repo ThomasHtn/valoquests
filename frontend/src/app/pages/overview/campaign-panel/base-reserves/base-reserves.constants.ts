@@ -1,4 +1,4 @@
-import { LedgerKey } from '../campaign-panel.model';
+import { LedgerKey } from '../reserve-ledger/reserve-ledger.model';
 
 /**
  * Stocks drawn as tanks, in display order.

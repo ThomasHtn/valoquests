@@ -4,6 +4,9 @@ import { Match } from '@core/matches/match.model';
 
 import { toHistoryMatch } from './squad-matches.utils';
 
+/**
+ * The match every converted row points to.
+ */
 const MATCH = { id: 42, mapName: 'Ascent' } as Match;
 
 describe('toHistoryMatch', () => {

@@ -170,6 +170,9 @@ export class MatchHistory {
     ),
   );
 
+  /**
+   * Loads the next page when the end of the list scrolls into view.
+   */
   constructor() {
     // After render: the sentinel only exists once `hasMore` has rendered it.
     afterRenderEffect((onCleanup) => {

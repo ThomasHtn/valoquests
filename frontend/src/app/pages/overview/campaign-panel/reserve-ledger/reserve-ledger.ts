@@ -8,8 +8,8 @@ import { TranslatePipe } from '@core/i18n/translate-pipe';
 import { Translation } from '@core/i18n/translation';
 import { Tooltip } from '@shared/tooltip/tooltip';
 
-import { LedgerCell, LedgerColumn, LedgerRow } from '../campaign-panel.model';
 import { LedgerCellView } from './ledger-cell/ledger-cell';
+import { LedgerCell, LedgerColumn, LedgerRow } from './reserve-ledger.model';
 
 /**
  * Reserves per week: gained above the ground, spent below, carry-over dashed.

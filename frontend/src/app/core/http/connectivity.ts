@@ -28,6 +28,9 @@ export class Connectivity {
    */
   public readonly online = signal(this.window?.navigator.onLine ?? true);
 
+  /**
+   * Follows the browser going offline and back, and tells the player.
+   */
   constructor() {
     this.window?.addEventListener('offline', () => {
       this.online.set(false);

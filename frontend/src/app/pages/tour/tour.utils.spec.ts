@@ -8,9 +8,15 @@ import {
   startOfWeek,
 } from './tour.utils';
 
+/**
+ * Echoes the key and its params, so assertions read the wording inputs.
+ */
 const translate = (key: string, params?: Record<string, string | number>): string =>
   params ? `${key}:${JSON.stringify(params)}` : key;
 
+/**
+ * Two squad members for the tour scenes.
+ */
 const operators = [
   { playerId: 1, name: 'Kairo', portrait: null },
   { playerId: 2, name: 'Sable', portrait: null },

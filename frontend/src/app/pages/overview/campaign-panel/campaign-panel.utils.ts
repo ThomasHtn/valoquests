@@ -2,14 +2,13 @@ import { CAMPAIGN_WEEK_COUNT } from '@core/campaign/campaign.constants';
 import { Campaign } from '@core/campaign/campaign.model';
 import { CampaignWeek, ExtractionLimiter } from '@core/campaign/campaign-week.model';
 
+import { PlanetState, Reserves } from './campaign-panel.model';
 import {
   LedgerCell,
   LedgerColumn,
   LedgerKey,
   LedgerRow,
-  PlanetState,
-  Reserves,
-} from './campaign-panel.model';
+} from './reserve-ledger/reserve-ledger.model';
 
 /**
  * Where a week stands: won, lost, the one being played, or still ahead.

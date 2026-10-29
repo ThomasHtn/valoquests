@@ -29,7 +29,13 @@ function week(weekStart: string): WeekOption {
   `,
 })
 class WeekPickerHost {
+  /**
+   * Weeks offered, newest first.
+   */
   public readonly options = [week('2026-09-28'), week('2026-09-21'), week('2026-09-14')];
+  /**
+   * Week currently picked.
+   */
   public readonly selected = signal<string | null>('2026-09-21');
 }
 

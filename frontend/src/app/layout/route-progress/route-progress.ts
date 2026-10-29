@@ -34,6 +34,9 @@ export class RouteProgress {
    */
   private hideTimer: ReturnType<typeof setTimeout> | undefined;
 
+  /**
+   * Starts the bar on each navigation and finishes it however the navigation ends.
+   */
   constructor() {
     const subscription = inject(Router).events.subscribe((event) => {
       if (event instanceof NavigationStart) {

@@ -45,6 +45,9 @@ export class NavigationHistory {
    */
   public readonly previousUrl = signal<string | null>(null);
 
+  /**
+   * Records each navigation, telling back and replace moves apart.
+   */
   constructor() {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {

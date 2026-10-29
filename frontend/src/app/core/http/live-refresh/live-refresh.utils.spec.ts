@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { liveRefreshStamp } from './live-refresh.utils';
 
-// Explicit instants: Paris is UTC+2 in September, whatever the runtime zone.
+/**
+ * Explicit instants: Paris is UTC+2 in September, whatever the runtime zone.
+ */
 const NOON = new Date('2026-09-07T10:00:00Z');
 
 describe('liveRefreshStamp', () => {

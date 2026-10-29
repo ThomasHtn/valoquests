@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { BoardRow } from '../leaderboard.model';
 import { groupPodium } from './podium.utils';
 
+/**
+ * A board row reduced to what the podium reads.
+ */
 const row = (playerId: number, position: number | null): BoardRow =>
   ({ playerId, position }) as BoardRow;
 

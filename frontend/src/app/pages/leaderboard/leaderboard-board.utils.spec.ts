@@ -11,11 +11,17 @@ import {
   weekChallengeCeiling,
 } from './leaderboard-board.utils';
 
+/**
+ * The campaign being played, in its third week.
+ */
 const running = {
   id: 7,
   weeks: [{ weekIndex: 2, weekStart: '2026-09-07' }],
 } as unknown as Campaign;
 
+/**
+ * A finished campaign from earlier in the year.
+ */
 const closed = [
   { id: 3, firstWeekStart: '2026-01-05', lastWeekStart: '2026-03-09' },
 ] as unknown as CampaignHistory[];
