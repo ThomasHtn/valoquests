@@ -135,7 +135,8 @@ Everything converges on a single replay.
   flags stop being honest.
 - **One job at a time writes the match history.** `MatchHistoryLock` serializes synchronizations,
   the weekly rollover, the daily tick, the challenge redraw, the ranking recalculation, the player
-  deletion and the campaign reset; the app runs as a single instance.
+  deletion, the match game-mode correction, opening, stopping and deleting a campaign, and the
+  campaign reset; the app runs as a single instance.
 
 ### Challenges as data
 

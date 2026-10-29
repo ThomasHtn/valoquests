@@ -5,6 +5,7 @@ import static io.github.thomashtn.valoquests.shared.config.OpenApiConfig.ADMIN_K
 import io.github.thomashtn.valoquests.match.dto.GameModeCorrectionRequest;
 import io.github.thomashtn.valoquests.match.dto.MatchCorrectionResponse;
 import io.github.thomashtn.valoquests.match.service.MatchCorrectionService;
+import io.github.thomashtn.valoquests.shared.concurrency.MatchHistoryLock;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,12 +34,19 @@ public class MatchAdminController {
     private final MatchCorrectionService correctionService;
 
     /**
+     * Lock shared by every job writing the match history, so a correction never races an import.
+     */
+    private final MatchHistoryLock matchHistoryLock;
+
+    /**
      * Creates the administrative match controller.
      *
      * @param correctionService match correction service
+     * @param matchHistoryLock  lock shared by every job writing the match history
      */
-    public MatchAdminController(MatchCorrectionService correctionService) {
+    public MatchAdminController(MatchCorrectionService correctionService, MatchHistoryLock matchHistoryLock) {
         this.correctionService = correctionService;
+        this.matchHistoryLock = matchHistoryLock;
     }
 
     /**
@@ -62,12 +70,18 @@ public class MatchAdminController {
     @ApiResponse(responseCode = "401", description = "X-Admin-Key header is missing.")
     @ApiResponse(responseCode = "403", description = "X-Admin-Key value is invalid.")
     @ApiResponse(responseCode = "404", description = "The requested match does not exist.")
+    @ApiResponse(
+        responseCode = "409",
+        description = "Another job writing the match history is already running."
+    )
     public MatchCorrectionResponse correctGameMode(
         @Parameter(description = "Internal match identifier.", example = "1204", required = true)
         @PathVariable long matchId,
 
         @Valid @RequestBody GameModeCorrectionRequest request
     ) {
-        return correctionService.correctGameMode(matchId, request.gameMode());
+        return matchHistoryLock.supplyOrReject(
+            () -> correctionService.correctGameMode(matchId, request.gameMode())
+        );
     }
 }

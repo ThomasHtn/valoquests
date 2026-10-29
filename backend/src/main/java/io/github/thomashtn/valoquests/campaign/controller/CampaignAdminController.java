@@ -95,12 +95,18 @@ public class CampaignAdminController {
             """
     )
     @ApiResponse(responseCode = "201", description = "Campaign opened successfully.")
-    @ApiResponse(responseCode = "409", description = "A campaign is already live, or no player is active.")
+    @ApiResponse(
+        responseCode = "409",
+        description = "A campaign is already live, no player is active, or another job writing the match history runs."
+    )
     public CampaignAdminResponse openCampaign(
         @RequestParam(defaultValue = "AMATEUR") CampaignDifficulty difficulty,
         @RequestParam(defaultValue = "NEXT_WEEK") CampaignStartWeek startWeek
     ) {
-        return CampaignAdminResponse.from(lifecycleService.open(difficulty, startWeek));
+        // A current-week opening replays at once: it must not race a synchronization's replay.
+        return CampaignAdminResponse.from(
+            matchHistoryLock.supplyOrReject(() -> lifecycleService.open(difficulty, startWeek))
+        );
     }
 
     /**
@@ -117,9 +123,13 @@ public class CampaignAdminController {
             """
     )
     @ApiResponse(responseCode = "200", description = "Campaign stopped successfully.")
-    @ApiResponse(responseCode = "409", description = "No campaign is opened or running.")
+    @ApiResponse(
+        responseCode = "409",
+        description = "No campaign is opened or running, or another job writing the match history runs."
+    )
     public CampaignAdminResponse stopCampaign() {
-        return CampaignAdminResponse.from(lifecycleService.stop());
+        // A replay already holding the campaign would otherwise write past the day it was stopped on.
+        return CampaignAdminResponse.from(matchHistoryLock.supplyOrReject(lifecycleService::stop));
     }
 
     /**
@@ -168,7 +178,11 @@ public class CampaignAdminController {
     )
     @ApiResponse(responseCode = "204", description = "Campaign deleted successfully.")
     @ApiResponse(responseCode = "404", description = "No campaign owns the identifier.")
+    @ApiResponse(
+        responseCode = "409",
+        description = "Another job writing the match history is already running."
+    )
     public void deleteCampaign(@PathVariable long id) {
-        lifecycleService.delete(id);
+        matchHistoryLock.runOrReject(() -> lifecycleService.delete(id));
     }
 }

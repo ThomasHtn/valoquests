@@ -145,6 +145,36 @@ class CampaignAdminControllerTest {
         verify(lifecycleService).delete(7L);
     }
 
+    @Test
+    @DisplayName("Refuses to stop the campaign while a synchronization may be replaying it")
+    void shouldRefuseTheStopWhileAnotherJobRuns() throws Exception {
+        matchHistoryLock.acquireOrReject();
+        try {
+            mockMvc.perform(post("/api/admin/campaigns/stop")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+                .andExpect(status().isConflict());
+        } finally {
+            matchHistoryLock.release();
+        }
+
+        verify(lifecycleService, never()).stop();
+    }
+
+    @Test
+    @DisplayName("Refuses to delete a campaign while another guarded job holds the lock")
+    void shouldRefuseTheDeletionWhileAnotherJobRuns() throws Exception {
+        matchHistoryLock.acquireOrReject();
+        try {
+            mockMvc.perform(delete("/api/admin/campaigns/7")
+                    .header(AdminApiKeyFilter.HEADER_NAME, ADMIN_KEY))
+                .andExpect(status().isConflict());
+        } finally {
+            matchHistoryLock.release();
+        }
+
+        verify(lifecycleService, never()).delete(7L);
+    }
+
     /**
      * Verifies that the whole lifecycle stays behind the administrative key.
      */
