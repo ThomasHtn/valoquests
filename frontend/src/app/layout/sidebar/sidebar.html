@@ -177,14 +177,15 @@
           [appTooltipDisabled]="!collapsed()"
           [attr.aria-controls]="languageMenuId"
           [attr.aria-expanded]="languageMenuOpen()"
-          [attr.aria-label]="'sidebar.language.label' | translate"
           aria-haspopup="listbox"
           appTooltipPosition="right"
           appTooltipSize="md"
           class="sidebar__language-button focus-ring-inset press"
           type="button"
         >
-          <svg class="size-4 shrink-0" lucideLanguages></svg>
+          <svg aria-hidden="true" class="size-4 shrink-0" lucideLanguages></svg>
+          <!-- Name holds the visible code, so voice control can say what is on screen. -->
+          <span class="sr-only">{{ 'sidebar.language.label' | translate }}</span>
           <span class="sidebar__language-code">{{ language() }}</span>
         </button>
 

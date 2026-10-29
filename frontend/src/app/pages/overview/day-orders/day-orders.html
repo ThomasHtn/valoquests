@@ -14,13 +14,11 @@
               />
             }
           </p>
-          <p
-            [attr.aria-label]="
+          <p class="day-orders__count">
+            <span class="sr-only">{{
               'challenges.card.squadAria'
                 | translate: { done: daily.doneCount, total: daily.marks.length }
-            "
-            class="day-orders__count"
-          >
+            }}</span>
             <b aria-hidden="true" class="day-orders__count-value tabular-nums"
               >{{ daily.doneCount
               }}<span class="day-orders__count-total">/{{ daily.marks.length }}</span></b

@@ -155,7 +155,7 @@
     [loadingText]="'overview.state.loading' | translate"
     padding="page"
   >
-    <main class="overview__main">
+    <div class="overview__main">
       <!-- A scan wire ties the planet to the row it points at. -->
       @if (mission(); as mission) {
         <section aria-labelledby="mission-title">
@@ -221,7 +221,7 @@
           }
         </div>
       </div>
-    </main>
+    </div>
   </app-resource-state>
 
   <!-- Without a mission, a settled or closed campaign still shows its result. -->
