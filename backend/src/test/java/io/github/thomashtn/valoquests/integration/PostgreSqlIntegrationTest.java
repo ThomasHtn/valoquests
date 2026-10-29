@@ -3,8 +3,8 @@ package io.github.thomashtn.valoquests.integration;
 import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Provides a shared PostgreSQL Testcontainer for integration tests.
@@ -21,8 +21,8 @@ public abstract class PostgreSqlIntegrationTest {
      * <p>Not {@code @Container} on purpose: the extension would stop it after the first class, breaking the next.
      * Started once and reaped by Ryuk at JVM exit (Testcontainers "singleton container" pattern).
      */
-    protected static final PostgreSQLContainer<?> POSTGRESQL =
-        new PostgreSQLContainer<>("postgres:17-alpine")
+    protected static final PostgreSQLContainer POSTGRESQL =
+        new PostgreSQLContainer("postgres:17-alpine")
             .withDatabaseName("valo_quests")
             .withUsername("valorant")
             .withPassword("valorant");
